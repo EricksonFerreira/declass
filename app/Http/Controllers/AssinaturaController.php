@@ -379,13 +379,13 @@ class AssinaturaController extends Controller
                 }
 
                 $faqs[] = [
-                    'id' => 'faq-' . $faqIndex++,
+                    'id' => 'faq-'.$faqIndex++,
                     'q' => $q,
                     'aHtml' => Str::markdown($a === '' ? '_' : $a),
                 ];
             }
 
-            if (!empty($faqs)) {
+            if (! empty($faqs)) {
                 $groupedFaqs[$categoryName] = $faqs;
             }
         }
@@ -703,6 +703,7 @@ class AssinaturaController extends Controller
         }
 
         $empresaId = $assinatura->empresa_id;
+
         return $empresaId ? Empresa::find($empresaId) : null;
     }
 
@@ -1119,7 +1120,7 @@ class AssinaturaController extends Controller
                 'currency' => 'brl',
                 'payment_method_types' => ['card'],
                 'customer' => $customerId,
-                'description' => 'Plano '.($pagamento->empresaPlano?->plano?->nome ?? 'DeCars'),
+                'description' => 'Plano '.($pagamento->empresaPlano?->plano?->nome ?? 'DECLOCK'),
                 'metadata' => [
                     'pagamento_id' => $pagamento->id,
                     'empresa_id' => $pagamento->empresa_id,

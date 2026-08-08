@@ -63,7 +63,7 @@ input[type="color"]::-webkit-color-swatch { border:1px solid #e2e8f0; border-rad
             <div class="mt-3">
                 <label class="font-weight-bold mb-2" style="font-size:.82rem;">Pre-visualizacao</label>
                 <div class="cor-preview-box" id="previewBox" style="background:{{ $empresa->cor_primaria ?? '#000000' }};color:{{ $empresa->cor_secundaria ?? '#ffffff' }};">
-                    DeCars — Sistema de Gestao
+                    DECLOCK — Sistema de Gestao
                 </div>
             </div>
         </div>

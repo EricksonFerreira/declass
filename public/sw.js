@@ -1,4 +1,4 @@
-const CACHE_NAME = 'decars-pwa-v1';
+const CACHE_NAME = 'DECLOCK-pwa-v1';
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',

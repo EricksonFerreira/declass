@@ -3,35 +3,35 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Conheca a DeCars, software da Sonyd Tech para locadoras de veiculos com gestao completa, check-in digital, financeiro e site de reservas online para vender mais.">
-    <meta name="keywords" content="sobre DeCars, software para locadora de veiculos, sistema para locadoras, site de reservas online, Sonyd Tech, gestao de frota, check-in digital, financeiro, multas">
+    <meta name="description" content="Conheca a DECLOCK, software da Sonyd Tech para locadoras de veiculos com gestao completa, check-in digital, financeiro e site de reservas online para vender mais.">
+    <meta name="keywords" content="sobre DECLOCK, software para locadora de veiculos, sistema para locadoras, site de reservas online, Sonyd Tech, gestao de frota, check-in digital, financeiro, multas">
     <meta name="author" content="Sonyd Tech">
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
     <link rel="canonical" href="{{ url('/sobre') }}">
     <meta property="og:locale" content="pt_BR">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="{{ $empresa->nome ?? 'DeCars' }}">
-    <meta property="og:title" content="Sobre {{ $empresa->nome ?? 'DeCars' }} | Software para Locadoras">
+    <meta property="og:site_name" content="{{ $empresa->nome ?? 'DECLOCK' }}">
+    <meta property="og:title" content="Sobre {{ $empresa->nome ?? 'DECLOCK' }} | Software para Locadoras">
     <meta property="og:description" content="Gestao de locadoras com site de reservas online, personalizacao e foco em conversao.">
     <meta property="og:url" content="{{ url('/sobre') }}">
-    <meta property="og:image" content="{{ asset('assets/og/decars-share.png') }}">
+    <meta property="og:image" content="{{ asset('assets/og/DECLOCK-share.png') }}">
     <meta property="og:image:type" content="image/png">
-    <meta property="og:image:alt" content="Banner da DeCars com software para locadoras e site de vendas">
+    <meta property="og:image:alt" content="Banner da DECLOCK com software para locadoras e site de vendas">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Sobre {{ $empresa->nome ?? 'DeCars' }} | Software para Locadoras">
+    <meta name="twitter:title" content="Sobre {{ $empresa->nome ?? 'DECLOCK' }} | Software para Locadoras">
     <meta name="twitter:description" content="Software para locadoras com site de reservas online e foco em vendas.">
-    <meta name="twitter:image" content="{{ asset('assets/og/decars-share.png') }}">
+    <meta name="twitter:image" content="{{ asset('assets/og/DECLOCK-share.png') }}">
     <meta name="theme-color" content="#0a1628">
-    <title>Sobre {{ $empresa->nome ?? 'DeCars' }} | Software para Locadoras</title>
+    <title>Sobre {{ $empresa->nome ?? 'DECLOCK' }} | Software para Locadoras</title>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicons/favicon.ico') }}">
     @php $manifestVersion = rawurlencode((string) ($empresa->id ?? '0')).'-'.substr(sha1(($empresa->nome ?? '').'|'.($empresa->logo_path ?? '').'|'.($empresa->cor_primaria ?? '')), 0, 12); @endphp
     <link rel="manifest" href="{{ route('site.manifest', ['v' => $manifestVersion]) }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="{{ $empresa->nome ?? 'DeCars' }}">
+    <meta name="apple-mobile-web-app-title" content="{{ $empresa->nome ?? 'DECLOCK' }}">
     <link rel="apple-touch-icon" href="{{ route('site.manifest.icon') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,11 +42,11 @@
     {
         "@context": "https://schema.org",
         "@type": "AboutPage",
-        "name": "Sobre a DeCars",
+        "name": "Sobre a DECLOCK",
         "url": "{{ url('/sobre') }}",
         "about": {
             "@type": "SoftwareApplication",
-            "name": "DeCars",
+            "name": "DECLOCK",
             "applicationCategory": "BusinessApplication",
             "operatingSystem": "Web",
             "publisher": {
@@ -411,8 +411,8 @@
     <header class="nav">
         <div class="container nav-inner">
             <a class="brand" href="{{ route('site.apresentacao') }}">
-                <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="Logo DeCars">
-                <span>DeCars</span>
+                <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="Logo DECLOCK">
+                <span>DECLOCK</span>
             </a>
             <nav class="nav-links" aria-label="Navegacao principal">
                 <a href="{{ route('site.apresentacao') }}">Home</a>
@@ -436,14 +436,14 @@
                     </div>
                     <h1>Software para locadoras que também vende online</h1>
                     <p>
-                        A DeCars foi criada para locadoras que querem sair da planilha, organizar a operação e, ao mesmo tempo, ter um site de reservas online para transformar visitantes em clientes.
+                        A DECLOCK foi criada para locadoras que querem sair da planilha, organizar a operação e, ao mesmo tempo, ter um site de reservas online para transformar visitantes em clientes.
                         Aqui você encontra gestão completa, check-in digital, financeiro, multas, NFS-e e uma presença digital pensada para crescer junto com o seu negócio.
                     </p>
                     <div class="hero-actions">
                         <a class="btn btn-primary" href="{{ route('site.apresentacao') }}#planos">
                             Ver planos
                         </a>
-                        <a class="btn btn-ghost" href="https://wa.me/558192554172?text={{ urlencode('Olá! Quero conhecer melhor a DeCars e entender como o site de reservas pode ajudar minha locadora.') }}" target="_blank" rel="noopener">
+                        <a class="btn btn-ghost" href="https://wa.me/558192554172?text={{ urlencode('Olá! Quero conhecer melhor a DECLOCK e entender como o site de reservas pode ajudar minha locadora.') }}" target="_blank" rel="noopener">
                             Falar no WhatsApp
                         </a>
                     </div>
@@ -454,7 +454,7 @@
                     </div>
                 </div>
                 <div class="hero-card">
-                    <img src="{{ asset('assets/og/decars-share.svg') }}" alt="Banner da DeCars com software e site de reservas online">
+                    <img src="{{ asset('assets/og/DECLOCK-share.svg') }}" alt="Banner da DECLOCK com software e site de reservas online">
                 </div>
             </div>
         </section>
@@ -465,7 +465,7 @@
                     <div class="tag">O diferencial</div>
                     <h2>Mais do que um sistema. Uma plataforma para vender mais.</h2>
                     <p class="lead">
-                        A maioria dos sistemas para locadoras ajuda na operação interna. A DeCars vai além: entrega um site de reservas online e um painel completo para o dia a dia da empresa.
+                        A maioria dos sistemas para locadoras ajuda na operação interna. A DECLOCK vai além: entrega um site de reservas online e um painel completo para o dia a dia da empresa.
                         Isso faz com que a locadora ganhe eficiência operacional e também uma vitrine para captar reservas pela internet.
                     </p>
                 </div>
@@ -501,7 +501,7 @@
                         <div class="tag">Para quem foi feito</div>
                         <h2>Feito para locadoras que querem crescer com previsibilidade</h2>
                         <p class="lead">
-                            A DeCars atende desde operações menores que precisam de controle e agilidade ate locadoras que querem um produto mais completo, com canal de vendas próprio e potencial de escala.
+                            A DECLOCK atende desde operações menores que precisam de controle e agilidade ate locadoras que querem um produto mais completo, com canal de vendas próprio e potencial de escala.
                         </p>
                     </div>
                     <div class="panel">
@@ -547,9 +547,9 @@
                 <div class="cta">
                     <div>
                         <div class="tag" style="border-color: rgba(255,255,255,.18); color: #fff; background: rgba(255,255,255,.08);">Pronto para começar?</div>
-                        <h2>Conheca a DeCars e veja como o site de vendas pode ajudar sua locadora</h2>
+                        <h2>Conheca a DECLOCK e veja como o site de vendas pode ajudar sua locadora</h2>
                         <p>
-                            Se voce quer um software com foco em operacao e tambem em vendas, a DeCars foi pensada para esse modelo. Entre em contato, conheca os planos e veja como a sua locadora pode ganhar mais presenca digital.
+                            Se voce quer um software com foco em operacao e tambem em vendas, a DECLOCK foi pensada para esse modelo. Entre em contato, conheca os planos e veja como a sua locadora pode ganhar mais presenca digital.
                         </p>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:.75rem; min-width:260px;">
@@ -567,7 +567,7 @@
                 <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
                 <span>Software da Sonyd Tech</span>
             </a>
-            <small>© {{ $anoAtual }} DeCars. Todos os direitos reservados.</small>
+            <small>© {{ $anoAtual }} DECLOCK. Todos os direitos reservados.</small>
         </div>
     </footer>
 </body>

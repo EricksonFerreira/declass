@@ -1,6 +1,6 @@
 {
-  "name": "DeCars",
-  "short_name": "DeCars",
+  "name": "DECLOCK",
+  "short_name": "DECLOCK",
   "description": "Sistema para locadoras com gestão completa, check-in digital e reservas online.",
   "start_url": "/",
   "scope": "/",

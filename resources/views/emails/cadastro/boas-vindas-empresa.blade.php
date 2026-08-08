@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bem-vindo ao DECars</title>
+<title>Bem-vindo ao DECLOCK</title>
 <style>
   body { margin:0; padding:0; background:#f4f6f9; font-family: 'Segoe UI', Arial, sans-serif; color:#333; }
   .wrapper { max-width:600px; margin:32px auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.08); }
@@ -25,14 +25,14 @@
 <body>
 <div class="wrapper">
   <div class="header">
-    <h1>🎉 Bem-vindo ao DECars!</h1>
+    <h1>🎉 Bem-vindo ao DECLOCK!</h1>
   </div>
 
   <div class="body">
     <div class="greeting">Olá, {{ $empresa->nome }}!</div>
 
     <p>
-      Sua empresa foi cadastrada com sucesso na plataforma <strong>DECars</strong>.
+      Sua empresa foi cadastrada com sucesso na plataforma <strong>DECLOCK</strong>.
       Agora é só seguir os próximos passos para começar a gerenciar sua frota com agilidade.
     </p>
 
@@ -61,7 +61,7 @@
     </p>
 
     <p style="text-align:center;">
-      <a href="{{ config('app.url') }}/login" class="btn">Acessar o DECars</a>
+      <a href="{{ config('app.url') }}/login" class="btn">Acessar o DECLOCK</a>
     </p>
 
     <hr class="divider">
@@ -73,7 +73,7 @@
   </div>
 
   <div class="footer">
-    DECars — Sistema de Gestão de Frotas e Locadoras<br>
+    DECLOCK — Sistema de Gestão de Frotas e Locadoras<br>
     Este é um e-mail automático, por favor não responda diretamente.
   </div>
 </div>

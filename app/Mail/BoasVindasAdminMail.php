@@ -23,7 +23,7 @@ class BoasVindasAdminMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Suas credenciais de acesso ao DECars',
+            subject: 'Suas credenciais de acesso ao DECLOCK',
         );
     }
 

@@ -3,39 +3,39 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="DeCars é o software da Sonyd Tech para locadoras de veículos: gestão completa, check-in digital, financeiro, multas, NFS-e e site de reservas online para vender mais.">
+    <meta name="description" content="DECLOCK é o software da Sonyd Tech para locadoras de veículos: gestão completa, check-in digital, financeiro, multas, NFS-e e site de reservas online para vender mais.">
     <meta name="keywords" content="software para locadora de veículos, sistema para locadoras, sistema para locadora de carros, site de reservas online, gestão de frota, check-in digital, financeiro, multas, NFS-e, Sonyd Tech">
     <meta name="author" content="Sonyd Tech">
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
     <link rel="canonical" href="{{ url()->current() }}">
     <meta property="og:locale" content="pt_BR">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="DeCars">
-    <meta property="og:title" content="DeCars — Sistema para Locadoras com Site de Reservas Online">
+    <meta property="og:site_name" content="DECLOCK">
+    <meta property="og:title" content="DECLOCK — Sistema para Locadoras com Site de Reservas Online">
     <meta property="og:description" content="Software da Sonyd Tech para gestão de locadoras e site de reservas online.">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="{{ asset('assets/og/decars-share.png') }}">
+    <meta property="og:image" content="{{ asset('assets/og/DECLOCK-share.png') }}">
     <meta property="og:image:type" content="image/png">
-    <meta property="og:image:alt" content="Banner da DeCars com software para locadoras e site de reservas online">
+    <meta property="og:image:alt" content="Banner da DECLOCK com software para locadoras e site de reservas online">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="675">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="DeCars — Sistema para Locadoras com Site de Reservas Online">
+    <meta name="twitter:title" content="DECLOCK — Sistema para Locadoras com Site de Reservas Online">
     <meta name="twitter:description" content="Gestão completa para locadoras com site de vendas para reservas online.">
-    <meta name="twitter:image" content="{{ asset('assets/og/decars-share.png') }}">
-    <meta name="twitter:image:alt" content="Banner da DeCars com software para locadoras e site de reservas online">
+    <meta name="twitter:image" content="{{ asset('assets/og/DECLOCK-share.png') }}">
+    <meta name="twitter:image:alt" content="Banner da DECLOCK com software para locadoras e site de reservas online">
     <meta name="twitter:site" content="@sonydtech">
     <meta name="twitter:creator" content="@sonydtech">
     <meta name="theme-color" content="#0a1628">
-    <meta name="application-name" content="DeCars">
-    <title>DeCars | Software para Locadoras com Site de Reservas Online</title>
+    <meta name="application-name" content="DECLOCK">
+    <title>DECLOCK | Software para Locadoras com Site de Reservas Online</title>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicons/favicon.ico') }}">
     @php $manifestVersion = rawurlencode((string) ($empresa->id ?? '0')).'-'.substr(sha1(($empresa->nome ?? '').'|'.($empresa->logo_path ?? '').'|'.($empresa->cor_primaria ?? '')), 0, 12); @endphp
     <link rel="manifest" href="{{ route('site.manifest', ['v' => $manifestVersion]) }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="{{ $empresa->nome ?? 'DeCars' }}">
+    <meta name="apple-mobile-web-app-title" content="{{ $empresa->nome ?? 'DECLOCK' }}">
     <link rel="apple-touch-icon" href="{{ route('site.manifest.icon') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,7 +47,7 @@
     {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        "name": "DeCars",
+        "name": "DECLOCK",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web",
         "description": "Software da Sonyd Tech para locadoras de veículos com gestão completa e site de reservas online.",
@@ -87,7 +87,7 @@
     {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        "name": "DeCars",
+        "name": "DECLOCK",
         "url": "{{ url('/') }}",
         "publisher": {
             "@type": "Organization",
@@ -103,10 +103,10 @@
         "mainEntity": [
             {
                 "@type": "Question",
-                "name": "O DeCars é só um sistema administrativo?",
+                "name": "O DECLOCK é só um sistema administrativo?",
                 "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Não. O DeCars combina gestão para locadoras com um site de reservas online para vender mais e centralizar a operação."
+                    "text": "Não. O DECLOCK combina gestão para locadoras com um site de reservas online para vender mais e centralizar a operação."
                 }
             },
             {
@@ -130,7 +130,7 @@
                 "name": "O software serve para pequenas e grandes locadoras?",
                 "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Sim. O DeCars atende operações menores e também locadoras que precisam de mais escala, controle e personalização."
+                    "text": "Sim. O DECLOCK atende operações menores e também locadoras que precisam de mais escala, controle e personalização."
                 }
             }
         ]
@@ -1545,7 +1545,7 @@
             <div class="nav-logo-icon">
                 <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="">
             </div>
-            DECARS
+            DECLOCK
         </a>
         <ul class="nav-links" id="navLinks">
             <li><a href="#funcionalidades">Funcionalidades</a></li>
@@ -1609,7 +1609,7 @@
                 <div class="hero-carousel-wrap">
                     <div class="hero-carousel" id="heroCarousel">
                         <figure class="hero-carousel-slide is-active">
-                            <img src="{{ asset('assets/welcome/site-aluguel.png') }}" alt="Site de reservas online do DeCars">
+                            <img src="{{ asset('assets/welcome/site-aluguel.png') }}" alt="Site de reservas online do DECLOCK">
                             <figcaption class="hero-carousel-caption">
                                 <span>Site de vendas</span>
                                 <strong>O cliente reserva online com a sua marca</strong>
@@ -1617,7 +1617,7 @@
                             </figcaption>
                         </figure>
                         <figure class="hero-carousel-slide">
-                            <img src="{{ asset('assets/welcome/home.png') }}" alt="Painel principal do DeCars">
+                            <img src="{{ asset('assets/welcome/home.png') }}" alt="Painel principal do DECLOCK">
                             <figcaption class="hero-carousel-caption">
                                 <span>Dashboard</span>
                                 <strong>Visão executiva da operação</strong>
@@ -1625,7 +1625,7 @@
                             </figcaption>
                         </figure>
                         <figure class="hero-carousel-slide">
-                            <img src="{{ asset('assets/welcome/reservas.png') }}" alt="Lista de reservas do DeCars">
+                            <img src="{{ asset('assets/welcome/reservas.png') }}" alt="Lista de reservas do DECLOCK">
                             <figcaption class="hero-carousel-caption">
                                 <span>Reservas online</span>
                                 <strong>Receba e organize as locações</strong>
@@ -1684,7 +1684,7 @@
                 <div class="sales-diff-tag"><i class="fas fa-store"></i> Diferencial competitivo</div>
                 <h2 class="sales-diff-title">Além de gerenciar, sua locadora também vende.</h2>
                 <p class="sales-diff-copy">
-                    O DeCars não entrega apenas controle operacional. Ele também oferece um site de vendas para a locadora escalar os alugueis, gerar mais reservas e transformar a marca em um canal de aquisição.
+                    O DECLOCK não entrega apenas controle operacional. Ele também oferece um site de vendas para a locadora escalar os alugueis, gerar mais reservas e transformar a marca em um canal de aquisição.
                 </p>
                 <div class="sales-diff-points">
                     <div class="sales-diff-point"><i class="fas fa-check-circle"></i> Site público integrado ao sistema, com reserva online e identidade visual da empresa.</div>
@@ -1693,13 +1693,13 @@
                 </div>
                 <div class="sales-diff-actions">
                     <a href="https://locrickson.shop" target="_blank" rel="noopener noreferrer" class="sales-diff-link">Ver um dos modelos de site de vendas</a>
-                    <span class="sales-diff-note">Esse é o diferencial que faz o DeCars se destacar entre os sistemas do mercado.</span>
+                    <span class="sales-diff-note">Esse é o diferencial que faz o DECLOCK se destacar entre os sistemas do mercado.</span>
                 </div>
             </div>
             <div class="reveal-right delay-1">
                 <div class="sales-diff-visual">
                     <div class="sales-diff-badge"><i class="fas fa-sparkles"></i> Site de vendas</div>
-                    <img src="{{ asset('assets/welcome/site-aluguel.png') }}" alt="Site de vendas do DeCars">
+                    <img src="{{ asset('assets/welcome/site-aluguel.png') }}" alt="Site de vendas do DECLOCK">
                 </div>
             </div>
         </div>
@@ -1712,7 +1712,7 @@
         <div class="section-header" style="text-align:center;margin-bottom:0">
             <div class="section-tag reveal" style="justify-content:center">O Problema</div>
             <h2 class="section-title reveal delay-1" style="margin:0 auto .9rem">Sua locadora ainda usa<br>planilha ou sistema ultrapassado?</h2>
-            <p class="section-sub reveal delay-2" style="margin:0 auto">Locadoras perdem dinheiro todo dia por falta de controle integrado. O DeCars resolve na raiz.</p>
+            <p class="section-sub reveal delay-2" style="margin:0 auto">Locadoras perdem dinheiro todo dia por falta de controle integrado. O DECLOCK resolve na raiz.</p>
         </div>
         <div class="problems-grid">
             <div class="problem-card reveal delay-1">
@@ -1942,7 +1942,7 @@
     <div class="container">
         <div class="section-header" style="text-align:center;margin-bottom:3rem">
             <div class="section-tag reveal" style="justify-content:center">Números</div>
-            <h2 class="section-title reveal delay-1" style="margin:0 auto">DeCars em números</h2>
+            <h2 class="section-title reveal delay-1" style="margin:0 auto">DECLOCK em números</h2>
         </div>
         <div class="stats-grid">
             <div class="stat-item reveal delay-1">
@@ -1976,7 +1976,7 @@
             <div class="reveal-left">
                 <div class="section-tag">Depoimentos</div>
                 <h2 class="section-title">O que dizem nossos clientes</h2>
-                <p class="section-sub">Quem usa o DeCars não volta a controlar locação em planilha.</p>
+                <p class="section-sub">Quem usa o DECLOCK não volta a controlar locação em planilha.</p>
                 <div class="testi-nav">
                     <button class="testi-btn" id="testiPrev"><i class="fas fa-arrow-left"></i></button>
                     <button class="testi-btn" id="testiNext"><i class="fas fa-arrow-right"></i></button>
@@ -1988,7 +1988,7 @@
                         <div class="swiper-slide">
                             <div class="testi-card">
                                 <div class="testi-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                                <p class="testi-text">"Antes do DeCars a gente perdia em média 3 reservas por semana por conflito de agenda. Hoje isso não acontece mais. O sistema é simples para a equipe e completo para o gestor."</p>
+                                <p class="testi-text">"Antes do DECLOCK a gente perdia em média 3 reservas por semana por conflito de agenda. Hoje isso não acontece mais. O sistema é simples para a equipe e completo para o gestor."</p>
                                 <div class="testi-author">
                                     <div class="testi-avatar">MA</div>
                                     <div><div class="testi-name">Marcos Alves</div><div class="testi-role">Diretor — Auto Premium Recife</div></div>
@@ -2231,15 +2231,15 @@
         <div class="section-header" style="text-align:center">
             <div class="section-tag reveal" style="justify-content:center">Perguntas frequentes</div>
             <h2 class="section-title reveal delay-1" style="margin:0 auto .9rem">Tudo o que você precisa saber antes de contratar</h2>
-            <p class="section-sub reveal delay-2" style="margin:0 auto">Respostas rápidas para deixar claro o diferencial do DeCars: gestão para locadoras + site de vendas para reservas online.</p>
+            <p class="section-sub reveal delay-2" style="margin:0 auto">Respostas rápidas para deixar claro o diferencial do DECLOCK: gestão para locadoras + site de vendas para reservas online.</p>
         </div>
         <div class="faq-grid">
             <article class="faq-card reveal delay-1">
                 <div class="faq-q">
                     <i class="fas fa-question"></i>
-                    <h3>O DeCars é só um sistema administrativo?</h3>
+                    <h3>O DECLOCK é só um sistema administrativo?</h3>
                 </div>
-                <p>Não. O DeCars combina gestão completa para locadoras com um site de reservas online para vender mais e centralizar a operação.</p>
+                <p>Não. O DECLOCK combina gestão completa para locadoras com um site de reservas online para vender mais e centralizar a operação.</p>
             </article>
             <article class="faq-card reveal delay-2">
                 <div class="faq-q">
@@ -2295,7 +2295,7 @@
                     <div class="footer-logo-icon">
                        <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="">
                     </div>
-                   DECARS
+                   DECLOCK
                 </div>
                 <p class="footer-tagline">Software completo para gestão de locadoras de veículos. Simples para a equipe, poderoso para o gestor.</p>
             </div>
@@ -2311,7 +2311,7 @@
             <div class="footer-col">
                 <h5>Empresa</h5>
                 <ul>
-                    <li><a href="{{ route('site.sobre') }}">Sobre a DeCars</a></li>
+                    <li><a href="{{ route('site.sobre') }}">Sobre a DECLOCK</a></li>
                     <li><a href="https://www.sonyd.com.br" target="_blank" rel="noopener noreferrer">Sonyd Tech</a></li>
                     <li><a href="#planos">Planos</a></li>
                 </ul>
@@ -2327,7 +2327,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© {{ date('Y') }} DeCars. Todos os direitos reservados.</p>
+            <p>© {{ date('Y') }} DECLOCK. Todos os direitos reservados.</p>
             <a class="footer-brand-credit" href="https://www.sonyd.com.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
                 <span>Software oficial da</span>
                 <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
@@ -2548,9 +2548,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
     apiKey: "AIzaSyAQ_OGNmmXZQq3DKgW7CH13_nGvjN30Abw",
-    authDomain: "decars-438c0.firebaseapp.com",
-    projectId: "decars-438c0",
-    storageBucket: "decars-438c0.firebasestorage.app",
+    authDomain: "DECLOCK-438c0.firebaseapp.com",
+    projectId: "DECLOCK-438c0",
+    storageBucket: "DECLOCK-438c0.firebasestorage.app",
     messagingSenderId: "324332157331",
     appId: "1:324332157331:web:71d65eabf22e637dc19066",
     measurementId: "G-0C5NVBZ8XN"

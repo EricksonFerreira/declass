@@ -7,7 +7,7 @@
     $empresaBranding = app(\App\Support\EmpresaBranding::class);
     $faviconUrl = $empresaBranding->logoUrl();
     $empresaAtual = $empresaBranding->empresaAtual();
-    $appName = $empresaAtual?->nome ?: config('app.name', 'DeCars');
+    $appName = $empresaAtual?->nome ?: config('app.name', 'DECLOCK');
     $manifestVersion = rawurlencode((string) ($empresaAtual?->id ?? '0')).'-'.substr(sha1(($empresaAtual?->nome ?? '').'|'.($empresaAtual?->logo_path ?? '').'|'.($empresaAtual?->cor_primaria ?? '')), 0, 12);
 @endphp
 

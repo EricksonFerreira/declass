@@ -23,7 +23,7 @@ class BoasVindasEmpresaMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Bem-vindo ao DECars — sua conta foi criada!',
+            subject: 'Bem-vindo ao DECLOCK — sua conta foi criada!',
         );
     }
 

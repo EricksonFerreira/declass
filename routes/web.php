@@ -122,18 +122,30 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         return view('auth.register-success');
     })->name('register.success');
 
-    Route::get('home', [HomeController::class, 'home'])->middleware(['auth'])->name('home');
+    Route::get('home', [\App\Http\Controllers\Clockify\ClockifyDashboardController::class, 'index'])->middleware(['auth'])->name('home');
     Route::get('home/chart-data', [HomeController::class, 'chartData'])->middleware(['auth'])->name('home.chart-data');
+    Route::get('home/produtividade', [\App\Http\Controllers\Clockify\ClockifyDashboardController::class, 'produtividade'])->middleware(['auth'])->name('home.produtividade');
+    Route::get('home/equipe', [\App\Http\Controllers\Clockify\ClockifyDashboardController::class, 'equipe'])->middleware(['auth'])->name('home.equipe');
+    Route::get('home/projetos', [\App\Http\Controllers\Clockify\ClockifyDashboardController::class, 'projetos'])->middleware(['auth'])->name('home.projetos');
     Route::get('indicadores', [IndicadoresController::class, 'index'])->middleware(['auth'])->name('indicadores.index');
     Route::get('indicadores/{slug}', [IndicadoresController::class, 'show'])->middleware(['auth'])->name('indicadores.show');
     Route::get('prospeccao', [LocadoraProspeccaoController::class, 'index'])->middleware(['auth', 'can:acessar-superadmin'])->name('prospeccao.index');
     Route::get('prospeccao/estados', [LocadoraProspeccaoController::class, 'estados'])->middleware(['auth', 'can:acessar-superadmin'])->name('prospeccao.estados');
     Route::get('prospeccao/cidades/{uf}', [LocadoraProspeccaoController::class, 'cidades'])->middleware(['auth', 'can:acessar-superadmin'])->name('prospeccao.cidades');
-    Route::get('/dashboard', function () {
-        return redirect()->route('reserva.minhas');
-    })->middleware('auth')->name('dashboard');
-
-    Route::post('tipotransacao/setperpage', [TipoTransacaoController::class, 'setPerPage'])->name('tipotransacao.setPerPage');
+    Route::get('/dashboard', [\App\Http\Controllers\Clockify\ClockifyDashboardController::class, 'index'])->middleware('auth')->name('dashboard');
+    Route::get('pricing', [\App\Http\Controllers\Clockify\PricingController::class, 'index'])->middleware('auth')->name('pricing');
+    Route::get('relatorios', [\App\Http\Controllers\Clockify\ReportController::class, 'index'])->middleware('auth')->name('relatorios.index');
+    Route::get('relatorios/horas-trabalhadas', [\App\Http\Controllers\Clockify\ReportController::class, 'horasTrabalhadas'])->middleware('auth')->name('relatorios.horas-trabalhadas');
+    Route::get('relatorios/horas', [\App\Http\Controllers\Clockify\ReportController::class, 'horasTrabalhadas'])->middleware('auth')->name('relatorios.horas');
+    // Alias for backward compatibility
+    // Duplicate alias removed to avoid conflict; original route uses name 'relatorios.horas-trabalhadas'
+    Route::match(['get','post'], 'relatorios/exportar', [\App\Http\Controllers\Clockify\ReportController::class, 'export'])->middleware('auth')->name('relatorios.exportar');
+    // Alias for existing export route used by sidebar
+    Route::match(['get','post'], 'relatorios/export', [\App\Http\Controllers\Clockify\ReportController::class, 'export'])->middleware('auth')->name('relatorios.export');
+    Route::get('relatorios/membros', [\App\Http\Controllers\Clockify\ReportController::class, 'membros'])->middleware('auth')->name('relatorios.membros');
+    Route::delete('relatorios/membros/{user}', [\App\Http\Controllers\Clockify\ReportController::class, 'destroyMembro'])->middleware('auth')->name('relatorios.membros.destroy');
+    Route::post('relatorios/membros/store', [\App\Http\Controllers\Clockify\ReportController::class, 'storeMembro'])->middleware('auth')->name('relatorios.membros.store');
+Route::post('tipotransacao/setperpage', [TipoTransacaoController::class, 'setPerPage'])->name('tipotransacao.setPerPage');
     Route::get('tipotransacao/removerfiltro', [TipoTransacaoController::class, 'removerFiltro']);
     Route::get('tipotransacao/filtro', [TipoTransacaoController::class, 'filtro']);
     Route::resource('tipotransacao', TipoTransacaoController::class);
@@ -221,6 +233,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'status_reserva',
         'plano',
         'onboarding',
+        'clockify',
     ];
 
     foreach ($authGroupFiles as $groupFile) {

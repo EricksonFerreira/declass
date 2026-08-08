@@ -69,7 +69,7 @@
         <h1 class="onb-card-title" style="text-align:center;">Plano contratado com sucesso!</h1>
         <p style="font-size:.9rem; color:#64748b; line-height:1.65;">
             Sua conta está ativa em modo de avaliação. Siga os passos abaixo para
-            configurar tudo e começar a usar o DeCars completo.
+            configurar tudo e começar a usar o DECLOCK completo.
         </p>
     </div>
 

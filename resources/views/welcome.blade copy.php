@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="DeCars — Locadora de veículos premium. Reserve agora e dirija com conforto, segurança e estilo.">
-    <title>DeCars — Locadora de Veículos Premium</title>
+    <meta name="description" content="DECLOCK — Locadora de veículos premium. Reserve agora e dirija com conforto, segurança e estilo.">
+    <title>DECLOCK — Locadora de Veículos Premium</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -701,8 +701,8 @@
                         <line x1="659" y1="259" x2="685" y2="285"/><line x1="711" y1="311" x2="685" y2="285"/>
                         <line x1="711" y1="259" x2="685" y2="285"/><line x1="659" y1="311" x2="685" y2="285"/>
                     </g>
-                    <!-- DeCars decal -->
-                    <text x="450" y="215" text-anchor="middle" font-family="'Syne',sans-serif" font-size="13" font-weight="800" fill="rgba(230,57,70,.6)" letter-spacing="4">DECARS</text>
+                    <!-- DECLOCK decal -->
+                    <text x="450" y="215" text-anchor="middle" font-family="'Syne',sans-serif" font-size="13" font-weight="800" fill="rgba(230,57,70,.6)" letter-spacing="4">DECLOCK</text>
                     <!-- Ground shadow -->
                     <ellipse cx="465" cy="342" rx="320" ry="18" fill="rgba(0,0,0,.5)"/>
                     <!-- Red accent stripe -->
@@ -992,7 +992,7 @@
             </div>
 
             <div class="reveal" style="transition-delay:.15s">
-                <div class="section-eyebrow">Por que a DeCars?</div>
+                <div class="section-eyebrow">Por que a DECLOCK?</div>
                 <h2 class="section-title">Experiência além do volante</h2>
                 <p class="section-sub">
                     Combinamos tecnologia, frota premium e atendimento humanizado para que cada jornada seja memorável.
@@ -1039,7 +1039,7 @@
         <div class="testimonials-header reveal">
             <div class="section-eyebrow">Depoimentos</div>
             <h2 class="section-title">O que nossos clientes dizem</h2>
-            <p class="section-sub">Mais de 150.000 clientes satisfeitos. Veja por que escolhem a DeCars em cada viagem.</p>
+            <p class="section-sub">Mais de 150.000 clientes satisfeitos. Veja por que escolhem a DECLOCK em cada viagem.</p>
         </div>
 
         <div class="testimonials-grid">
@@ -1057,7 +1057,7 @@
 
             <div class="testi-card reveal" style="transition-delay:.1s">
                 <div class="testi-stars">★★★★★</div>
-                <p class="testi-text">Aluguel de viagem a trabalho toda semana e a DeCars se tornou minha primeira opção. O app é intuitivo, a frota está sempre atualizada e nunca tive problemas com cobrança.</p>
+                <p class="testi-text">Aluguel de viagem a trabalho toda semana e a DECLOCK se tornou minha primeira opção. O app é intuitivo, a frota está sempre atualizada e nunca tive problemas com cobrança.</p>
                 <div class="testi-author">
                     <div class="testi-avatar" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6)">AM</div>
                     <div>
@@ -1087,7 +1087,7 @@
     <div class="cta-inner reveal">
         <div class="section-eyebrow">Pronto para partir?</div>
         <h2 class="section-title">Reserve agora e ganhe<br><span style="color:var(--red)">10% na primeira locação</span></h2>
-        <p class="section-sub">Use o código <strong style="color:var(--white)">DECARS10</strong> ao finalizar a reserva. Válido para qualquer veículo da frota na primeira locação.</p>
+        <p class="section-sub">Use o código <strong style="color:var(--white)">DECLOCK10</strong> ao finalizar a reserva. Válido para qualquer veículo da frota na primeira locação.</p>
         <div class="cta-btns">
             <a href="{{ Route::has('login') ? route('login') : '#' }}" class="btn-hero-primary">
                 <i class="fas fa-calendar-check"></i> Fazer minha reserva
@@ -1120,7 +1120,7 @@
             <div class="footer-col">
                 <h4>Empresa</h4>
                 <ul>
-                    <li><a href="#">Sobre a DeCars</a></li>
+                    <li><a href="#">Sobre a DECLOCK</a></li>
                     <li><a href="#">Nossa frota</a></li>
                     <li><a href="#">Estações</a></li>
                     <li><a href="#">Trabalhe conosco</a></li>
@@ -1143,7 +1143,7 @@
                 <h4>Contato</h4>
                 <ul>
                     <li><a href="tel:08001234567"><i class="fas fa-phone mr-1"></i> 0800 123 4567</a></li>
-                    <li><a href="mailto:contato@decars.com.br"><i class="fas fa-envelope mr-1"></i> contato@decars.com.br</a></li>
+                    <li><a href="mailto:contato@DECLOCK.com.br"><i class="fas fa-envelope mr-1"></i> contato@DECLOCK.com.br</a></li>
                     <li><a href="#"><i class="fas fa-comment mr-1"></i> Chat ao vivo 24h</a></li>
                     <li><a href="#"><i class="fab fa-whatsapp mr-1"></i> WhatsApp</a></li>
                 </ul>
@@ -1151,7 +1151,7 @@
         </div>
 
         <div class="footer-bottom">
-            <p>© {{ date('Y') }} DeCars Locadora de Veículos. Todos os direitos reservados.</p>
+            <p>© {{ date('Y') }} DECLOCK Locadora de Veículos. Todos os direitos reservados.</p>
             <div class="footer-legal">
                 <a href="#">Privacidade</a>
                 <a href="#">Termos de Uso</a>

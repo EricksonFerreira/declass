@@ -228,7 +228,7 @@
                             </div>
                             <div class="card-body py-2" style="font-size:.82rem;">
                                 <p class="mb-2 text-muted">Dúvidas sobre planos ou problemas técnicos?</p>
-                                <a href="mailto:suporte@decars.com.br" class="btn btn-outline-secondary btn-sm btn-block mb-2">
+                                <a href="mailto:suporte@DECLOCK.com.br" class="btn btn-outline-secondary btn-sm btn-block mb-2">
                                     <i class="fas fa-envelope mr-1"></i> E-mail
                                 </a>
                                 <a href="https://wa.me/558192554172" target="_blank" rel="noopener"
@@ -378,7 +378,7 @@
                                                 Fale com nossa equipe e escolha a melhor forma de pagamento para você.
                                             </p>
                                             <div class="d-flex" style="gap:.75rem;flex-wrap:wrap;">
-                                                <a href="mailto:suporte@decars.com.br?subject={{ urlencode('Pagamento do plano - Ref: ' . ($proximoPagamento->referencia_interna ?? '')) }}"
+                                                <a href="mailto:suporte@DECLOCK.com.br?subject={{ urlencode('Pagamento do plano - Ref: ' . ($proximoPagamento->referencia_interna ?? '')) }}"
                                                    class="btn btn-outline-secondary btn-sm">
                                                     <i class="fas fa-envelope mr-1"></i> E-mail
                                                 </a>

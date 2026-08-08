@@ -83,7 +83,7 @@
                 @if(!empty($loginEmpresa?->logo_url))
                     <img src="{{ $loginEmpresa->logo_url }}" alt="Logo {{ $loginTitle }}">
                 @else
-                    <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="Ícone DeCars">
+                    <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="Ícone DECLOCK">
                 @endif
             </div>
         </div>

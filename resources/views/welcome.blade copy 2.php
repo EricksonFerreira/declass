@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="DeCars — Sistema completo para gestão de locadoras de veículos. Reservas, frota, financeiro, check-in digital, multas e muito mais.">
-    <title>DeCars — Sistema para Locadoras de Veículos</title>
+    <meta name="description" content="DECLOCK — Sistema completo para gestão de locadoras de veículos. Reservas, frota, financeiro, check-in digital, multas e muito mais.">
+    <title>DECLOCK — Sistema para Locadoras de Veículos</title>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicons/favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -679,7 +679,7 @@
             <div class="nav-logo-icon">
                 <img src="{{'assets/imgs/logo-sem-texto.png'}}" alt="">
             </div>
-            DECARS
+            DECLOCK
         </a>
         <ul class="nav-links" id="navLinks">
             <li><a href="#funcionalidades">Funcionalidades</a></li>
@@ -740,7 +740,7 @@
                         <strong>Print do sistema aqui</strong>
                         <span>Substitua pela imagem do dashboard ou tela principal</span>
                     </div> --}}
-                    {{-- Exemplo: <img src="{{ asset('img/hero-dashboard.png') }}" alt="DeCars Dashboard"> --}}
+                    {{-- Exemplo: <img src="{{ asset('img/hero-dashboard.png') }}" alt="DECLOCK Dashboard"> --}}
                 </div>
                 <div class="hero-badge-float pos-br">
                     <i class="fas fa-chart-line" style="color:#22c55e"></i> +37% de produtividade
@@ -782,7 +782,7 @@
         <div class="section-header" style="text-align:center;margin-bottom:0">
             <div class="section-tag reveal" style="justify-content:center">O Problema</div>
             <h2 class="section-title reveal delay-1" style="margin:0 auto .9rem">Sua locadora ainda usa<br>planilha ou sistema ultrapassado?</h2>
-            <p class="section-sub reveal delay-2" style="margin:0 auto">Locadoras perdem dinheiro todo dia por falta de controle integrado. O DeCars resolve na raiz.</p>
+            <p class="section-sub reveal delay-2" style="margin:0 auto">Locadoras perdem dinheiro todo dia por falta de controle integrado. O DECLOCK resolve na raiz.</p>
         </div>
         <div class="problems-grid">
             <div class="problem-card reveal delay-1">
@@ -992,7 +992,7 @@
     <div class="container">
         <div class="section-header" style="text-align:center;margin-bottom:3rem">
             <div class="section-tag reveal" style="justify-content:center">Números</div>
-            <h2 class="section-title reveal delay-1" style="margin:0 auto">DeCars em números</h2>
+            <h2 class="section-title reveal delay-1" style="margin:0 auto">DECLOCK em números</h2>
         </div>
         <div class="stats-grid">
             <div class="stat-item reveal delay-1">
@@ -1026,7 +1026,7 @@
             <div class="reveal-left">
                 <div class="section-tag">Depoimentos</div>
                 <h2 class="section-title">O que dizem nossos clientes</h2>
-                <p class="section-sub">Quem usa o DeCars não volta a controlar locação em planilha.</p>
+                <p class="section-sub">Quem usa o DECLOCK não volta a controlar locação em planilha.</p>
                 <div class="testi-nav">
                     <button class="testi-btn" id="testiPrev"><i class="fas fa-arrow-left"></i></button>
                     <button class="testi-btn" id="testiNext"><i class="fas fa-arrow-right"></i></button>
@@ -1038,7 +1038,7 @@
                         <div class="swiper-slide">
                             <div class="testi-card">
                                 <div class="testi-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                                <p class="testi-text">"Antes do DeCars a gente perdia em média 3 reservas por semana por conflito de agenda. Hoje isso não acontece mais. O sistema é simples para a equipe e completo para o gestor."</p>
+                                <p class="testi-text">"Antes do DECLOCK a gente perdia em média 3 reservas por semana por conflito de agenda. Hoje isso não acontece mais. O sistema é simples para a equipe e completo para o gestor."</p>
                                 <div class="testi-author">
                                     <div class="testi-avatar">MA</div>
                                     <div><div class="testi-name">Marcos Alves</div><div class="testi-role">Diretor — Auto Premium Recife</div></div>
@@ -1184,7 +1184,7 @@
                     <div class="footer-logo-icon">
                        <img src="{{'assets/imgs/logo-sem-texto.png'}}" alt="">
                     </div>
-                   DECARS
+                   DECLOCK
                 </div>
                 <p class="footer-tagline">Software completo para gestão de locadoras de veículos. Simples para a equipe, poderoso para o gestor.</p>
             </div>
@@ -1217,7 +1217,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© {{ date('Y') }} DeCars. Todos os direitos reservados.</p>
+            <p>© {{ date('Y') }} DECLOCK. Todos os direitos reservados.</p>
             <p>
                 Criado por
                 <a href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer">

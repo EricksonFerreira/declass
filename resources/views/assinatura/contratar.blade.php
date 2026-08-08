@@ -232,7 +232,7 @@
                                 Prefere que um atendente te ajude? Escolha o canal abaixo e informe o plano que deseja contratar.
                             </p>
                             <div class="d-flex" style="gap:.75rem;flex-wrap:wrap;">
-                                <a href="mailto:suporte@decars.com.br?subject={{ urlencode('Quero contratar o plano ' . $plano->nome) }}"
+                                <a href="mailto:suporte@DECLOCK.com.br?subject={{ urlencode('Quero contratar o plano ' . $plano->nome) }}"
                                    class="btn btn-outline-secondary btn-sm">
                                     <i class="fas fa-envelope mr-1"></i> Enviar e-mail
                                 </a>

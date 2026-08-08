@@ -1526,6 +1526,11 @@ function fetchChartData() {
             lastDashboardData = data;
             simboloMoeda = data.simboloMoeda || 'R$';
             renderKpis(data, inicio, fim);
+            
+            const detailsEl = document.getElementById('homeDetails');
+            if (detailsEl) {
+                detailsEl.classList.remove('d-none');
+            }
         })
         .catch(() => alert('Erro ao carregar dados. Tente novamente.'))
         .finally(() => {

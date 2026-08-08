@@ -8,7 +8,7 @@
 
 @section('content')
 <div class="onb-card">
-    <h1 class="onb-card-title">Bem-vindo ao DeCars! 👋</h1>
+    <h1 class="onb-card-title">Bem-vindo ao DECLOCK! 👋</h1>
     <p class="onb-card-sub">
         Vamos configurar sua conta em poucos passos. Comece informando os dados básicos da sua locadora.
     </p>
