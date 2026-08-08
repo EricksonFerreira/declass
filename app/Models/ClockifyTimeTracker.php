@@ -58,6 +58,9 @@ class ClockifyTimeTracker extends Model
         }
 
         $end = $this->fim ?: now();
+        if ($this->inicio->gt($end)) {
+            return 0;
+        }
         return $this->inicio->diffInSeconds($end);
     }
 

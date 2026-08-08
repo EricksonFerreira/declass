@@ -16,10 +16,18 @@ class UpdateActiveTrackerAction
             ->first();
 
         if ($tracker) {
-            $tracker->update([
-                'descricao' => $data['descricao'] ?? null,
-                'clockify_projeto_id' => $data['clockify_projeto_id'] ?? null,
-            ]);
+            $updateData = [];
+            
+            if (array_key_exists('descricao', $data)) {
+                $updateData['descricao'] = $data['descricao'];
+            }
+            if (array_key_exists('clockify_projeto_id', $data)) {
+                $updateData['clockify_projeto_id'] = !empty($data['clockify_projeto_id']) ? $data['clockify_projeto_id'] : null;
+            }
+            
+            if (!empty($updateData)) {
+                $tracker->update($updateData);
+            }
 
             if ($tagIds !== null) {
                 $tracker->tags()->sync($tagIds);

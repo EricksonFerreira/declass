@@ -1,8 +1,14 @@
 @extends('adminlte::page')
 
+@section('title', 'Exportar Relatório')
+
+@section('content_header')
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    <x-page-title :title="'Exportar Relatório'" />
+@stop
+
 @section('content')
 <div class="container py-4">
-    <h1 class="mb-4">Exportar Relatório</h1>
     <form method="POST" action="{{ route('relatorios.exportar') }}">
         @csrf
         <div class="row g-3">

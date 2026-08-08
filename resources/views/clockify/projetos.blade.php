@@ -11,7 +11,7 @@
     <div class="row">
         <!-- Listagem de Projetos -->
         <div class="col-md-8">
-            <div class="card card-outline card-primary">
+            <div class="card card-outline card-primary shadow-sm">
                 <div class="card-header">
                     <h3 class="card-title text-bold text-sm">Registros <span class="badge badge-primary">{{ $projetos->total() }}</span></h3>
                     <div class="card-tools">
@@ -24,51 +24,81 @@
                     </div>
                 </div>
                 <div class="card-body table-responsive p-0">
-                    <table class="table table-hover table-striped table-bordered table-sm text-nowrap">
+                    <table class="table table-hover table-striped table-bordered table-sm">
                         <thead>
                             <tr>
                                 <th style="width: 50px;" class="text-center">Cor</th>
                                 <th>Nome</th>
                                 <th>Cliente</th>
-                                <th>Descrição</th>
-                                <th>Visibilidade</th>
-                                <th>Status</th>
-                                <th style="width: 150px;">Ações</th>
+                                <th>Orçamento</th>
+                                <th>Planejamento de Entrega</th>
+                                <th class="text-center" style="width: 80px;">Status</th>
+                                <th style="width: 150px;" class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($projetos as $projeto)
                                 <tr>
-                                    <td class="text-center">
+                                    <td class="text-center align-middle">
                                         <span class="badge text-white" style="background-color: {{ $projeto->cor ?? '#6c757d' }}; width: 24px; height: 24px; display: inline-block; border-radius: 50%; border: 1px solid #dee2e6;">&nbsp;</span>
                                     </td>
-                                    <td class="font-weight-bold">{{ $projeto->nome }}</td>
-                                    <td>{{ $projeto->cliente->nome ?? '-' }}</td>
-                                    <td>
-                                        <span class="text-muted" title="{{ $projeto->descricao }}">
-                                            {{ Str::limit($projeto->descricao ?? '-', 30) }}
-                                        </span>
+                                    <td class="align-middle">
+                                        <div class="font-weight-bold">
+                                            <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="text-dark font-weight-bold" style="text-decoration: none;">{{ $projeto->nome }}</a>
+                                        </div>
+                                        @if($projeto->descricao)
+                                            <small class="text-muted d-block text-truncate" style="max-width: 250px;" title="{{ $projeto->descricao }}">
+                                                {{ $projeto->descricao }}
+                                            </small>
+                                        @endif
                                     </td>
-                                    <td>
-                                        <span class="badge badge-{{ $projeto->publico ? 'info' : 'secondary' }}">
-                                            {{ $projeto->publico ? 'Público' : 'Privado' }}
-                                        </span>
+                                    <td class="align-middle">{{ $projeto->cliente->nome ?? '-' }}</td>
+                                    <td class="align-middle">
+                                        @if($projeto->horas_orcadas > 0)
+                                            <div><strong>{{ number_format($projeto->horas_orcadas, 1, ',', '.') }} h</strong></div>
+                                            @if($projeto->valor_hora > 0)
+                                                <div class="text-xs text-muted">Tarifa: R$ {{ number_format($projeto->valor_hora, 2, ',', '.') }}/h</div>
+                                                <div class="text-xs font-weight-bold text-secondary">Custo: R$ {{ number_format($projeto->custo_orcado, 2, ',', '.') }}</div>
+                                            @endif
+                                        @else
+                                            <span class="text-muted text-xs">Não orçado</span>
+                                        @endif
                                     </td>
-                                    <td>
+                                    <td class="align-middle">
+                                        @if($projeto->data_entrega_previsao)
+                                            <div class="font-weight-bold text-sm text-primary">
+                                                <i class="far fa-calendar-check mr-1"></i> {{ $projeto->data_entrega_previsao->format('d/m/Y') }}
+                                            </div>
+                                            <div class="text-xs">
+                                                <span>Restam: <strong>{{ $projeto->dias_uteis_planejamento }} dias úteis</strong></span><br>
+                                                <span>Horas Planejadas: <strong>{{ number_format($projeto->horas_planejadas, 1, ',', '.') }} h</strong> ({{ number_format($projeto->horas_diarias_planejamento ?? 8, 1) }}h/dia)</span>
+                                                @if($projeto->valor_hora > 0)
+                                                    <br><span class="text-secondary font-weight-bold">Custo Previsto: R$ {{ number_format($projeto->custo_planejado, 2, ',', '.') }}</span>
+                                                @endif
+                                            </div>
+                                            <!-- Estudo de Metragem / Sizing check -->
+                                            <div class="mt-1">
+                                                @if($projeto->horas_orcadas > 0)
+                                                    @if($projeto->horas_planejadas <= $projeto->horas_orcadas)
+                                                        <span class="badge badge-success text-xs"><i class="fas fa-check-circle"></i> Metragem Ok</span>
+                                                    @else
+                                                        <span class="badge badge-danger text-xs" title="Horas planejadas excedem o orçamento!"><i class="fas fa-exclamation-triangle"></i> Excede Orçamento</span>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-muted text-xs">Sem planejamento</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center align-middle">
                                         <span class="badge badge-{{ $projeto->ativo ? 'success' : 'danger' }}">
                                             {{ $projeto->ativo ? 'Ativo' : 'Inativo' }}
                                         </span>
                                     </td>
-                                    <td>
-                                        <button type="button" class="btn btn-xs btn-warning" 
-                                            onclick="editProjeto({{ json_encode($projeto) }})">
-                                            <i class="fa fa-edit"></i> Editar
-                                        </button>
-                                        <form action="{{ route('clockify.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este projeto?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
-                                        </form>
+                                    <td class="align-middle text-center" style="white-space: nowrap;">
+                                        <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary font-weight-bold px-3 py-1 shadow-sm">
+                                            <i class="fas fa-eye mr-1"></i> Detalhes
+                                        </a>
                                     </td>
                                 </tr>
                             @empty
@@ -87,7 +117,7 @@
 
         <!-- Formulário de Cadastro / Edição -->
         <div class="col-md-4">
-            <div class="card card-outline card-success" id="form-card">
+            <div class="card card-outline card-success shadow-sm" id="form-card">
                 <div class="card-header">
                     <h3 class="card-title text-bold text-sm" id="form-title">Cadastrar Novo Projeto</h3>
                 </div>
@@ -110,8 +140,21 @@
                         </div>
                         <div class="form-group">
                             <label for="descricao">Descrição</label>
-                            <textarea name="descricao" id="descricao" rows="3" class="form-control form-control-sm" placeholder="Resumo do projeto..."></textarea>
+                            <textarea name="descricao" id="descricao" rows="2" class="form-control form-control-sm" placeholder="Resumo do projeto..."></textarea>
                         </div>
+
+                        <!-- Budget Fields -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="valor_faturado">Valor Faturado (R$)</label>
+                                    <input type="number" step="0.01" name="valor_faturado" id="valor_faturado" class="form-control form-control-sm" placeholder="Ex: 15000.00" />
+                                </div>
+                            </div>
+                        </div>
+
+
+
                         <div class="form-group">
                             <label for="cor">Cor do Projeto</label>
                             <div class="input-group input-group-sm">
@@ -153,7 +196,8 @@
                     width: '100%'
                 });
             }
-        });
+
+
 
         function editProjeto(projeto) {
             $('#form-title').text('Editar Projeto: ' + projeto.nome);
@@ -169,6 +213,10 @@
             $('#publico').val(projeto.publico ? "1" : "0");
             $('#ativo').val(projeto.ativo ? "1" : "0");
             
+            // Budget & Planning fields
+            $('#horas_orcadas').val(projeto.horas_orcadas);
+            $('#valor_hora').val(projeto.valor_hora);
+            
             $('#status-group').show();
             $('#cancel-btn').show();
             $('#form-card').removeClass('card-success').addClass('card-warning');
@@ -183,7 +231,7 @@
             
             // Reset Select2
             $('#clockify_cliente_id').val('').trigger('change');
-            
+
             $('#status-group').hide();
             $('#cancel-btn').hide();
             $('#form-card').removeClass('card-warning').addClass('card-success');

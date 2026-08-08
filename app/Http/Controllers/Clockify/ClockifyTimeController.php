@@ -25,6 +25,7 @@ class ClockifyTimeController extends Controller
             'usuarios' => $usuarios,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Painel', 'url' => route('home')],
                 ['name' => 'Equipes / Times', 'active' => true],
             ],
         ]);

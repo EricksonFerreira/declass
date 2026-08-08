@@ -10,8 +10,42 @@
 @section('css')
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Incluir Select2 CSS e Tema Bootstrap 4 -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f6f9; }
+    
+    /* Clockify-like Tracker Bar */
+    .tracker-bar-card {
+        border-radius: 12px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+        border: none;
+        border-left: 5px solid #28a745;
+        transition: all 0.3s ease;
+    }
+    .tracker-bar-card.active-running {
+        border-left-color: #dc3545;
+        animation: pulse-border 2s infinite;
+    }
+    @keyframes pulse-border {
+        0% { border-left-color: #dc3545; }
+        50% { border-left-color: #ffc107; }
+        100% { border-left-color: #dc3545; }
+    }
+    
+    .tracker-input-desc {
+        font-size: 16px;
+        font-weight: 500;
+        color: #1e293b;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding-left: 0;
+    }
+    .tracker-input-desc::placeholder {
+        color: #94a3b8;
+    }
     
     /* Clean inputs inside past history table */
     .inline-tracker-input {
@@ -22,40 +56,106 @@
         font-weight: 600;
         color: #1e293b;
         border-radius: 6px;
+        font-size: 14px;
     }
-    .inline-tracker-input:focus {
+    .inline-tracker-input:focus, .inline-tracker-input:hover {
         background: #fff !important;
         border-color: #cbd5e1 !important;
         box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
     }
 
     .inline-tracker-select {
-        border-color: transparent !important;
+        border: 1px solid transparent !important;
         background-color: transparent !important;
         font-weight: 700;
         cursor: pointer;
         border-radius: 6px;
+        font-size: 13px;
+        color: #475569;
+        padding: 4px 8px;
     }
     .inline-tracker-select:focus, .inline-tracker-select:hover {
         background-color: #fff !important;
         border-color: #cbd5e1 !important;
     }
 
-    /* Small badge saving status */
-    .saving-indicator {
+    /* Minimalist Select2 for inline table tags */
+    .select2-container--bootstrap4 .select2-selection--multiple {
+        background-color: transparent !important;
+        border: 1px solid transparent !important;
+        min-height: 32px;
+    }
+    .select2-container--bootstrap4.select2-container--focus .select2-selection--multiple,
+    .select2-container--bootstrap4:hover .select2-selection--multiple {
+        background-color: #fff !important;
+        border-color: #cbd5e1 !important;
+    }
+    .select2-container--bootstrap4 .select2-selection__choice {
+        background-color: #e2e8f0 !important;
+        border: none !important;
+        color: #334155 !important;
+        font-weight: 600;
         font-size: 11px;
+        border-radius: 4px;
+        padding: 2px 6px !important;
+    }
+    
+    /* Saving indicators */
+    .saving-indicator {
+        font-size: 12px;
         font-weight: 700;
-        color: #0ea5e9;
+        color: #0284c7;
         display: none;
         align-items: center;
-        gap: 4px;
-        position: absolute;
-        right: 15px;
-        top: 50%;
-        transform: translateY(-50%);
+        gap: 6px;
+        background: #e0f2fe;
+        padding: 6px 12px;
+        border-radius: 20px;
     }
 
-    /* Responsividade da Tabela de Tracker */
+    /* History table design */
+    .history-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+    }
+    .history-table th {
+        background-color: #f8fafc;
+        color: #64748b;
+        text-transform: uppercase;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid #edf2f7;
+    }
+    .history-table td {
+        vertical-align: middle !important;
+        padding: 10px 12px !important;
+    }
+
+    /* Duration tag styling */
+    .duration-badge {
+        font-family: monospace;
+        font-size: 14px;
+        background-color: #f1f5f9;
+        color: #334155;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+        display: inline-block;
+    }
+    .duration-badge.running {
+        background-color: #ecfdf5;
+        color: #059669;
+        animation: pulse-bg 1.5s infinite;
+    }
+    @keyframes pulse-bg {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+
+    /* Responsividade da Tabela */
     @media (max-width: 991.98px) {
         .responsive-tracker-table, 
         .responsive-tracker-table thead, 
@@ -108,19 +208,13 @@
             color: #94a3b8;
             content: attr(data-label);
         }
-
-        /* Estilo para inputs e select mobile */
-        .responsive-tracker-table td .form-control {
-            display: inline-block;
-            width: 100%;
-        }
     }
 </style>
 @stop
 
 @section('content')
     <!-- Bloco de Timer (Ativo ou Novo) -->
-    <div class="card card-outline card-success shadow-sm mb-4">
+    <div class="card shadow-sm mb-4" style="border-radius: 12px;">
         <div class="card-body p-3">
             @if ($activeTracker)
                 <!-- Rastreador Ativo em Execução -->
@@ -194,30 +288,30 @@
     </div>
 
     <!-- Toggle para Registro Manual -->
-    <div class="card collapsed-card mb-4 shadow-sm">
-        <div class="card-header bg-light py-2">
-            <h3 class="card-title text-sm text-bold text-muted" data-card-widget="collapse" style="cursor: pointer;">
-                <i class="fas fa-plus mr-1"></i> Adicionar Registro Manualmente
+    <div class="card collapsed-card mb-4 shadow-sm" style="border-radius: 12px; border: none;">
+        <div class="card-header bg-white py-2" data-card-widget="collapse" style="cursor: pointer; border-radius: 12px;">
+            <h3 class="card-title text-sm text-bold text-muted mb-0">
+                <i class="fas fa-keyboard mr-2 text-primary"></i> Adicionar Registro Manualmente
             </h3>
             <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <button type="button" class="btn btn-tool text-primary">
                     <i class="fas fa-plus"></i>
                 </button>
             </div>
         </div>
-        <div class="card-body">
+        <div class="card-body bg-white" style="border-top: 1px solid #f1f5f9;">
             <form action="{{ route('clockify.tracker.manual') }}" method="POST">
                 @csrf
                 <div class="row">
-                    <div class="col-md-4 mb-2 mb-md-0">
+                    <div class="col-md-4 mb-3 mb-md-0">
                         <div class="form-group mb-0">
-                            <label>Descrição</label>
+                            <label class="text-xs text-muted text-bold">Descrição</label>
                             <input type="text" name="descricao" class="form-control form-control-sm" placeholder="Ex: Ajustes de CSS">
                         </div>
                     </div>
-                    <div class="col-md-3 mb-2 mb-md-0">
+                    <div class="col-md-3 mb-3 mb-md-0">
                         <div class="form-group mb-0">
-                            <label>Projeto</label>
+                            <label class="text-xs text-muted text-bold">Projeto</label>
                             <select name="clockify_projeto_id" class="form-control form-control-sm select2">
                                 <option value="">Sem Projeto</option>
                                 @foreach ($projetos as $proj)
@@ -226,22 +320,22 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-2 mb-2 mb-md-0">
+                    <div class="col-md-2 mb-3 mb-md-0">
                         <div class="form-group mb-0">
-                            <label>Início</label>
+                            <label class="text-xs text-muted text-bold">Início</label>
                             <input type="datetime-local" name="inicio" class="form-control form-control-sm" required>
                         </div>
                     </div>
-                    <div class="col-md-2 mb-2 mb-md-0">
+                    <div class="col-md-2 mb-3 mb-md-0">
                         <div class="form-group mb-0">
-                            <label>Fim</label>
+                            <label class="text-xs text-muted text-bold">Fim</label>
                             <input type="datetime-local" name="fim" class="form-control form-control-sm" required>
                         </div>
                     </div>
                     <div class="col-md-1">
                         <div class="form-group mb-0">
                             <label class="d-none d-md-block">&nbsp;</label>
-                            <button type="submit" class="btn btn-sm btn-success btn-block" style="margin-top: 2px;">Salvar</button>
+                            <button type="submit" class="btn btn-sm btn-primary btn-block font-weight-bold" style="margin-top: 2px;">Salvar</button>
                         </div>
                     </div>
                 </div>
@@ -250,81 +344,136 @@
     </div>
 
     <!-- Histórico de Registros de Tempo -->
-    <div class="card card-outline card-primary shadow-sm">
-        <div class="card-header position-relative">
-            <h3 class="card-title text-sm text-bold text-muted">Histórico de Tempo</h3>
+    <div class="card history-card">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+            <h3 class="card-title text-bold text-dark mb-0"><i class="fas fa-history text-secondary mr-2"></i> Histórico de Tempo</h3>
+            <!-- Filter Form -->
+            <form method="GET" action="{{ route('clockify.tracker.index') }}" class="row g-3 align-items-end" style="flex-wrap: nowrap; margin: 0;">
+                <div class="col-md-3">
+                    <label class="form-label text-xs text-muted">Projeto</label>
+                    <select name="project_id" class="form-control form-control-sm select2" style="width:100%">
+                        <option value="">Todos</option>
+                        @foreach ($projetos as $proj)
+                            <option value="{{ $proj->id }}" @selected(request('project_id') == $proj->id)>{{ $proj->nome }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-xs text-muted">Tags</label>
+                    <select name="tags[]" class="form-control form-control-sm select2" multiple style="width:100%" data-placeholder="Tags...">
+                        @foreach ($tags as $tag)
+                            <option value="{{ $tag->id }}" @selected(in_array($tag->id, request('tags', [])))>{{ $tag->nome }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-xs text-muted">De</label>
+                    <input type="date" name="start_date" class="form-control form-control-sm" value="{{ request('start_date') }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-xs text-muted">Até</label>
+                    <input type="date" name="end_date" class="form-control form-control-sm" value="{{ request('end_date') }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-xs text-muted">Palavra‑chave</label>
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Buscar..." value="{{ request('search') }}">
+                </div>
+                <div class="col-12 d-flex justify-content-end mt-2">
+                    <button type="submit" class="btn btn-primary btn-sm me-2"><i class="fas fa-search me-1"></i>Buscar</button>
+                    <a href="{{ route('clockify.tracker.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync me-1"></i>Reset</a>
+                </div>
+            </form>
             <div class="saving-indicator" id="global-saving-indicator">
-                <i class="fas fa-sync fa-spin"></i> Salvando alterações...
+                <i class="fas fa-sync fa-spin"></i> Salvando...
             </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover table-bordered table-sm mb-0 responsive-tracker-table">
+                <table class="table table-hover table-bordered table-sm mb-0 responsive-tracker-table history-table">
                     <thead>
                         <tr>
-                            <th>Descrição</th>
+                            <th class="pl-3">Descrição</th>
                             <th>Projeto</th>
                             <th>Tags</th>
-                            <th class="text-center" style="width: 200px;">Período</th>
-                            <th class="text-center" style="width: 100px;">Duração</th>
-                            <th style="width: 100px;">Ações</th>
+                            <th class="text-center" style="width: 230px;">Período</th>
+                            <th class="text-center" style="width: 120px;">Duração</th>
+                            <th style="width: 100px;" class="text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($pastTrackers as $tracker)
                             <tr data-tracker-id="{{ $tracker->id }}">
-                                <td class="align-middle p-1" data-label="Descrição">
+                                <td class="align-middle p-1 pl-3" data-label="Descrição">
                                     <input type="text" class="form-control form-control-sm inline-tracker-input tracker-inline-desc" 
                                            data-id="{{ $tracker->id }}" value="{{ $tracker->descricao }}" placeholder="Sem descrição">
                                 </td>
                                 <td class="align-middle p-1" data-label="Projeto">
-                                    <select class="form-control form-control-sm inline-tracker-select tracker-inline-project" data-id="{{ $tracker->id }}" style="min-width: 140px;">
+                                    <select class="form-control form-control-sm inline-tracker-select tracker-inline-project" data-id="{{ $tracker->id }}" style="min-width: 150px;">
                                         <option value="">Sem Projeto</option>
                                         @foreach ($projetos as $proj)
                                             <option value="{{ $proj->id }}" @selected($tracker->clockify_projeto_id == $proj->id)>{{ $proj->nome }}</option>
                                         @endforeach
                                     </select>
                                 </td>
-                                <td class="align-middle p-1" data-label="Tags" style="min-width: 150px;">
-                                    <select class="form-control form-control-sm select2 tracker-inline-tags" multiple data-id="{{ $tracker->id }}" data-placeholder="Tags...">
+                                <td class="align-middle p-1" data-label="Tags" style="min-width: 180px;">
+                                    <select class="form-control form-control-sm select2 tracker-inline-tags" multiple data-id="{{ $tracker->id }}" data-placeholder="Adicionar tags...">
                                         @foreach ($tags as $tag)
                                             <option value="{{ $tag->id }}" @selected($tracker->tags->contains($tag->id))>{{ $tag->nome }}</option>
                                         @endforeach
                                     </select>
                                 </td>
                                 <td class="text-center align-middle text-sm text-muted" data-label="Período">
-                                    {{ $tracker->inicio->format('d/m/Y H:i') }} às {{ $tracker->fim ? $tracker->fim->format('H:i') : '-' }}
+                                    <i class="far fa-calendar-alt mr-1 text-xs"></i> {{ $tracker->inicio->format('d/m/Y H:i') }} às {{ $tracker->fim ? $tracker->fim->format('H:i') : '-' }}
                                 </td>
-                                <td class="text-center align-middle font-weight-bold text-secondary" data-label="Duração">
-                                    {{ $tracker->formatted_duration }}
+                                <td class="text-center align-middle" data-label="Duração">
+                                    <span class="duration-badge {{ !$tracker->fim ? 'running' : '' }}">
+                                        {{ $tracker->formatted_duration }}
+                                    </span>
                                 </td>
                                 <td class="align-middle text-center" data-label="Ações">
                                     <form action="{{ route('clockify.tracker.destroy', $tracker->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este registro de tempo?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-xs btn-default text-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                        <button type="submit" class="btn btn-xs btn-outline-danger border-0"><i class="fa fa-trash"></i> Excluir</button>
                                     </form>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">Nenhum registro de tempo encontrado. Comece a rastrear agora!</td>
+                                <td colspan="6" class="text-center text-muted py-5">
+                                    <i class="far fa-clock fa-2x mb-3 text-muted"></i><br>
+                                    Nenhum registro de tempo encontrado. Comece a rastrear agora!
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
-        <div class="card-footer clearfix">
+        <div class="card-footer clearfix bg-white border-top">
             {{ $pastTrackers->links() }}
         </div>
     </div>
 @stop
 
 @section('js')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
             const savingIndicator = document.getElementById('global-saving-indicator');
+
+            // Inicialização do Select2 com visual Bootstrap 4 e coerência visual
+            function initSelect2() {
+                if ($.fn.select2) {
+                    $('.select2').select2({
+                        theme: 'bootstrap4',
+                        width: '100%',
+                        dropdownAutoWidth: true
+                    });
+                }
+            }
+
+            initSelect2();
 
             // Autocomplete update function for past trackers
             function updatePastTrackerInline(trackerId, dataObj) {
@@ -346,7 +495,7 @@
                     complete: function() {
                         setTimeout(() => {
                             savingIndicator.style.display = 'none';
-                        }, 600);
+                        }, 500);
                     }
                 });
             }

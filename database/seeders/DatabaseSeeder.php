@@ -13,14 +13,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PermissoesSistemaSeeder::class,
-            FrotaCatalogSeeder::class,
             PermissoesNovasFuncionalidadesSeeder::class,
-            PlanoSeeder::class,
-            TiposDanosPorCategoriaELocalizacaoSeeder::class,
-            CondicoesGeraisSeeder::class,
-            OsCategoriaSeeder::class,
-            ChamadosSeeder::class,
-            FiscalSeeder::class,
+            ClockifyMockDataSeeder::class,
         ]);
     }
 }

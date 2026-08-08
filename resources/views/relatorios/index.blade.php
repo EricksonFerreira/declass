@@ -1,12 +1,14 @@
 @extends('adminlte::page')
 
+@section('title', 'Relatórios')
+
 @section('content_header')
-    <h1>Relatórios</h1>
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    <x-page-title :title="'Relatórios'" />
 @stop
 
 @section('content')
 <div class="container py-4">
-    <h1 class="mb-4">Relatórios</h1>
     <div class="row g-4">
         <div class="col-md-4">
             <div class="card h-100 shadow-sm">

@@ -60,6 +60,7 @@ class ClockifyDashboardController extends Controller
             'selectedEndDate' => $stats['endDate']->toDateString(),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Painel', 'url' => route('home')],
                 ['name' => 'Dashboard', 'active' => true],
             ],
             // Member stats for chart
@@ -87,6 +88,7 @@ class ClockifyDashboardController extends Controller
             'selectedEndDate' => $data['endDate']->toDateString(),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Painel', 'url' => route('home')],
                 ['name' => 'Produtividade', 'active' => true],
             ],
         ]));
@@ -121,6 +123,7 @@ class ClockifyDashboardController extends Controller
             'selectedEndDate' => $data['endDate']->toDateString(),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Painel', 'url' => route('home')],
                 ['name' => 'Equipe', 'active' => true],
             ],
         ]));
@@ -146,6 +149,7 @@ class ClockifyDashboardController extends Controller
             'selectedEndDate' => $data['endDate']->toDateString(),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Painel', 'url' => route('home')],
                 ['name' => 'Projetos', 'active' => true],
             ],
         ]));

@@ -18,8 +18,11 @@ class GetMemberStatsAction
      */
     public function handle(Carbon $startDate, Carbon $endDate, ?array $userIds = null): array
     {
+        $start = $startDate->copy()->startOfDay();
+        $end = $endDate->copy()->endOfDay();
+
         // Fetch trackers in range
-        $query = ClockifyTimeTracker::whereBetween('inicio', [$startDate->startOfDay(), $endDate->endOfDay()])
+        $query = ClockifyTimeTracker::whereBetween('inicio', [$start, $end])
             ->whereNotNull('fim');
 
         if (!empty($userIds)) {
@@ -30,7 +33,7 @@ class GetMemberStatsAction
 
         // Prepare date labels (inclusive)
         $dateLabels = [];
-        $period = \Carbon\CarbonPeriod::create($startDate, $endDate);
+        $period = \Carbon\CarbonPeriod::create($start, $end);
         foreach ($period as $date) {
             $dateLabels[] = $date->format('Y-m-d');
         }

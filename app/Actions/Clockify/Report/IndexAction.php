@@ -8,6 +8,11 @@ class IndexAction
 {
     public function handle()
     {
-        return View::make('relatorios.index');
+        $breadcrumb = [
+            ['name' => 'Home', 'url' => route('home')],
+            ['name' => 'Painel', 'url' => route('home')],
+            ['name' => 'Relatórios', 'active' => true],
+        ];
+        return View::make('relatorios.index', ['breadcrumb' => $breadcrumb]);
     }
 }

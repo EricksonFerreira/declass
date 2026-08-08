@@ -20,8 +20,13 @@ class ReportController extends Controller
     public function membros()
     {
         $users = User::paginate(15);
+        $breadcrumb = [
+            ['name' => 'Home', 'url' => route('home')],
+            ['name' => 'Painel', 'url' => route('home')],
+            ['name' => 'Membros', 'active' => true],
+        ];
 
-        return View::make('relatorios.membros', ['users' => $users, 'breadcrumb' => []]);
+        return View::make('relatorios.membros', ['users' => $users, 'breadcrumb' => $breadcrumb]);
     }
 
     // New method to store a new member (user)
@@ -47,7 +52,13 @@ class ReportController extends Controller
 
     public function horasTrabalhadas()
     {
-        return View::make('relatorios.horas-trabalhadas');
+        $breadcrumb = [
+            ['name' => 'Home', 'url' => route('home')],
+            ['name' => 'Painel', 'url' => route('home')],
+            ['name' => 'Relatórios', 'url' => route('relatorios.index')],
+            ['name' => 'Horas Trabalhadas', 'active' => true],
+        ];
+        return View::make('relatorios.horas-trabalhadas', ['breadcrumb' => $breadcrumb]);
     }
 
     public function export(Request $request, ExportReportAction $action)
@@ -61,7 +72,13 @@ class ReportController extends Controller
             );
         }
         $users = User::all();
+        $breadcrumb = [
+            ['name' => 'Home', 'url' => route('home')],
+            ['name' => 'Painel', 'url' => route('home')],
+            ['name' => 'Relatórios', 'url' => route('relatorios.index')],
+            ['name' => 'Exportar', 'active' => true],
+        ];
 
-        return View::make('relatorios.export', ['users' => $users]);
+        return View::make('relatorios.export', ['users' => $users, 'breadcrumb' => $breadcrumb]);
     }
 }

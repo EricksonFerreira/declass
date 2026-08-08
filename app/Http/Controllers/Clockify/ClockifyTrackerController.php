@@ -30,11 +30,45 @@ class ClockifyTrackerController extends Controller
             ->whereNull('fim')
             ->first();
 
-        $pastTrackers = ClockifyTimeTracker::with(['projeto', 'tags'])
+        // Build base query for past trackers
+        $pastTrackersQuery = ClockifyTimeTracker::with(['projeto', 'tags'])
             ->where('user_id', $userId)
-            ->whereNotNull('fim')
-            ->orderBy('inicio', 'desc')
-            ->paginate(20);
+            ->whereNotNull('fim');
+
+        // Filter by project
+        if ($request->filled('project_id')) {
+            $pastTrackersQuery->where('clockify_projeto_id', $request->input('project_id'));
+        }
+
+        // Filter by tags (trackers that have any of the selected tags)
+        if ($request->filled('tags')) {
+            $pastTrackersQuery->whereHas('tags', function ($q) use ($request) {
+                $q->whereIn('clockify_tags.id', $request->input('tags'));
+            });
+        }
+
+        // Filter by start date (records starting on or after)
+        if ($request->filled('start_date')) {
+            $pastTrackersQuery->whereDate('inicio', '>=', $request->input('start_date'));
+        }
+
+        // Filter by end date (records ending on or before)
+        if ($request->filled('end_date')) {
+            $pastTrackersQuery->whereDate('fim', '<=', $request->input('end_date'));
+        }
+
+        // Keyword search in description or project name
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $pastTrackersQuery->where(function ($q) use ($search) {
+                $q->where('descricao', 'like', "%$search%")
+                  ->orWhereHas('projeto', function ($q2) use ($search) {
+                        $q2->where('nome', 'like', "%$search%");
+                  });
+            });
+        }
+
+        $pastTrackers = $pastTrackersQuery->orderBy('inicio', 'desc')->paginate(20);
 
         $projetos = ClockifyProjeto::where('ativo', true)->orderBy('nome')->get();
         $tags = ClockifyTag::where('ativo', true)->orderBy('nome')->get();
@@ -47,6 +81,7 @@ class ClockifyTrackerController extends Controller
             'tags' => $tags,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Painel', 'url' => route('home')],
                 ['name' => 'Time Tracker', 'active' => true],
             ],
         ]);
@@ -201,6 +236,7 @@ class ClockifyTrackerController extends Controller
             'projetos' => $projetos,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Painel', 'url' => route('home')],
                 ['name' => 'Timesheet', 'active' => true],
             ],
         ]);

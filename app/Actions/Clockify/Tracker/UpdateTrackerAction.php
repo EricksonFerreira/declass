@@ -10,13 +10,25 @@ class UpdateTrackerAction
     {
         $tracker = ClockifyTimeTracker::findOrFail($id);
         
-        $tracker->update([
-            'descricao' => $data['descricao'] ?? null,
-            'clockify_projeto_id' => $data['clockify_projeto_id'] ?? null,
-            'faturavel' => $data['faturavel'] ?? false,
-        ]);
+        $updateData = [];
+        
+        if (array_key_exists('descricao', $data)) {
+            $updateData['descricao'] = $data['descricao'];
+        }
+        if (array_key_exists('clockify_projeto_id', $data)) {
+            $updateData['clockify_projeto_id'] = !empty($data['clockify_projeto_id']) ? $data['clockify_projeto_id'] : null;
+        }
+        if (array_key_exists('faturavel', $data)) {
+            $updateData['faturavel'] = (bool) $data['faturavel'];
+        }
 
-        $tracker->tags()->sync($tagIds ?? []);
+        if (!empty($updateData)) {
+            $tracker->update($updateData);
+        }
+
+        if ($tagIds !== null) {
+            $tracker->tags()->sync($tagIds);
+        }
 
         return $tracker;
     }

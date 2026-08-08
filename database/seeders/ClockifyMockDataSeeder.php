@@ -19,9 +19,8 @@ class ClockifyMockDataSeeder extends Seeder
      */
     public function run(): void
     {
-        // 0. Obter a empresa principal
-        $empresa = Empresa::first();
-        $empresaId = $empresa ? $empresa->id : 1;
+        // 0. Vincular tudo à empresa 1
+        $empresaId = 1;
 
         // 1. Garantir que os usuários principais e fictícios existam
         $password = Hash::make('password123');

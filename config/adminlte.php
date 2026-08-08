@@ -330,6 +330,11 @@ return [
             'route' => 'clockify.calendario.index',
             'icon' => 'fas fa-calendar-alt',
         ],
+        [
+            'text' => 'Planejar Equipe',
+            'route' => 'clockify.projetos.planejar-equipe-geral',
+            'icon' => 'fas fa-users-cog',
+        ],
 
         // ANALISAR
         [

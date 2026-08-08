@@ -9,7 +9,7 @@ use App\Http\Controllers\Clockify\ClockifyTimeOffController;
 use App\Http\Controllers\Clockify\ClockifyTrackerController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('clockify')->name('clockify.')->group(function () {
+Route::name('clockify.')->group(function () {
     // Time Tracker
     Route::get('tracker', [ClockifyTrackerController::class, 'index'])->name('tracker.index');
     Route::post('tracker/start', [ClockifyTrackerController::class, 'start'])->name('tracker.start');
@@ -37,7 +37,19 @@ Route::prefix('clockify')->name('clockify.')->group(function () {
 
     // Resources
     Route::resource('clientes', ClockifyClienteController::class)->except(['create', 'show', 'edit']);
-    Route::resource('projetos', ClockifyProjetoController::class)->except(['create', 'show', 'edit']);
+
+    // Projetos com rotas de planejamento
+    Route::get('projetos/{id}/planejamento', [ClockifyProjetoController::class, 'planejamento'])->name('projetos.planejamento');
+    Route::post('projetos/{id}/planejamento', [ClockifyProjetoController::class, 'planejamentoStore'])->name('projetos.planejamento.store');
+    Route::get('projetos/{id}/cronogramas/novo', [ClockifyProjetoController::class, 'cronogramaNovo'])->name('projetos.cronogramas.novo');
+    Route::post('projetos/{id}/cronogramas', [ClockifyProjetoController::class, 'cronogramaStore'])->name('projetos.cronogramas.store');
+    Route::delete('cronogramas/{id}', [ClockifyProjetoController::class, 'cronogramaDestroy'])->name('projetos.cronogramas.destroy');
+    Route::get('projetos/{id}/planejar-equipe', [ClockifyProjetoController::class, 'planejarEquipe'])->name('projetos.planejar-equipe');
+    Route::post('projetos/{id}/planejar-equipe', [ClockifyProjetoController::class, 'planejarEquipeStore'])->name('projetos.planejar-equipe.store');
+    Route::get('planejar-equipe', [ClockifyProjetoController::class, 'planejarEquipeGeral'])->name('projetos.planejar-equipe-geral');
+    Route::post('planejar-equipe', [ClockifyProjetoController::class, 'planejarEquipeGeralStore'])->name('projetos.planejar-equipe-geral.store');
+    Route::resource('projetos', ClockifyProjetoController::class)->except(['create', 'edit']);
+
     Route::resource('tags', ClockifyTagController::class)->except(['create', 'show', 'edit']);
     Route::resource('times', ClockifyTimeController::class)->except(['create', 'show', 'edit']);
 });

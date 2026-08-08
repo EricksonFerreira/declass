@@ -63,6 +63,7 @@ class ClockifyCalendarioController extends Controller
             'usuarios' => $usuarios,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Painel', 'url' => route('home')],
                 ['name' => 'Calendário', 'active' => true],
             ],
         ]);
@@ -75,7 +76,7 @@ class ClockifyCalendarioController extends Controller
             'clockify_projeto_id' => 'required|exists:clockify_projetos,id',
             'data_inicio' => 'required|date',
             'data_fim' => 'required|date|after_or_equal:data_inicio',
-            'horas_por_dia' => 'nullable|numeric|min:0|max:24',
+            'horas_por_dia' => 'nullable|numeric|min:0',
             'observacao' => 'nullable|string',
         ]);
 

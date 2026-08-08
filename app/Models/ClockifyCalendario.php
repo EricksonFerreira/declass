@@ -16,10 +16,12 @@ class ClockifyCalendario extends Model
         'empresa_id',
         'user_id',
         'clockify_projeto_id',
+        'clockify_projeto_cronograma_id',
         'data_inicio',
         'data_fim',
         'horas_por_dia',
         'observacao',
+        'trabalho_junto',
         'usuinc',
         'datainc',
         'usuatu',
@@ -27,11 +29,12 @@ class ClockifyCalendario extends Model
     ];
 
     protected $casts = [
-        'data_inicio' => 'date',
-        'data_fim' => 'date',
-        'horas_por_dia' => 'decimal:2',
-        'datainc' => 'datetime',
-        'datatu' => 'datetime',
+        'data_inicio'    => 'date',
+        'data_fim'       => 'date',
+        'horas_por_dia'  => 'decimal:2',
+        'trabalho_junto' => 'boolean',
+        'datainc'        => 'datetime',
+        'datatu'         => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -42,5 +45,10 @@ class ClockifyCalendario extends Model
     public function projeto(): BelongsTo
     {
         return $this->belongsTo(ClockifyProjeto::class, 'clockify_projeto_id');
+    }
+
+    public function cronograma(): BelongsTo
+    {
+        return $this->belongsTo(ClockifyProjetoCronograma::class, 'clockify_projeto_cronograma_id');
     }
 }

@@ -20,7 +20,7 @@ class LoadProjectsOverviewAction
 
         // 1. If a single project is selected, load detailed "Project Status" view data
         if ($filterProjectId) {
-            $project = ClockifyProjeto::with('cliente')->find($filterProjectId);
+            $project = ClockifyProjeto::with(['cliente', 'users', 'cronogramas.planejamentos'])->find($filterProjectId);
             
             if ($project) {
                 // Get trackers for this project
@@ -37,49 +37,34 @@ class LoadProjectsOverviewAction
                 $billableHours = round($billableSeconds / 3600, 1);
                 $nonBillableHours = round(($totalSeconds - $billableSeconds) / 3600, 1);
 
-                // Simulation: Budget & Financial stats
-                $budgetHours = 150.0; // Simulated target
+                // Budget & Financial stats (real values from DB if set, else simulated)
+                $budgetHours = (float) ($project->horas_orcadas ?: 150.0);
+                $hourlyRate = (float) ($project->valor_hora ?: 150.0);
+                
                 $progressPercent = $budgetHours > 0 ? round(($totalHours / $budgetHours) * 100, 2) : 0;
 
-                $budgetAmount = $budgetHours * 150.0; // Simulated R$ 150/h billing
-                $amountEarned = $billableHours * 150.0;
+                $budgetAmount = $budgetHours * $hourlyRate;
+                $amountEarned = $billableHours * $hourlyRate;
                 $expenses = $totalHours * 15.0; // Simulated R$ 15/h expense
                 $remainingAmount = $budgetAmount - $amountEarned;
 
-                // Group trackers by description (simulating "Tasks" within the project)
+                // Load individual trackers as tasks/entries to show specific times
                 $tasks = [];
-                $grouped = $trackers->groupBy(fn($t) => $t->descricao ?: 'Geral');
-
-                foreach ($grouped as $taskDesc => $taskTrackers) {
-                    $taskSeconds = $taskTrackers->sum('duration_in_seconds');
-                    $taskHours = round($taskSeconds / 3600, 1);
-                    
-                    // Most active user for this task
-                    $userGroup = $taskTrackers->groupBy('user_id');
-                    $mostActiveUserId = null;
-                    $maxUserSeconds = 0;
-                    foreach ($userGroup as $uId => $uTrackers) {
-                        $uSec = $uTrackers->sum('duration_in_seconds');
-                        if ($uSec > $maxUserSeconds) {
-                            $maxUserSeconds = $uSec;
-                            $mostActiveUserId = $uId;
-                        }
-                    }
-                    $assignee = User::find($mostActiveUserId)?->nome ?: 'Qualquer um';
-
-                    $taskBillableSec = $taskTrackers->where('faturavel', true)->sum('duration_in_seconds');
-                    $taskBillableHours = round($taskBillableSec / 3600, 1);
-
+                foreach ($trackers as $tracker) {
+                    $trackerHours = round($tracker->duration_in_seconds / 3600, 2);
                     $tasks[] = [
-                        'nome' => $taskDesc,
-                        'encarregado' => $assignee,
-                        'despesas' => $taskHours * 15.0,
-                        'valor' => $taskBillableHours * 150.0,
-                        'horas' => $taskHours,
+                        'nome' => $tracker->descricao ?: 'Sem descrição',
+                        'encarregado' => $tracker->user->nome ?? 'Usuário',
+                        'despesas' => $trackerHours * 15.0,
+                        'valor' => $tracker->faturavel ? ($trackerHours * $hourlyRate) : 0.0,
+                        'horas' => $trackerHours,
+                        'periodo' => $tracker->inicio->format('d/m/Y H:i') . ' - ' . ($tracker->fim ? $tracker->fim->format('H:i') : 'Ativo'),
+                        'timestamp' => $tracker->inicio->timestamp,
                     ];
                 }
 
-                usort($tasks, fn($a, $b) => $b['horas'] <=> $a['horas']);
+                // Sort by latest entry
+                usort($tasks, fn($a, $b) => $b['timestamp'] <=> $a['timestamp']);
 
                 return [
                     'startDate' => $startDate,
@@ -93,6 +78,9 @@ class LoadProjectsOverviewAction
                     'progressPercent' => $progressPercent,
                     'budgetAmount' => $budgetAmount,
                     'amountEarned' => $amountEarned,
+                    'valor_faturado' => $project->valor_faturado ?? 0.00,
+                    'valor_faturado_etapas' => $project->cronogramas->sum('valor_faturado'),
+                    'valor_faturado_diff' => ($project->valor_faturado ?? 0.00) - $project->cronogramas->sum('valor_faturado'),
                     'expenses' => $expenses,
                     'remainingAmount' => $remainingAmount,
                     'tasks' => $tasks,

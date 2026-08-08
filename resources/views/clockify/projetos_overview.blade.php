@@ -98,116 +98,236 @@
         <!-- ============================================== -->
         <h3 class="font-weight-bold text-dark mb-4" style="font-family:'Plus Jakarta Sans',sans-serif; letter-spacing: -0.02em;">
             <i class="fas fa-circle mr-2" style="font-size: 14px; color: {{ $project->cor ?? '#6c757d' }};"></i> {{ $project->nome }}
-        </h3>
-
-        <!-- Abas do Projeto Clockify Style -->
+            <!-- Abas do Projeto Clockify Style -->
         <div class="clockify-tabs">
-            <button class="clockify-tab-btn">Tarefas</button>
-            <button class="clockify-tab-btn">Acesso</button>
-            <button class="clockify-tab-btn active">Status</button>
-            <button class="clockify-tab-btn">Projeção</button>
-            <button class="clockify-tab-btn">Configurações</button>
+            <button class="clockify-tab-btn" data-target="#tab-tarefas">Tarefas</button>
+            <button class="clockify-tab-btn" data-target="#tab-acesso">Acesso</button>
+            <button class="clockify-tab-btn active" data-target="#tab-status">Status</button>
+            <button class="clockify-tab-btn" data-target="#tab-projecao">Projeção</button>
+            <button class="clockify-tab-btn" data-target="#tab-configuracoes">Configurações</button>
         </div>
 
-        <div class="row">
-            <div class="col-md-4">
-                <!-- KPIs Financeiros -->
-                <div class="status-kpi-block">
-                    <div class="status-kpi-row">
-                        <span class="status-kpi-label">Orçamento</span>
-                        <span class="status-kpi-value">R$ {{ number_format($budgetAmount, 2, ',', '.') }}</span>
+        <!-- Conteúdo da Aba STATUS -->
+        <div id="tab-status" class="project-tab-content">
+            <div class="row">
+                <div class="col-md-4">
+                    <!-- KPIs Financeiros -->
+                    <div class="status-kpi-block">
+                        <div class="status-kpi-row">
+                            <span class="status-kpi-label">Orçamento</span>
+                            <span class="status-kpi-value">R$ {{ number_format($budgetAmount, 2, ',', '.') }}</span>
+                        </div>
+                        <div class="status-kpi-row">
+                            <span class="status-kpi-label">Valor (Faturado)</span>
+                            <span class="status-kpi-value text-success">R$ {{ number_format($valor_faturado, 2, ',', '.') }}</span>
+                            <span class="status-kpi-label">Valor Faturado Etapas</span>
+                            <span class="status-kpi-value text-warning">R$ {{ number_format($valor_faturado_etapas, 2, ',', '.') }}</span>
+                            <span class="status-kpi-label">Diferença</span>
+                            <span class="status-kpi-value {{ $valor_faturado_diff >= 0 ? 'text-success' : 'text-danger' }}">R$ {{ number_format($valor_faturado_diff, 2, ',', '.') }}</span>
+                        </div>
+                        <div class="status-kpi-row">
+                            <span class="status-kpi-label">Expenses</span>
+                            <span class="status-kpi-value text-danger">R$ {{ number_format($expenses, 2, ',', '.') }}</span>
+                        </div>
+                        <div class="status-kpi-row">
+                            <span class="status-kpi-label">Restante</span>
+                            <span class="status-kpi-value">R$ {{ number_format($remainingAmount, 2, ',', '.') }}</span>
+                        </div>
                     </div>
-                    <div class="status-kpi-row">
-                        <span class="status-kpi-label">Valor (Faturado)</span>
-                        <span class="status-kpi-value text-success">R$ {{ number_format($amountEarned, 2, ',', '.') }}</span>
-                    </div>
-                    <div class="status-kpi-row">
-                        <span class="status-kpi-label">Expenses</span>
-                        <span class="status-kpi-value text-danger">R$ {{ number_format($expenses, 2, ',', '.') }}</span>
-                    </div>
-                    <div class="status-kpi-row">
-                        <span class="status-kpi-label">Restante</span>
-                        <span class="status-kpi-value">R$ {{ number_format($remainingAmount, 2, ',', '.') }}</span>
+
+                    <!-- KPIs de Horas -->
+                    <div class="status-kpi-block">
+                        <div class="status-kpi-row">
+                            <span class="status-kpi-label">Rastreado</span>
+                            <span class="status-kpi-value">{{ number_format($totalHours, 1) }}h</span>
+                        </div>
+                        <div class="status-kpi-row">
+                            <span class="status-kpi-label">Faturável</span>
+                            <span class="status-kpi-value text-info">{{ number_format($billableHours, 1) }}h</span>
+                        </div>
+                        <div class="status-kpi-row">
+                            <span class="status-kpi-label">Não-Faturável</span>
+                            <span class="status-kpi-value text-muted">{{ number_format($nonBillableHours, 1) }}h</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- KPIs de Horas -->
-                <div class="status-kpi-block">
-                    <div class="status-kpi-row">
-                        <span class="status-kpi-label">Rastreado</span>
-                        <span class="status-kpi-value">{{ number_format($totalHours, 1) }}h</span>
-                    </div>
-                    <div class="status-kpi-row">
-                        <span class="status-kpi-label">Faturável</span>
-                        <span class="status-kpi-value text-info">{{ number_format($billableHours, 1) }}h</span>
-                    </div>
-                    <div class="status-kpi-row">
-                        <span class="status-kpi-label">Não-Faturável</span>
-                        <span class="status-kpi-value text-muted">{{ number_format($nonBillableHours, 1) }}h</span>
-                    </div>
-                </div>
-            </div>
+                <!-- Gráfico de Rosca / Conclusão de Orçamento -->
+                <div class="col-md-8">
+                    <div class="card shadow-sm p-4" style="border-radius: 12px; border: 1px solid #e2e8f0; min-height: 380px;">
+                        <!-- Barra de progresso horizontal do orçamento -->
+                        <div class="status-progress-wrap">
+                            <span>Progresso do Orçamento (Horas)</span>
+                            <span>{{ number_format($progressPercent, 2) }}%</span>
+                        </div>
+                        <div class="status-progress-bar-bg">
+                            <div class="status-progress-bar-fill" style="width: {{ min($progressPercent, 100) }}%; background-color: {{ $progressPercent > 100 ? '#ef4444' : '#22c55e' }};"></div>
+                        </div>
 
-            <!-- Gráfico de Rosca / Conclusão de Orçamento -->
-            <div class="col-md-8">
-                <div class="card shadow-sm p-4" style="border-radius: 12px; border: 1px solid #e2e8f0; min-height: 380px;">
-                    <!-- Barra de progresso horizontal do orçamento -->
-                    <div class="status-progress-wrap">
-                        <span>Progresso do Orçamento (Horas)</span>
-                        <span>{{ number_format($progressPercent, 2) }}%</span>
-                    </div>
-                    <div class="status-progress-bar-bg">
-                        <div class="status-progress-bar-fill" style="width: {{ min($progressPercent, 100) }}%; background-color: {{ $progressPercent > 100 ? '#ef4444' : '#22c55e' }};"></div>
-                    </div>
+                        <!-- Gráfico circular central -->
+                        <div style="position: relative; height: 180px;">
+                            <canvas id="projectStatusDonut"></canvas>
+                        </div>
 
-                    <!-- Gráfico circular central -->
-                    <div style="position: relative; height: 180px;">
-                        <canvas id="projectStatusDonut"></canvas>
-                    </div>
-
-                    <!-- Legendas coloridas -->
-                    <div class="chart-legend-wrap">
-                        <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#0ea5e9;"></span> Faturável ({{ number_format($billableHours, 1) }}h)</span>
-                        <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#84cc16;"></span> Não-Faturável ({{ number_format($nonBillableHours, 1) }}h)</span>
-                        <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#e2e8f0;"></span> Restante ({{ number_format(max($budgetHours - $totalHours, 0), 1) }}h)</span>
+                        <!-- Legendas coloridas -->
+                        <div class="chart-legend-wrap">
+                            <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#0ea5e9;"></span> Faturável ({{ number_format($billableHours, 1) }}h)</span>
+                            <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#84cc16;"></span> Não-Faturável ({{ number_format($nonBillableHours, 1) }}h)</span>
+                            <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#e2e8f0;"></span> Restante ({{ number_format(max($budgetHours - $totalHours, 0), 1) }}h)</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Tabela de Tarefas / Lançamentos detalhados -->
-        <div class="card shadow-sm mt-3" style="border-radius: 12px; border: 1px solid #e2e8f0; overflow:hidden;">
-            <div class="card-header bg-white border-bottom p-3">
-                <h3 class="card-title text-sm text-bold font-weight-bold text-dark"><i class="fas fa-list mr-1"></i> Tarefas e Lançamentos do Período</h3>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="thead-light">
-                            <tr>
-                                <th class="pl-4">Nome da Tarefa</th>
-                                <th>Encarregado</th>
-                                <th class="text-right">Despesas</th>
-                                <th class="text-right">Valor</th>
-                                <th class="text-center">Tempo Rastreado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($tasks as $t)
+        <!-- Conteúdo da Aba TAREFAS -->
+        <div id="tab-tarefas" class="project-tab-content" style="display: none;">
+            <div class="card shadow-sm" style="border-radius: 12px; border: 1px solid #e2e8f0; overflow:hidden;">
+                <div class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center flex-wrap">
+                    <h3 class="card-title text-sm text-bold font-weight-bold text-dark mb-2 mb-md-0"><i class="fas fa-list mr-1"></i> Tarefas e Lançamentos do Período</h3>
+                    <div class="card-tools">
+                        <div class="input-group input-group-sm" style="width: 250px;">
+                            <input type="text" id="task-search" class="form-control float-right" placeholder="Filtrar lançamentos...">
+                            <div class="input-group-append">
+                                <span class="input-group-text"><i class="fas fa-filter"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0 text-sm">
+                            <thead class="thead-light">
                                 <tr>
-                                    <td class="pl-4 font-weight-bold text-dark">{{ $t['nome'] }}</td>
-                                    <td>👤 {{ $t['encarregado'] }}</td>
-                                    <td class="text-right text-danger font-weight-bold">R$ {{ number_format($t['despesas'], 2, ',', '.') }}</td>
-                                    <td class="text-right text-success font-weight-bold">R$ {{ number_format($t['valor'], 2, ',', '.') }}</td>
-                                    <td class="text-center font-weight-bold text-primary">{{ number_format($t['horas'], 1) }}h</td>
+                                    <th class="pl-4">Nome da Tarefa / Descrição</th>
+                                    <th>Encarregado</th>
+                                    <th>Horário / Período</th>
+                                    <th class="text-right">Despesas</th>
+                                    <th class="text-right">Valor</th>
+                                    <th class="text-center">Tempo Rastreado</th>
                                 </tr>
+                            </thead>
+                            <tbody id="task-table-tbody">
+                                @forelse($tasks as $t)
+                                    <tr>
+                                        <td class="pl-4 text-dark font-weight-bold">{{ $t['nome'] }}</td>
+                                        <td><i class="fas fa-user text-muted mr-1"></i> {{ $t['encarregado'] }}</td>
+                                        <td><i class="far fa-clock text-muted mr-1"></i> {{ $t['periodo'] }}</td>
+                                        <td class="text-right text-danger">R$ {{ number_format($t['despesas'], 2, ',', '.') }}</td>
+                                        <td class="text-right text-success">R$ {{ number_format($t['valor'], 2, ',', '.') }}</td>
+                                        <td class="text-center text-primary font-weight-bold">{{ number_format($t['horas'], 2, ',', '.') }}h</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">Sem lançamentos de tarefas no período selecionado.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Aba ACESSO -->
+        <div id="tab-acesso" class="project-tab-content" style="display: none;">
+            <div class="card shadow-sm" style="border-radius: 12px; border: 1px solid #e2e8f0; overflow:hidden;">
+                <div class="card-header bg-white border-bottom p-3">
+                    <h3 class="card-title text-sm text-bold font-weight-bold text-dark"><i class="fas fa-users mr-1"></i> Membros com Acesso ao Projeto</h3>
+                </div>
+                <div class="card-body p-0">
+                    @if($project->publico)
+                        <div class="p-5 text-center text-muted">
+                            <i class="fas fa-globe fa-3x mb-3 text-info"></i>
+                            <h5 class="font-weight-bold text-dark">Este projeto é Público</h5>
+                            <p class="text-sm text-muted mb-0">Qualquer membro da empresa tem acesso para lançar tempo e visualizar este projeto.</p>
+                        </div>
+                    @else
+                        <ul class="nav flex-column mb-0">
+                            @forelse($project->users as $u)
+                                <li class="nav-item border-bottom p-3">
+                                    <div class="d-flex align-items-center">
+                                        <span class="mr-3 text-secondary" style="font-size: 20px;"><i class="fas fa-user-circle text-primary"></i></span>
+                                        <div>
+                                            <span class="font-weight-bold text-dark">{{ $u->nome }}</span>
+                                            <small class="text-muted d-block">{{ $u->email }}</small>
+                                        </div>
+                                    </div>
+                                </li>
                             @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">Sem lançamentos de tarefas no período selecionado.</td>
-                                </tr>
+                                <li class="p-5 text-center text-muted">
+                                    <i class="fas fa-user-lock fa-3x mb-3 text-warning"></i>
+                                    <h5 class="font-weight-bold text-dark">Projeto Privado sem Membros</h5>
+                                    <p class="text-sm text-muted">Este projeto é privado, mas nenhum colaborador foi associado a ele ainda.</p>
+                                </li>
                             @endforelse
-                        </tbody>
-                    </table>
+                        </ul>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Aba PROJEÇÃO -->
+        <div id="tab-projecao" class="project-tab-content" style="display: none;">
+            <div class="card shadow-sm" style="border-radius: 12px; border: 1px solid #e2e8f0; overflow:hidden;">
+                <div class="card-header bg-white border-bottom p-3">
+                    <h3 class="card-title text-sm text-bold font-weight-bold text-dark"><i class="fas fa-chart-line mr-1"></i> Cronograma de Entrega e Metragem</h3>
+                </div>
+                <div class="card-body p-4">
+                    @if($project->cronograma_ativo)
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="font-weight-bold text-dark mb-1"><i class="fas fa-check-circle text-success mr-1"></i> {{ $project->cronograma_ativo->nome }}</h5>
+                                <p class="text-sm text-muted mb-3">Previsão: <strong>{{ $project->data_entrega_previsao ? $project->data_entrega_previsao->format('d/m/Y') : '-' }}</strong> (Restam: {{ $project->dias_uteis_planejamento }} dias úteis)</p>
+                                <div class="row">
+                                    <div class="col-6 border-right">
+                                        <span class="text-xs text-muted d-block text-uppercase font-weight-bold">Horas Necessárias</span>
+                                        <span class="font-weight-bold text-dark text-lg">{{ number_format($project->horas_planejadas, 1) }}h</span>
+                                    </div>
+                                    <div class="col-6 pl-4">
+                                        <span class="text-xs text-muted d-block text-uppercase font-weight-bold">Custo Previsto</span>
+                                        <span class="font-weight-bold text-success text-lg">R$ {{ number_format($project->custo_planejado, 2, ',', '.') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-md-right mt-3 mt-md-0">
+                                <a href="{{ route('clockify.projetos.planejamento', $project->id) }}" class="btn btn-primary font-weight-bold shadow-sm" target="_blank">
+                                    <i class="fas fa-edit mr-1"></i> Ajustar Planejamento
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-center py-5">
+                            <i class="far fa-calendar-times fa-4x mb-3 text-muted"></i>
+                            <h5 class="font-weight-bold text-dark">Nenhum Cronograma Ativo</h5>
+                            <p class="text-sm text-muted mb-4">Este projeto ainda não possui um cronograma de entrega ativo ou válido.</p>
+                            <a href="{{ route('clockify.projetos.planejamento', $project->id) }}" class="btn btn-primary font-weight-bold shadow-sm" target="_blank">
+                                <i class="fas fa-calendar-alt mr-1"></i> Criar Planejamento
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Aba CONFIGURAÇÕES -->
+        <div id="tab-configuracoes" class="project-tab-content" style="display: none;">
+            <div class="card shadow-sm" style="border-radius: 12px; border: 1px solid #e2e8f0; overflow:hidden;">
+                <div class="card-header bg-white border-bottom p-3">
+                    <h3 class="card-title text-sm text-bold font-weight-bold text-dark"><i class="fas fa-cog mr-1"></i> Configurações e Metadados do Projeto</h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="font-weight-bold text-dark mb-1">Painel Administrativo do Projeto</h5>
+                            <p class="text-sm text-muted mb-0">Você pode gerenciar as cores, nome, orçamento base, atribuir clientes e alterar visibilidade pública/privada.</p>
+                        </div>
+                        <div class="col-md-4 text-md-right mt-3 mt-md-0">
+                            <a href="{{ route('clockify.projetos.index') }}" class="btn btn-warning text-dark font-weight-bold shadow-sm">
+                                <i class="fas fa-sliders-h mr-1"></i> Configurações Gerais
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -328,6 +448,16 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching listener
+    $('.clockify-tab-btn').on('click', function() {
+        $('.clockify-tab-btn').removeClass('active');
+        $(this).addClass('active');
+
+        const target = $(this).data('target');
+        $('.project-tab-content').hide();
+        $(target).show();
+    });
+
     // Dropdown URL change listener
     document.getElementById('project-filter-select').addEventListener('change', function() {
         const val = this.value;
@@ -409,6 +539,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     @endif
+
+    // Client-side quick filter for tasks table
+    $('#task-search').on('keyup', function() {
+        const value = $(this).val().toLowerCase();
+        $('#task-table-tbody tr').each(function() {
+            const text = $(this).text().toLowerCase();
+            $(this).toggle(text.indexOf(value) > -1);
+        });
+    });
 });
 </script>
 @stop

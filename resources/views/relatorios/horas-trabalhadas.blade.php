@@ -3,13 +3,8 @@
 @section('title', 'Horas Trabalhadas')
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h1 class="m-0">Horas Trabalhadas</h1>
-        <ol class="breadcrumb float-sm-right mb-0">
-            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-            <li class="breadcrumb-item active">Horas Trabalhadas</li>
-        </ol>
-    </div>
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    <x-page-title :title="'Horas Trabalhadas'" />
 @stop
 
 @section('content')
