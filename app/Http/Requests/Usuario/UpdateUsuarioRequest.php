@@ -22,12 +22,19 @@ class UpdateUsuarioRequest extends FormRequest
         ]);
 
         if (! $this->filled('role_id')) {
-            $colaboradorRole = \App\Models\Regra::where('name', 'colaborador_administrativo')
-                ->orWhere('name', 'Colaborador Administrativo')
-                ->first();
-            $this->merge([
-                'role_id' => $colaboradorRole?->id ?? 8,
-            ]);
+            $usuarioId = (int) $this->route('usuario');
+            $roleId = $usuarioId > 0
+                ? (int) (\App\Models\User::query()->whereKey($usuarioId)->value('role_id') ?? 0)
+                : 0;
+
+            if ($roleId <= 0) {
+                $colaboradorRole = \App\Models\Regra::where('name', 'colaborador_administrativo')
+                    ->orWhere('name', 'Colaborador Administrativo')
+                    ->first();
+                $roleId = (int) ($colaboradorRole?->id ?? 8);
+            }
+
+            $this->merge(['role_id' => $roleId]);
         }
     }
 
@@ -65,6 +72,12 @@ class UpdateUsuarioRequest extends FormRequest
             ],
             'role_id' => 'required|integer|exists:roles,id',
             'cargo' => 'required|string|max:255',
+            'funcao_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('funcoes', 'id')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
+            'custo_hora' => 'nullable|numeric|min:0',
             'ativo' => 'nullable|boolean',
             'numero_carta_conducao' => 'nullable|string|max:20',
             'local_emissao_carta_conducao' => 'nullable|string|max:100',
@@ -115,6 +128,8 @@ class UpdateUsuarioRequest extends FormRequest
             'endereco' => 'endereco',
             'numero_identificacao' => 'numero de identificacao',
             'role_id' => 'regra de usuario',
+            'funcao_id' => 'funcao',
+            'custo_hora' => 'custo por hora',
             'numero_carta_conducao' => 'numero da carta de conducao',
             'local_emissao_carta_conducao' => 'local de emissao da carta de conducao',
             'pais_emissao_carta_conducao' => 'pais de emissao da carta de conducao',

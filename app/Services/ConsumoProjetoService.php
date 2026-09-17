@@ -1,0 +1,189 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\ClockifyProjeto;
+use App\Models\ClockifyProjetoEstimativa;
+use App\Models\Funcao;
+use App\Support\EmpresaContext;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Relatório "horas consumidas × horas estimadas" por projeto e por função.
+ */
+class ConsumoProjetoService
+{
+    public const SEM_FUNCAO = 0;
+
+    /**
+     * Consumo em segundos agrupado por projeto × função.
+     *
+     * @return Collection<int, object{clockify_projeto_id:int, funcao_id:int|null, funcao_nome:string|null, segundos:float}>
+     */
+    public function consumoPorFuncao(int $empresaId, ?int $projetoId = null): Collection
+    {
+        return DB::table('clockify_time_trackers as t')
+            ->join('users as u', 'u.id', '=', 't.user_id')
+            ->leftJoin('funcoes as f', 'f.id', '=', 'u.funcao_id')
+            ->where('t.empresa_id', $empresaId)
+            ->when($projetoId, fn ($q) => $q->where('t.clockify_projeto_id', $projetoId))
+            ->whereNotNull('t.inicio')
+            ->groupBy('t.clockify_projeto_id', 'u.funcao_id', 'f.nome')
+            ->selectRaw('t.clockify_projeto_id, u.funcao_id, f.nome as funcao_nome, SUM(GREATEST(TIMESTAMPDIFF(SECOND, t.inicio, COALESCE(t.fim, NOW())), 0)) as segundos')
+            ->get();
+    }
+
+    /**
+     * Consumo em segundos agrupado por membro dentro de um projeto.
+     *
+     * @return Collection<int, object{user_id:int, nome:string, email:string|null, funcao_id:int|null, funcao_nome:string|null, custo_hora:float, segundos:float}>
+     */
+    public function consumoPorMembro(ClockifyProjeto $projeto): Collection
+    {
+        return DB::table('clockify_time_trackers as t')
+            ->join('users as u', 'u.id', '=', 't.user_id')
+            ->leftJoin('funcoes as f', 'f.id', '=', 'u.funcao_id')
+            ->where('t.clockify_projeto_id', $projeto->id)
+            ->whereNotNull('t.inicio')
+            ->groupBy('t.user_id', 'u.nome', 'u.email', 'u.funcao_id', 'f.nome', 'u.custo_hora', 'f.custo_hora')
+            ->selectRaw('t.user_id, u.nome, u.email, u.funcao_id, f.nome as funcao_nome, COALESCE(u.custo_hora, f.custo_hora, 0) as custo_hora, SUM(GREATEST(TIMESTAMPDIFF(SECOND, t.inicio, COALESCE(t.fim, NOW())), 0)) as segundos')
+            ->orderBy('u.nome')
+            ->get();
+    }
+
+    /**
+     * Estimativas agrupadas por projeto × função.
+     *
+     * @return Collection<int, object{clockify_projeto_id:int, funcao_id:int, funcao_nome:string|null, horas:float}>
+     */
+    public function estimativasPorFuncao(int $empresaId, ?int $projetoId = null): Collection
+    {
+        return ClockifyProjetoEstimativa::query()
+            ->join('funcoes as f', 'f.id', '=', 'clockify_projeto_estimativas.funcao_id')
+            ->where('clockify_projeto_estimativas.empresa_id', $empresaId)
+            ->when($projetoId, fn ($q) => $q->where('clockify_projeto_estimativas.clockify_projeto_id', $projetoId))
+            ->groupBy('clockify_projeto_estimativas.clockify_projeto_id', 'clockify_projeto_estimativas.funcao_id', 'f.nome')
+            ->selectRaw('clockify_projeto_estimativas.clockify_projeto_id, clockify_projeto_estimativas.funcao_id, f.nome as funcao_nome, SUM(clockify_projeto_estimativas.horas_estimadas) as horas')
+            ->get();
+    }
+
+    /**
+     * Linhas "função × consumida × estimada × %" de um projeto (aba A02).
+     *
+     * @return array<int, array{funcao_id:int, nome:string, consumida:float, estimada:float|null, pct:float|null, custo:float}>
+     */
+    public function linhasPorFuncao(ClockifyProjeto $projeto): array
+    {
+        $empresaId = (int) $projeto->empresa_id;
+
+        $consumo = $this->consumoPorFuncao($empresaId, $projeto->id)
+            ->keyBy(fn ($r) => (int) ($r->funcao_id ?? self::SEM_FUNCAO));
+
+        $estimadas = $this->estimativasPorFuncao($empresaId, $projeto->id)
+            ->keyBy(fn ($r) => (int) $r->funcao_id);
+
+        $funcoesIds = $consumo->keys()->merge($estimadas->keys())->unique()->sort()->values();
+
+        return $funcoesIds->map(function (int $funcaoId) use ($consumo, $estimadas) {
+            $cons = $consumo->get($funcaoId);
+            $est = $estimadas->get($funcaoId);
+
+            $consumida = $cons ? round(((float) $cons->segundos) / 3600, 2) : 0.0;
+            $estimada = $est ? (float) $est->horas : null;
+            $pct = $estimada !== null && $estimada > 0
+                ? round(($consumida / $estimada) * 100, 2)
+                : null;
+
+            return [
+                'funcao_id' => $funcaoId,
+                'nome' => $cons?->funcao_nome ?? $est?->funcao_nome ?? 'Sem função',
+                'consumida' => $consumida,
+                'estimada' => $estimada,
+                'pct' => $pct,
+                'custo' => 0.0, // preenchido via membros quando necessário
+            ];
+        })->all();
+    }
+
+    /**
+     * Resumo de um projeto para a aba A01 (totais por função + compilado).
+     */
+    public function resumoProjeto(ClockifyProjeto $projeto, ?Collection $consumoTodos = null, ?Collection $estimativasTodos = null): array
+    {
+        $empresaId = (int) $projeto->empresa_id;
+        $consumoTodos = $consumoTodos ?? $this->consumoPorFuncao($empresaId);
+        $estimativasTodos = $estimativasTodos ?? $this->estimativasPorFuncao($empresaId);
+
+        $porFuncao = [];
+        $totCons = 0.0;
+        $totEst = 0.0;
+        $temEstimativa = false;
+
+        foreach ($consumoTodos->where('clockify_projeto_id', $projeto->id) as $c) {
+            $fid = (int) ($c->funcao_id ?? self::SEM_FUNCAO);
+            $horas = ((float) $c->segundos) / 3600;
+            $porFuncao[$fid]['consumida'] = ($porFuncao[$fid]['consumida'] ?? 0) + $horas;
+            $porFuncao[$fid]['nome'] = $c->funcao_nome ?? 'Sem função';
+            $totCons += $horas;
+        }
+
+        foreach ($estimativasTodos->where('clockify_projeto_id', $projeto->id) as $e) {
+            $fid = (int) $e->funcao_id;
+            $porFuncao[$fid]['estimada'] = ($porFuncao[$fid]['estimada'] ?? 0) + (float) $e->horas;
+            $porFuncao[$fid]['nome'] = $e->funcao_nome ?? 'Sem função';
+            $totEst += (float) $e->horas;
+            $temEstimativa = true;
+        }
+
+        foreach ($porFuncao as $fid => &$f) {
+            $cons = $f['consumida'] ?? 0.0;
+            $est = $f['estimada'] ?? null;
+            $f['consumida'] = round($cons, 2);
+            $f['pct'] = $est !== null && $est > 0 ? round(($cons / $est) * 100, 2) : null;
+        }
+
+        return [
+            'por_funcao' => $porFuncao,
+            'consumida' => round($totCons, 2),
+            'estimada' => $temEstimativa ? round($totEst, 2) : null,
+            'pct' => $temEstimativa && $totEst > 0 ? round(($totCons / $totEst) * 100, 2) : null,
+        ];
+    }
+
+    /**
+     * Lista de funções que têm consumo ou estimativa em qualquer projeto (colunas da A01).
+     *
+     * @return array<int, string> funcao_id => nome
+     */
+    public function funcoesEmUso(int $empresaId, ?Collection $consumo = null, ?Collection $estimativas = null): array
+    {
+        $consumo = $consumo ?? $this->consumoPorFuncao($empresaId);
+        $estimativas = $estimativas ?? $this->estimativasPorFuncao($empresaId);
+
+        $nomes = [];
+        foreach ($consumo as $c) {
+            $nomes[(int) ($c->funcao_id ?? self::SEM_FUNCAO)] = $c->funcao_nome ?? 'Sem função';
+        }
+        foreach ($estimativas as $e) {
+            $nomes[(int) $e->funcao_id] = $e->funcao_nome ?? 'Sem função';
+        }
+
+        asort($nomes);
+
+        return $nomes;
+    }
+
+    public function empresaId(): int
+    {
+        return (int) (app(EmpresaContext::class)->empresaId() ?? auth()->user()?->empresa_id ?? 0);
+    }
+
+    /**
+     * Funções ativas da empresa para selects.
+     */
+    public function funcoesParaSelect(): array
+    {
+        return Funcao::where('ativo', true)->orderBy('nome')->pluck('nome', 'id')->all();
+    }
+}

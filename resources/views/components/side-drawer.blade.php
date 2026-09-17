@@ -40,7 +40,7 @@
             position: fixed;
             top: 0;
             right: -480px;
-            width: 480px;
+            width: min(480px, 100vw);
             height: 100vh;
             background: #ffffff;
             box-shadow: -5px 0 25px rgba(0,0,0,0.15);
@@ -79,6 +79,20 @@
             padding: 1.25rem;
             border-top: 1px solid rgba(0,0,0,0.05);
             background: #f8fafc;
+        }
+
+        @media (max-width: 575.98px) {
+            .side-drawer-body { padding: 1rem; }
+            .side-drawer-footer {
+                padding: 1rem;
+                display: flex;
+                gap: .5rem;
+            }
+            .side-drawer-footer .btn {
+                flex: 1;
+                margin-right: 0 !important;
+                min-height: 42px;
+            }
         }
     </style>
 @endpush

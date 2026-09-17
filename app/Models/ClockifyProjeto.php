@@ -12,6 +12,18 @@ class ClockifyProjeto extends Model
 {
     use HasAuditColumns;
 
+    public const STATUS_EM_ANDAMENTO = 'em_andamento';
+
+    public const STATUS_CONCLUIDO = 'concluido';
+
+    public const STATUS_CANCELADO = 'cancelado';
+
+    public const STATUS_LABELS = [
+        self::STATUS_EM_ANDAMENTO => 'Em andamento',
+        self::STATUS_CONCLUIDO => 'Concluído',
+        self::STATUS_CANCELADO => 'Cancelado',
+    ];
+
     protected $table = 'clockify_projetos';
 
     protected $fillable = [
@@ -22,6 +34,7 @@ class ClockifyProjeto extends Model
         'cor',
         'publico',
         'ativo',
+        'status',
         'horas_orcadas',
         'valor_hora',
         'valor_faturado',
@@ -64,6 +77,25 @@ class ClockifyProjeto extends Model
     public function cronogramas(): HasMany
     {
         return $this->hasMany(ClockifyProjetoCronograma::class, 'clockify_projeto_id');
+    }
+
+    public function estimativas(): HasMany
+    {
+        return $this->hasMany(ClockifyProjetoEstimativa::class, 'clockify_projeto_id');
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return self::STATUS_LABELS[$this->status] ?? self::STATUS_LABELS[self::STATUS_EM_ANDAMENTO];
+    }
+
+    public function getStatusCorAttribute(): string
+    {
+        return match ($this->status) {
+            self::STATUS_CONCLUIDO => 'success',
+            self::STATUS_CANCELADO => 'secondary',
+            default => 'warning',
+        };
     }
 
     public function getCronogramaAtivoAttribute(): ?ClockifyProjetoCronograma

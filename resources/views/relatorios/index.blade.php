@@ -28,6 +28,16 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="fas fa-chart-bar fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Consumo × Estimado</h5>
+                    <p class="text-muted small text-center mb-1">Horas consumidas vs. estimadas por projeto e função</p>
+                    <a href="{{ route('relatorios.consumo') }}" class="btn btn-warning mt-2">Ver relatório</a>
+                </div>
+            </div>
+        </div>
         <!-- Add more report cards here as needed -->
     </div>
 </div>

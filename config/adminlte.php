@@ -428,6 +428,11 @@ return [
                     'route' => 'relatorios.horas-trabalhadas',
                     'icon' => 'fas fa-clock',
                 ],
+                [
+                    'text' => 'Consumo × Estimado',
+                    'route' => 'relatorios.consumo',
+                    'icon' => 'fas fa-chart-bar',
+                ],
             ],
         ],
         [
@@ -439,6 +444,11 @@ return [
                     'text' => 'Empresas',
                     'route' => 'empresa.index',
                     'icon' => 'fas fa-building',
+                ],
+                [
+                    'text' => 'Comandos',
+                    'route' => 'comandos.index',
+                    'icon' => 'fas fa-terminal',
                 ],
             ],
         ],
@@ -619,4 +629,3 @@ return [
 
     'livewire' => false,
 ];
-

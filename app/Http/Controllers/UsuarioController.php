@@ -52,7 +52,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
         // session()->forget("$this->nomeFiltro.filtro");
-        $usuarios = $this->usuarioService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['tipoUsuario']);
+        $usuarios = $this->usuarioService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['tipoUsuario', 'funcao']);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Usuarios');
         $filters = $this->obterFiltrosPrincipais();
@@ -64,6 +64,8 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $perPages = [5, 10, 15, 25, 50, 100];
 
         $nomeFiltro = $this->nomeFiltro;
+        $tiposUsuario = $this->regraService->getAllTiposUsuarios();
+        $funcoes = \App\Models\Funcao::where('ativo', true)->orderBy('nome')->pluck('nome', 'id');
 
         return view('usuario.index', compact(
             'usuarios',
@@ -73,7 +75,9 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             'additionalFilters',
             'perPages',
             'perPage',
-            'nomeFiltro'
+            'nomeFiltro',
+            'tiposUsuario',
+            'funcoes'
         ))->with('titulo', $this->titulo);
     }
 
@@ -100,9 +104,10 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Usuarios', 'usuario.index', 'Criar');
 
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
+        $funcoes = \App\Models\Funcao::where('ativo', true)->orderBy('nome')->pluck('nome', 'id');
         [$metodo, $rota] = $this->getFormMethodAndRoute();
 
-        return view('usuario.add-edit', compact('breadcrumb', 'sexo', 'metodo', 'tiposUsuario', 'rota'))->with('titulo', $this->titulo);
+        return view('usuario.add-edit', compact('breadcrumb', 'sexo', 'metodo', 'tiposUsuario', 'funcoes', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreUsuarioRequest $request)
@@ -221,6 +226,9 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     {
         $query = User::with('regra')
             ->select(['id', 'nome', 'email', 'numero_identificacao', 'telefone', 'empresa_id', 'role_id', 'data_nascimento', 'created_at'])
+            ->where(function ($q) {
+                $q->whereNull('tipo_usuario_id')->orWhere('tipo_usuario_id', '!=', 1);
+            })
             ->orderBy('nome');
 
         if (SchemaCache::hasColumn('users', 'empresa_id')) {
@@ -301,11 +309,12 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         ];
 
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
+        $funcoes = \App\Models\Funcao::where('ativo', true)->orderBy('nome')->pluck('nome', 'id');
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuarios', 'usuario.index', "Editar: $usuario->nome");
         [$metodo, $rota] = $this->getFormMethodAndRoute($usuario);
 
-        return view('usuario.add-edit', compact('usuario', 'breadcrumb', 'tiposUsuario', 'sexo', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        return view('usuario.add-edit', compact('usuario', 'breadcrumb', 'tiposUsuario', 'funcoes', 'sexo', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateUsuarioRequest $request, $id)
@@ -335,6 +344,11 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
     public function salvarNovaSenha(UpdatePasswordUsuarioRequest $request, $id)
     {
+        $usuario = $this->usuarioService->getById($id);
+        if (! $usuario) {
+            abort(403, 'Sem acesso a este usuario.');
+        }
+
         $resetarParaAcesso = $request->boolean('resetar_para_acesso');
 
         $this->usuarioService->updatePassword($id, [

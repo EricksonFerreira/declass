@@ -74,6 +74,33 @@
                         </div>
                     </div>
 
+                    <div class="form-row">
+                        <div class="col-md-6 form-group">
+                            <label for="funcao_id">Função</label>
+                            <select class="form-control @error('funcao_id') is-invalid @enderror" id="funcao_id" name="funcao_id">
+                                <option value="">Nenhuma</option>
+                                @foreach(($funcoes ?? []) as $id => $nome)
+                                    <option value="{{ $id }}" {{ (string) old('funcao_id', $usuario->funcao_id ?? '') === (string) $id ? 'selected' : '' }}>
+                                        {{ $nome }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="form-text text-muted">Usada no relatório "Consumo × Estimado" por projeto.</small>
+                            @error('funcao_id')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label for="custo_hora">Custo por hora (R$)</label>
+                            <input type="number" step="0.01" min="0" class="form-control @error('custo_hora') is-invalid @enderror" id="custo_hora" name="custo_hora" value="{{ old('custo_hora', $usuario->custo_hora ?? '') }}" placeholder="0,00">
+                            <small class="form-text text-muted">Opcional. Base para o cálculo de custo e efetividade do contrato.</small>
+                            @error('custo_hora')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
                     @if(!isset($usuario))
                         <div class="form-row">
                             <div class="col-md-6 form-group">

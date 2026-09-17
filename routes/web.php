@@ -99,6 +99,13 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
     Route::put('relatorios/membros/{user}', [\App\Http\Controllers\Clockify\ReportController::class, 'updateMembro'])->middleware('auth')->name('relatorios.membros.update');
     Route::post('relatorios/membros/{user}/reset-password', [\App\Http\Controllers\Clockify\ReportController::class, 'resetPassword'])->middleware('auth')->name('relatorios.membros.reset-password');
 
+    Route::middleware('auth')->group(function (): void {
+        Route::get('relatorios/consumo', [\App\Http\Controllers\Clockify\ConsumoRelatorioController::class, 'index'])->name('relatorios.consumo');
+        Route::get('relatorios/consumo/{id}', [\App\Http\Controllers\Clockify\ConsumoRelatorioController::class, 'show'])->name('relatorios.consumo.show');
+        Route::post('relatorios/consumo/{id}/estimativas', [\App\Http\Controllers\Clockify\ConsumoRelatorioController::class, 'estimativaStore'])->name('relatorios.consumo.estimativas.store');
+        Route::delete('relatorios/consumo/estimativas/{estimativa}', [\App\Http\Controllers\Clockify\ConsumoRelatorioController::class, 'estimativaDestroy'])->name('relatorios.consumo.estimativas.destroy');
+        Route::patch('relatorios/consumo/{id}/status', [\App\Http\Controllers\Clockify\ConsumoRelatorioController::class, 'updateStatus'])->name('relatorios.consumo.status');
+    });
 
     Route::middleware('auth')->group(function (): void {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -119,6 +126,12 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         Route::get('migrations/seed', [MigrationController::class, 'seed'])->name('migrations.seed');
         Route::get('migrations/run-all', [MigrationController::class, 'runAll'])->name('migrations.run-all');
         Route::get('migrations/fix-gateway-customer', [MigrationController::class, 'fixGatewayCustomer'])->name('migrations.fix-gateway-customer');
+    });
+
+    // Central de comandos Artisan — somente superadmin
+    Route::middleware(['auth', 'can:acessar-superadmin'])->group(function () {
+        Route::get('comandos', [\App\Http\Controllers\ComandoSistemaController::class, 'index'])->name('comandos.index');
+        Route::post('comandos/executar', [\App\Http\Controllers\ComandoSistemaController::class, 'run'])->name('comandos.executar');
     });
 
     require __DIR__.'/auth.php';

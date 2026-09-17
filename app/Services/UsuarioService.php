@@ -2,14 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Models\Estacao;
+use App\Models\User;
 use App\Support\EmpresaContext;
-use Illuminate\Database\Eloquent\Model;
-use App\Services\AbstractBaseService;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use App\Support\SchemaCache;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class UsuarioService extends AbstractBaseService
 {
@@ -22,8 +20,8 @@ class UsuarioService extends AbstractBaseService
 
     public function setModel(Model $model): void
     {
-        if (!$model instanceof User) {
-            throw new \InvalidArgumentException("Modelo esperado App\\Models\\User");
+        if (! $model instanceof User) {
+            throw new \InvalidArgumentException('Modelo esperado App\\Models\\User');
         }
         $this->model = $model;
     }
@@ -31,6 +29,18 @@ class UsuarioService extends AbstractBaseService
     public function getModel(): Model
     {
         return $this->model;
+    }
+
+    /**
+     * Contas superadmin são de plataforma e só podem ser configuradas
+     * diretamente no banco (tipo_usuario_id = 1). Elas nunca aparecem
+     * nem podem ser alteradas pelos fluxos de gestão de usuários.
+     */
+    protected function applyEmpresaScope($query)
+    {
+        return parent::applyEmpresaScope($query)->where(function ($q) {
+            $q->whereNull('tipo_usuario_id')->orWhere('tipo_usuario_id', '!=', 1);
+        });
     }
 
     /**
@@ -53,9 +63,9 @@ class UsuarioService extends AbstractBaseService
                 $doc = trim((string) ($u->email ?? ''));
             }
 
-            $label = $nome !== '' ? $nome : ('Usuario #' . (int) $u->id);
+            $label = $nome !== '' ? $nome : ('Usuario #'.(int) $u->id);
             if ($doc !== '') {
-                $label .= ' - ' . $doc;
+                $label .= ' - '.$doc;
             }
 
             $out[(int) $u->id] = $label;
@@ -81,7 +91,7 @@ class UsuarioService extends AbstractBaseService
         }
 
         $data['email_verified_at'] = now();
-        
+
         /** @var User $user */
         $user = $this->model->create($data);
         $this->syncEstacoesPermitidas($user, $data, $acessoTodasEstacoes);
@@ -89,9 +99,10 @@ class UsuarioService extends AbstractBaseService
         return $user;
     }
 
-    public function updatePassword($id, $data){
+    public function updatePassword($id, $data)
+    {
         $this->model = $this->applyEmpresaScope($this->model->newQuery())->find($id);
-        if (!$this->model) {
+        if (! $this->model) {
             throw new \RuntimeException('Usuario nao encontrado para a empresa atual.');
         }
 
@@ -109,7 +120,7 @@ class UsuarioService extends AbstractBaseService
     public function updateUser($id, array $data): ?User
     {
         $user = $this->applyEmpresaScope($this->model->newQuery())->find($id);
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -138,12 +149,12 @@ class UsuarioService extends AbstractBaseService
      */
     private function enforceRoleStationDefaults(array $data, bool $acessoTodasEstacoes, ?User $user = null): array
     {
-        if (!SchemaCache::hasColumn($this->model->getTable(), 'role_id')) {
+        if (! SchemaCache::hasColumn($this->model->getTable(), 'role_id')) {
             return [$acessoTodasEstacoes, $data];
         }
 
         $roleId = (int) ($data['role_id'] ?? ($user?->role_id ?? 0));
-        if ($roleId <= 0 || !SchemaCache::hasTable('roles')) {
+        if ($roleId <= 0 || ! SchemaCache::hasTable('roles')) {
             return [$acessoTodasEstacoes, $data];
         }
 
@@ -154,12 +165,14 @@ class UsuarioService extends AbstractBaseService
             $acessoTodasEstacoes = true;
             $data['acesso_todas_estacoes'] = true;
             unset($data['estacoes']);
+
             return [$acessoTodasEstacoes, $data];
         }
 
         if (in_array($roleKey, ['colaborador_administrativo', 'colaborador administrativo', 'colaborador_chefe', 'colaborador chefe'], true)) {
             $acessoTodasEstacoes = false;
             $data['acesso_todas_estacoes'] = false;
+
             return [$acessoTodasEstacoes, $data];
         }
 
@@ -167,6 +180,7 @@ class UsuarioService extends AbstractBaseService
             $acessoTodasEstacoes = false;
             $data['acesso_todas_estacoes'] = false;
             $data['estacoes'] = [];
+
             return [$acessoTodasEstacoes, $data];
         }
 
@@ -175,12 +189,13 @@ class UsuarioService extends AbstractBaseService
 
     private function syncEstacoesPermitidas(User $user, array $data, bool $acessoTodasEstacoes): void
     {
-        if (!SchemaCache::hasTable('estacao_user')) {
+        if (! SchemaCache::hasTable('estacao_user')) {
             return;
         }
 
         if ($acessoTodasEstacoes) {
             $user->estacoesPermitidas()->detach();
+
             return;
         }
 
@@ -192,11 +207,12 @@ class UsuarioService extends AbstractBaseService
 
         if ($estacoes->isEmpty()) {
             $user->estacoesPermitidas()->sync([]);
+
             return;
         }
 
         $query = Estacao::query()->whereIn('id', $estacoes->all());
-        if (SchemaCache::hasColumn('estacoes', 'empresa_id') && !empty($user->empresa_id)) {
+        if (SchemaCache::hasColumn('estacoes', 'empresa_id') && ! empty($user->empresa_id)) {
             $query->where('empresa_id', $user->empresa_id);
         }
 

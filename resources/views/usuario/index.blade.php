@@ -22,13 +22,13 @@
 
     <div class="card card-outline card-primary shadow-sm">
         <div class="card-header px-3 py-2">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center ux-card-header">
                 <h3 class="card-title text-sm text-bold">
                     REGISTROS
                     <span class="badge badge-success">{{ $usuarios->total() }}</span>
                 </h3>
 
-                <div class="align-bottom d-flex flex-row justify-between" style="gap:6px;flex-wrap:wrap;">
+                <div class="align-bottom d-flex flex-row justify-between ux-header-controls" style="gap:6px;flex-wrap:wrap;">
                     <form action="{{ route('usuario.setPerPage') }}" method="POST">
                         @csrf
                         <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
@@ -43,7 +43,7 @@
                         </button>
                     </div>
 
-                    <div class="d-flex align-items-end">
+                    <div class="d-flex align-items-end ux-header-pagination">
                         {{ $usuarios->links() }}
                     </div>
                 </div>
@@ -54,25 +54,15 @@
             <div class="ux-cards p-3">
                 @forelse ($usuarios as $usuario)
                     @php
-                        $canMetodoPagamento = auth()->user()->hasPermissao('usuario.metodoPagamento');
                         $canEditar = auth()->user()->hasPermissao('usuario.edit');
                         $canAlterarSenha = auth()->user()->hasPermissao('usuario.alterarSenha');
                         $canExcluir = auth()->user()->hasPermissao('usuario.destroy');
-                        $temAlgumaAcao = $canMetodoPagamento || $canEditar || $canAlterarSenha || $canExcluir;
+                        $temAlgumaAcao = $canEditar || $canAlterarSenha || $canExcluir;
                         $nomeUsuario = trim((string) ($usuario->nome ?? 'Usuário'));
                         $partesNome = preg_split('/\s+/', $nomeUsuario) ?: [];
                         $iniciais = collect($partesNome)->filter()->take(2)
                             ->map(fn($parte) => mb_strtoupper(mb_substr($parte, 0, 1)))->implode('');
                         $iniciais = $iniciais ?: 'US';
-                        $pendenciasUsuario = [];
-                        if (empty($usuario->email)) $pendenciasUsuario[] = 'E-mail';
-                        if (empty($usuario->numero_identificacao)) $pendenciasUsuario[] = 'Documento';
-                        if (empty($usuario->celular)) $pendenciasUsuario[] = 'Celular';
-                        if (empty($usuario->data_nascimento)) $pendenciasUsuario[] = 'Nascimento';
-                        if (empty($usuario->pais_sigla) || empty($usuario->cidade) || empty($usuario->endereco)) $pendenciasUsuario[] = 'Contato/Endereço';
-                        $statusUsuario = !empty($usuario->data_validade_carta_conducao) && \Carbon\Carbon::parse($usuario->data_validade_carta_conducao)->isPast()
-                            ? 'Documento vencido'
-                            : (count($pendenciasUsuario) > 0 ? 'Cadastro incompleto' : 'Apto para locação');
                     @endphp
 
                     <article class="ux-card">
@@ -83,6 +73,11 @@
                                 <div class="ux-card__title">{{ $usuario->nome }}</div>
                                 <div class="ux-card__sub">{{ $usuario->email ?: 'Sem e-mail' }}</div>
                             </div>
+                            @if ($usuario->tipoUsuario)
+                                <div class="ux-card__badges">
+                                    <span class="ux-card__badge ux-card__badge--blue">{{ $usuario->tipoUsuario->name }}</span>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="ux-card__meta">
@@ -91,6 +86,10 @@
                                 <strong class="ux-card__meta-value">{{ $usuario->cargo ?: 'Sem cargo' }}</strong>
                             </div>
                             <div class="ux-card__meta-row">
+                                <span class="ux-card__meta-label"><i class="fas fa-briefcase mr-1"></i>Função</span>
+                                <strong class="ux-card__meta-value">{{ $usuario->funcao?->nome ?: 'Sem função' }}</strong>
+                            </div>
+                            <div class="ux-card__meta-row ux-card__meta-row--full">
                                 <span class="ux-card__meta-label"><i class="fas fa-phone-alt mr-1"></i>Celular</span>
                                 <strong class="ux-card__meta-value">{{ $usuario->celular ?: 'Sem celular' }}</strong>
                             </div>
@@ -103,7 +102,10 @@
                                    data-nome="{{ $usuario->nome }}"
                                    data-email="{{ $usuario->email }}"
                                    data-celular="{{ $usuario->celular }}"
-                                   data-cargo="{{ $usuario->cargo }}">
+                                   data-cargo="{{ $usuario->cargo }}"
+                                   data-role-id="{{ $usuario->role_id }}"
+                                   data-funcao-id="{{ $usuario->funcao_id }}"
+                                   data-custo-hora="{{ $usuario->custo_hora }}">
                                     <i class="fas fa-edit mr-1"></i>Editar
                                 </a>
                             @endif
@@ -167,11 +169,10 @@
                     <tbody>
                         @forelse ($usuarios as $usuario)
                             @php
-                                $canMetodoPagamento = auth()->user()->hasPermissao('usuario.metodoPagamento');
                                 $canEditar = auth()->user()->hasPermissao('usuario.edit');
                                 $canAlterarSenha = auth()->user()->hasPermissao('usuario.alterarSenha');
                                 $canExcluir = auth()->user()->hasPermissao('usuario.destroy');
-                                $temAlgumaAcao = $canMetodoPagamento || $canEditar || $canAlterarSenha || $canExcluir;
+                                $temAlgumaAcao = $canEditar || $canAlterarSenha || $canExcluir;
                             @endphp
 
                             <tr>
@@ -214,7 +215,10 @@
                                                     data-nome="{{ $usuario->nome }}"
                                                     data-email="{{ $usuario->email }}"
                                                     data-celular="{{ $usuario->celular }}"
-                                                    data-cargo="{{ $usuario->cargo }}">
+                                                    data-cargo="{{ $usuario->cargo }}"
+                                                    data-role-id="{{ $usuario->role_id }}"
+                                                    data-funcao-id="{{ $usuario->funcao_id }}"
+                                                    data-custo-hora="{{ $usuario->custo_hora }}">
                                                     <i class="fas fa-edit mr-1"></i> Editar
                                                 </a>
                                             @endif
@@ -305,6 +309,44 @@
             <label for="drawer_cargo">Cargo <span class="text-danger">*</span></label>
             <input type="text" class="form-control form-control-sm @error('cargo') is-invalid @enderror" id="drawer_cargo" name="cargo" value="{{ old('cargo') }}" required>
             @error('cargo')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label for="drawer_role_id">Perfil de acesso <span class="text-danger">*</span></label>
+            <select class="form-control form-control-sm @error('role_id') is-invalid @enderror" id="drawer_role_id" name="role_id" required>
+                <option value="">Selecione o perfil</option>
+                @foreach(($tiposUsuario ?? []) as $id => $nome)
+                    <option value="{{ $id }}" {{ (string) old('role_id') === (string) $id ? 'selected' : '' }}>
+                        {{ ucfirst(str_replace('_', ' ', $nome)) }}
+                    </option>
+                @endforeach
+            </select>
+            @error('role_id')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label for="drawer_funcao_id">Função</label>
+            <select class="form-control form-control-sm @error('funcao_id') is-invalid @enderror" id="drawer_funcao_id" name="funcao_id">
+                <option value="">Nenhuma</option>
+                @foreach(($funcoes ?? []) as $id => $nome)
+                    <option value="{{ $id }}" {{ (string) old('funcao_id') === (string) $id ? 'selected' : '' }}>
+                        {{ $nome }}
+                    </option>
+                @endforeach
+            </select>
+            @error('funcao_id')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label for="drawer_custo_hora">Custo por hora (R$)</label>
+            <input type="number" step="0.01" min="0" class="form-control form-control-sm @error('custo_hora') is-invalid @enderror" id="drawer_custo_hora" name="custo_hora" value="{{ old('custo_hora') }}" placeholder="0,00">
+            @error('custo_hora')
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
@@ -553,6 +595,61 @@
                 grid-template-columns: 1fr;
                 padding: 6px 4px 12px;
             }
+
+            /* Filtro não fixa no topo no mobile — ocupa muito da tela */
+            .veiculo-filter-sticky {
+                position: static;
+            }
+
+            /* Header do card empilha e esconde a paginação duplicada */
+            .ux-card-header {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 8px;
+            }
+
+            .ux-header-controls {
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .ux-header-pagination {
+                display: none !important;
+            }
+
+            /* Ações do card viram botões grandes e empilhados (área de toque) */
+            .ux-card__foot {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .ux-card__foot form {
+                width: 100%;
+                display: block;
+            }
+
+            .ux-card__foot .btn {
+                width: 100%;
+            }
+
+            .ux-card__foot .btn {
+                min-height: 40px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: .85rem;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .ux-card__meta {
+                grid-template-columns: 1fr;
+            }
+
+            .ux-view-toggle .btn {
+                font-size: .75rem;
+                padding: .35rem .5rem;
+            }
         }
     </style>
 @stop
@@ -590,6 +687,9 @@
                     $('#drawer_email').val(data.email);
                     $('#drawer_celular').val(data.celular);
                     $('#drawer_cargo').val(data.cargo);
+                    $('#drawer_role_id').val(data.role_id || '');
+                    $('#drawer_funcao_id').val(data.funcao_id || '');
+                    $('#drawer_custo_hora').val(data.custo_hora || '');
                 } else {
                     $form[0].reset();
                 }
@@ -619,7 +719,10 @@
                     nome: $btn.data('nome'),
                     email: $btn.data('email'),
                     celular: $btn.data('celular'),
-                    cargo: $btn.data('cargo')
+                    cargo: $btn.data('cargo'),
+                    role_id: $btn.data('role-id'),
+                    funcao_id: $btn.data('funcao-id'),
+                    custo_hora: $btn.data('custo-hora')
                 });
             });
 
@@ -636,7 +739,10 @@
                         nome: "{{ old('nome') }}",
                         email: "{{ old('email') }}",
                         celular: "{{ old('celular') }}",
-                        cargo: "{{ old('cargo') }}"
+                        cargo: "{{ old('cargo') }}",
+                        role_id: "{{ old('role_id') }}",
+                        funcao_id: "{{ old('funcao_id') }}",
+                        custo_hora: "{{ old('custo_hora') }}"
                     } : null
                 );
             @endif
@@ -777,10 +883,10 @@
 
     const steps = [
 { element: '.page-title', popover: { title: 'Lista de Usuários', description: 'Aqui você gerencia todos os usuários do sistema: clientes, colaboradores, gerentes e administradores. Cada usuário tem uma regra de acesso que define o que ele pode ver e fazer.' } },
-        { element: '.btn-create-resource, a[href*="usuario/create"]', popover: { title: 'Adicionar usuário', description: 'Clique aqui para cadastrar um novo usuário. O formulário é dividido em etapas: Dados Pessoais, Contato e Endereço, Perfil e Acesso, Carta de Condução e Segurança (senha).', side: 'bottom' } },
-        { element: '.tabela-usuarios thead tr', popover: { title: 'Tabela de usuários', description: 'Exibe nome, e-mail, telefone, regra de acesso, cidade e data de cadastro. Clique no cabeçalho para ordenar.', side: 'bottom' } },
-        { element: '.tabela-usuarios tbody tr:first-child td', popover: { title: 'Regra de acesso', description: 'O badge colorido indica o perfil do usuário (Cliente, Colaborador, Gerente, Administrador). A regra controla quais módulos e ações cada usuário pode acessar.', side: 'right' } },
-        { element: '.tabela-usuarios tbody tr:first-child td:last-child', popover: { title: 'Ações disponíveis', description: 'Para cada usuário: <b>Pagamento</b> (gerenciar cartões Stripe), <b>Editar</b> (alterar dados), <b>Resetar senha</b> (voltar para senha padrão) e <b>Excluir</b>.', side: 'left' } },
+        { element: '.btn-create-resource, a[href*="usuario/create"]', popover: { title: 'Adicionar usuário', description: 'Clique aqui para cadastrar um novo colaborador: nome, e-mail, celular, cargo, perfil de acesso e, se quiser, função e custo por hora para os relatórios.', side: 'bottom' } },
+        { element: '.ux-view-toggle', popover: { title: 'Cards ou Tabela', description: 'Alterne entre a visualização em cards (ideal no celular) e a tabela completa no desktop.', side: 'bottom' } },
+        { element: '.ux-cards article:first-child .ux-card__badges', popover: { title: 'Perfil de acesso', description: 'O badge indica o perfil do usuário (Colaborador, Gerente, Administrador). O perfil controla quais módulos e ações cada usuário pode acessar.', side: 'right' } },
+        { element: '.ux-cards article:first-child .ux-card__foot', popover: { title: 'Ações disponíveis', description: 'Para cada usuário: <b>Editar</b> (alterar dados, função e custo/hora), <b>Resetar senha</b> (voltar para a senha padrão) e <b>Excluir</b>.', side: 'left' } },
     ];
 
     function marcarFeito() {

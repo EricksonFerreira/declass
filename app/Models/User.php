@@ -50,6 +50,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'foto_perfil',
         'saldo_atual',
         'cargo',
+        'funcao_id',
+        'custo_hora',
         'ativo',
     ];
 
@@ -74,6 +76,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'acesso_todas_estacoes' => 'boolean',
         'forcar_troca_senha' => 'boolean',
         'saldo_atual' => 'decimal:2',
+        'custo_hora' => 'decimal:2',
     ];
 
     public function sendEmailVerificationNotification()
@@ -204,6 +207,19 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Empresa::class, 'empresa_id');
     }
 
+    public function funcao()
+    {
+        return $this->belongsTo(Funcao::class, 'funcao_id');
+    }
+
+    /**
+     * Custo/hora efetivo do colaborador: override do usuário ou default da função.
+     */
+    public function getCustoHoraEfetivoAttribute(): float
+    {
+        return (float) ($this->custo_hora ?? $this->funcao?->custo_hora ?? 0);
+    }
+
     public function estacoesPermitidas()
     {
         return $this->belongsToMany(Estacao::class, 'estacao_user', 'user_id', 'estacao_id')->withTimestamps();
@@ -245,6 +261,10 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Super admin do sistema (global): tipo_usuario_id = 1.
      * Possui acesso total, independente da empresa.
+     *
+     * Só pode ser definido via UPDATE direto no banco — o mutator
+     * setTipoUsuarioIdAttribute redireciona qualquer escrita Eloquent
+     * para role_id, então nenhum form/fluxo da aplicação cria superadmin.
      */
     public function isSuperAdmin(): bool
     {
