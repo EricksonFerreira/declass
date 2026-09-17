@@ -60,8 +60,9 @@ class ClockifyDashboardController extends Controller
             'selectedEndDate' => $stats['endDate']->toDateString(),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
-                ['name' => 'Dashboard', 'active' => true],
+                ['name' => 'Análise'],
+                ['name' => 'Painel', 'url' => route('dashboard')],
+                ['name' => 'Visão Geral', 'active' => true],
             ],
             // Member stats for chart
             'memberStats' => $memberData['memberStats'],
@@ -88,7 +89,8 @@ class ClockifyDashboardController extends Controller
             'selectedEndDate' => $data['endDate']->toDateString(),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Análise'],
+                ['name' => 'Painel', 'url' => route('dashboard')],
                 ['name' => 'Produtividade', 'active' => true],
             ],
         ]));
@@ -123,7 +125,8 @@ class ClockifyDashboardController extends Controller
             'selectedEndDate' => $data['endDate']->toDateString(),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Análise'],
+                ['name' => 'Painel', 'url' => route('dashboard')],
                 ['name' => 'Equipe', 'active' => true],
             ],
         ]));
@@ -149,7 +152,8 @@ class ClockifyDashboardController extends Controller
             'selectedEndDate' => $data['endDate']->toDateString(),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Análise'],
+                ['name' => 'Painel', 'url' => route('dashboard')],
                 ['name' => 'Projetos', 'active' => true],
             ],
         ]));

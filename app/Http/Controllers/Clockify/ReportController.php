@@ -31,7 +31,8 @@ class ReportController extends Controller
 
         $breadcrumb = [
             ['name' => 'Home', 'url' => route('home')],
-            ['name' => 'Painel', 'url' => route('home')],
+            ['name' => 'Análise'],
+            ['name' => 'Relatórios', 'url' => route('relatorios.index')],
             ['name' => 'Membros', 'active' => true],
         ];
 
@@ -98,7 +99,7 @@ class ReportController extends Controller
     {
         $breadcrumb = [
             ['name' => 'Home', 'url' => route('home')],
-            ['name' => 'Painel', 'url' => route('home')],
+            ['name' => 'Análise'],
             ['name' => 'Relatórios', 'url' => route('relatorios.index')],
             ['name' => 'Horas Trabalhadas', 'active' => true],
         ];
@@ -124,9 +125,9 @@ class ReportController extends Controller
             ->get();
         $breadcrumb = [
             ['name' => 'Home', 'url' => route('home')],
-            ['name' => 'Painel', 'url' => route('home')],
+            ['name' => 'Análise'],
             ['name' => 'Relatórios', 'url' => route('relatorios.index')],
-            ['name' => 'Exportar', 'active' => true],
+            ['name' => 'Exportar CSV', 'active' => true],
         ];
 
         return View::make('relatorios.export', ['users' => $users, 'breadcrumb' => $breadcrumb]);

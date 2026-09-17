@@ -22,7 +22,7 @@ class ClockifyTagController extends Controller
             'tags' => $tags,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Gerenciar'],
                 ['name' => 'Tags', 'active' => true],
             ],
         ]);

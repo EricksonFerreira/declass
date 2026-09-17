@@ -39,7 +39,7 @@ class ClockifyProjetoController extends Controller
             'matrixMembers' => [],
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Gerenciar'],
                 ['name' => 'Projetos', 'active' => true],
             ],
         ]);
@@ -130,7 +130,7 @@ class ClockifyProjetoController extends Controller
             'existingPlanning' => $existingPlanning,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Gerenciar'],
                 ['name' => 'Projetos', 'url' => route('clockify.projetos.index')],
                 ['name' => $projeto->nome, 'url' => route('clockify.projetos.show', $projeto->id)],
                 ['name' => 'Planejamento', 'active' => true],
@@ -277,9 +277,9 @@ class ClockifyProjetoController extends Controller
             'clientes' => $clientes,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Gerenciar'],
                 ['name' => 'Projetos', 'url' => route('clockify.projetos.index')],
-                ['name' => 'Detalhes', 'active' => true],
+                ['name' => $projeto->nome, 'active' => true],
             ],
         ]);
     }
@@ -326,7 +326,7 @@ class ClockifyProjetoController extends Controller
             'alocacoes'         => $alocacoes,
             'breadcrumb'        => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Gerenciar'],
                 ['name' => 'Projetos', 'url' => route('clockify.projetos.index')],
                 ['name' => $projeto->nome, 'url' => route('clockify.projetos.show', $projeto->id)],
                 ['name' => 'Planejar Equipe', 'active' => true],
@@ -390,8 +390,7 @@ class ClockifyProjetoController extends Controller
             'alocacoes' => [],
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
-                ['name' => 'Projetos', 'url' => route('clockify.projetos.index')],
+                ['name' => 'Gerenciar'],
                 ['name' => 'Planejar Equipe', 'active' => true],
             ],
         ]);

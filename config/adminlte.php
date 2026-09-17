@@ -319,11 +319,25 @@ return [
             'type' => 'fullscreen-widget',
             'topnav_right' => false,
         ],
-        // TRACK
+        [
+            'text' => 'Início',
+            'route' => 'home',
+            'icon' => 'fas fa-home',
+        ],
+
+        // REGISTRAR TEMPO
+        [
+            'header' => 'REGISTRAR TEMPO',
+        ],
         [
             'text' => 'Rastreador',
             'route' => 'clockify.tracker.index',
             'icon' => 'fas fa-stopwatch',
+        ],
+        [
+            'text' => 'Timesheet',
+            'route' => 'clockify.timesheet',
+            'icon' => 'fas fa-table',
         ],
         [
             'text' => 'Calendário',
@@ -331,14 +345,14 @@ return [
             'icon' => 'fas fa-calendar-alt',
         ],
         [
-            'text' => 'Planejar Equipe',
-            'route' => 'clockify.projetos.planejar-equipe-geral',
-            'icon' => 'fas fa-users-cog',
+            'text' => 'Time Off',
+            'route' => 'clockify.timeoff.index',
+            'icon' => 'fas fa-plane',
         ],
 
-        // ANALISAR
+        // ANÁLISE
         [
-            'header' => 'ANALISAR',
+            'header' => 'ANÁLISE',
         ],
         [
             'text' => 'Painel',
@@ -346,7 +360,7 @@ return [
             'submenu' => [
                 [
                     'text' => 'Visão Geral',
-                    'route' => 'home',
+                    'route' => 'dashboard',
                     'icon' => 'fas fa-tachometer-alt',
                 ],
                 [
@@ -366,54 +380,6 @@ return [
                 ],
             ],
         ],
-
-        [
-            'text' => 'Timesheet',
-            'route' => 'clockify.timesheet',
-            'icon' => 'fas fa-table',
-        ],
-
-        [
-            'text' => 'Gerenciar',
-            'icon' => 'fas fa-tools',
-            'submenu' => [
-                [
-                    'text' => 'Clientes',
-                    'route' => 'clockify.clientes.index',
-                    'icon' => 'fas fa-user-friends',
-                ],
-                [
-                    'text' => 'Projetos',
-                    'route' => 'clockify.projetos.index',
-                    'icon' => 'fas fa-project-diagram',
-                ],
-                [
-                    'text' => 'Equipe',
-                    'route' => 'clockify.times.index',
-                    'icon' => 'fas fa-users',
-                ],
-                [
-                    'text' => 'Funções',
-                    'route' => 'clockify.funcoes.index',
-                    'icon' => 'fas fa-briefcase',
-                ],
-                [
-                    'text' => 'Tags',
-                    'route' => 'clockify.tags.index',
-                    'icon' => 'fas fa-tags',
-                ],
-                [
-                    'text' => 'Time Off',
-                    'route' => 'clockify.timeoff.index',
-                    'icon' => 'fas fa-plane',
-                ],
-                [
-                    'text' => 'Usuários',
-                    'route' => 'usuario.index',
-                    'icon' => 'fas fa-users',
-                ],
-            ],
-        ],
         [
             'text' => 'Relatórios',
             'icon' => 'fas fa-file-alt',
@@ -422,11 +388,6 @@ return [
                     'text' => 'Visão geral',
                     'route' => 'relatorios.index',
                     'icon' => 'fas fa-file-alt',
-                ],
-                [
-                    'text' => 'Exportar CSV',
-                    'route' => 'relatorios.export',
-                    'icon' => 'fas fa-file-export',
                 ],
                 [
                     'text' => 'Horas trabalhadas',
@@ -438,8 +399,55 @@ return [
                     'route' => 'relatorios.consumo',
                     'icon' => 'fas fa-chart-bar',
                 ],
+                [
+                    'text' => 'Exportar CSV',
+                    'route' => 'relatorios.export',
+                    'icon' => 'fas fa-file-export',
+                ],
             ],
         ],
+
+        // GERENCIAR
+        [
+            'header' => 'GERENCIAR',
+        ],
+        [
+            'text' => 'Projetos',
+            'route' => 'clockify.projetos.index',
+            'icon' => 'fas fa-project-diagram',
+        ],
+        [
+            'text' => 'Planejar Equipe',
+            'route' => 'clockify.projetos.planejar-equipe-geral',
+            'icon' => 'fas fa-users-cog',
+        ],
+        [
+            'text' => 'Clientes',
+            'route' => 'clockify.clientes.index',
+            'icon' => 'fas fa-user-friends',
+        ],
+        [
+            'text' => 'Equipe',
+            'route' => 'clockify.times.index',
+            'icon' => 'fas fa-users',
+        ],
+        [
+            'text' => 'Funções',
+            'route' => 'clockify.funcoes.index',
+            'icon' => 'fas fa-briefcase',
+        ],
+        [
+            'text' => 'Tags',
+            'route' => 'clockify.tags.index',
+            'icon' => 'fas fa-tags',
+        ],
+        [
+            'text' => 'Usuários',
+            'route' => 'usuario.index',
+            'icon' => 'fas fa-user-cog',
+        ],
+
+        // SISTEMA (somente superadmin — 'can' não funciona em header, por isso é submenu)
         [
             'text' => 'Configurações',
             'icon' => 'fas fa-cogs',
@@ -457,6 +465,7 @@ return [
                 ],
             ],
         ],
+
         // AJUDA
         [
             'header' => 'AJUDA',

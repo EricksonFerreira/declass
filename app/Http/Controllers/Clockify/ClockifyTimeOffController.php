@@ -28,7 +28,7 @@ class ClockifyTimeOffController extends Controller
             'usuarios' => $usuarios,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Registrar Tempo'],
                 ['name' => 'Time Off', 'active' => true],
             ],
         ]);

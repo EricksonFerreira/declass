@@ -86,7 +86,7 @@ class ClockifyCalendarioController extends Controller
             'usuarios' => $usuarios,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Registrar Tempo'],
                 ['name' => 'Calendário', 'active' => true],
             ],
         ]);

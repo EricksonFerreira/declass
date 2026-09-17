@@ -62,7 +62,8 @@ class ComandoSistemaController extends Controller
             'grupos' => self::COMANDOS,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Comandos do Sistema', 'active' => true],
+                ['name' => 'Configurações'],
+                ['name' => 'Comandos', 'active' => true],
             ],
         ]);
     }

@@ -80,7 +80,12 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         return view('auth.register-success');
     })->name('register.success');
 
-    Route::get('home', [\App\Http\Controllers\Clockify\ClockifyDashboardController::class, 'index'])->middleware(['auth'])->name('home');
+    Route::get('home', function () {
+        return view('home', [
+            'titulo' => 'Início',
+            'breadcrumb' => [['name' => 'Home', 'active' => true]],
+        ]);
+    })->middleware(['auth'])->name('home');
     Route::get('home/chart-data', [HomeController::class, 'chartData'])->middleware(['auth'])->name('home.chart-data');
     Route::get('home/produtividade', [\App\Http\Controllers\Clockify\ClockifyDashboardController::class, 'produtividade'])->middleware(['auth'])->name('home.produtividade');
     Route::get('home/equipe', [\App\Http\Controllers\Clockify\ClockifyDashboardController::class, 'equipe'])->middleware(['auth'])->name('home.equipe');

@@ -208,7 +208,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         $empresas = $this->empresaService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Empresas');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Empresas', 'Configurações');
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -241,7 +241,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             'S' => 'Ativo',
             'N' => 'Inativo',
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Empresas', 'empresa.index', 'Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Empresas', 'empresa.index', 'Criar', 'Configurações');
         [$metodo, $rota] = $this->getFormMethodAndRoute();
         [$calcaoConfigEmpresa, $calcaoConfigsGrupo, $gruposFrota] = $this->dadosCalcaoForm(null);
 
@@ -348,7 +348,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             return redirect()->route('empresa.index')->with('error', 'Empresa nao encontrada.');
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome);
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome, 'Configurações');
         $contratos = $empresa->contratos()->latest('id')->take(10)->get();
         $planos = Plano::query()->ativos()->orderBy('nome')->get(['id', 'nome', 'descricao', 'valor_mensal', 'valor_anual']);
 
@@ -572,7 +572,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             return redirect()->route('empresa.index')->with('error', 'Empresa nao encontrada.');
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome . ' · Armazenamento');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome . ' · Armazenamento', 'Configurações');
 
         $query = ArquivoRastreado::query()
             ->where('empresa_id', $empresa->id)
@@ -635,7 +635,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             'S' => 'Ativo',
             'N' => 'Inativo',
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', "Editar: $empresa->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', "Editar: $empresa->nome", 'Configurações');
         [$metodo, $rota] = $this->getFormMethodAndRoute($empresa);
         [$calcaoConfigEmpresa, $calcaoConfigsGrupo, $gruposFrota] = $this->dadosCalcaoForm($empresa);
 
@@ -698,7 +698,8 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit(
             'Empresas',
             'empresa.index',
-            "Site de apresentacao: $empresa->nome"
+            "Site de apresentacao: $empresa->nome",
+            'Configurações'
         );
         $metodo = 'PUT';
         $rota = route('empresa.site-apresentacao.update', $empresa->id);
@@ -792,7 +793,8 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit(
             'Empresas',
             'empresa.index',
-            "Editor visual: $empresa->nome"
+            "Editor visual: $empresa->nome",
+            'Configurações'
         );
 
         return view('empresa.site-editor', compact(

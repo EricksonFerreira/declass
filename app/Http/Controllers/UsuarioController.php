@@ -54,7 +54,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         // session()->forget("$this->nomeFiltro.filtro");
         $usuarios = $this->usuarioService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['tipoUsuario', 'funcao']);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Usuarios');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Usuários', 'Gerenciar');
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -101,7 +101,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             'F' => 'Feminino',
             'O' => 'Outro',
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Usuarios', 'usuario.index', 'Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Usuários', 'usuario.index', 'Criar', 'Gerenciar');
 
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
         $funcoes = \App\Models\Funcao::where('ativo', true)->orderBy('nome')->pluck('nome', 'id');
@@ -311,7 +311,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
         $funcoes = \App\Models\Funcao::where('ativo', true)->orderBy('nome')->pluck('nome', 'id');
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuarios', 'usuario.index', "Editar: $usuario->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuários', 'usuario.index', "Editar: $usuario->nome", 'Gerenciar');
         [$metodo, $rota] = $this->getFormMethodAndRoute($usuario);
 
         return view('usuario.add-edit', compact('usuario', 'breadcrumb', 'tiposUsuario', 'funcoes', 'sexo', 'metodo', 'rota'))->with('titulo', $this->titulo);
@@ -335,7 +335,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         if (! $usuario) {
             abort(403, 'Sem acesso a este usuario.');
         }
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuarios', 'usuario.index', "Alterar Senha: $usuario->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuários', 'usuario.index', "Alterar Senha: $usuario->nome", 'Gerenciar');
         $metodo = 'PUT';
         $rota = route('usuario.salvarNovaSenha', $usuario->id);
 

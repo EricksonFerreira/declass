@@ -19,42 +19,46 @@ class BreadcrumbService
         ]);
         return $this->prepararBreadcrumb($items);
     }
-    public function prepararBreadcrumbIndex(string $indexName)
+    public function prepararBreadcrumbIndex(string $indexName, ?string $grupo = null)
     {
-        $items = $this->buildBreadCrumbItems([
+        $items = $this->buildBreadCrumbItems(array_filter([
             ['Home', route('home')],
+            $grupo ? [$grupo, null] : null,
             [$indexName, null],
-        ]);
+        ]));
         return $this->prepararBreadcrumb($items);
     }
 
-    public function prepararBreadcrumbCreate(string $indexName, string $routeName, string $createName)
+    public function prepararBreadcrumbCreate(string $indexName, string $routeName, string $createName, ?string $grupo = null)
     {
-        $items = $this->buildBreadCrumbItems([
+        $items = $this->buildBreadCrumbItems(array_filter([
             ['Home', route('home')],
+            $grupo ? [$grupo, null] : null,
             [$indexName, route($routeName)],
             [$createName, null],
-        ]);
+        ]));
         return $this->prepararBreadcrumb($items);
     }
 
-    public function prepararBreadcrumbEdit( string $indexName,string $routeName, string $editName)
+    public function prepararBreadcrumbEdit( string $indexName,string $routeName, string $editName, ?string $grupo = null)
     {
-        $items = $this->buildBreadCrumbItems([
+        $items = $this->buildBreadCrumbItems(array_filter([
             ['Home', route('home')],
+            $grupo ? [$grupo, null] : null,
             [$indexName, route($routeName)],
             [$editName, null],
-        ]);
+        ]));
         return $this->prepararBreadcrumb($items);
     }
 
-    public function prepararBreadcrumbShow(string $indexName, string $routeName, string $showName)
+    public function prepararBreadcrumbShow(string $indexName, string $routeName, string $showName, ?string $grupo = null)
     {
-        $items = $this->buildBreadCrumbItems([
+        $items = $this->buildBreadCrumbItems(array_filter([
             ['Home', route('home')],
+            $grupo ? [$grupo, null] : null,
             [$indexName, route($routeName)],
             [$showName, null],
-        ]);
+        ]));
         return $this->prepararBreadcrumb($items);
     }
 

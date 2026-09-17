@@ -20,6 +20,10 @@ class NotificacaoController extends Controller
             'titulo' => 'Notificações',
             'notificacoes' => $notificacoes,
             'naoLidas' => $user->unreadNotifications()->count(),
+            'breadcrumb' => [
+                ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Notificações', 'active' => true],
+            ],
         ]);
     }
 

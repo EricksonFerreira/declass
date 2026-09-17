@@ -81,8 +81,8 @@ class ClockifyTrackerController extends Controller
             'tags' => $tags,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
-                ['name' => 'Time Tracker', 'active' => true],
+                ['name' => 'Registrar Tempo'],
+                ['name' => 'Rastreador', 'active' => true],
             ],
         ]);
     }
@@ -236,7 +236,7 @@ class ClockifyTrackerController extends Controller
             'projetos' => $projetos,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Registrar Tempo'],
                 ['name' => 'Timesheet', 'active' => true],
             ],
         ]);

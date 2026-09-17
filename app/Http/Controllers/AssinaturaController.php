@@ -330,6 +330,7 @@ class AssinaturaController extends Controller
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new \App\DTO\BreadCrumbItem('Home', route('home')),
             new \App\DTO\BreadCrumbItem('Ajuda', null),
+            new \App\DTO\BreadCrumbItem('Central de Ajuda', null),
         ]);
 
         $ajudaPath = base_path('docs/ajuda-planos.md');

@@ -11,7 +11,7 @@
                         : (method_exists($breadcrumb, 'getUrl') ? $breadcrumb->getUrl() : ($breadcrumb->url ?? null));
                 @endphp
                 <li class="breadcrumb-item {{ $loop->last ? 'active' : '' }}">
-                    @if (!$loop->last)
+                    @if (!$loop->last && $url)
                         <a href="{{ $url }}">{{ $name }}</a>
                     @else
                         {{ $name }}

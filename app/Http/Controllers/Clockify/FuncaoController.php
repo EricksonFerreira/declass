@@ -23,7 +23,7 @@ class FuncaoController extends Controller
             'funcoes' => $funcoes,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Gerenciar'],
                 ['name' => 'Funções', 'active' => true],
             ],
         ]);

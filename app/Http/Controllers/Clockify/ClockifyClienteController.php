@@ -22,7 +22,7 @@ class ClockifyClienteController extends Controller
             'clientes' => $clientes,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
-                ['name' => 'Painel', 'url' => route('home')],
+                ['name' => 'Gerenciar'],
                 ['name' => 'Clientes', 'active' => true],
             ],
         ]);

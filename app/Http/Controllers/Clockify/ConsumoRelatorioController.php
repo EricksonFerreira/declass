@@ -52,6 +52,7 @@ class ConsumoRelatorioController extends Controller
             'filtros' => $request->only('busca', 'status', 'cliente_id', 'ano'),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Análise'],
                 ['name' => 'Relatórios', 'url' => route('relatorios.index')],
                 ['name' => 'Consumo × Estimado', 'active' => true],
             ],
@@ -100,6 +101,7 @@ class ConsumoRelatorioController extends Controller
             'statusLabels' => ClockifyProjeto::STATUS_LABELS,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Análise'],
                 ['name' => 'Relatórios', 'url' => route('relatorios.index')],
                 ['name' => 'Consumo × Estimado', 'url' => route('relatorios.consumo')],
                 ['name' => $projeto->nome, 'active' => true],
