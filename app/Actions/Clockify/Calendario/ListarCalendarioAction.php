@@ -9,6 +9,8 @@ class ListarCalendarioAction
 {
     public function handle(): Collection
     {
-        return ClockifyCalendario::with(['user', 'projeto'])->get();
+        return ClockifyCalendario::with(['user', 'projeto'])
+            ->where('empresa_id', auth()->user()->empresa_id)
+            ->get();
     }
 }

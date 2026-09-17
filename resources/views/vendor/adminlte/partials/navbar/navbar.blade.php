@@ -94,6 +94,33 @@
         font-weight: 700 !important;
     }
 
+    /* Breadcrumb no menu superior (x-breadcrumb injeta via content_top_nav_left) */
+    .main-header .navbar-breadcrumb .breadcrumb {
+        font-size: .875rem;
+        line-height: 1.5;
+    }
+
+    .main-header .navbar-breadcrumb .breadcrumb-item a {
+        color: var(--empresa-cor-primaria-contraste, #495057);
+        opacity: .8;
+        font-weight: 500;
+    }
+
+    .main-header .navbar-breadcrumb .breadcrumb-item a:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    .main-header .navbar-breadcrumb .breadcrumb-item.active {
+        color: var(--empresa-cor-primaria-contraste, #343a40);
+        font-weight: 700;
+    }
+
+    .main-header .navbar-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+        color: var(--empresa-cor-primaria-contraste, #6c757d);
+        opacity: .55;
+    }
+
     .user-menu .dropdown-menu {
         border: 1px solid #e2e8f0;
         box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);

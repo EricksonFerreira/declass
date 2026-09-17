@@ -100,7 +100,7 @@
     </div>
 
     <!-- POPOVER DE DETALHES DO EVENTO - DESIGN PREMIUM -->
-    <div id="clockify-event-popover" class="ck-popover d-none" style="position: fixed; z-index: 9999; width: 310px; font-family:'Plus Jakarta Sans',sans-serif;">
+    <div id="clockify-event-popover" class="ck-popover d-none" style="position: absolute; z-index: 9999; width: 310px; font-family:'Plus Jakarta Sans',sans-serif;">
         <!-- Header colorido por projeto -->
         <div class="ck-pop-header" id="popover-header">
             <div class="ck-pop-header-top">
@@ -641,7 +641,11 @@
         /* =====================================================
            ALL-DAY ROW LABEL
         ===================================================== */
-        .fc-timegrid-allday-label, .fc-daygrid-event-dot { display: none; }
+        .fc-daygrid-event-dot { display: none; }
+        .fc-timegrid-allday-label .fc-timegrid-axis-cushion {
+            font-size: 8px !important;
+            letter-spacing: 0.08em;
+        }
         .fc-timegrid-axis-cushion {
             font-size: 9px !important;
             font-weight: 700 !important;
@@ -765,9 +769,12 @@
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 locale: 'pt-br',
                 initialView: isMobileInit ? 'timeGridDay' : 'timeGridWeek',
-                slotMinTime: '00:00:00',
-                slotMaxTime: '24:00:00',
+                slotMinTime: '05:00:00',
+                slotMaxTime: '23:00:00',
+                height: isMobileInit ? 540 : 720,
+                expandRows: true,
                 scrollTime: '07:00:00',
+                eventMinHeight: 24,
                 allDaySlot: true, // Habilitar a linha de Planilha/All-Day no topo
                 allDayText: 'PLANILHA', // Alinha com o texto da imagem do Clockify
                 nowIndicator: true,
@@ -779,6 +786,7 @@
                 eventStartEditable: true,
                 eventDurationEditable: true,
                 eventResizableFromStart: true,
+                selectable: true,
                 eventLongPressDelay: 400, // segurar ~0.4s p/ arrastar no touch
                 selectLongPressDelay: 500,
                 views: {
@@ -810,10 +818,23 @@
                     persistEventMove(info);
                 },
                 dateClick: function(info) {
+                    // Clique no número do dia (navLink) deve navegar, não abrir o modal
+                    if (info.jsEvent && info.jsEvent.target.closest('.fc-daygrid-day-number')) {
+                        return;
+                    }
                     const dateStr = info.dateStr.split('T')[0];
                     document.getElementById('modal-data-inicio').value = dateStr;
                     document.getElementById('modal-data-fim').value = dateStr;
                     openAddAllocationModalDirect();
+                },
+                select: function(info) {
+                    // Arrastar para selecionar um intervalo abre o modal já preenchido
+                    var startStr = info.startStr.split('T')[0];
+                    var endDate = info.allDay ? addDays(info.end, -1) : info.end;
+                    document.getElementById('modal-data-inicio').value = startStr;
+                    document.getElementById('modal-data-fim').value = fmtDate(endDate);
+                    openAddAllocationModalDirect();
+                    calendar.unselect();
                 },
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
@@ -888,14 +909,10 @@
 
                     let daySeconds = 0;
                     rawEvents.forEach(function(ev) {
-                        if (ev.id.toString().startsWith('tracker-')) {
-                            const evStartStr = ev.start.split('T')[0];
+                        if (ev.extendedProps.type === 'tracker' && ev.start && ev.end) {
+                            const evStartStr = ev.start.slice(0, 10);
                             if (evStartStr === dateStr) {
-                                const tId = ev.id.replace('tracker-', '');
-                                const trackerObj = trackersList.find(t => t.id == tId);
-                                if (trackerObj) {
-                                    daySeconds += trackerObj.duration_in_seconds;
-                                }
+                                daySeconds += (new Date(ev.end) - new Date(ev.start)) / 1000;
                             }
                         }
                     });
@@ -966,36 +983,6 @@
                 }
             });
 
-            var alocList = @json($alocacoes);
-            var trackersList = @json(\App\Models\ClockifyTimeTracker::with('user','projeto')->whereNotNull('fim')->get());
-
-            rawEvents.forEach(function(ev) {
-                if (ev.id.toString().startsWith('tracker-')) {
-                    var tId = ev.id.replace('tracker-', '');
-                    var trackerObj = trackersList.find(t => t.id == tId);
-                    if (trackerObj) {
-                        ev.extendedProps.user_id = trackerObj.user_id;
-                        ev.extendedProps.user_name = trackerObj.user ? trackerObj.user.nome : 'Usuário';
-                        ev.extendedProps.project_name = trackerObj.projeto ? trackerObj.projeto.nome : 'Sem Projeto';
-                        ev.extendedProps.project_color = trackerObj.projeto ? trackerObj.projeto.cor : '#94a3b8';
-                        ev.allDay = false; // Tracker is hourly
-                    }
-                } else {
-                    var alocObj = alocList.find(a => a.id == ev.id);
-                    if (alocObj) {
-                        ev.extendedProps.user_id = alocObj.user_id;
-                        ev.extendedProps.user_name = alocObj.user ? alocObj.user.nome : 'Usuário';
-                        ev.extendedProps.project_name = alocObj.projeto ? alocObj.projeto.nome : 'Projeto';
-                        ev.extendedProps.project_color = alocObj.projeto ? alocObj.projeto.cor : '#007bff';
-                        ev.extendedProps.hours = alocObj.horas_por_dia;
-                        
-                        // Allocations go to Planilha (all-day slot) at the top, like the image
-                        ev.allDay = true; 
-                    }
-                }
-            });
-
-            calendar.refetchEvents();
             calendar.render();
 
             document.getElementById('calendar-user-filter').addEventListener('change', function() {
@@ -1009,6 +996,13 @@
                     closePopover();
                 }
             });
+
+            // Fecha o popover quando a grade do calendário rola (o evento sai debaixo dele)
+            var calScroller = calendarEl.querySelector('.fc-scroller');
+            if (calScroller) {
+                calScroller.addEventListener('scroll', closePopover);
+            }
+            document.getElementById('full-calendar').addEventListener('scroll', closePopover, true);
         });
     </script>
 @stop

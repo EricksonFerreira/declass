@@ -83,21 +83,25 @@
 
     <!-- Side Drawer Component -->
     <x-side-drawer id="clienteDrawer" title="Cadastrar Novo Cliente" formId="cliente-form" action="{{ route('clockify.clientes.store') }}">
+        <input type="hidden" name="id" id="cliente_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="nome">Nome <span class="text-danger">*</span></label>
-            <input type="text" name="nome" id="nome" class="form-control form-control-sm" required placeholder="Ex: Google Inc.">
+            <input type="text" name="nome" id="nome" class="form-control form-control-sm @error('nome') is-invalid @enderror" value="{{ old('nome') }}" required placeholder="Ex: Google Inc.">
+            @error('nome')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
         </div>
         <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" name="email" id="email" class="form-control form-control-sm" placeholder="cliente@email.com">
+            <input type="email" name="email" id="email" class="form-control form-control-sm" value="{{ old('email') }}" placeholder="cliente@email.com">
         </div>
         <div class="form-group">
             <label for="telefone">Telefone</label>
-            <input type="text" name="telefone" id="telefone" class="form-control form-control-sm" placeholder="(11) 99999-9999">
+            <input type="text" name="telefone" id="telefone" class="form-control form-control-sm" value="{{ old('telefone') }}" placeholder="(11) 99999-9999">
         </div>
         <div class="form-group">
             <label for="endereco">Endereço</label>
-            <textarea name="endereco" id="endereco" rows="3" class="form-control form-control-sm" placeholder="Rua, Número, Bairro..."></textarea>
+            <textarea name="endereco" id="endereco" rows="3" class="form-control form-control-sm" placeholder="Rua, Número, Bairro...">{{ old('endereco') }}</textarea>
         </div>
         <div class="form-group" id="status-group" style="display: none;">
             <label for="ativo">Status</label>
@@ -120,16 +124,33 @@
                 $('#cliente-form').attr('action', '{{ route('clockify.clientes.store') }}');
                 $('#cliente-formMethod').val('POST');
                 $('#cliente-form')[0].reset();
+                $('#cliente_id').val('');
                 $('#status-group').hide();
                 $('#clienteDrawerBackdrop').addClass('show');
                 $('#clienteDrawer').addClass('open');
             });
+
+            @if ($errors->any())
+                @if (old('_method') === 'PUT')
+                    $('#clienteDrawerTitle').text('Editar Cliente');
+                    $('#cliente-form').attr('action', '{{ url('admin/clientes') }}/' + '{{ old('id') }}');
+                    $('#cliente-formMethod').val('PUT');
+                    $('#status-group').show();
+                @else
+                    $('#clienteDrawerTitle').text('Cadastrar Novo Cliente');
+                    $('#cliente-form').attr('action', '{{ route('clockify.clientes.store') }}');
+                    $('#cliente-formMethod').val('POST');
+                @endif
+                $('#clienteDrawerBackdrop').addClass('show');
+                $('#clienteDrawer').addClass('open');
+            @endif
         });
 
         function editCliente(cliente) {
             $('#clienteDrawerTitle').text('Editar Cliente: ' + cliente.nome);
-            $('#cliente-form').attr('action', '/admin/clockify/clientes/' + cliente.id);
+            $('#cliente-form').attr('action', '{{ url('admin/clientes') }}/' + cliente.id);
             $('#cliente-formMethod').val('PUT');
+            $('#cliente_id').val(cliente.id);
             $('#nome').val(cliente.nome);
             $('#email').val(cliente.email);
             $('#telefone').val(cliente.telefone);

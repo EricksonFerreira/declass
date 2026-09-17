@@ -476,11 +476,13 @@
             initSelect2();
 
             // Autocomplete update function for past trackers
+            var trackerUpdateUrlTemplate = "{{ route('clockify.tracker.update', ['id' => '__ID__']) }}";
+
             function updatePastTrackerInline(trackerId, dataObj) {
                 savingIndicator.style.display = 'flex';
 
                 $.ajax({
-                    url: `/admin/clockify/tracker/${trackerId}`,
+                    url: trackerUpdateUrlTemplate.replace('__ID__', trackerId),
                     type: "POST",
                     data: Object.assign({
                         _token: "{{ csrf_token() }}",

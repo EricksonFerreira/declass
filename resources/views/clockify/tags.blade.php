@@ -79,9 +79,13 @@
 
     <!-- Side Drawer Component -->
     <x-side-drawer id="tagDrawer" title="Criar Nova Tag" formId="tag-form" action="{{ route('clockify.tags.store') }}">
+        <input type="hidden" name="id" id="tag_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="nome">Nome da Tag <span class="text-danger">*</span></label>
-            <input type="text" name="nome" id="nome" class="form-control form-control-sm" required placeholder="Ex: Faturável, Em Análise...">
+            <input type="text" name="nome" id="nome" class="form-control form-control-sm @error('nome') is-invalid @enderror" value="{{ old('nome') }}" required placeholder="Ex: Faturável, Em Análise...">
+            @error('nome')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
         </div>
         <div class="form-group" id="status-group" style="display: none;">
             <label for="ativo">Status</label>
@@ -101,16 +105,33 @@
                 $('#tag-form').attr('action', '{{ route('clockify.tags.store') }}');
                 $('#tag-formMethod').val('POST');
                 $('#tag-form')[0].reset();
+                $('#tag_id').val('');
                 $('#status-group').hide();
                 $('#tagDrawerBackdrop').addClass('show');
                 $('#tagDrawer').addClass('open');
             });
+
+            @if ($errors->any())
+                @if (old('_method') === 'PUT')
+                    $('#tagDrawerTitle').text('Editar Tag');
+                    $('#tag-form').attr('action', '{{ url('admin/tags') }}/' + '{{ old('id') }}');
+                    $('#tag-formMethod').val('PUT');
+                    $('#status-group').show();
+                @else
+                    $('#tagDrawerTitle').text('Criar Nova Tag');
+                    $('#tag-form').attr('action', '{{ route('clockify.tags.store') }}');
+                    $('#tag-formMethod').val('POST');
+                @endif
+                $('#tagDrawerBackdrop').addClass('show');
+                $('#tagDrawer').addClass('open');
+            @endif
         });
 
         function editTag(tag) {
             $('#tagDrawerTitle').text('Editar Tag: ' + tag.nome);
-            $('#tag-form').attr('action', '/admin/clockify/tags/' + tag.id);
+            $('#tag-form').attr('action', '{{ url('admin/tags') }}/' + tag.id);
             $('#tag-formMethod').val('PUT');
+            $('#tag_id').val(tag.id);
             $('#nome').val(tag.nome);
             $('#ativo').val(tag.ativo ? "1" : "0");
             

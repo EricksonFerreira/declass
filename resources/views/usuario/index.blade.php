@@ -281,6 +281,7 @@
     </div>
 
     <x-side-drawer id="sideDrawer" title="Cadastrar Usuário" formId="drawerForm" action="{{ route('usuario.store') }}">
+        <input type="hidden" name="id" id="drawer_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="drawer_nome">Nome <span class="text-danger">*</span></label>
             <input type="text" class="form-control form-control-sm @error('nome') is-invalid @enderror" id="drawer_nome" name="nome" value="{{ old('nome') }}" required>
@@ -683,6 +684,7 @@
                 $form.find('.invalid-feedback').remove();
                 
                 if (data) {
+                    $('#drawer_id').val(data.id || '');
                     $('#drawer_nome').val(data.nome);
                     $('#drawer_email').val(data.email);
                     $('#drawer_celular').val(data.celular);
@@ -692,6 +694,7 @@
                     $('#drawer_custo_hora').val(data.custo_hora || '');
                 } else {
                     $form[0].reset();
+                    $('#drawer_id').val('');
                 }
                 
                 $backdrop.addClass('show');
@@ -716,6 +719,7 @@
                 const id = $btn.data('id');
                 const action = `/admin/usuario/${id}`;
                 abrirDrawer('Editar Usuário', action, 'PUT', {
+                    id: id,
                     nome: $btn.data('nome'),
                     email: $btn.data('email'),
                     celular: $btn.data('celular'),

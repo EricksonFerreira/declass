@@ -9,13 +9,16 @@
 
 @section('content')
     <div class="row">
-        <!-- Listagem de Projetos -->
-        <div class="col-md-8">
+        <div class="col-md-12">
             <div class="card card-outline card-primary shadow-sm">
                 <div class="card-header">
                     <h3 class="card-title text-bold text-sm">Registros <span class="badge badge-primary">{{ $projetos->total() }}</span></h3>
-                    <div class="card-tools">
-                        <form action="{{ route('clockify.projetos.index') }}" method="GET" class="input-group input-group-sm" style="width: 200px;">
+                    <div class="card-tools d-flex align-items-center" style="gap: 10px;">
+                        <button type="button" class="btn btn-sm btn-primary" id="btn-create-projeto">
+                            <i class="fas fa-plus mr-1"></i> Novo Projeto
+                        </button>
+
+                        <form action="{{ route('clockify.projetos.index') }}" method="GET" class="input-group input-group-sm mb-0" style="width: 200px;">
                             <input type="text" name="search" class="form-control float-right" placeholder="Procurar..." value="{{ request('search') }}">
                             <div class="input-group-append">
                                 <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
@@ -24,7 +27,7 @@
                     </div>
                 </div>
                 <div class="card-body table-responsive p-0">
-                    <table class="table table-hover table-striped table-bordered table-sm">
+                    <table class="table table-hover table-striped table-bordered table-sm text-nowrap mb-0">
                         <thead>
                             <tr>
                                 <th style="width: 50px;" class="text-center">Cor</th>
@@ -33,7 +36,7 @@
                                 <th>Faturamento</th>
                                 <th>Planejamento de Entrega</th>
                                 <th class="text-center" style="width: 80px;">Status</th>
-                                <th style="width: 150px;" class="text-center">Ações</th>
+                                <th style="width: 240px;" class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -83,106 +86,98 @@
                                         </span>
                                     </td>
                                     <td class="align-middle text-center" style="white-space: nowrap;">
-                                        <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary font-weight-bold px-3 py-1 shadow-sm">
-                                            <i class="fas fa-eye mr-1"></i> Detalhes
+                                        <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary mr-1">
+                                            <i class="fas fa-eye"></i> Detalhes
                                         </a>
+                                        <button type="button" class="btn btn-xs btn-warning mr-1"
+                                            onclick="editProjeto({{ json_encode($projeto) }})">
+                                            <i class="fa fa-edit"></i> Editar
+                                        </button>
+                                        <form action="{{ route('clockify.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"
+                                            onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                        </form>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-3">Nenhum projeto cadastrado.</td>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
+                                        Nenhum projeto cadastrado.
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-                <div class="card-footer clearfix">
-                    {{ $projetos->appends(request()->query())->links() }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Formulário de Cadastro / Edição -->
-        <div class="col-md-4">
-            <div class="card card-outline card-success shadow-sm" id="form-card">
-                <div class="card-header">
-                    <h3 class="card-title text-bold text-sm" id="form-title">Cadastrar Novo Projeto</h3>
-                </div>
-                <form id="projeto-form" action="{{ route('clockify.projetos.store') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="_method" id="form-method" value="POST">
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label for="nome">Nome <span class="text-danger">*</span></label>
-                            <input type="text" name="nome" id="nome" class="form-control form-control-sm" required placeholder="Ex: Novo Site XPAND">
-                        </div>
-                        <div class="form-group">
-                            <label for="clockify_cliente_id">Cliente</label>
-                            <select name="clockify_cliente_id" id="clockify_cliente_id" class="form-control form-control-sm select2">
-                                <option value="">Nenhum Cliente</option>
-                                @foreach ($clientes as $cliente)
-                                    <option value="{{ $cliente->id }}">{{ $cliente->nome }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="descricao">Descrição</label>
-                            <textarea name="descricao" id="descricao" rows="2" class="form-control form-control-sm" placeholder="Resumo do projeto..."></textarea>
-                        </div>
-
-                        <!-- Budget Fields -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="valor_faturado">Valor Faturado (R$)</label>
-                                    <input type="text" name="valor_faturado" id="valor_faturado" class="form-control form-control-sm money-mask" placeholder="Ex: 15.000,00" />
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="valor_hora">Valor por Hora (R$)</label>
-                                    <input type="text" name="valor_hora" id="valor_hora" class="form-control form-control-sm money-mask" placeholder="Ex: 150,00" />
-                                </div>
-                            </div>
-                        </div>
-
-
-
-                        <div class="form-group">
-                            <label for="cor">Cor do Projeto</label>
-                            <div class="input-group input-group-sm">
-                                <input type="color" name="cor" id="cor" class="form-control form-control-sm" style="padding: 2px; height: 31px;" value="#0284c7">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="publico">Visibilidade</label>
-                            <select name="publico" id="publico" class="form-control form-control-sm">
-                                <option value="1">Público</option>
-                                <option value="0">Privado</option>
-                            </select>
-                        </div>
-                        <div class="form-group" id="status-group" style="display: none;">
-                            <label for="ativo">Status</label>
-                            <select name="ativo" id="ativo" class="form-control form-control-sm">
-                                <option value="1">Ativo</option>
-                                <option value="0">Inativo</option>
-                            </select>
-                        </div>
+                @if($projetos->hasPages())
+                    <div class="card-footer py-2 d-flex justify-content-end">
+                        {{ $projetos->appends(request()->query())->links() }}
                     </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-sm btn-success float-right" id="save-btn">Salvar</button>
-                        <button type="button" class="btn btn-sm btn-default" id="cancel-btn" style="display: none;" onclick="resetForm()">Cancelar</button>
-                    </div>
-                </form>
+                @endif
             </div>
         </div>
     </div>
+
+    <!-- Side Drawer Component -->
+    <x-side-drawer id="projetoDrawer" title="Novo Projeto" formId="projeto-form" action="{{ route('clockify.projetos.store') }}">
+        <input type="hidden" name="id" id="projeto_id" value="{{ old('id') }}">
+        <div class="form-group">
+            <label for="nome">Nome <span class="text-danger">*</span></label>
+            <input type="text" name="nome" id="nome" class="form-control form-control-sm @error('nome') is-invalid @enderror" value="{{ old('nome') }}" required placeholder="Ex: Novo Site XPAND">
+            @error('nome')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+        <div class="form-group">
+            <label for="clockify_cliente_id">Cliente</label>
+            <select name="clockify_cliente_id" id="clockify_cliente_id" class="form-control form-control-sm select2">
+                <option value="">Nenhum Cliente</option>
+                @foreach ($clientes as $cliente)
+                    <option value="{{ $cliente->id }}" @selected((string) old('clockify_cliente_id') === (string) $cliente->id)>{{ $cliente->nome }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="descricao">Descrição</label>
+            <textarea name="descricao" id="descricao" rows="2" class="form-control form-control-sm" placeholder="Resumo do projeto...">{{ old('descricao') }}</textarea>
+        </div>
+        <div class="form-row">
+            <div class="col-6 form-group">
+                <label for="valor_faturado">Valor Faturado (R$)</label>
+                <input type="text" name="valor_faturado" id="valor_faturado" class="form-control form-control-sm money-mask" value="{{ old('valor_faturado') }}" placeholder="Ex: 15.000,00">
+            </div>
+            <div class="col-6 form-group">
+                <label for="valor_hora">Valor por Hora (R$)</label>
+                <input type="text" name="valor_hora" id="valor_hora" class="form-control form-control-sm money-mask" value="{{ old('valor_hora') }}" placeholder="Ex: 150,00">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="cor">Cor do Projeto</label>
+            <input type="color" name="cor" id="cor" class="form-control form-control-sm" style="padding: 2px; height: 31px;" value="{{ old('cor', '#0284c7') }}">
+        </div>
+        <div class="form-group">
+            <label for="publico">Visibilidade</label>
+            <select name="publico" id="publico" class="form-control form-control-sm">
+                <option value="1" @selected(old('publico', '1') === '1')>Público</option>
+                <option value="0" @selected(old('publico') === '0')>Privado</option>
+            </select>
+        </div>
+        <div class="form-group" id="status-group" style="display: none;">
+            <label for="ativo">Status</label>
+            <select name="ativo" id="ativo" class="form-control form-control-sm">
+                <option value="1">Ativo</option>
+                <option value="0">Inativo</option>
+            </select>
+        </div>
+    </x-side-drawer>
 @stop
 
 @section('js')
     <script>
-        $(document).ready(function() {
-            // Inicializar Select2 se disponível
+        $(function() {
             if ($.fn.select2) {
                 $('.select2').select2({
                     theme: 'bootstrap4',
@@ -190,7 +185,6 @@
                 });
             }
 
-            // Aplicar máscara monetária
             if ($.fn.inputmask) {
                 $('.money-mask').inputmask('currency', {
                     radixPoint: ',',
@@ -204,49 +198,52 @@
                     removeMaskOnSubmit: true
                 });
             }
+
+            $('#btn-create-projeto').on('click', function() {
+                $('#projetoDrawerTitle').text('Novo Projeto');
+                $('#projeto-form').attr('action', '{{ route('clockify.projetos.store') }}');
+                $('#projeto-formMethod').val('POST');
+                $('#projeto-form')[0].reset();
+                $('#projeto_id').val('');
+                $('#clockify_cliente_id').val('').trigger('change');
+                $('#status-group').hide();
+                $('#projetoDrawerBackdrop').addClass('show');
+                $('#projetoDrawer').addClass('open');
+            });
+
+            @if ($errors->any())
+                @if (old('_method') === 'PUT')
+                    $('#projetoDrawerTitle').text('Editar Projeto');
+                    $('#projeto-form').attr('action', '{{ url('admin/projetos') }}/' + '{{ old('id') }}');
+                    $('#projeto-formMethod').val('PUT');
+                    $('#status-group').show();
+                @else
+                    $('#projetoDrawerTitle').text('Novo Projeto');
+                    $('#projeto-form').attr('action', '{{ route('clockify.projetos.store') }}');
+                    $('#projeto-formMethod').val('POST');
+                @endif
+                $('#projetoDrawerBackdrop').addClass('show');
+                $('#projetoDrawer').addClass('open');
+            @endif
         });
 
-
-
         function editProjeto(projeto) {
-            $('#form-title').text('Editar Projeto: ' + projeto.nome);
-            $('#projeto-form').attr('action', '/admin/clockify/projetos/' + projeto.id);
-            $('#form-method').val('PUT');
+            $('#projetoDrawerTitle').text('Editar Projeto: ' + projeto.nome);
+            $('#projeto-form').attr('action', '{{ url('admin/projetos') }}/' + projeto.id);
+            $('#projeto-formMethod').val('PUT');
+            $('#projeto_id').val(projeto.id);
             $('#nome').val(projeto.nome);
-            
-            // Set values and trigger change for Select2
             $('#clockify_cliente_id').val(projeto.clockify_cliente_id).trigger('change');
-            
             $('#descricao').val(projeto.descricao);
-            $('#cor').val(projeto.cor ?? '#0284c7');
-            $('#publico').val(projeto.publico ? "1" : "0");
-            $('#ativo').val(projeto.ativo ? "1" : "0");
-            
-            // Budget & Planning fields
             $('#valor_faturado').val(projeto.valor_faturado);
             $('#valor_hora').val(projeto.valor_hora);
-            
+            $('#cor').val(projeto.cor ?? '#0284c7');
+            $('#publico').val(projeto.publico ? '1' : '0');
+            $('#ativo').val(projeto.ativo ? '1' : '0');
+
             $('#status-group').show();
-            $('#cancel-btn').show();
-            $('#form-card').removeClass('card-success').addClass('card-warning');
-            $('#save-btn').removeClass('btn-success').addClass('btn-warning').text('Atualizar');
-        }
-
-        function resetForm() {
-            $('#form-title').text('Cadastrar Novo Projeto');
-            $('#projeto-form').attr('action', '{{ route('clockify.projetos.store') }}');
-            $('#form-method').val('POST');
-            $('#projeto-form')[0].reset();
-            
-            // Reset Select2
-            $('#clockify_cliente_id').val('').trigger('change');
-            $('#valor_faturado').val('');
-            $('#valor_hora').val('');
-
-            $('#status-group').hide();
-            $('#cancel-btn').hide();
-            $('#form-card').removeClass('card-warning').addClass('card-success');
-            $('#save-btn').removeClass('btn-warning').addClass('btn-success').text('Salvar');
+            $('#projetoDrawerBackdrop').addClass('show');
+            $('#projetoDrawer').addClass('open');
         }
     </script>
 @stop

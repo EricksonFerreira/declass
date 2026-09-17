@@ -8,7 +8,8 @@ class DeleteCalendarioAction
 {
     public function handle(int $id): bool
     {
-        $alocacao = ClockifyCalendario::findOrFail($id);
+        $alocacao = ClockifyCalendario::where('empresa_id', auth()->user()->empresa_id)->findOrFail($id);
+
         return $alocacao->delete();
     }
 }

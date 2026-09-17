@@ -7,6 +7,7 @@ use App\Http\Controllers\Clockify\ClockifyTagController;
 use App\Http\Controllers\Clockify\ClockifyTimeController;
 use App\Http\Controllers\Clockify\ClockifyTimeOffController;
 use App\Http\Controllers\Clockify\ClockifyTrackerController;
+use App\Http\Controllers\Clockify\FuncaoController;
 use Illuminate\Support\Facades\Route;
 
 Route::name('clockify.')->group(function () {
@@ -53,5 +54,6 @@ Route::name('clockify.')->group(function () {
     Route::resource('projetos', ClockifyProjetoController::class)->except(['create', 'edit']);
 
     Route::resource('tags', ClockifyTagController::class)->except(['create', 'show', 'edit']);
+    Route::resource('funcoes', FuncaoController::class)->except(['create', 'show', 'edit']);
     Route::resource('times', ClockifyTimeController::class)->except(['create', 'show', 'edit']);
 });

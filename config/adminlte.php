@@ -215,7 +215,7 @@ return [
     */
 
     'sidebar_mini' => false,
-    'sidebar_collapse' => true,
+    'sidebar_collapse' => false,
     'sidebar_collapse_auto_size' => false,
     'sidebar_collapse_remember' => false,
     'sidebar_collapse_remember_no_transition' => true,
@@ -391,6 +391,11 @@ return [
                     'text' => 'Equipe',
                     'route' => 'clockify.times.index',
                     'icon' => 'fas fa-users',
+                ],
+                [
+                    'text' => 'Funções',
+                    'route' => 'clockify.funcoes.index',
+                    'icon' => 'fas fa-briefcase',
                 ],
                 [
                     'text' => 'Tags',

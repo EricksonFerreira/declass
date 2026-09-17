@@ -116,7 +116,12 @@ class ReportController extends Controller
                 $request->input('report_type')
             );
         }
-        $users = User::all();
+        $users = User::where('empresa_id', auth()->user()->empresa_id)
+            ->where(function ($q) {
+                $q->whereNull('tipo_usuario_id')->orWhere('tipo_usuario_id', '!=', 1);
+            })
+            ->orderBy('nome')
+            ->get();
         $breadcrumb = [
             ['name' => 'Home', 'url' => route('home')],
             ['name' => 'Painel', 'url' => route('home')],

@@ -8,19 +8,28 @@ use App\Actions\Clockify\Calendario\MoverCalendarioAction;
 use App\Actions\Clockify\Calendario\SaveCalendarioAction;
 use App\Http\Controllers\Controller;
 use App\Models\ClockifyProjeto;
+use App\Models\ClockifyTimeTracker;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ClockifyCalendarioController extends Controller
 {
     public function index(Request $request, ListarCalendarioAction $action): View
     {
+        $empresaId = $request->user()->empresa_id;
+
         $alocacoes = $action->handle();
-        $projetos = ClockifyProjeto::where('ativo', true)->orderBy('nome')->get();
-        $usuarios = User::orderBy('nome')->get();
+        $projetos = ClockifyProjeto::where('empresa_id', $empresaId)->where('ativo', true)->orderBy('nome')->get();
+        $usuarios = User::where('empresa_id', $empresaId)
+            ->where(function ($q) {
+                $q->whereNull('tipo_usuario_id')->orWhere('tipo_usuario_id', '!=', 1);
+            })
+            ->orderBy('nome')
+            ->get();
 
         $events = [];
         foreach ($alocacoes as $aloc) {
@@ -28,19 +37,26 @@ class ClockifyCalendarioController extends Controller
                 'id' => $aloc->id,
                 'title' => ($aloc->user->nome ?? 'Usuário').' - '.($aloc->projeto->nome ?? 'Projeto'),
                 'start' => $aloc->data_inicio->toDateString(),
-                'end' => $aloc->data_fim->addDay()->toDateString(),
+                'end' => $aloc->data_fim->copy()->addDay()->toDateString(),
+                'allDay' => true,
                 'color' => $aloc->projeto->cor ?? '#007bff',
                 'description' => $aloc->observacao ?? '',
                 'extendedProps' => [
-                    'hours' => $aloc->horas_por_dia,
                     'type' => 'alocacao',
+                    'user_id' => $aloc->user_id,
+                    'user_name' => $aloc->user->nome ?? 'Usuário',
+                    'project_name' => $aloc->projeto->nome ?? 'Projeto',
+                    'project_color' => $aloc->projeto->cor ?? '#007bff',
+                    'hours' => (float) $aloc->horas_por_dia,
                 ],
             ];
         }
 
         // Add logged time trackers to calendar
-        $trackers = \App\Models\ClockifyTimeTracker::with(['projeto', 'user'])
+        $trackers = ClockifyTimeTracker::with(['projeto', 'user'])
+            ->where('empresa_id', $empresaId)
             ->whereNotNull('fim')
+            ->whereNotNull('inicio')
             ->get();
 
         foreach ($trackers as $tracker) {
@@ -48,19 +64,24 @@ class ClockifyCalendarioController extends Controller
                 'id' => 'tracker-'.$tracker->id,
                 'title' => ($tracker->user->nome ?? 'Usuário').': '.($tracker->descricao ?: 'Sem descrição').' ('.$tracker->formatted_duration.')',
                 'start' => $tracker->inicio->toIso8601String(),
-                'end' => $tracker->fim ? $tracker->fim->toIso8601String() : null,
+                'end' => $tracker->fim->toIso8601String(),
+                'allDay' => false,
                 'color' => $tracker->projeto->cor ?? '#28a745',
                 'description' => ($tracker->projeto->nome ?? 'Sem Projeto').' - '.($tracker->descricao ?: 'Sem descrição'),
                 'extendedProps' => [
                     'type' => 'tracker',
+                    'user_id' => $tracker->user_id,
+                    'user_name' => $tracker->user->nome ?? 'Usuário',
+                    'project_name' => $tracker->projeto->nome ?? 'Sem Projeto',
+                    'project_color' => $tracker->projeto->cor ?? '#28a745',
+                    'duration_seconds' => $tracker->duration_in_seconds,
                 ],
             ];
         }
 
         return view('clockify.calendario', [
             'titulo' => 'Calendário e Alocações',
-            'events' => json_encode($events),
-            'alocacoes' => $alocacoes,
+            'events' => json_encode($events, JSON_INVALID_UTF8_SUBSTITUTE),
             'projetos' => $projetos,
             'usuarios' => $usuarios,
             'breadcrumb' => [
@@ -73,9 +94,17 @@ class ClockifyCalendarioController extends Controller
 
     public function store(Request $request, SaveCalendarioAction $action): RedirectResponse
     {
+        $empresaId = $request->user()->empresa_id;
+
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'clockify_projeto_id' => 'required|exists:clockify_projetos,id',
+            'user_id' => [
+                'required',
+                Rule::exists('users', 'id')->where('empresa_id', $empresaId),
+            ],
+            'clockify_projeto_id' => [
+                'required',
+                Rule::exists('clockify_projetos', 'id')->where('empresa_id', $empresaId),
+            ],
             'data_inicio' => 'required|date',
             'data_fim' => 'required|date|after_or_equal:data_inicio',
             'horas_por_dia' => 'nullable|numeric|min:0',

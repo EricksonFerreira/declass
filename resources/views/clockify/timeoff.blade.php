@@ -106,6 +106,7 @@
 
     <!-- Side Drawer Component -->
     <x-side-drawer id="timeoffDrawer" title="Solicitar Time Off" formId="timeoff-form" action="{{ route('clockify.timeoff.store') }}">
+        <input type="hidden" name="id" id="timeoff_id" value="{{ old('id') }}">
         @if (auth()->user()->can('gerenciar-empresa'))
             <div class="form-group">
                 <label for="user_id">Colaborador</label>
@@ -156,10 +157,25 @@
                 form[0].reset();
                 form.attr('action', storeUrl);
                 $('#timeoff-formMethod').val('POST');
+                $('#timeoff_id').val('');
                 $('#timeoffDrawerTitle').text('Solicitar Time Off');
                 $('#timeoffDrawerBackdrop').addClass('show');
                 $('#timeoffDrawer').addClass('open');
             });
+
+            @if ($errors->any())
+                @if (old('_method') === 'PUT')
+                    $('#timeoffDrawerTitle').text('Editar Time Off');
+                    $('#timeoff-form').attr('action', updateUrlTemplate.replace('__ID__', '{{ old('id') }}'));
+                    $('#timeoff-formMethod').val('PUT');
+                @else
+                    $('#timeoffDrawerTitle').text('Solicitar Time Off');
+                    $('#timeoff-form').attr('action', storeUrl);
+                    $('#timeoff-formMethod').val('POST');
+                @endif
+                $('#timeoffDrawerBackdrop').addClass('show');
+                $('#timeoffDrawer').addClass('open');
+            @endif
 
             // Editar: abre o mesmo drawer preenchido, enviando como PUT
             $('.btn-edit-timeoff').on('click', function() {
@@ -168,6 +184,7 @@
                 form.attr('action', updateUrlTemplate.replace('__ID__', d.id));
                 $('#timeoff-formMethod').val('PUT');
                 $('#timeoffDrawerTitle').text('Editar Time Off');
+                $('#timeoff_id').val(d.id);
                 $('#user_id').val(d.user);
                 $('#tipo').val(d.tipo);
                 $('#data_inicio').val(d.inicio);
