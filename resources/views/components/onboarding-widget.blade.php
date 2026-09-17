@@ -14,7 +14,7 @@
         <div class="d-flex align-items-center" style="gap:.6rem;">
             <i class="fas fa-rocket text-white" style="font-size:.9rem;"></i>
             <span style="font-weight:700;font-size:.875rem;color:#fff;">
-                Configure sua locadora — {{ $pct }}% concluído
+                Comece a usar o DECLOCK — {{ $pct }}% concluído
             </span>
         </div>
         <div class="d-flex align-items-center" style="gap:.75rem;">

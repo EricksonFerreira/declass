@@ -15,48 +15,29 @@ class EmpresaAlertaService
     {
         $plano = $assinatura->plano;
 
-        // 1. Veículos excedentes
-        if ($plano->limite_veiculos !== null) {
-            $totalVeiculos = \App\Models\Veiculo::where('empresa_id', $empresa->id)
-                ->where('ativo', true)
-                ->where('vendido', false)
-                ->count();
+        // 1. Usuários excedentes
+        if ($plano->limite_usuarios !== null) {
+            $totalUsuarios = $empresa->users()->count();
 
-            if ($totalVeiculos > $plano->limite_veiculos) {
-                $excedente = $totalVeiculos - $plano->limite_veiculos;
+            if ($totalUsuarios > $plano->limite_usuarios) {
+                $excedente = $totalUsuarios - $plano->limite_usuarios;
 
                 $this->criarOuAtualizar(
                     $empresa,
-                    'veiculos_excedentes',
+                    'usuarios_excedentes',
                     'critico',
-                    'Frota acima do limite do plano',
-                    "Seu plano {$plano->nome} permite até {$plano->limite_veiculos} veículo(s). Você tem {$totalVeiculos} ativos, excedendo em {$excedente}. Desative os veículos excedentes para manter o sistema funcionando normalmente.",
-                    ['limite' => $plano->limite_veiculos, 'total' => $totalVeiculos, 'excedente' => $excedente]
+                    'Equipe acima do limite do plano',
+                    "Seu plano {$plano->nome} permite até {$plano->limite_usuarios} usuário(s). Você tem {$totalUsuarios}, excedendo em {$excedente}. Ajuste a equipe ou faça upgrade do plano.",
+                    ['limite' => $plano->limite_usuarios, 'total' => $totalUsuarios, 'excedente' => $excedente]
                 );
             } else {
-                $this->resolver($empresa, 'veiculos_excedentes');
+                $this->resolver($empresa, 'usuarios_excedentes');
             }
-        }
-
-        // 2. Módulo de multas indisponível
-        if (! $plano->modulo_multas) {
-            $temMultas = \App\Models\Multa::where('empresa_id', $empresa->id)->exists() ?? false;
-
-            if (class_exists(\App\Models\Multa::class) && $temMultas) {
-                $this->criarOuAtualizar(
-                    $empresa,
-                    'modulo_multas_indisponivel',
-                    'aviso',
-                    'Módulo de multas não incluso no plano',
-                    "Seu plano {$plano->nome} não inclui o módulo de multas. Os registros existentes foram mantidos, mas não será possível criar novas multas. Faça upgrade do plano para continuar usando este módulo.",
-                    []
-                );
-            }
-        } else {
-            $this->resolver($empresa, 'modulo_multas_indisponivel');
         }
 
         // Estes avisos não devem mais aparecer no dashboard.
+        $this->resolver($empresa, 'veiculos_excedentes');
+        $this->resolver($empresa, 'modulo_multas_indisponivel');
         $this->resolver($empresa, 'modulo_nfse_indisponivel');
         $this->resolver($empresa, 'site_vendas_indisponivel');
     }
@@ -90,7 +71,7 @@ class EmpresaAlertaService
             ->exists();
 
         if ($pagamentoPagoNoPeriodo) {
-            return "Você já realizou um pagamento do plano {$planoAtual->nome} neste mês. O downgrade para {$novoPlano->nome} só poderá ser feito a partir do próximo período de cobrança (" . now()->addMonth()->format('m/Y') . ").";
+            return "Você já realizou um pagamento do plano {$planoAtual->nome} neste mês. O downgrade para {$novoPlano->nome} só poderá ser feito a partir do próximo período de cobrança (".now()->addMonth()->format('m/Y').').';
         }
 
         return null;

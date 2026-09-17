@@ -10,7 +10,7 @@
 <div class="onb-card">
     <h1 class="onb-card-title">Bem-vindo ao DECLOCK! 👋</h1>
     <p class="onb-card-sub">
-        Vamos configurar sua conta em poucos passos. Comece informando os dados básicos da sua locadora.
+        Vamos configurar sua conta em poucos passos. Comece informando os dados básicos da sua empresa.
     </p>
 
     @if ($errors->any())
@@ -27,10 +27,10 @@
 
         <div class="form-row" style="margin-bottom:1.25rem;">
             <div>
-                <label class="form-label">Nome da Locadora <span style="color:#ef4444;">*</span></label>
+                <label class="form-label">Nome da Empresa <span style="color:#ef4444;">*</span></label>
                 <input type="text" name="nome" class="form-control @error('nome') is-invalid @enderror"
                        value="{{ old('nome', auth()->user()->empresa?->nome ?? '') }}"
-                       placeholder="Ex.: Locadora VIP" required maxlength="200" autofocus>
+                       placeholder="Ex.: Agência Horizonte" required maxlength="200" autofocus>
                 @error('nome')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div>
@@ -47,7 +47,7 @@
                 <label class="form-label">E-mail da Empresa</label>
                 <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
                        value="{{ old('email', auth()->user()->empresa?->email ?? '') }}"
-                       placeholder="contato@minhalocadora.com.br" maxlength="200">
+                       placeholder="contato@minhaempresa.com.br" maxlength="200">
                 @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div>
@@ -66,7 +66,7 @@
 
         <div style="display:flex; justify-content:flex-end; margin-top:1.5rem;">
             <button type="submit" class="btn btn-primary btn-lg">
-                Próximo: Escolher Plano <i class="fas fa-arrow-right"></i>
+                Próximo: Ativar teste grátis <i class="fas fa-arrow-right"></i>
             </button>
         </div>
     </form>

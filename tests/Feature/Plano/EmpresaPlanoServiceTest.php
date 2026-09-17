@@ -26,14 +26,14 @@ use Carbon\Carbon;
 
 describe('valorTotalPlano', function () {
     it('retorna valor_mensal para periodicidade mensal', function () {
-        $plano   = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 170.00]);
+        $plano = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 170.00]);
         $service = app(EmpresaPlanoService::class);
 
         expect($service->valorTotalPlano($plano, 'mensal'))->toBe(200.0);
     });
 
     it('retorna valor_anual * 12 para periodicidade anual', function () {
-        $plano   = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 170.00]);
+        $plano = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 170.00]);
         $service = app(EmpresaPlanoService::class);
 
         expect($service->valorTotalPlano($plano, 'anual'))->toBe(170.0 * 12);
@@ -45,25 +45,48 @@ describe('valorTotalPlano', function () {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('contratar — nova assinatura', function () {
-    it('cria assinatura com status aguardando_pagamento', function () {
-        $empresa    = Empresa::factory()->create();
-        $plano      = Plano::factory()->create(['valor_mensal' => 199.90]);
-        $service    = app(EmpresaPlanoService::class);
+    it('cria primeira assinatura da empresa com status trial', function () {
+        $empresa = Empresa::factory()->create();
+        $plano = Plano::factory()->create(['valor_mensal' => 199.90]);
+        $service = app(EmpresaPlanoService::class);
 
         $assinatura = $service->contratar($empresa, $plano, 'mensal', 'pix', null, null);
 
-        expect($assinatura->status)->toBe('aguardando_pagamento');
+        expect($assinatura->status)->toBe('trial');
         expect($assinatura->empresa_id)->toBe($empresa->id);
         expect($assinatura->plano_id)->toBe($plano->id);
     });
 
-    it('cria primeiro pagamento pendente junto com a assinatura', function () {
-        $empresa    = Empresa::factory()->create();
-        $plano      = Plano::factory()->create(['valor_mensal' => 199.90]);
-        $service    = app(EmpresaPlanoService::class);
+    it('trial da primeira assinatura vence em 7 dias', function () {
+        $empresa = Empresa::factory()->create();
+        $plano = Plano::factory()->create(['valor_mensal' => 199.90]);
+        $service = app(EmpresaPlanoService::class);
 
         $assinatura = $service->contratar($empresa, $plano, 'mensal', 'pix', null, null);
-        $pagamento  = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
+
+        expect($assinatura->data_vencimento->format('Y-m-d'))->toBe(now()->addDays(7)->format('Y-m-d'));
+    });
+
+    it('segunda contratacao nao gera trial e fica aguardando_pagamento', function () {
+        $empresa = Empresa::factory()->create();
+        $plano = Plano::factory()->create(['valor_mensal' => 199.90]);
+        $service = app(EmpresaPlanoService::class);
+
+        EmpresaPlano::factory()->cancelado()->create(['empresa_id' => $empresa->id]);
+
+        $assinatura = $service->contratar($empresa, $plano, 'mensal', 'pix', null, null);
+
+        expect($assinatura->status)->toBe('aguardando_pagamento');
+        expect($assinatura->data_vencimento->format('Y-m-d'))->toBe(now()->addMonth()->format('Y-m-d'));
+    });
+
+    it('cria primeiro pagamento pendente junto com a assinatura', function () {
+        $empresa = Empresa::factory()->create();
+        $plano = Plano::factory()->create(['valor_mensal' => 199.90]);
+        $service = app(EmpresaPlanoService::class);
+
+        $assinatura = $service->contratar($empresa, $plano, 'mensal', 'pix', null, null);
+        $pagamento = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
 
         expect($pagamento)->not->toBeNull();
         expect($pagamento->status)->toBe('pendente');
@@ -72,7 +95,7 @@ describe('contratar — nova assinatura', function () {
 
     it('valor cobrado anual e valor_anual * 12', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 150.00]);
+        $plano = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 150.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = $service->contratar($empresa, $plano, 'anual', 'pix', null, null);
@@ -82,8 +105,10 @@ describe('contratar — nova assinatura', function () {
 
     it('data de vencimento mensal e hoje + 1 mes', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $plano = Plano::factory()->create(['valor_mensal' => 100.00]);
         $service = app(EmpresaPlanoService::class);
+
+        EmpresaPlano::factory()->cancelado()->create(['empresa_id' => $empresa->id]);
 
         $assinatura = $service->contratar($empresa, $plano, 'mensal', 'pix', null, null);
 
@@ -92,8 +117,10 @@ describe('contratar — nova assinatura', function () {
 
     it('data de vencimento anual e hoje + 1 ano', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->create(['valor_anual' => 150.00]);
+        $plano = Plano::factory()->create(['valor_anual' => 150.00]);
         $service = app(EmpresaPlanoService::class);
+
+        EmpresaPlano::factory()->cancelado()->create(['empresa_id' => $empresa->id]);
 
         $assinatura = $service->contratar($empresa, $plano, 'anual', 'pix', null, null);
 
@@ -102,7 +129,7 @@ describe('contratar — nova assinatura', function () {
 
     it('converte metodo automatico para cartao', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->create(['valor_mensal' => 199.90]);
+        $plano = Plano::factory()->create(['valor_mensal' => 199.90]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = $service->contratar($empresa, $plano, 'mensal', 'automatico', null, null);
@@ -112,7 +139,7 @@ describe('contratar — nova assinatura', function () {
 
     it('renovacao_automatica so e verdadeiro para metodo cartao', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->create(['valor_mensal' => 199.90]);
+        $plano = Plano::factory()->create(['valor_mensal' => 199.90]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = $service->contratar($empresa, $plano, 'mensal', 'pix', null, null, [], true);
@@ -122,7 +149,7 @@ describe('contratar — nova assinatura', function () {
 
     it('renovacao_automatica e verdadeiro quando metodo e cartao', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->create(['valor_mensal' => 199.90]);
+        $plano = Plano::factory()->create(['valor_mensal' => 199.90]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = $service->contratar($empresa, $plano, 'mensal', 'cartao', null, null, [], true);
@@ -132,11 +159,11 @@ describe('contratar — nova assinatura', function () {
 
     it('referencia_interna do pagamento comeca com INI-', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $plano = Plano::factory()->create(['valor_mensal' => 100.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = $service->contratar($empresa, $plano, 'mensal', 'pix', null, null);
-        $pagamento  = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
+        $pagamento = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
 
         expect($pagamento->referencia_interna)->toStartWith('INI-');
     });
@@ -149,8 +176,8 @@ describe('contratar — nova assinatura', function () {
 describe('contratar — cancelamento de assinaturas anteriores', function () {
     it('cancela assinatura ativa da empresa ao contratar novo plano', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 200.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 200.00]);
         $service = app(EmpresaPlanoService::class);
 
         $antiga = EmpresaPlano::create([
@@ -169,8 +196,8 @@ describe('contratar — cancelamento de assinaturas anteriores', function () {
 
     it('cancela assinatura em trial ao contratar novo plano', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 200.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 200.00]);
         $service = app(EmpresaPlanoService::class);
 
         $trial = EmpresaPlano::create([
@@ -189,8 +216,8 @@ describe('contratar — cancelamento de assinaturas anteriores', function () {
 
     it('cancela assinatura inadimplente ao contratar novo plano', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 200.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 200.00]);
         $service = app(EmpresaPlanoService::class);
 
         $inadimplente = EmpresaPlano::create([
@@ -209,8 +236,8 @@ describe('contratar — cancelamento de assinaturas anteriores', function () {
 
     it('nao cancela assinatura ja cancelada', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 200.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 200.00]);
         $service = app(EmpresaPlanoService::class);
 
         $cancelada = EmpresaPlano::create([
@@ -235,9 +262,9 @@ describe('contratar — cancelamento de assinaturas anteriores', function () {
 
 describe('contratar — desativacao de veiculos', function () {
     it('desativa somente os veiculos passados em veiculosDesativar', function () {
-        $empresa  = Empresa::factory()->create();
-        $plano    = Plano::factory()->comLimite(1)->create(['valor_mensal' => 99.00]);
-        $service  = app(EmpresaPlanoService::class);
+        $empresa = Empresa::factory()->create();
+        $plano = Plano::factory()->comLimite(1)->create(['valor_mensal' => 99.00]);
+        $service = app(EmpresaPlanoService::class);
 
         $v1 = Veiculo::create(['empresa_id' => $empresa->id, 'ativo' => true, 'vendido' => false, 'nome' => 'A', 'placa_licenca' => 'AAA0001']);
         $v2 = Veiculo::create(['empresa_id' => $empresa->id, 'ativo' => true, 'vendido' => false, 'nome' => 'B', 'placa_licenca' => 'BBB0002']);
@@ -246,13 +273,13 @@ describe('contratar — desativacao de veiculos', function () {
 
         expect(Veiculo::find($v1->id)->ativo)->toBeTrue();
         expect(Veiculo::find($v2->id)->ativo)->toBeFalse();
-    });
+    })->skip('Modelo Veiculo removido do dominio');
 
     it('nao desativa veiculos de outra empresa', function () {
         $empresaA = Empresa::factory()->create();
         $empresaB = Empresa::factory()->create();
-        $plano    = Plano::factory()->comLimite(1)->create(['valor_mensal' => 99.00]);
-        $service  = app(EmpresaPlanoService::class);
+        $plano = Plano::factory()->comLimite(1)->create(['valor_mensal' => 99.00]);
+        $service = app(EmpresaPlanoService::class);
 
         $vB = Veiculo::create(['empresa_id' => $empresaB->id, 'ativo' => true, 'vendido' => false, 'nome' => 'X', 'placa_licenca' => 'XXX0001']);
 
@@ -260,7 +287,7 @@ describe('contratar — desativacao de veiculos', function () {
 
         // Veículo de outra empresa não deve ser desativado
         expect(Veiculo::find($vB->id)->ativo)->toBeTrue();
-    });
+    })->skip('Modelo Veiculo removido do dominio');
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -269,12 +296,12 @@ describe('contratar — desativacao de veiculos', function () {
 
 describe('ativarAposConfirmacao — contratacao', function () {
     it('muda status da assinatura para ativo', function () {
-        $empresa    = Empresa::factory()->create();
-        $plano      = Plano::factory()->create(['valor_mensal' => 199.90]);
-        $service    = app(EmpresaPlanoService::class);
+        $empresa = Empresa::factory()->create();
+        $plano = Plano::factory()->create(['valor_mensal' => 199.90]);
+        $service = app(EmpresaPlanoService::class);
 
         $assinatura = $service->contratar($empresa, $plano, 'mensal', 'pix', null, null);
-        $pagamento  = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
+        $pagamento = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
 
         $service->ativarAposConfirmacao($pagamento);
 
@@ -282,12 +309,12 @@ describe('ativarAposConfirmacao — contratacao', function () {
     });
 
     it('muda status do pagamento para pago', function () {
-        $empresa    = Empresa::factory()->create();
-        $plano      = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $service    = app(EmpresaPlanoService::class);
+        $empresa = Empresa::factory()->create();
+        $plano = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $service = app(EmpresaPlanoService::class);
 
         $assinatura = $service->contratar($empresa, $plano, 'mensal', 'pix', null, null);
-        $pagamento  = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
+        $pagamento = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
 
         $service->ativarAposConfirmacao($pagamento);
 
@@ -295,12 +322,12 @@ describe('ativarAposConfirmacao — contratacao', function () {
     });
 
     it('define pago_em quando nao estava preenchido', function () {
-        $empresa    = Empresa::factory()->create();
-        $plano      = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $service    = app(EmpresaPlanoService::class);
+        $empresa = Empresa::factory()->create();
+        $plano = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $service = app(EmpresaPlanoService::class);
 
         $assinatura = $service->contratar($empresa, $plano, 'mensal', 'pix', null, null);
-        $pagamento  = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
+        $pagamento = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
 
         $service->ativarAposConfirmacao($pagamento);
 
@@ -308,13 +335,13 @@ describe('ativarAposConfirmacao — contratacao', function () {
     });
 
     it('nao sobrescreve pago_em quando ja estava definido', function () {
-        $empresa    = Empresa::factory()->create();
-        $plano      = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $service    = app(EmpresaPlanoService::class);
+        $empresa = Empresa::factory()->create();
+        $plano = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $service = app(EmpresaPlanoService::class);
         $dataOriginal = now()->subDay();
 
         $assinatura = $service->contratar($empresa, $plano, 'mensal', 'pix', null, null);
-        $pagamento  = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
+        $pagamento = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)->first();
         $pagamento->update(['pago_em' => $dataOriginal]);
 
         $service->ativarAposConfirmacao($pagamento);
@@ -330,8 +357,8 @@ describe('ativarAposConfirmacao — contratacao', function () {
 describe('ativarAposConfirmacao — upgrade', function () {
     it('troca o plano da assinatura para o novo plano', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 300.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 300.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([
@@ -345,17 +372,17 @@ describe('ativarAposConfirmacao — upgrade', function () {
 
         $pagamento = EmpresaPlanoPagamento::create([
             'empresa_plano_id' => $assinatura->id,
-            'empresa_id'       => $empresa->id,
-            'valor'            => 100.00,
-            'periodicidade'    => 'mensal',
-            'metodo'           => 'pix',
-            'status'           => 'pendente',
-            'data_vencimento'  => now()->addDays(3)->toDateString(),
-            'metadados'        => [
-                'acao'               => 'upgrade',
-                'novo_plano_id'      => $planoB->id,
+            'empresa_id' => $empresa->id,
+            'valor' => 100.00,
+            'periodicidade' => 'mensal',
+            'metodo' => 'pix',
+            'status' => 'pendente',
+            'data_vencimento' => now()->addDays(3)->toDateString(),
+            'metadados' => [
+                'acao' => 'upgrade',
+                'novo_plano_id' => $planoB->id,
                 'nova_periodicidade' => 'mensal',
-                'reinicia_periodo'   => false,
+                'reinicia_periodo' => false,
             ],
         ]);
 
@@ -366,8 +393,8 @@ describe('ativarAposConfirmacao — upgrade', function () {
 
     it('atualiza valor_cobrado para o total do novo plano', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 300.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 300.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([
@@ -381,17 +408,17 @@ describe('ativarAposConfirmacao — upgrade', function () {
 
         $pagamento = EmpresaPlanoPagamento::create([
             'empresa_plano_id' => $assinatura->id,
-            'empresa_id'       => $empresa->id,
-            'valor'            => 100.00,
-            'periodicidade'    => 'mensal',
-            'metodo'           => 'pix',
-            'status'           => 'pendente',
-            'data_vencimento'  => now()->addDays(3)->toDateString(),
-            'metadados'        => [
-                'acao'               => 'upgrade',
-                'novo_plano_id'      => $planoB->id,
+            'empresa_id' => $empresa->id,
+            'valor' => 100.00,
+            'periodicidade' => 'mensal',
+            'metodo' => 'pix',
+            'status' => 'pendente',
+            'data_vencimento' => now()->addDays(3)->toDateString(),
+            'metadados' => [
+                'acao' => 'upgrade',
+                'novo_plano_id' => $planoB->id,
                 'nova_periodicidade' => 'mensal',
-                'reinicia_periodo'   => false,
+                'reinicia_periodo' => false,
             ],
         ]);
 
@@ -402,8 +429,8 @@ describe('ativarAposConfirmacao — upgrade', function () {
 
     it('reinicia data_vencimento para +1 ano quando reinicia_periodo e verdadeiro', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00, 'valor_anual' => 90.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 300.00, 'valor_anual' => 250.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00, 'valor_anual' => 90.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 300.00, 'valor_anual' => 250.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([
@@ -417,17 +444,17 @@ describe('ativarAposConfirmacao — upgrade', function () {
 
         $pagamento = EmpresaPlanoPagamento::create([
             'empresa_plano_id' => $assinatura->id,
-            'empresa_id'       => $empresa->id,
-            'valor'            => 2000.00,
-            'periodicidade'    => 'anual',
-            'metodo'           => 'pix',
-            'status'           => 'pendente',
-            'data_vencimento'  => now()->addDays(3)->toDateString(),
-            'metadados'        => [
-                'acao'               => 'upgrade',
-                'novo_plano_id'      => $planoB->id,
+            'empresa_id' => $empresa->id,
+            'valor' => 2000.00,
+            'periodicidade' => 'anual',
+            'metodo' => 'pix',
+            'status' => 'pendente',
+            'data_vencimento' => now()->addDays(3)->toDateString(),
+            'metadados' => [
+                'acao' => 'upgrade',
+                'novo_plano_id' => $planoB->id,
                 'nova_periodicidade' => 'anual',
-                'reinicia_periodo'   => true,
+                'reinicia_periodo' => true,
             ],
         ]);
 
@@ -440,9 +467,9 @@ describe('ativarAposConfirmacao — upgrade', function () {
 
     it('limpa mudanca agendada ao confirmar upgrade', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 300.00]);
-        $planoC  = Plano::factory()->create(['valor_mensal' => 50.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 300.00]);
+        $planoC = Plano::factory()->create(['valor_mensal' => 50.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([
@@ -460,17 +487,17 @@ describe('ativarAposConfirmacao — upgrade', function () {
 
         $pagamento = EmpresaPlanoPagamento::create([
             'empresa_plano_id' => $assinatura->id,
-            'empresa_id'       => $empresa->id,
-            'valor'            => 100.00,
-            'periodicidade'    => 'mensal',
-            'metodo'           => 'pix',
-            'status'           => 'pendente',
-            'data_vencimento'  => now()->addDays(3)->toDateString(),
-            'metadados'        => [
-                'acao'               => 'upgrade',
-                'novo_plano_id'      => $planoB->id,
+            'empresa_id' => $empresa->id,
+            'valor' => 100.00,
+            'periodicidade' => 'mensal',
+            'metodo' => 'pix',
+            'status' => 'pendente',
+            'data_vencimento' => now()->addDays(3)->toDateString(),
+            'metadados' => [
+                'acao' => 'upgrade',
+                'novo_plano_id' => $planoB->id,
                 'nova_periodicidade' => 'mensal',
-                'reinicia_periodo'   => false,
+                'reinicia_periodo' => false,
             ],
         ]);
 
@@ -484,7 +511,7 @@ describe('ativarAposConfirmacao — upgrade', function () {
 
     it('cancela outros pagamentos pendentes de upgrade', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->create(['valor_mensal' => 200.00]);
+        $plano = Plano::factory()->create(['valor_mensal' => 200.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([
@@ -517,7 +544,7 @@ describe('ativarAposConfirmacao — upgrade', function () {
 
     it('nao cancela pagamento de contratacao ao confirmar upgrade', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->create(['valor_mensal' => 200.00]);
+        $plano = Plano::factory()->create(['valor_mensal' => 200.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([
@@ -557,8 +584,8 @@ describe('ativarAposConfirmacao — upgrade', function () {
 describe('isDowngrade', function () {
     it('retorna true quando novo plano tem limite menor que o atual', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->comLimite(20)->create();
-        $planoB  = Plano::factory()->comLimite(5)->create();
+        $planoA = Plano::factory()->comLimite(20)->create();
+        $planoB = Plano::factory()->comLimite(5)->create();
         $service = app(EmpresaPlanoService::class);
 
         EmpresaPlano::create([
@@ -575,8 +602,8 @@ describe('isDowngrade', function () {
 
     it('retorna true quando plano atual e ilimitado e novo tem limite', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->ilimitado()->create();
-        $planoB  = Plano::factory()->comLimite(10)->create();
+        $planoA = Plano::factory()->ilimitado()->create();
+        $planoB = Plano::factory()->comLimite(10)->create();
         $service = app(EmpresaPlanoService::class);
 
         EmpresaPlano::create([
@@ -593,7 +620,7 @@ describe('isDowngrade', function () {
 
     it('retorna false quando empresa nao tem assinatura ativa', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->comLimite(5)->create();
+        $plano = Plano::factory()->comLimite(5)->create();
         $service = app(EmpresaPlanoService::class);
 
         expect($service->isDowngrade($empresa, $plano))->toBeFalse();
@@ -601,8 +628,8 @@ describe('isDowngrade', function () {
 
     it('retorna false quando novo plano tem limite maior', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->comLimite(5)->create();
-        $planoB  = Plano::factory()->comLimite(20)->create();
+        $planoA = Plano::factory()->comLimite(5)->create();
+        $planoB = Plano::factory()->comLimite(20)->create();
         $service = app(EmpresaPlanoService::class);
 
         EmpresaPlano::create([
@@ -619,8 +646,8 @@ describe('isDowngrade', function () {
 
     it('retorna false quando novo plano e ilimitado', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->comLimite(10)->create();
-        $planoB  = Plano::factory()->ilimitado()->create();
+        $planoA = Plano::factory()->comLimite(10)->create();
+        $planoB = Plano::factory()->ilimitado()->create();
         $service = app(EmpresaPlanoService::class);
 
         EmpresaPlano::create([
@@ -643,56 +670,56 @@ describe('isDowngrade', function () {
 describe('veiculosExcedentes', function () {
     it('retorna colecao vazia quando plano e ilimitado', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->ilimitado()->create();
+        $plano = Plano::factory()->ilimitado()->create();
         $service = app(EmpresaPlanoService::class);
 
         Veiculo::create(['empresa_id' => $empresa->id, 'ativo' => true, 'vendido' => false, 'nome' => 'A', 'placa_licenca' => 'XYZ1111']);
 
         expect($service->veiculosExcedentes($empresa, $plano))->toHaveCount(0);
-    });
+    })->skip('Veiculo removido do dominio');
 
     it('retorna colecao vazia quando dentro do limite', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->comLimite(5)->create();
+        $plano = Plano::factory()->comLimite(5)->create();
         $service = app(EmpresaPlanoService::class);
 
         Veiculo::create(['empresa_id' => $empresa->id, 'ativo' => true, 'vendido' => false, 'nome' => 'A', 'placa_licenca' => 'INL0001']);
 
         expect($service->veiculosExcedentes($empresa, $plano))->toHaveCount(0);
-    });
+    })->skip('Veiculo removido do dominio');
 
     it('retorna exatamente os excedentes quando acima do limite', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->comLimite(1)->create();
+        $plano = Plano::factory()->comLimite(1)->create();
         $service = app(EmpresaPlanoService::class);
 
         Veiculo::create(['empresa_id' => $empresa->id, 'ativo' => true, 'vendido' => false, 'nome' => 'A', 'placa_licenca' => 'EXC0001']);
         Veiculo::create(['empresa_id' => $empresa->id, 'ativo' => true, 'vendido' => false, 'nome' => 'B', 'placa_licenca' => 'EXC0002']);
 
         expect($service->veiculosExcedentes($empresa, $plano))->toHaveCount(1);
-    });
+    })->skip('Veiculo removido do dominio');
 
     it('ignora veiculos inativos na contagem', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->comLimite(1)->create();
+        $plano = Plano::factory()->comLimite(1)->create();
         $service = app(EmpresaPlanoService::class);
 
         Veiculo::create(['empresa_id' => $empresa->id, 'ativo' => true,  'vendido' => false, 'nome' => 'A', 'placa_licenca' => 'VVV0001']);
         Veiculo::create(['empresa_id' => $empresa->id, 'ativo' => false, 'vendido' => false, 'nome' => 'B', 'placa_licenca' => 'VVV0002']);
 
         expect($service->veiculosExcedentes($empresa, $plano))->toHaveCount(0);
-    });
+    })->skip('Veiculo removido do dominio');
 
     it('ignora veiculos vendidos na contagem', function () {
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->comLimite(1)->create();
+        $plano = Plano::factory()->comLimite(1)->create();
         $service = app(EmpresaPlanoService::class);
 
         Veiculo::create(['empresa_id' => $empresa->id, 'ativo' => true, 'vendido' => false, 'nome' => 'A', 'placa_licenca' => 'SLD0001']);
         Veiculo::create(['empresa_id' => $empresa->id, 'ativo' => true, 'vendido' => true,  'nome' => 'B', 'placa_licenca' => 'SLD0002']);
 
         expect($service->veiculosExcedentes($empresa, $plano))->toHaveCount(0);
-    });
+    })->skip('Veiculo removido do dominio');
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -702,8 +729,8 @@ describe('veiculosExcedentes', function () {
 describe('criarCobrancaUpgrade', function () {
     it('cria pagamento proporcional no mesmo ciclo mensal', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00, 'valor_anual' => 90.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 300.00, 'valor_anual' => 270.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00, 'valor_anual' => 90.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 300.00, 'valor_anual' => 270.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([
@@ -726,8 +753,8 @@ describe('criarCobrancaUpgrade', function () {
         $empresa = Empresa::factory()->create();
         // Plano A: R$100/mês, Plano B: R$200/mês
         // Período: 30 dias total, 15 restantes → diff = 100 → proporcional = 15/30 * 100 = 50
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00, 'valor_anual' => 90.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 180.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00, 'valor_anual' => 90.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 180.00]);
         $service = app(EmpresaPlanoService::class);
 
         Carbon::setTestNow(now());
@@ -751,8 +778,8 @@ describe('criarCobrancaUpgrade', function () {
 
     it('cria pagamento com metadados de upgrade corretos', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 300.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 300.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([
@@ -773,8 +800,8 @@ describe('criarCobrancaUpgrade', function () {
 
     it('reinicia_periodo e verdadeiro quando troca de mensal para anual', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00, 'valor_anual' => 80.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 160.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00, 'valor_anual' => 80.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 160.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([
@@ -793,8 +820,8 @@ describe('criarCobrancaUpgrade', function () {
 
     it('lanca excecao quando diferenca e zero (mesmo plano e mesmo valor)', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 300.00, 'valor_anual' => 270.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 300.00, 'valor_anual' => 270.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 300.00, 'valor_anual' => 270.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 300.00, 'valor_anual' => 270.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([
@@ -812,8 +839,8 @@ describe('criarCobrancaUpgrade', function () {
 
     it('lanca excecao para troca anual para mensal (nao suportada no upgrade imediato)', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 170.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 100.00, 'valor_anual' => 90.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 200.00, 'valor_anual' => 170.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 100.00, 'valor_anual' => 90.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([
@@ -831,8 +858,8 @@ describe('criarCobrancaUpgrade', function () {
 
     it('referencia_interna do upgrade comeca com UPG-', function () {
         $empresa = Empresa::factory()->create();
-        $planoA  = Plano::factory()->create(['valor_mensal' => 100.00]);
-        $planoB  = Plano::factory()->create(['valor_mensal' => 300.00]);
+        $planoA = Plano::factory()->create(['valor_mensal' => 100.00]);
+        $planoB = Plano::factory()->create(['valor_mensal' => 300.00]);
         $service = app(EmpresaPlanoService::class);
 
         $assinatura = EmpresaPlano::create([

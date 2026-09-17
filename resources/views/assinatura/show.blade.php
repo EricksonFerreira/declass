@@ -39,16 +39,13 @@
             <div class="col-md-4 col-12 mb-3">
                 <div class="card card-outline card-info h-100">
                     <div class="card-body">
-                        <div class="text-muted text-uppercase small font-weight-bold mb-1">Estações</div>
+                        <div class="text-muted text-uppercase small font-weight-bold mb-1">Projetos</div>
                         <div class="d-flex justify-content-between align-items-end">
                             <div>
-                                <div class="h2 mb-0 font-weight-bold">{{ number_format($qtdEstacoes ?? 0, 0, ',', '.') }}</div>
-                                <small class="text-muted">vinculadas à empresa</small>
-                                <div class="small text-info font-weight-bold mt-1">
-                                    Plano permite: {{ $assinatura->plano->multi_estacao ? 'Múltiplas estações' : '1 estação' }}
-                                </div>
+                                <div class="h2 mb-0 font-weight-bold">{{ number_format($qtdProjetos ?? 0, 0, ',', '.') }}</div>
+                                <small class="text-muted">cadastrados na empresa</small>
                             </div>
-                            <i class="fas fa-map-marker-alt text-info" style="font-size:2rem; opacity:.2;"></i>
+                            <i class="fas fa-folder-open text-info" style="font-size:2rem; opacity:.2;"></i>
                         </div>
                     </div>
                 </div>
@@ -56,16 +53,16 @@
             <div class="col-md-4 col-12 mb-3">
                 <div class="card card-outline card-success h-100">
                     <div class="card-body">
-                        <div class="text-muted text-uppercase small font-weight-bold mb-1">Veículos</div>
+                        <div class="text-muted text-uppercase small font-weight-bold mb-1">Usuários</div>
                         <div class="d-flex justify-content-between align-items-end">
                             <div>
-                                <div class="h2 mb-0 font-weight-bold">{{ number_format($qtdVeiculos ?? 0, 0, ',', '.') }}</div>
-                                <small class="text-muted">na frota ativa</small>
+                                <div class="h2 mb-0 font-weight-bold">{{ number_format($qtdUsuarios ?? 0, 0, ',', '.') }}</div>
+                                <small class="text-muted">na equipe</small>
                                 <div class="small text-success font-weight-bold mt-1">
-                                    Plano permite: {{ $assinatura->plano->limite_veiculos_texto }}
+                                    Plano permite: {{ $assinatura->plano->limite_usuarios_texto }}
                                 </div>
                             </div>
-                            <i class="fas fa-car text-success" style="font-size:2rem; opacity:.2;"></i>
+                            <i class="fas fa-users text-success" style="font-size:2rem; opacity:.2;"></i>
                         </div>
                     </div>
                 </div>

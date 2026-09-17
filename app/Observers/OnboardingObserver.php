@@ -2,13 +2,15 @@
 
 namespace App\Observers;
 
+use App\Models\ClockifyProjeto;
+use App\Models\ClockifyTimeTracker;
 use App\Models\OnboardingStep;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 /**
  * Observer genérico que marca steps de onboarding quando modelos são criados.
- * Registrado para Veiculo, Estacao e User.
+ * Registrado para ClockifyProjeto, ClockifyTime e User.
  */
 class OnboardingObserver
 {
@@ -16,7 +18,7 @@ class OnboardingObserver
     {
         $empresaId = $this->resolverEmpresaId($model);
 
-        if (!$empresaId) {
+        if (! $empresaId) {
             return;
         }
 
@@ -24,17 +26,17 @@ class OnboardingObserver
             ->where('concluido', false)
             ->first();
 
-        if (!$step) {
+        if (! $step) {
             return;
         }
 
         $classe = get_class($model);
 
         match (true) {
-            str_ends_with($classe, 'Veiculo')  => $step->update(['step_frota_cadastrada'   => true]),
-            str_ends_with($classe, 'Estacao')  => $step->update(['step_estacao_cadastrada' => true]),
-            str_ends_with($classe, 'User')     => $step->update(['step_usuario_criado'     => true]),
-            default                            => null,
+            str_ends_with($classe, 'ClockifyProjeto') => $step->update(['step_frota_cadastrada' => true]),
+            str_ends_with($classe, 'ClockifyTimeTracker') => $step->update(['step_estacao_cadastrada' => true]),
+            str_ends_with($classe, 'User') => $step->update(['step_usuario_criado' => true]),
+            default => null,
         };
 
         $this->verificarConclusao($step->fresh());
@@ -55,16 +57,18 @@ class OnboardingObserver
 
     private function verificarConclusao(OnboardingStep $step): void
     {
-        if (!$step) {
+        if (! $step) {
             return;
         }
 
         $todosConcluidos = $step->step_empresa_configurada
             && $step->step_plano_contratado
-            && $step->step_frota_cadastrada
-            && $step->step_estacao_cadastrada;
+            && ($step->step_frota_cadastrada
+                || ClockifyProjeto::where('empresa_id', $step->empresa_id)->exists())
+            && ($step->step_estacao_cadastrada
+                || ClockifyTimeTracker::where('empresa_id', $step->empresa_id)->exists());
 
-        if ($todosConcluidos && !$step->concluido) {
+        if ($todosConcluidos && ! $step->concluido) {
             $step->update(['concluido' => true]);
         }
     }

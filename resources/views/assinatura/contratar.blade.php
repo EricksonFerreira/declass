@@ -32,13 +32,13 @@
     @endif
 
     @php
-        $veiculosExcedentes = $plano->limite_veiculos !== null && $totalVeiculos > $plano->limite_veiculos
-            ? $totalVeiculos - $plano->limite_veiculos : 0;
+        $usuariosExcedentes = $plano->limite_usuarios !== null && $totalVeiculos > $plano->limite_usuarios
+            ? $totalVeiculos - $plano->limite_usuarios : 0;
     @endphp
-    @if ($veiculosExcedentes > 0)
+    @if ($usuariosExcedentes > 0)
         <div class="alert alert-warning">
-            <i class="fas fa-car mr-1"></i>
-            <strong>Atencao:</strong> Voce tem <strong>{{ $totalVeiculos }} veiculos ativos</strong> e este plano permite apenas <strong>{{ $plano->limite_veiculos }}</strong>. Ao contratar, voce precisara desativar <strong>{{ $veiculosExcedentes }} veiculo(s)</strong>.
+            <i class="fas fa-users mr-1"></i>
+            <strong>Atencao:</strong> Sua equipe tem <strong>{{ $totalVeiculos }} usuário(s)</strong> e este plano permite apenas <strong>{{ $plano->limite_usuarios }}</strong>. Ajuste a equipe após a contratação para se enquadrar no limite.
         </div>
     @endif
 
@@ -569,7 +569,7 @@ function gerarPix(pagamentoId) {
     document.getElementById('pixConteudo').style.display = 'none';
     document.getElementById('pixErro').style.display = 'none';
 
-    fetch('/meu-plano/pagamento/' + pagamentoId + '/pix', {
+    fetch('{{ url('/admin/assinatura/pagamento') }}/' + pagamentoId + '/pix', {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
     })
@@ -600,7 +600,7 @@ function gerarPix(pagamentoId) {
 function iniciarPollingPix(pagamentoId) {
     if (pixPollingTimer) clearInterval(pixPollingTimer);
     pixPollingTimer = setInterval(function () {
-        fetch('/meu-plano/pagamento/' + pagamentoId + '/status', {
+        fetch('{{ url('/admin/assinatura/pagamento') }}/' + pagamentoId + '/status', {
             headers: { 'Accept': 'application/json' }
         })
         .then(function (r) { return r.json(); })
@@ -630,7 +630,7 @@ function copiarPixCode() {
 
 // ── Cartao ──
 function inicializarCartao(pagamentoId) {
-    fetch('/meu-plano/pagamento/' + pagamentoId + '/cartao-intent?peek=1', {
+    fetch('{{ url('/admin/assinatura/pagamento') }}/' + pagamentoId + '/cartao-intent?peek=1', {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({ peek: true }),
@@ -695,7 +695,7 @@ async function processarCartao(pagamentoId, btn) {
     try {
         if (cartaoPmId === 'novo') {
             if (!stripeNovoCard) throw new Error('Formulario de cartao nao carregado.');
-            var r1 = await fetch('/meu-plano/pagamento/' + pagamentoId + '/cartao-intent', {
+            var r1 = await fetch('{{ url('/admin/assinatura/pagamento') }}/' + pagamentoId + '/cartao-intent', {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
                 body: JSON.stringify({ salvar_cartao: true }),
@@ -707,7 +707,7 @@ async function processarCartao(pagamentoId, btn) {
             if (result.error) throw new Error(result.error.message);
             if (result.paymentIntent.status !== 'succeeded') throw new Error('Pagamento nao aprovado.');
 
-            var r2 = await fetch('/meu-plano/pagamento/' + pagamentoId + '/cartao-confirmar', {
+            var r2 = await fetch('{{ url('/admin/assinatura/pagamento') }}/' + pagamentoId + '/cartao-confirmar', {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
                 body: JSON.stringify({ payment_intent_id: result.paymentIntent.id }),

@@ -1,6 +1,6 @@
 @php
     $etapaAtiva = 'onboarding.orientacoes';
-    $etapasConc = ['onboarding.empresa', 'onboarding.plano', 'onboarding.pagamento', 'onboarding.cores'];
+    $etapasConc = ['onboarding.empresa', 'onboarding.cores'];
 @endphp
 
 @extends('onboarding._layout')
@@ -66,10 +66,10 @@
     {{-- Cabeçalho de sucesso --}}
     <div style="text-align:center; margin-bottom:2rem;">
         <div style="font-size:3rem; margin-bottom:.5rem;">🎉</div>
-        <h1 class="onb-card-title" style="text-align:center;">Plano contratado com sucesso!</h1>
+        <h1 class="onb-card-title" style="text-align:center;">Bem-vindo ao DECLOCK!</h1>
         <p style="font-size:.9rem; color:#64748b; line-height:1.65;">
-            Sua conta está ativa em modo de avaliação. Siga os passos abaixo para
-            configurar tudo e começar a usar o DECLOCK completo.
+            Sua conta está pronta. Siga os passos abaixo para
+            configurar tudo e começar a gerenciar o tempo da sua equipe.
         </p>
     </div>
 
@@ -115,16 +115,16 @@
 
     {{-- Lista de passos --}}
     @php
-        $pagamentoFeito = $step->step_pagamento_realizado;
+        $acessoLiberado = (bool) ($step->step_plano_contratado || $step->step_pagamento_realizado);
         $stepsExibir    = $step->stepsParaExibir($planoAtivo);
-        // Keys que ficam liberadas mesmo sem pagamento
-        $stepsLivres = ['step_empresa_configurada', 'step_plano_contratado', 'step_pagamento_realizado'];
+        // Keys que ficam liberadas mesmo sem teste ativo
+        $stepsLivres = ['step_empresa_configurada', 'step_plano_contratado'];
     @endphp
     <div class="steps-list">
         @foreach ($stepsExibir as $s)
             @php
                 $podeIr    = Route::has($s['rota']);
-                $bloqueado = !$pagamentoFeito && !in_array($s['key'], $stepsLivres);
+                $bloqueado = !$acessoLiberado && !in_array($s['key'], $stepsLivres);
                 $classes   = trim(($s['feito'] ? 'feito' : '') . ' ' . ($bloqueado ? 'bloqueado' : ''));
             @endphp
             <div class="step-item {{ $classes }}">
@@ -136,7 +136,7 @@
                     <div class="step-desc">{{ $s['descricao'] }}</div>
                     @if ($bloqueado)
                         <span class="step-bloqueado-hint">
-                            <i class="fas fa-lock"></i> Disponível após confirmar o pagamento
+                            <i class="fas fa-lock"></i> Disponível após ativar o teste grátis
                         </span>
                     @elseif (!$s['feito'] && $podeIr)
                         @php
@@ -161,13 +161,13 @@
 
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem;">
         <span style="font-size:.83rem; color:#94a3b8;">
-            @if (!$pagamentoFeito)
-                Confirme o pagamento para liberar o acesso ao painel.
+            @if (!$acessoLiberado)
+                Ative o teste grátis para liberar o acesso ao painel.
             @else
                 Você pode completar a configuração depois, pelo painel.
             @endif
         </span>
-        @if ($pagamentoFeito)
+        @if ($acessoLiberado)
             <form action="{{ route('onboarding.concluir') }}" method="POST">
                 @csrf
                 <button type="submit" class="btn btn-primary btn-lg">
@@ -175,7 +175,7 @@
                 </button>
             </form>
         @else
-            <button type="button" class="btn btn-primary btn-lg btn-painel-disabled" disabled title="Confirme o pagamento primeiro">
+            <button type="button" class="btn btn-primary btn-lg btn-painel-disabled" disabled title="Ative o teste grátis primeiro">
                 Ir para o Painel <i class="fas fa-lock ml-1"></i>
             </button>
         @endif

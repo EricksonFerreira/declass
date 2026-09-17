@@ -21,8 +21,6 @@ class ExigirPagamentoPlanoMiddleware
         'onboarding.',
         'assinatura.',
         'notificacoes.',
-        'home',
-        'dashboard',
         'site.apresentacao',
         'site.reserva.',
         'site.multa.',
@@ -38,12 +36,12 @@ class ExigirPagamentoPlanoMiddleware
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return $next($request);
         }
 
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return $next($request);
         }
 
@@ -58,7 +56,7 @@ class ExigirPagamentoPlanoMiddleware
         }
 
         $empresa = $user->empresa ?? null;
-        if (!$empresa) {
+        if (! $empresa) {
             return $next($request);
         }
 
@@ -67,13 +65,13 @@ class ExigirPagamentoPlanoMiddleware
             return $next($request);
         }
 
-        return redirect()->route('home')
-            ->with('warning', 'Acesse a area administrativa para continuar.');
+        return redirect()->route('assinatura.meu-plano')
+            ->with('warning', 'Seu período de teste terminou. Escolha um plano para continuar usando o sistema.');
     }
 
     private function isAllowedRoute(?string $routeName): bool
     {
-        if (!$routeName) {
+        if (! $routeName) {
             return false;
         }
 
@@ -86,4 +84,3 @@ class ExigirPagamentoPlanoMiddleware
         return false;
     }
 }
-

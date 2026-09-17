@@ -1,6 +1,6 @@
 @php
     $etapaAtiva = 'onboarding.cores';
-    $etapasConc = ['onboarding.empresa', 'onboarding.plano'];
+    $etapasConc = ['onboarding.empresa'];
 @endphp
 
 @extends('onboarding._layout')

@@ -2,21 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Cashier\Billable;
 use App\Notifications\ResetPasswordCustom;
 use App\Notifications\VerifyEmailCustom;
+use App\Support\SchemaCache;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Cashier\Billable;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use Notifiable, Billable;
+    use Billable, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -77,9 +77,9 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     public function sendEmailVerificationNotification()
-{
-    $this->notify(new VerifyEmailCustom);
-}
+    {
+        $this->notify(new VerifyEmailCustom);
+    }
 
     public function sendPasswordResetNotification($token): void
     {
@@ -93,7 +93,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getFotoPerfilUrlAttribute(): string
     {
-        if (!empty($this->foto_perfil) && Storage::disk('public')->exists($this->foto_perfil)) {
+        if (! empty($this->foto_perfil) && Storage::disk('public')->exists($this->foto_perfil)) {
             return Storage::url($this->foto_perfil);
         }
 
@@ -101,10 +101,10 @@ class User extends Authenticatable implements MustVerifyEmail
         $foreground = $this->normalizeHexColor($this->avatarForegroundColor()) ?: $this->avatarForegroundColorFromBackground($background);
 
         return 'https://ui-avatars.com/api/?name='
-            . urlencode((string) $this->nome)
-            . '&background=' . $background
-            . '&color=' . $foreground
-            . '&size=256';
+            .urlencode((string) $this->nome)
+            .'&background='.$background
+            .'&color='.$foreground
+            .'&size=256';
     }
 
     private function avatarBackgroundColor(): string
@@ -155,10 +155,10 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         if (strlen($color) === 3 && ctype_xdigit($color)) {
-            $color = $color[0] . $color[0] . $color[1] . $color[1] . $color[2] . $color[2];
+            $color = $color[0].$color[0].$color[1].$color[1].$color[2].$color[2];
         }
 
-        if (strlen($color) !== 6 || !ctype_xdigit($color)) {
+        if (strlen($color) !== 6 || ! ctype_xdigit($color)) {
             return '';
         }
 
@@ -215,7 +215,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        if (!SchemaCache::hasColumn($this->getTable(), 'acesso_todas_estacoes')) {
+        if (! SchemaCache::hasColumn($this->getTable(), 'acesso_todas_estacoes')) {
             return true;
         }
 
@@ -265,7 +265,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return app(\App\Services\PlanoPermissaoService::class)->usuarioPodeUsarPermissao($this, $permissao);
         }
 
-        if (!$this->role_id) {
+        if (! $this->role_id) {
             return false;
         }
 
@@ -277,7 +277,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where('roles.id', $this->role_id)
             ->exists();
 
-        if (!$hasPermission) {
+        if (! $hasPermission) {
             return false;
         }
 
@@ -290,7 +290,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return 'home';
         }
 
-        if (!$this->role_id) {
+        if (! $this->role_id) {
             return null;
         }
 
@@ -309,18 +309,18 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $candidates = $permissions->filter(function (string $routeName) {
-            if (!Route::has($routeName)) {
+            if (! Route::has($routeName)) {
                 return false;
             }
 
             $route = Route::getRoutes()->getByName($routeName);
-            if (!$route) {
+            if (! $route) {
                 return false;
             }
 
             $methods = $route->methods();
             $hasGet = in_array('GET', $methods, true) || in_array('HEAD', $methods, true);
-            if (!$hasGet) {
+            if (! $hasGet) {
                 return false;
             }
 
@@ -340,7 +340,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $priorityActions = ['index', 'filtro', 'setPerPage', 'show', 'create'];
         foreach ($priorityActions as $action) {
-            $match = $candidates->first(fn (string $name) => str_ends_with($name, '.' . $action));
+            $match = $candidates->first(fn (string $name) => str_ends_with($name, '.'.$action));
             if ($match) {
                 return $match;
             }

@@ -123,18 +123,16 @@
 <body>
 <div class="onb-shell">
     <header class="onb-header">
-        <div class="onb-logo">De<span>Cars</span></div>
+        <div class="onb-logo">DE<span>CLOCK</span></div>
         <div class="onb-header-meta">Configuração inicial</div>
     </header>
 
     {{-- Barra de etapas --}}
     @php
         $etapas = [
-            ['rota' => 'onboarding.empresa',     'label' => 'Empresa'],
-            ['rota' => 'onboarding.plano',        'label' => 'Plano'],
-            ['rota' => 'onboarding.pagamento',    'label' => 'Pagamento'],
-            ['rota' => 'onboarding.cores',        'label' => 'Cores'],
-            ['rota' => 'onboarding.orientacoes',  'label' => 'Orientações'],
+            ['rota' => 'onboarding.empresa',      'label' => 'Empresa'],
+            ['rota' => 'onboarding.cores',        'label' => 'Identidade Visual'],
+            ['rota' => 'onboarding.orientacoes',  'label' => 'Primeiros Passos'],
         ];
         $etapaAtiva = $etapaAtiva ?? 'onboarding.empresa';
         $etapasConc = $etapasConc ?? [];

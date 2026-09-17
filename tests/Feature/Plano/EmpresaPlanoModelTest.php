@@ -1,9 +1,6 @@
 <?php
 
-use App\Models\Empresa;
 use App\Models\EmpresaPlano;
-use App\Models\Plano;
-use Carbon\Carbon;
 
 describe('EmpresaPlano model', function () {
     it('estaAtivo retorna true para status ativo', function () {
@@ -54,7 +51,7 @@ describe('EmpresaPlano model', function () {
 
     it('temMudancaAgendada retorna true quando mudanca_tipo e mudanca_efetiva_em definidos', function () {
         $assinatura = EmpresaPlano::factory()->create([
-            'mudanca_tipo'       => 'cancelamento',
+            'mudanca_tipo' => 'cancelamento',
             'mudanca_efetiva_em' => now()->addMonth()->toDateString(),
         ]);
 
@@ -63,7 +60,7 @@ describe('EmpresaPlano model', function () {
 
     it('temMudancaAgendada retorna false quando mudanca_tipo e null', function () {
         $assinatura = EmpresaPlano::factory()->create([
-            'mudanca_tipo'       => null,
+            'mudanca_tipo' => null,
             'mudanca_efetiva_em' => null,
         ]);
 
@@ -71,7 +68,7 @@ describe('EmpresaPlano model', function () {
     });
 
     it('statusBadge retorna label e class corretos', function () {
-        $ativo       = EmpresaPlano::factory()->ativo()->create();
+        $ativo = EmpresaPlano::factory()->ativo()->create();
         $inadimplente = EmpresaPlano::factory()->create(['status' => 'inadimplente']);
 
         expect($ativo->status_badge['label'])->toBe('Ativo');

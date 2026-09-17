@@ -296,8 +296,8 @@ class AssinaturaController extends Controller
         $planos = Plano::ativos()->get();
         $empresa = $this->resolverEmpresaDaAssinatura($assinatura);
 
-        $qtdEstacoes = $empresa ? \App\Models\Estacao::where('empresa_id', $empresa->id)->count() : 0;
-        $qtdVeiculos = $empresa ? \App\Models\Veiculo::where('empresa_id', $empresa->id)->count() : 0;
+        $qtdProjetos = $empresa ? \App\Models\ClockifyProjeto::withoutGlobalScope('empresa')->where('empresa_id', $empresa->id)->count() : 0;
+        $qtdUsuarios = $empresa ? $empresa->users()->count() : 0;
         $armazenamentoUsadoBytes = $empresa?->storage_used_bytes ?? 0;
         $armazenamentoLimiteBytes = $empresa?->storage_limit_bytes ?? 0;
         $armazenamentoUsadoTexto = $empresa?->storage_used ?? '0 B';
@@ -307,8 +307,8 @@ class AssinaturaController extends Controller
         return view('assinatura.show', compact(
             'assinatura',
             'planos',
-            'qtdEstacoes',
-            'qtdVeiculos',
+            'qtdProjetos',
+            'qtdUsuarios',
             'armazenamentoUsadoBytes',
             'armazenamentoLimiteBytes',
             'armazenamentoUsadoTexto',
@@ -401,7 +401,7 @@ class AssinaturaController extends Controller
             ->get();
 
         $empresas->transform(function (Empresa $empresa) {
-            $empresa->setAttribute('qtd_veiculos_ativos', \App\Models\Veiculo::where('empresa_id', $empresa->id)->where('ativo', true)->where('vendido', false)->count());
+            $empresa->setAttribute('qtd_veiculos_ativos', $empresa->users()->count());
             $empresa->setAttribute('qtd_estacoes', \App\Models\Estacao::where('empresa_id', $empresa->id)->count());
             $empresa->setAttribute('armazenamento_usado_mb', (float) round(($empresa->storage_used_bytes ?? 0) / 1048576, 2));
 
@@ -463,6 +463,7 @@ class AssinaturaController extends Controller
             metodoPagamento: 'manual',
             diaVencimento: $data['dia_vencimento'] ?? null,
             criadoPorUserId: Auth::id(),
+            permitirTrial: false,
         );
 
         $metadados = (array) ($empresaPlano->metadados ?? []);
@@ -655,7 +656,8 @@ class AssinaturaController extends Controller
         }
 
         $assinatura = $empresa->planoAtivo()->with('plano.itens')->first();
-        $planos = Plano::ativos()->with('itens')->get();
+        // Por enquanto apenas um plano é oferecido publicamente (com trial de 7 dias).
+        $planos = Plano::ativos()->with('itens')->limit(1)->get();
         $historico = $empresa->pagamentosPlano()
             ->with('empresaPlano.plano')
             ->orderByDesc('data_vencimento')
@@ -678,9 +680,10 @@ class AssinaturaController extends Controller
         }
 
         $plano = Plano::with('itens')->findOrFail($planoId);
+        abort_unless($plano->ativo, 404);
         $empresa = Auth::user()->empresa;
 
-        $totalVeiculos = $empresa ? \App\Models\Veiculo::where('empresa_id', $empresa->id)->where('ativo', true)->where('vendido', false)->count() : 0;
+        $totalVeiculos = $empresa ? $empresa->users()->count() : 0;
         $assinaturaAtual = $empresa?->planoAtivo()->with('plano')->first();
         $erroDowngrade = null;
 
@@ -725,6 +728,7 @@ class AssinaturaController extends Controller
         abort_unless($empresa, 403);
 
         $plano = Plano::findOrFail($data['plano_id']);
+        abort_unless($plano->ativo, 404);
 
         // Bloqueia downgrade no mesmo mês pago
         $assinaturaAtual = $empresa->planoAtivo()->with('plano')->first();
@@ -888,84 +892,14 @@ class AssinaturaController extends Controller
     /** Exibe seleção de veículos para downgrade (via painel, não onboarding). */
     public function downgrade(): View|RedirectResponse
     {
-        $planoId = session('downgrade_plano_id');
-
-        if (! $planoId) {
-            return redirect()->route('assinatura.meu-plano');
-        }
-
-        $empresa = Auth::user()->empresa;
-        $plano = Plano::findOrFail($planoId);
-        $excedentes = $this->planoService->veiculosExcedentes($empresa, $plano);
-        $todos = $this->planoService->veiculosAtivos($empresa);
-
-        return view('assinatura.downgrade', compact('plano', 'excedentes', 'todos'));
+        // Fluxo de ajuste de frota removido junto com o domínio de veículos.
+        return redirect()->route('assinatura.meu-plano');
     }
 
     public function confirmarDowngrade(Request $request): RedirectResponse
     {
-        $planoId = session('downgrade_plano_id');
-
-        if (! $planoId) {
-            return redirect()->route('assinatura.meu-plano');
-        }
-
-        $plano = Plano::findOrFail($planoId);
-        $empresa = Auth::user()->empresa;
-
-        $data = $request->validate([
-            'veiculos_desativar' => 'required|array|min:1',
-            'veiculos_desativar.*' => 'integer|exists:veiculos,id',
-        ], [
-            'veiculos_desativar.required' => 'Selecione ao menos um veículo para desativar.',
-        ]);
-
-        $ainda = $this->planoService->veiculosAtivos($empresa)
-            ->whereNotIn('id', $data['veiculos_desativar'])
-            ->count();
-
-        if ($plano->limite_veiculos !== null && $ainda > $plano->limite_veiculos) {
-            $faltam = $ainda - $plano->limite_veiculos;
-
-            return back()->withErrors([
-                'veiculos_desativar' => "Desative mais {$faltam} veículo(s) para se enquadrar no limite do plano {$plano->nome}.",
-            ]);
-        }
-
-        $origem = (string) session('downgrade_origem', 'assinatura');
-
-        // Se o downgrade veio de uma troca com assinatura ativa, agenda para a renovação.
-        if ($origem === 'agendar') {
-            $assinaturaAtual = $empresa->planoAtivo()->firstOrFail();
-
-            $this->agendarMudancaPlano(
-                assinatura: $assinaturaAtual,
-                proximoPlano: $plano,
-                periodicidade: (string) session('downgrade_periodicidade', 'mensal'),
-                tipo: 'downgrade',
-                metadadosExtras: [
-                    'veiculos_desativar' => array_values($data['veiculos_desativar']),
-                ],
-            );
-        } else {
-            // Fluxo original: contratação/alteração imediata (cria nova assinatura + cobrança pendente).
-            $this->planoService->contratar(
-                empresa: $empresa,
-                plano: $plano,
-                periodicidade: session('downgrade_periodicidade', 'mensal'),
-                metodoPagamento: session('downgrade_metodo', 'boleto'),
-                diaVencimento: session('downgrade_dia_vencimento'),
-                criadoPorUserId: Auth::id(),
-                veiculosDesativar: $data['veiculos_desativar'],
-            );
-        }
-
-        session()->forget(['downgrade_plano_id', 'downgrade_periodicidade', 'downgrade_metodo', 'downgrade_dia_vencimento', 'downgrade_origem']);
-
-        return redirect()->route('assinatura.meu-plano')
-            ->with('success', $origem === 'agendar'
-                ? 'Downgrade agendado para a proxima renovacao. Ajuste de frota registrado para aplicar no proximo ciclo.'
-                : 'Plano alterado e veiculos ajustados com sucesso.');
+        // Fluxo de ajuste de frota removido junto com o domínio de veículos.
+        return redirect()->route('assinatura.meu-plano');
     }
 
     /** Gera (ou reutiliza) o PaymentIntent PIX via Stripe e retorna QR Code. */

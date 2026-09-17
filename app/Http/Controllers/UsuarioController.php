@@ -142,8 +142,6 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             $data['password'] = self::SENHA_PADRAO_ACESSO;
             $data['forcar_troca_senha'] = true;
 
-            $stripeSecret = $this->resolveStripeSecret(null, isset($data['empresa_id']) ? (int) $data['empresa_id'] : null);
-
             if (! empty(trim((string) $data['email']))) {
                 $query = User::query()->whereRaw('LOWER(email) = ?', [mb_strtolower(trim((string) $data['email']))]);
                 if (SchemaCache::hasColumn('users', 'empresa_id')) {

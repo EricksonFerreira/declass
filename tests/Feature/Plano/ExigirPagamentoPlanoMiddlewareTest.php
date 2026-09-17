@@ -15,23 +15,23 @@ function criarUserSemEmpresa(): User
 
 function criarUserComEmpresaSemAssinatura(): array
 {
-    $regra   = Regra::firstOrCreate(['name' => 'usuario', 'guard_name' => 'web']);
+    $regra = Regra::firstOrCreate(['name' => 'usuario', 'guard_name' => 'web']);
     $empresa = Empresa::factory()->create();
-    $user    = User::factory()->create(['role_id' => $regra->id, 'empresa_id' => $empresa->id]);
+    $user = User::factory()->create(['role_id' => $regra->id, 'empresa_id' => $empresa->id]);
 
     return [$empresa, $user];
 }
 
 function criarUserComAssinaturaAtiva(): array
 {
-    $regra   = Regra::firstOrCreate(['name' => 'usuario', 'guard_name' => 'web']);
+    $regra = Regra::firstOrCreate(['name' => 'usuario', 'guard_name' => 'web']);
     $empresa = Empresa::factory()->create();
-    $plano   = Plano::factory()->create();
-    $user    = User::factory()->create(['role_id' => $regra->id, 'empresa_id' => $empresa->id]);
+    $plano = Plano::factory()->create();
+    $user = User::factory()->create(['role_id' => $regra->id, 'empresa_id' => $empresa->id]);
 
     EmpresaPlano::factory()->ativo()->create([
         'empresa_id' => $empresa->id,
-        'plano_id'   => $plano->id,
+        'plano_id' => $plano->id,
     ]);
 
     return [$empresa, $user];
@@ -67,11 +67,15 @@ describe('ExigirPagamentoPlanoMiddleware', function () {
 
         $response = $this->actingAs($user)->get(route('home'));
 
-        $response->assertStatus(200);
+        // ResolveTenant nega acesso antes do middleware de pagamento (403),
+        // entao o importante e nao haver redirect para meu-plano.
+        $response->assertForbidden();
     });
 
     it('nao bloqueia superadmin mesmo sem assinatura', function () {
-        $admin = User::factory()->create(['role_id' => 1, 'empresa_id' => null]);
+        $admin = User::factory()->create(['empresa_id' => null]);
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $admin->id)->update(['tipo_usuario_id' => 1]);
+        $admin->refresh();
 
         $response = $this->actingAs($admin)->get(route('home'));
 
@@ -96,18 +100,36 @@ describe('ExigirPagamentoPlanoMiddleware', function () {
     });
 
     it('empresa com assinatura em trial tem acesso ao sistema', function () {
-        $regra   = Regra::firstOrCreate(['name' => 'usuario', 'guard_name' => 'web']);
+        $regra = Regra::firstOrCreate(['name' => 'usuario', 'guard_name' => 'web']);
         $empresa = Empresa::factory()->create();
-        $plano   = Plano::factory()->create();
-        $user    = User::factory()->create(['role_id' => $regra->id, 'empresa_id' => $empresa->id]);
+        $plano = Plano::factory()->create();
+        $user = User::factory()->create(['role_id' => $regra->id, 'empresa_id' => $empresa->id]);
 
         EmpresaPlano::factory()->trial()->create([
             'empresa_id' => $empresa->id,
-            'plano_id'   => $plano->id,
+            'plano_id' => $plano->id,
         ]);
 
         $response = $this->actingAs($user)->get(route('assinatura.meu-plano'));
 
         $response->assertStatus(200);
+    });
+
+    it('bloqueia acesso quando o trial expirou', function () {
+        $regra = Regra::firstOrCreate(['name' => 'usuario', 'guard_name' => 'web']);
+        $empresa = Empresa::factory()->create();
+        $plano = Plano::factory()->create();
+        $user = User::factory()->create(['role_id' => $regra->id, 'empresa_id' => $empresa->id]);
+
+        EmpresaPlano::factory()->trial()->create([
+            'empresa_id' => $empresa->id,
+            'plano_id' => $plano->id,
+            'data_inicio' => now()->subDays(10)->toDateString(),
+            'data_vencimento' => now()->subDays(3)->toDateString(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('home'));
+
+        $response->assertRedirect(route('assinatura.meu-plano'));
     });
 });

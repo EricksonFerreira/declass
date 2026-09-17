@@ -151,7 +151,7 @@
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td>Veículo adicional</td>
+                                                        <td>Usuário adicional</td>
                                                         <td class="text-right"><input type="number" step="0.01" min="0" id="veiculoUnit" name="valor_veiculo_adicional" class="form-control form-control-sm text-right" value="3.00"></td>
                                                         <td class="text-center">
                                                             <input type="number" min="0" step="1" id="veiculoQtd" name="veiculos_adicionais" class="form-control form-control-sm text-center" value="0">

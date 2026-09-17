@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Menu\CustomAdminLte;
+use App\Models\ClockifyProjeto;
+use App\Models\ClockifyTimeTracker;
 use App\Models\User;
 use App\Observers\OnboardingObserver;
 use App\Support\EmpresaContext;
@@ -80,6 +82,8 @@ class AppServiceProvider extends ServiceProvider
         Cashier::useCustomerModel(User::class);
 
         User::observe(OnboardingObserver::class);
+        ClockifyProjeto::observe(OnboardingObserver::class);
+        ClockifyTimeTracker::observe(OnboardingObserver::class);
 
         // Replace the AdminLTE singleton with our custom version that hides
         // orphan section headers (OPERAÇÃO, FROTA, etc.) when the user has

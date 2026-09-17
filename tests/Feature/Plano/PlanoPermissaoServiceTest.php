@@ -46,19 +46,15 @@ function criarAdminEmpresaComPlano(array $planoAttrs = []): array
 it('permite acesso do administrador somente para permissões liberadas no plano', function () {
     [, $plano, $admin] = criarAdminEmpresaComPlano();
 
-    $permitida = Permissao::create([
-        'name' => 'usuario.index',
-        'guard_name' => 'web',
-        'descricao' => 'Listagem de usuários',
-        'grupo' => 'usuario',
-    ]);
+    $permitida = Permissao::firstOrCreate(
+        ['name' => 'usuario.index', 'guard_name' => 'web'],
+        ['descricao' => 'Listagem de usuários', 'grupo' => 'usuario'],
+    );
 
-    $bloqueada = Permissao::create([
-        'name' => 'financeiro.index',
-        'guard_name' => 'web',
-        'descricao' => 'Listagem do financeiro',
-        'grupo' => 'financeiro',
-    ]);
+    $bloqueada = Permissao::firstOrCreate(
+        ['name' => 'financeiro.index', 'guard_name' => 'web'],
+        ['descricao' => 'Listagem do financeiro', 'grupo' => 'financeiro'],
+    );
 
     $plano->permissoes()->sync([$permitida->id]);
 
@@ -71,23 +67,20 @@ it('valida limite e conjunto de permissões do perfil conforme o plano', functio
         'limite_permissoes_por_regra' => 2,
     ]);
 
-    $permissaoA = Permissao::create([
-        'name' => 'usuario.index',
-        'guard_name' => 'web',
-        'grupo' => 'usuario',
-    ]);
+    $permissaoA = Permissao::firstOrCreate(
+        ['name' => 'usuario.index', 'guard_name' => 'web'],
+        ['grupo' => 'usuario'],
+    );
 
-    $permissaoB = Permissao::create([
-        'name' => 'usuario.create',
-        'guard_name' => 'web',
-        'grupo' => 'usuario',
-    ]);
+    $permissaoB = Permissao::firstOrCreate(
+        ['name' => 'usuario.create', 'guard_name' => 'web'],
+        ['grupo' => 'usuario'],
+    );
 
-    $permissaoC = Permissao::create([
-        'name' => 'financeiro.index',
-        'guard_name' => 'web',
-        'grupo' => 'financeiro',
-    ]);
+    $permissaoC = Permissao::firstOrCreate(
+        ['name' => 'financeiro.index', 'guard_name' => 'web'],
+        ['grupo' => 'financeiro'],
+    );
 
     $plano->permissoes()->sync([$permissaoA->id, $permissaoB->id]);
 

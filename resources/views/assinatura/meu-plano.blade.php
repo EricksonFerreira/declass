@@ -538,13 +538,11 @@
             {{-- Labels dos grupos de features --}}
             @php
             $grupoLabels = [
-                'Frota'    => ['icone' => 'car',           'label' => 'Frota'],
-                'Reservas' => ['icone' => 'calendar-check','label' => 'Reservas'],
-                'Financeiro'=> ['icone'=> 'dollar-sign',   'label' => 'Financeiro'],
-                'Estacoes' => ['icone' => 'map-marker-alt','label' => 'Estacoes'],
-                'Site'     => ['icone' => 'globe',         'label' => 'Site de Vendas'],
-                'Modulos'  => ['icone' => 'puzzle-piece',  'label' => 'Modulos Extras'],
-                'Gestao'   => ['icone' => 'users-cog',     'label' => 'Gestao'],
+                'Tempo'      => ['icone' => 'stopwatch',    'label' => 'Registro de Tempo'],
+                'Projetos'   => ['icone' => 'folder-open',  'label' => 'Projetos'],
+                'Equipe'     => ['icone' => 'users',        'label' => 'Equipe'],
+                'Relatorios' => ['icone' => 'chart-bar',    'label' => 'Relatórios'],
+                'Extras'     => ['icone' => 'puzzle-piece', 'label' => 'Extras'],
             ];
             @endphp
 
@@ -1075,14 +1073,14 @@ document.getElementById('toggleAnual')?.addEventListener('change', function () {
     document.getElementById('lblAnual2').style.color  = anual ? '#0a1628' : '#94a3b8';
     document.querySelectorAll('.plano-contratar-btn').forEach(btn => {
         const id = btn.dataset.plano;
-        btn.href = `{{ url('/admin/meu-plano/contratar') }}?plano_id=${id}&periodicidade=${periodo}`;
+        btn.href = `{{ route('assinatura.contratar') }}?plano_id=${id}&periodicidade=${periodo}`;
     });
 });
 
 // ── Modal Alterar Método ──────────────────────────────────────────────────────
 function abrirAlterarMetodo(pagamentoId, metodoAtual) {
     const form = document.getElementById('formAlterarMetodo');
-    form.action = `/admin/meu-plano/pagamento/${pagamentoId}/metodo`;
+    form.action = `{{ url('/admin/assinatura/pagamento') }}/${pagamentoId}/metodo`;
     document.querySelectorAll('#metodosCards .metodo-alt-opt').forEach(l => l.classList.remove('selected'));
     const radio = document.getElementById('met_' + metodoAtual);
     if (radio) {
