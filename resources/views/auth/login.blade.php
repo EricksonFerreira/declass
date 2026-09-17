@@ -392,7 +392,7 @@
     <div class="wrap">
 
         {{-- Logo --}}
-        <div class="logo">
+        <a href="{{ route('site.apresentacao') }}" class="logo" title="Ir para a pagina inicial" style="text-decoration:none">
             <div class="">
                 @if(!empty($loginLogoUrl))
                 <img src="{{ $loginLogoUrl }}" alt="Logo {{ $loginTitle }}" style="width:9em">
@@ -403,7 +403,7 @@
             {{-- @if(!empty($loginLogoUrl))
             <span class="logo__name">{{ $loginTitle }}</span>
             @endif --}}
-        </div>
+        </a>
 
         {{-- Card --}}
         <div class="card">
