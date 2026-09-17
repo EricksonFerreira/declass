@@ -39,7 +39,7 @@ class StoreUsuarioRequest extends FormRequest
 
     public function rules(): array
     {
-        $empresaId = app(EmpresaContext::class)->empresaId() ?? auth()->user()?->empresa_id;
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? $this->user()?->empresa_id;
         $isCadastroReserva = $this->boolean('cadastro_reserva');
 
         return [

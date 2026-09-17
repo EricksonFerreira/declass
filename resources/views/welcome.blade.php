@@ -744,173 +744,9 @@
                 <div class="hero-carousel-wrap">
                     <div class="hero-carousel" id="heroCarousel">
 
-                        <figure class="hero-carousel-slide is-active">
-                            <div class="hero-shot">
-                                <div class="shot-head">
-                                    <span class="shot-title"><i class="fas fa-gauge-high"></i> Visão geral da equipe</span>
-                                    <span class="shot-badge">Hoje</span>
-                                </div>
-                                <div class="shot-kpis">
-                                    <div class="shot-kpi"><small>Horas hoje</small><b>126h</b></div>
-                                    <div class="shot-kpi"><small>Rastreadores</small><b>8 ativos</b></div>
-                                    <div class="shot-kpi"><small>Projetos</small><b>12</b></div>
-                                </div>
-                                <div class="shot-card">
-                                    <div class="shot-card-head">Horas por dia no período <span>últimos 7 dias</span></div>
-                                    <div class="shot-bars">
-                                        <i style="height:45%"></i><i style="height:70%"></i><i style="height:55%"></i><i style="height:85%"></i><i style="height:62%"></i><i style="height:95%"></i><i style="height:40%"></i>
-                                    </div>
-                                </div>
-                                <div class="shot-track">
-                                    <span class="shot-play rec"><i class="fas fa-stop"></i></span>
-                                    <div class="shot-track-info">
-                                        <b>Desenvolvimento — Portal do cliente</b>
-                                        <small>Ana Souza · Projeto DECLOCK Web</small>
-                                    </div>
-                                    <span class="shot-badge green">Rodando</span>
-                                    <span class="shot-time">02:47</span>
-                                </div>
-                            </div>
-                            <figcaption class="hero-carousel-caption">
-                                <span>Dashboard</span>
-                                <strong>Visão executiva da operação</strong>
-                                <small>Horas, rastreadores ativos e projetos em um só lugar.</small>
-                            </figcaption>
-                        </figure>
-
-                        <figure class="hero-carousel-slide">
-                            <div class="hero-shot">
-                                <div class="shot-head">
-                                    <span class="shot-title"><i class="fas fa-stopwatch"></i> Rastreador de tempo</span>
-                                    <span class="shot-badge green">Ao vivo</span>
-                                </div>
-                                <div class="shot-track">
-                                    <span class="shot-play rec"><i class="fas fa-stop"></i></span>
-                                    <div class="shot-track-info">
-                                        <b>Design system</b>
-                                        <small>Carla Mendes · DECLOCK Web</small>
-                                    </div>
-                                    <span class="shot-time">01:12</span>
-                                </div>
-                                <div class="shot-track">
-                                    <span class="shot-play"><i class="fas fa-play"></i></span>
-                                    <div class="shot-track-info">
-                                        <b>API e integrações</b>
-                                        <small>Diego Lima · Backend</small>
-                                    </div>
-                                    <span class="shot-time">00:00</span>
-                                </div>
-                                <div class="shot-track">
-                                    <span class="shot-play"><i class="fas fa-play"></i></span>
-                                    <div class="shot-track-info">
-                                        <b>App mobile</b>
-                                        <small>Bruno Rocha · Frontend</small>
-                                    </div>
-                                    <span class="shot-time">00:00</span>
-                                </div>
-                                <div class="shot-track">
-                                    <span class="shot-play"><i class="fas fa-play"></i></span>
-                                    <div class="shot-track-info">
-                                        <b>Portal do cliente</b>
-                                        <small>Ana Souza · DECLOCK Web</small>
-                                    </div>
-                                    <span class="shot-time">00:00</span>
-                                </div>
-                            </div>
-                            <figcaption class="hero-carousel-caption">
-                                <span>Rastreador</span>
-                                <strong>Um clique para registrar</strong>
-                                <small>A equipe inicia o cronômetro e o gestor acompanha em tempo real.</small>
-                            </figcaption>
-                        </figure>
-
-                        <figure class="hero-carousel-slide">
-                            <div class="hero-shot">
-                                <div class="shot-head">
-                                    <span class="shot-title"><i class="fas fa-table-list"></i> Timesheet da semana</span>
-                                    <span class="shot-badge">38h</span>
-                                </div>
-                                <div class="ts-grid">
-                                    <div class="ts-row head">
-                                        <span></span>
-                                        <div class="ts-cell"><span>SEG</span></div>
-                                        <div class="ts-cell"><span>TER</span></div>
-                                        <div class="ts-cell"><span>QUA</span></div>
-                                        <div class="ts-cell"><span>QUI</span></div>
-                                        <div class="ts-cell"><span>SEX</span></div>
-                                    </div>
-                                    <div class="ts-row">
-                                        <span class="ts-name"><span class="shot-avatar" style="background:#0ea5e9">AS</span> Ana</span>
-                                        <div class="ts-cell"><i style="width:90%"></i></div>
-                                        <div class="ts-cell"><i style="width:75%"></i></div>
-                                        <div class="ts-cell"><i style="width:100%"></i></div>
-                                        <div class="ts-cell"><i style="width:60%"></i></div>
-                                        <div class="ts-cell"><i style="width:80%"></i></div>
-                                    </div>
-                                    <div class="ts-row">
-                                        <span class="ts-name"><span class="shot-avatar" style="background:#34d399">BR</span> Bruno</span>
-                                        <div class="ts-cell"><i style="width:70%"></i></div>
-                                        <div class="ts-cell"><i style="width:85%"></i></div>
-                                        <div class="ts-cell"><i style="width:50%"></i></div>
-                                        <div class="ts-cell"><i style="width:90%"></i></div>
-                                        <div class="ts-cell"><i style="width:65%"></i></div>
-                                    </div>
-                                    <div class="ts-row">
-                                        <span class="ts-name"><span class="shot-avatar" style="background:#fbbf24">CM</span> Carla</span>
-                                        <div class="ts-cell"><i style="width:55%"></i></div>
-                                        <div class="ts-cell"><i style="width:95%"></i></div>
-                                        <div class="ts-cell"><i style="width:70%"></i></div>
-                                        <div class="ts-cell"><i style="width:80%"></i></div>
-                                        <div class="ts-cell"><i style="width:45%"></i></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <figcaption class="hero-carousel-caption">
-                                <span>Timesheet</span>
-                                <strong>A semana inteira em uma tela</strong>
-                                <small>Lançamentos, totais por dia e conferência do período.</small>
-                            </figcaption>
-                        </figure>
-
-                        <figure class="hero-carousel-slide">
-                            <div class="hero-shot">
-                                <div class="shot-head">
-                                    <span class="shot-title"><i class="fas fa-calendar-days"></i> Calendário de alocações</span>
-                                    <span class="shot-badge gray">Semana</span>
-                                </div>
-                                <div class="cal-grid">
-                                    <div class="cal-col">
-                                        <div class="cal-day">Seg</div>
-                                        <div class="cal-chip" style="background:#0ea5e9;flex:2">Portal<small>Ana</small></div>
-                                        <div class="cal-chip" style="background:#34d399;flex:1">App<small>Bruno</small></div>
-                                    </div>
-                                    <div class="cal-col">
-                                        <div class="cal-day">Ter</div>
-                                        <div class="cal-chip" style="background:#fbbf24;flex:1">Design<small>Carla</small></div>
-                                        <div class="cal-chip" style="background:#c084fc;flex:2">API<small>Diego</small></div>
-                                    </div>
-                                    <div class="cal-col">
-                                        <div class="cal-day">Qua</div>
-                                        <div class="cal-chip" style="background:#0ea5e9;flex:2">Portal<small>Ana</small></div>
-                                    </div>
-                                    <div class="cal-col">
-                                        <div class="cal-day">Qui</div>
-                                        <div class="cal-chip" style="background:#f472b6;flex:1">Folga<small>Carla</small></div>
-                                        <div class="cal-chip" style="background:#34d399;flex:2">App<small>Bruno</small></div>
-                                    </div>
-                                    <div class="cal-col">
-                                        <div class="cal-day">Sex</div>
-                                        <div class="cal-chip" style="background:#c084fc;flex:1">API<small>Diego</small></div>
-                                        <div class="cal-chip" style="background:#0ea5e9;flex:1">Portal<small>Ana</small></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <figcaption class="hero-carousel-caption">
-                                <span>Calendário</span>
-                                <strong>Alocações sem conflito</strong>
-                                <small>Quem está em qual projeto, em qualquer dia da semana.</small>
-                            </figcaption>
-                        </figure>
+                        <img class="hero-carousel-slide" src="{{ asset('/assets/welcome/dashboard.png') }}" alt="">
+                        <img class="hero-carousel-slide" src="{{ asset('/assets/welcome/timesheet.png') }}" alt="">
+                        <img class="hero-carousel-slide" src="{{ asset('/assets/welcome/produtividade.png') }}" alt="">
 
                     </div>
                 </div>
@@ -942,7 +778,9 @@
                     <span class="sales-diff-note">Esse é o diferencial que faz o DECLOCK se destacar entre as ferramentas do mercado.</span>
                 </div>
             </div>
-            <div class="sales-diff-visual reveal-right delay-1">
+            <img class="sales-diff-visual reveal-right delay-1" src="{{ asset('/assets/welcome/planejar_equipe.png') }}"  > 
+
+            {{-- <div class="sales-diff-visual reveal-right delay-1">
                 <div class="sales-diff-badge"><i class="fas fa-chart-line"></i> Visão executiva</div>
                 <div class="sales-diff-panel">
                     <div class="shot-head" style="margin-bottom:.2rem">
@@ -970,7 +808,7 @@
                         <span class="shot-time">3,8h</span>
                     </div>
                 </div>
-            </div>
+            </div> --}}
         </div>
     </div>
 </section>
@@ -1033,7 +871,9 @@
                                 <div class="feature-item"><i class="fas fa-check"></i> Sincroniza direto com o timesheet</div>
                             </div>
                         </div>
-                        <div class="feature-slide-image">
+                        <img class="feature-slide-image" src="{{ asset('/assets/welcome/timetracker.png') }}"  > 
+
+                        {{-- <div class="feature-slide-image">
                             <div class="feature-shot">
                                 <div class="shot-head">
                                     <span class="shot-title"><i class="fas fa-stopwatch"></i> Rastreador</span>
@@ -1055,7 +895,7 @@
                                     <span class="shot-time">00:00:00</span>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
 
@@ -1073,7 +913,9 @@
                                 <div class="feature-item"><i class="fas fa-check"></i> Exportação para análise externa</div>
                             </div>
                         </div>
-                        <div class="feature-slide-image">
+                         <img class="feature-slide-image" src="{{ asset('/assets/welcome/timesheet.png') }}"  > 
+
+                        {{-- <div class="feature-slide-image">
                             <div class="feature-shot">
                                 <div class="shot-head">
                                     <span class="shot-title"><i class="fas fa-table-list"></i> Timesheet</span>
@@ -1114,7 +956,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
 
@@ -1132,7 +974,9 @@
                                 <div class="feature-item"><i class="fas fa-check"></i> Alertas de conflito de agenda</div>
                             </div>
                         </div>
-                        <div class="feature-slide-image">
+                        <img class="feature-slide-image" src="{{ asset('/assets/welcome/calendario.png') }}"  > 
+
+                        {{-- <div class="feature-slide-image">
                             <div class="feature-shot">
                                 <div class="shot-head">
                                     <span class="shot-title"><i class="fas fa-calendar-days"></i> Calendário</span>
@@ -1165,7 +1009,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
 
@@ -1183,7 +1027,9 @@
                                 <div class="feature-item"><i class="fas fa-check"></i> Exportação com um clique</div>
                             </div>
                         </div>
-                        <div class="feature-slide-image">
+                         <img class="feature-slide-image" src="{{ asset('/assets/welcome/dashboard.png') }}"  > 
+
+                        {{-- <div class="feature-slide-image">
                             <div class="feature-shot">
                                 <div class="shot-head">
                                     <span class="shot-title"><i class="fas fa-chart-column"></i> Relatório de horas</span>
@@ -1206,7 +1052,7 @@
                                     <span class="shot-time">27,0h</span>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
 

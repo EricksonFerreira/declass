@@ -38,7 +38,7 @@ class UpdateUsuarioRequest extends FormRequest
 
     public function rules(): array
     {
-        $empresaId = app(EmpresaContext::class)->empresaId() ?? auth()->user()?->empresa_id;
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? $this->user()?->empresa_id;
 
         return [
             'nome' => 'required|string|max:255',
