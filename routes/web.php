@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect('/admin/home');
+    return view('welcome');
 })->name('site.apresentacao');
 
 Route::get('/manifest.webmanifest', function () {
