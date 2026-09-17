@@ -5,7 +5,6 @@ namespace App\Http\Requests\Usuario;
 use App\Support\EmpresaContext;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class StoreUsuarioRequest extends FormRequest
@@ -76,65 +75,6 @@ class StoreUsuarioRequest extends FormRequest
             'estacoes' => 'nullable|array',
             'estacoes.*' => 'integer|exists:estacoes,id',
         ];
-    }
-
-    public function withValidator($validator): void
-    {
-        $validator->after(function ($v) {
-            $roleId = (int) ($this->input('role_id') ?? 0);
-            if ($roleId <= 0) {
-                return;
-            }
-
-            $roleName = (string) (DB::table('roles')->where('id', $roleId)->value('name') ?? '');
-            $roleKey = mb_strtolower(trim($roleName));
-            if ($roleKey === '') {
-                return;
-            }
-
-            $acessoTodas = (bool) $this->boolean('acesso_todas_estacoes');
-            $estacoes = $this->input('estacoes', []);
-            $count = is_array($estacoes) ? count(array_unique(array_filter($estacoes))) : 0;
-
-            if ($roleKey === 'gerente') {
-                if (! $acessoTodas) {
-                    $v->errors()->add('acesso_todas_estacoes', 'Para o perfil Gerente, o acesso deve ser a todas as estacoes.');
-                }
-
-                return;
-            }
-
-            if (in_array($roleKey, ['colaborador_administrativo', 'colaborador administrativo'], true)) {
-                if ($acessoTodas) {
-                    $v->errors()->add('acesso_todas_estacoes', 'Para Colaborador Administrativo, selecione estacoes permitidas (sem acesso total).');
-                }
-                if ($count !== 1) {
-                    $v->errors()->add('estacoes', 'Para Colaborador Administrativo, selecione exatamente 1 estacao.');
-                }
-
-                return;
-            }
-
-            if (in_array($roleKey, ['colaborador_chefe', 'colaborador chefe'], true)) {
-                if ($acessoTodas) {
-                    $v->errors()->add('acesso_todas_estacoes', 'Para Colaborador Chefe, selecione estacoes permitidas (sem acesso total).');
-                }
-                if ($count < 1 || $count > 3) {
-                    $v->errors()->add('estacoes', 'Para Colaborador Chefe, selecione de 1 a 3 estacoes.');
-                }
-
-                return;
-            }
-
-            if ($roleKey === 'cliente') {
-                if ($acessoTodas) {
-                    $v->errors()->add('acesso_todas_estacoes', 'Para Cliente, nao utilize acesso a todas as estacoes.');
-                }
-                if ($count > 0) {
-                    $v->errors()->add('estacoes', 'Para Cliente, nao selecione estacoes.');
-                }
-            }
-        });
     }
 
     public function messages()

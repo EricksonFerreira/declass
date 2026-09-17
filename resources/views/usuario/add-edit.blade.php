@@ -57,6 +57,23 @@
                         </div>
                     </div>
 
+                    <div class="form-row">
+                        <div class="col-md-6 form-group">
+                            <label for="role_id">Perfil de acesso <span class="text-danger">*</span></label>
+                            <select class="form-control @error('role_id') is-invalid @enderror" id="role_id" name="role_id" required>
+                                <option value="">Selecione o perfil</option>
+                                @foreach(($tiposUsuario ?? []) as $id => $nome)
+                                    <option value="{{ $id }}" {{ (string) old('role_id', $usuario->role_id ?? '') === (string) $id ? 'selected' : '' }}>
+                                        {{ ucfirst(str_replace('_', ' ', $nome)) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('role_id')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
                     @if(!isset($usuario))
                         <div class="form-row">
                             <div class="col-md-6 form-group">
