@@ -9,6 +9,10 @@
 
 @section('css')
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+@if(!$projeto)
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+@endif
 <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f6f9; }
 
@@ -95,6 +99,41 @@
     }
 @endphp
 
+@if(!$projeto)
+{{-- Project selector (general planning entry point) --}}
+<div class="card planning-card border-0">
+    <div class="card-header bg-white py-3 border-bottom">
+        <h3 class="card-title text-bold text-dark mb-0">
+            <i class="fas fa-project-diagram text-primary mr-2"></i> Selecione o projeto
+            <small class="text-muted font-weight-normal ml-2">— escolha um projeto para planejar a equipe</small>
+        </h3>
+    </div>
+    <div class="card-body">
+        @if($projetos->isEmpty())
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-folder-open fa-3x mb-3"></i>
+                <h5 class="font-weight-bold">Nenhum projeto ativo</h5>
+                <p class="mb-0">Cadastre um projeto antes de planejar a equipe.</p>
+            </div>
+        @else
+            <form method="GET" action="{{ route('clockify.projetos.planejar-equipe-geral') }}" class="d-flex flex-wrap align-items-end">
+                <div class="form-group mb-2 mr-3" style="min-width: 300px; max-width: 100%;">
+                    <label class="text-xs text-uppercase text-muted font-weight-bold">Projeto</label>
+                    <select name="projeto_id" id="projeto-selector" class="form-control select2" required>
+                        <option value="">Selecione um projeto...</option>
+                        @foreach($projetos as $p)
+                            <option value="{{ $p->id }}">{{ $p->nome }}{{ $p->cliente ? ' — ' . $p->cliente->nome : '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary font-weight-bold shadow-sm mb-2">
+                    <i class="fas fa-users-cog mr-1"></i> Planejar equipe
+                </button>
+            </form>
+        @endif
+    </div>
+</div>
+@else
 {{-- Context Banner --}}
 <div class="card planning-card mb-4 border-0 shadow-sm">
     <div class="card-body py-3">
@@ -342,9 +381,23 @@
         </form>
     </div>
 </div>
+@endif
 @stop
 
 @section('js')
+@if(!$projeto)
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+    $(function () {
+        $('#projeto-selector').select2({
+            theme: 'bootstrap4',
+            placeholder: 'Selecione um projeto...',
+            allowClear: true,
+            width: 'resolve'
+        });
+    });
+</script>
+@else
 <script>
     const MIN_DATE = document.getElementById('global-min-date').value;
     const MAX_DATE = document.getElementById('global-max-date').value;
@@ -453,4 +506,5 @@
         }
     });
 </script>
+@endif
 @stop

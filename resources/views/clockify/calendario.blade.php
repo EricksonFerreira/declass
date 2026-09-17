@@ -4,17 +4,17 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
         <x-page-title :title="$titulo" />
-        
+
         <!-- Filtros Rápidos do Calendário estilo Clockify -->
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center flex-wrap cal-header-actions">
             <!-- Botão rápido para agendar nova alocação sem precisar de coluna lateral -->
-            <button type="button" class="btn btn-sm btn-success font-weight-bold mr-3 shadow-sm" onclick="openAddAllocationModalDirect()" style="border-radius: 8px;">
+            <button type="button" class="btn btn-sm btn-success font-weight-bold mr-2 mb-2 shadow-sm" onclick="openAddAllocationModalDirect()" style="border-radius: 8px;">
                 <i class="fas fa-calendar-plus mr-1"></i> Agendar Alocação
             </button>
 
-            <select id="calendar-user-filter" class="form-control form-control-sm select2" style="min-width: 220px; border-radius: 8px;">
+            <select id="calendar-user-filter" class="form-control form-control-sm select2 mb-2" style="min-width: 220px; border-radius: 8px;">
                 <option value="all" selected>👥 Colegas de equipe (Todos)</option>
                 <option value="current">👤 Apenas meus registros</option>
                 @foreach ($usuarios as $u)
@@ -31,10 +31,10 @@
     <div class="row">
         <!-- Visualização do Calendário 100% de largura -->
         <div class="col-md-12">
-            <div class="card shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #e2e8f0;">
+            <div class="card cal-card shadow-sm border-0 mb-4">
                 <div class="card-body p-3 position-relative">
                     <!-- Calendar Container -->
-                    <div id="full-calendar" style="min-height: 650px;"></div>
+                    <div id="full-calendar"></div>
                 </div>
             </div>
         </div>
@@ -44,18 +44,18 @@
     <div class="modal fade" id="modalAddAllocationDirect" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
-                <div class="modal-header bg-success text-white" style="border-radius: 12px 12px 0 0;">
-                    <h5 class="modal-title font-weight-bold"><i class="fas fa-calendar-plus mr-2"></i> Agendar Alocação de Tempo</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title font-weight-bold text-dark"><i class="fas fa-calendar-plus mr-2 text-success"></i> Agendar Alocação de Tempo</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <form action="{{ route('clockify.calendario.store') }}" method="POST">
                     @csrf
-                    <div class="modal-body p-4">
+                    <div class="modal-body">
                         <div class="form-group">
-                            <label for="modal-user-id" class="text-xs font-weight-bold text-muted">Colaborador <span class="text-danger">*</span></label>
-                            <select name="user_id" id="modal-user-id" class="form-control" required style="border-radius:6px;">
+                            <label for="modal-user-id" class="text-sm">Colaborador <span class="text-danger">*</span></label>
+                            <select name="user_id" id="modal-user-id" class="form-control form-control-sm" required>
                                 <option value="">Selecione o colaborador...</option>
                                 @foreach ($usuarios as $u)
                                     <option value="{{ $u->id }}" @selected($u->id === Auth::id())>{{ $u->nome }}</option>
@@ -63,8 +63,8 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="modal-projeto-id" class="text-xs font-weight-bold text-muted">Projeto <span class="text-danger">*</span></label>
-                            <select name="clockify_projeto_id" id="modal-projeto-id" class="form-control" required style="border-radius:6px;">
+                            <label for="modal-projeto-id" class="text-sm">Projeto <span class="text-danger">*</span></label>
+                            <select name="clockify_projeto_id" id="modal-projeto-id" class="form-control form-control-sm" required>
                                 <option value="">Selecione o projeto...</option>
                                 @foreach ($projetos as $p)
                                     <option value="{{ $p->id }}">{{ $p->nome }}</option>
@@ -73,26 +73,26 @@
                         </div>
                         <div class="row">
                             <div class="col-6 form-group">
-                                <label for="modal-data-inicio" class="text-xs font-weight-bold text-muted">Data de Início <span class="text-danger">*</span></label>
-                                <input type="date" name="data_inicio" id="modal-data-inicio" class="form-control" required value="{{ date('Y-m-d') }}" style="border-radius:6px;">
+                                <label for="modal-data-inicio" class="text-sm">Data de Início <span class="text-danger">*</span></label>
+                                <input type="date" name="data_inicio" id="modal-data-inicio" class="form-control form-control-sm" required value="{{ date('Y-m-d') }}">
                             </div>
                             <div class="col-6 form-group">
-                                <label for="modal-data-fim" class="text-xs font-weight-bold text-muted">Data de Fim <span class="text-danger">*</span></label>
-                                <input type="date" name="data_fim" id="modal-data-fim" class="form-control" required value="{{ date('Y-m-d') }}" style="border-radius:6px;">
+                                <label for="modal-data-fim" class="text-sm">Data de Fim <span class="text-danger">*</span></label>
+                                <input type="date" name="data_fim" id="modal-data-fim" class="form-control form-control-sm" required value="{{ date('Y-m-d') }}">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="modal-horas" class="text-xs font-weight-bold text-muted">Horas por Dia</label>
-                            <input type="number" step="0.5" name="horas_por_dia" id="modal-horas" class="form-control" value="8.0" min="0.5" max="24" style="border-radius:6px;">
+                            <label for="modal-horas" class="text-sm">Horas por Dia</label>
+                            <input type="number" step="0.5" name="horas_por_dia" id="modal-horas" class="form-control form-control-sm" value="8.0" min="0.5" max="24">
                         </div>
                         <div class="form-group mb-0">
-                            <label for="modal-obs" class="text-xs font-weight-bold text-muted">Observação</label>
-                            <textarea name="observacao" id="modal-obs" rows="2" class="form-control" placeholder="Algum detalhe opcional..." style="border-radius:6px;"></textarea>
+                            <label for="modal-obs" class="text-sm">Observação</label>
+                            <textarea name="observacao" id="modal-obs" rows="2" class="form-control form-control-sm" placeholder="Algum detalhe opcional..."></textarea>
                         </div>
                     </div>
-                    <div class="modal-footer p-3 bg-light" style="border-radius: 0 0 12px 12px;">
-                        <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal" style="border-radius:8px;">Cancelar</button>
-                        <button type="submit" class="btn btn-success font-weight-bold" style="border-radius:8px;"><i class="fas fa-check mr-1"></i> Agendar Alocação</button>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success btn-sm font-weight-bold"><i class="fas fa-check mr-1"></i> Agendar Alocação</button>
                     </div>
                 </form>
             </div>
@@ -122,6 +122,9 @@
                 <span class="ck-pop-icon"><i class="far fa-clock"></i></span>
                 <span id="popover-event-time" class="ck-pop-info-text ck-pop-time">–</span>
             </div>
+            <div class="ck-pop-hint">
+                <i class="fas fa-arrows-alt mr-1"></i> Arraste o cartão no calendário para mover ou redimensionar.
+            </div>
         </div>
         <!-- Footer -->
         <div class="ck-pop-footer">
@@ -144,6 +147,19 @@
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <style>
+        /* =====================================================
+           PADRÃO VISUAL DO SISTEMA (mesmo da tela de projeto)
+        ===================================================== */
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f6f9; }
+
+        .cal-card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+        }
+
+        #full-calendar { min-height: 650px; }
+
         /* =====================================================
            VARIÁVEIS E RESET
         ===================================================== */
@@ -243,20 +259,22 @@
             border: none !important;
             box-shadow: none !important;
             margin-bottom: 3px !important;
-            cursor: pointer !important;
+            cursor: grab !important;
         }
+        .fc-event:active { cursor: grabbing !important; }
         .fc-event:focus { outline: none !important; }
 
         /* =====================================================
            CARD DE EVENTO (renderizado via eventContent)
+           Fundo levemente tingido pela cor do projeto p/ legibilidade
         ===================================================== */
         .ck-event-card {
-            background: #fff;
+            background: linear-gradient(160deg, var(--ck-proj-bg, #f1f5f9) 0%, #ffffff 75%);
             border-left: 4px solid var(--ck-proj-color, #94a3b8);
             border-radius: 8px;
             padding: 7px 9px;
             height: 100%;
-            box-shadow: 0 2px 8px rgba(15,23,42,0.07), 0 0 0 1px rgba(15,23,42,0.04);
+            box-shadow: 0 2px 8px rgba(15,23,42,0.10), 0 0 0 1px rgba(15,23,42,0.05);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -270,24 +288,15 @@
             top: 0; left: 0; right: 0;
             height: 3px;
             background: linear-gradient(90deg, var(--ck-proj-color, #94a3b8) 0%, transparent 100%);
-            opacity: 0.35;
+            opacity: 0.45;
         }
         .ck-event-card:hover {
-            box-shadow: 0 6px 18px rgba(15,23,42,0.13), 0 0 0 1px rgba(15,23,42,0.06);
+            box-shadow: 0 6px 18px rgba(15,23,42,0.16), 0 0 0 1px rgba(15,23,42,0.08);
             transform: translateY(-1px);
         }
 
-        /* Tipo Tracker: azul sutil */
-        .ck-event-card.type-tracker {
-            background: linear-gradient(160deg, rgba(14,165,233,0.05) 0%, rgba(255,255,255,1) 60%);
-        }
-        /* Tipo Alocação: verde sutil */
-        .ck-event-card.type-alocacao {
-            background: linear-gradient(160deg, rgba(16,185,129,0.05) 0%, rgba(255,255,255,1) 60%);
-        }
-
         .ck-event-project {
-            font-size: 9px;
+            font-size: 9.5px;
             font-weight: 800;
             text-transform: uppercase;
             color: var(--ck-proj-color, #64748b);
@@ -298,7 +307,7 @@
         }
         .ck-event-title {
             font-weight: 700;
-            font-size: 11.5px;
+            font-size: 12px;
             line-height: 1.3;
             color: #0f172a;
             margin: 3px 0 5px;
@@ -377,6 +386,33 @@
 
         /* Em telas muito estreitas (celulares ou colunas semanais muito espremidas) */
         @media (max-width: 768px) {
+            #full-calendar { min-height: 460px; }
+
+            /* Toolbar do FullCalendar: título em linha própria, botões quebram */
+            .fc .fc-header-toolbar {
+                flex-wrap: wrap;
+                row-gap: 8px;
+                margin-bottom: 12px;
+            }
+            .fc .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
+                order: -1;
+                flex: 1 0 100%;
+                text-align: center;
+            }
+            .fc .fc-header-toolbar .fc-toolbar-chunk:nth-child(3) {
+                margin-left: auto;
+            }
+            .fc .fc-toolbar-title { font-size: 14px !important; }
+            .fc .fc-button {
+                padding: 5px 9px !important;
+                font-size: 11px !important;
+            }
+            .fc .fc-button-group .fc-button { padding: 5px 8px !important; }
+
+            /* Células do mês mais compactas */
+            .fc-daygrid-day-number { font-size: 11px; padding: 2px 4px; }
+            .fc-daygrid-more-link { font-size: 9px; font-weight: 700; }
+
             .ck-event-card {
                 padding: 2px 4px;
                 border-left-width: 3px;
@@ -392,20 +428,81 @@
             .fc-timegrid-slots td {
                 height: 48px !important; /* Aumenta a altura das linhas no mobile para dar espaço */
             }
+            .fc-timegrid-axis-cushion { font-size: 8px !important; }
+
+            /* Popover nunca ultrapassa a viewport */
+            .ck-popover { width: min(310px, calc(100vw - 24px)) !important; }
+
+            /* Filtro do cabeçalho ocupa linha própria */
+            .cal-header-actions { width: 100%; }
+            .cal-header-actions .select2-container,
+            .cal-header-actions select { width: 100% !important; min-width: 0 !important; }
         }
+
+        /* Eventos na visão de mês: card compacto em 1 linha */
+        .fc-daygrid-event .ck-event-card {
+            padding: 3px 6px;
+            border-left-width: 3px;
+        }
+        .fc-daygrid-event .ck-event-title {
+            font-size: 10.5px;
+            -webkit-line-clamp: 1;
+            margin: 0;
+        }
+        .fc-daygrid-event .ck-event-project,
+        .fc-daygrid-event .ck-event-footer { display: none; }
+
+        /* Handles de resize mais fáceis de pegar no touch */
+        .fc .fc-event-resizer {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+        .fc .fc-event-resizer::after {
+            content: '';
+            width: 22px;
+            height: 4px;
+            border-radius: 4px;
+            background: rgba(15,23,42,0.25);
+        }
+        .fc-timegrid-event .fc-event-resizer { height: 8px; }
+        .fc-daygrid-event .fc-event-resizer { width: 8px; justify-content: flex-end; }
+        .fc-daygrid-event .fc-event-resizer::after { width: 4px; height: 14px; }
 
         /* =====================================================
            ALL-DAY (PLANILHA) - Alocações
+           O elemento .fc-h-event é o container transparente; a "pill"
+           colorida é o div interno .ck-aloc-pill (vars setadas nele mesmo)
         ===================================================== */
-        .fc-h-event {
-            background: linear-gradient(90deg, var(--proj-color, #e0f2fe) 0%, var(--proj-color-light, #f0f9ff) 100%) !important;
-            border: 1px solid var(--proj-border, #bae6fd) !important;
-            border-radius: 5px !important;
-            font-size: 10px !important;
-            font-weight: 800 !important;
-            padding: 3px 8px !important;
+        .fc-h-event { background: transparent !important; border: none !important; }
+        .ck-aloc-pill {
+            display: block;
+            width: 100%;
+            background: var(--proj-soft, #e0f2fe);
+            border-left: 3px solid var(--proj-color, #0284c7);
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 8px;
             text-transform: uppercase;
             letter-spacing: 0.04em;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: 0 1px 3px rgba(15,23,42,0.08);
+        }
+        .ck-aloc-pill strong { color: var(--proj-color, #0284c7); }
+
+        .ck-pop-hint {
+            margin: 2px 0 4px;
+            padding: 7px 10px;
+            background: #f8fafc;
+            border: 1px dashed #e2e8f0;
+            border-radius: 8px;
+            font-size: 10.5px;
+            font-weight: 600;
+            color: #94a3b8;
         }
 
         /* =====================================================
@@ -553,6 +650,12 @@
             letter-spacing: 0.05em;
         }
 
+        /* Destaque da área onde o evento será solto (drag) */
+        .fc .fc-highlight {
+            background: rgba(2,132,199,0.10) !important;
+            border-radius: 6px;
+        }
+
         /* =====================================================
            SCROLLBAR sutil
         ===================================================== */
@@ -585,18 +688,126 @@
             var rawEvents = {!! $events !!};
             var currentUserId = {{ Auth::id() }};
 
+            var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            var moveUrlTemplate = "{{ route('clockify.calendario.mover', ['id' => '__ID__']) }}";
+            var deleteCalUrlTemplate = "{{ route('clockify.calendario.destroy', ['id' => '__ID__']) }}";
+            var deleteTrackerUrlTemplate = "{{ route('clockify.tracker.destroy', ['id' => '__ID__']) }}";
+
+            function pad2(n) { return String(n).padStart(2, '0'); }
+            function fmtDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+            function fmtDateTime(d) { return fmtDate(d) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+            function addDays(d, n) { var x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
+            function parseLocalDate(str) { var p = str.split('-'); return new Date(p[0], p[1] - 1, p[2]); }
+            function colorWithAlpha(hex, alpha) {
+                if (typeof hex !== 'string') { return hex; }
+                if (/^#[0-9a-f]{3}$/i.test(hex)) {
+                    hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+                }
+                return /^#[0-9a-f]{6}$/i.test(hex) ? hex + alpha : hex;
+            }
+            function toast(icon, msg) {
+                if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                    Swal.fire({ icon: icon, text: msg, toast: true, position: 'top-end', showConfirmButton: false, timer: 2600, timerProgressBar: true });
+                }
+            }
+
+            // Persiste mover/redimensionar (drag & drop) via AJAX
+            function persistEventMove(info) {
+                var ev = info.event;
+                var isTracker = ev.extendedProps.type === 'tracker';
+                var realId = isTracker ? ev.id.replace('tracker-', '') : ev.id;
+                var url = moveUrlTemplate.replace('__ID__', realId);
+
+                var inicio, fim;
+                if (ev.allDay) {
+                    // Em eventos allDay o "end" do FullCalendar é exclusivo (+1 dia)
+                    inicio = fmtDate(ev.start);
+                    var endExclusive = ev.end ? ev.end : addDays(ev.start, 1);
+                    fim = fmtDate(addDays(endExclusive, -1));
+                    if (fim < inicio) { fim = inicio; }
+                } else {
+                    inicio = fmtDateTime(ev.start);
+                    fim = ev.end ? fmtDateTime(ev.end) : inicio;
+                }
+
+                fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ type: isTracker ? 'tracker' : 'alocacao', inicio: inicio, fim: fim })
+                }).then(function(resp) {
+                    if (!resp.ok) { throw new Error('HTTP ' + resp.status); }
+                    return resp.json();
+                }).then(function() {
+                    // Mantém a lista local em sync para o filtro/refetch não perder a nova posição
+                    var raw = rawEvents.find(function(e) { return e.id.toString() === ev.id.toString(); });
+                    if (raw) {
+                        if (ev.allDay) {
+                            raw.start = inicio;
+                            raw.end = fmtDate(addDays(parseLocalDate(fim), 1));
+                        } else {
+                            raw.start = fmtDateTime(ev.start);
+                            raw.end = ev.end ? fmtDateTime(ev.end) : null;
+                        }
+                    }
+                    toast('success', 'Registro movido com sucesso.');
+                }).catch(function() {
+                    info.revert();
+                    toast('error', 'Não foi possível mover o registro.');
+                });
+            }
+
+            var isMobileInit = window.innerWidth < 768;
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 locale: 'pt-br',
-                initialView: 'timeGridWeek',
+                initialView: isMobileInit ? 'timeGridDay' : 'timeGridWeek',
                 slotMinTime: '00:00:00',
                 slotMaxTime: '24:00:00',
                 scrollTime: '07:00:00',
                 allDaySlot: true, // Habilitar a linha de Planilha/All-Day no topo
                 allDayText: 'PLANILHA', // Alinha com o texto da imagem do Clockify
+                nowIndicator: true,
+                navLinks: true, // Clique no dia abre a visão diária (bom no mobile)
+                stickyHeaderDates: true,
+                dayMaxEvents: 3,
+                eventDisplay: 'block',
+                editable: true,
+                eventStartEditable: true,
+                eventDurationEditable: true,
+                eventResizableFromStart: true,
+                eventLongPressDelay: 400, // segurar ~0.4s p/ arrastar no touch
+                selectLongPressDelay: 500,
+                views: {
+                    timeGridThreeDay: {
+                        type: 'timeGrid',
+                        duration: { days: 3 },
+                        buttonText: '3 dias'
+                    },
+                    dayGridMonth: { fixedWeekCount: false }
+                },
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'timeGridWeek,timeGridDay,dayGridMonth'
+                    right: isMobileInit
+                        ? 'timeGridDay,timeGridWeek,dayGridMonth'
+                        : 'timeGridWeek,timeGridThreeDay,timeGridDay,dayGridMonth'
+                },
+                // Alocações (dia inteiro) não podem virar horário; trackers não podem virar dia inteiro
+                eventAllow: function(dropInfo, draggedEvent) {
+                    var isTracker = draggedEvent.extendedProps.type === 'tracker';
+                    return isTracker ? !dropInfo.allDay : dropInfo.allDay;
+                },
+                eventDrop: function(info) {
+                    closePopover();
+                    persistEventMove(info);
+                },
+                eventResize: function(info) {
+                    closePopover();
+                    persistEventMove(info);
                 },
                 dateClick: function(info) {
                     const dateStr = info.dateStr.split('T')[0];
@@ -606,12 +817,15 @@
                 },
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-                    
+
                     const rect = info.el.getBoundingClientRect();
                     const scrollX = window.scrollX || document.documentElement.scrollLeft;
                     const scrollY = window.scrollY || document.documentElement.scrollTop;
-                    
-                    popoverEl.style.left = (rect.left + scrollX - 30) + 'px';
+                    const popWidth = Math.min(310, window.innerWidth - 24);
+
+                    // Mantém o popover sempre dentro da viewport
+                    const leftPos = Math.max(8, Math.min(rect.left + scrollX - 30, scrollX + window.innerWidth - popWidth - 8));
+                    popoverEl.style.left = leftPos + 'px';
                     popoverEl.style.top = (rect.bottom + scrollY + 5) + 'px';
                     popoverEl.classList.remove('d-none');
 
@@ -622,11 +836,11 @@
                     if (type === 'tracker') {
                         typeBadge.className = 'ck-pop-badge';
                         typeBadge.textContent = 'Tempo';
-                        document.getElementById('popover-delete-form').action = `/admin/clockify/tracker/${ev.id.replace('tracker-', '')}`;
+                        document.getElementById('popover-delete-form').action = deleteTrackerUrlTemplate.replace('__ID__', ev.id.replace('tracker-', ''));
                     } else {
                         typeBadge.className = 'ck-pop-badge';
                         typeBadge.textContent = 'Alocação';
-                        document.getElementById('popover-delete-form').action = `/admin/clockify/calendario/${ev.id}`;
+                        document.getElementById('popover-delete-form').action = deleteCalUrlTemplate.replace('__ID__', ev.id);
                     }
 
                     const projColor = ev.extendedProps.project_color || '#0284c7';
@@ -704,15 +918,14 @@
                 eventContent: function(arg) {
                     let type = arg.event.extendedProps.type;
                     let projColor = arg.event.extendedProps.project_color || '#94a3b8';
-                    
+
                     if (arg.event.allDay) {
                         let div = document.createElement('div');
-                        div.className = 'w-100 px-1';
+                        div.className = 'ck-aloc-pill';
+                        // Vars ficam no próprio elemento (CSS var não sobe para o .fc-h-event pai)
                         div.style.setProperty('--proj-color', projColor);
-                        div.style.setProperty('--proj-color-light', projColor + '15');
-                        div.style.setProperty('--proj-border', projColor + '40');
-                        div.style.setProperty('--proj-text', projColor);
-                        div.innerHTML = `<strong>${arg.event.extendedProps.project_name || 'Sem Projeto'}</strong> ${arg.event.extendedProps.hours || 8}h`;
+                        div.style.setProperty('--proj-soft', colorWithAlpha(projColor, '26'));
+                        div.innerHTML = `<strong>${arg.event.extendedProps.project_name || 'Sem Projeto'}</strong> · ${arg.event.extendedProps.hours || 8}h/dia`;
                         return { domNodes: [div] };
                     }
 
@@ -738,6 +951,7 @@
                     let card = document.createElement('div');
                     card.className = `ck-event-card type-${type}`;
                     card.style.setProperty('--ck-proj-color', projColor);
+                    card.style.setProperty('--ck-proj-bg', colorWithAlpha(projColor, '26'));
                     
                     card.innerHTML = `
                         <div class="ck-event-project">${arg.event.extendedProps.project_name || 'Sem Projeto'}</div>

@@ -26,11 +26,13 @@ Route::name('clockify.')->group(function () {
     // Calendar
     Route::get('calendario', [ClockifyCalendarioController::class, 'index'])->name('calendario.index');
     Route::post('calendario', [ClockifyCalendarioController::class, 'store'])->name('calendario.store');
+    Route::patch('calendario/{id}/mover', [ClockifyCalendarioController::class, 'mover'])->name('calendario.mover');
     Route::delete('calendario/{id}', [ClockifyCalendarioController::class, 'destroy'])->name('calendario.destroy');
 
     // Time Off
     Route::get('timeoff', [ClockifyTimeOffController::class, 'index'])->name('timeoff.index');
     Route::post('timeoff', [ClockifyTimeOffController::class, 'store'])->name('timeoff.store');
+    Route::put('timeoff/{id}', [ClockifyTimeOffController::class, 'update'])->name('timeoff.update');
     Route::post('timeoff/{id}/approve', [ClockifyTimeOffController::class, 'approve'])->name('timeoff.approve');
     Route::post('timeoff/{id}/reject', [ClockifyTimeOffController::class, 'reject'])->name('timeoff.reject');
     Route::delete('timeoff/{id}', [ClockifyTimeOffController::class, 'destroy'])->name('timeoff.destroy');

@@ -373,30 +373,21 @@ class ClockifyProjetoController extends Controller
             ->with('success', 'Planejamento de equipe salvo com sucesso!');
     }
 
-    public function planejarEquipeGeral(Request $request): View
+    public function planejarEquipeGeral(Request $request): View|RedirectResponse
     {
         $projetoId = $request->query('projeto_id');
-        $projetos = ClockifyProjeto::where('ativo', true)->orderBy('nome')->get();
-        
-        $projeto = null;
-        $times = [];
-        $alocacoes = [];
 
         if ($projetoId) {
-            $projeto = ClockifyProjeto::with('cliente')->findOrFail((int) $projetoId);
-            $times = ClockifyTime::with('users')->orderBy('nome')->get();
-            $alocacoes = ClockifyCalendario::with('user')
-                ->where('clockify_projeto_id', $projeto->id)
-                ->get()
-                ->groupBy('user_id');
+            return redirect()->route('clockify.projetos.planejar-equipe', (int) $projetoId);
         }
 
+        $projetos = ClockifyProjeto::with('cliente')->where('ativo', true)->orderBy('nome')->get();
+
         return view('clockify.projetos_planejar_equipe', [
-            'titulo' => 'Planejar Equipe' . ($projeto ? ': ' . $projeto->nome : ''),
-            'projeto' => $projeto,
+            'titulo' => 'Planejar Equipe',
+            'projeto' => null,
             'projetos' => $projetos,
-            'times' => $times,
-            'alocacoes' => $alocacoes,
+            'alocacoes' => [],
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Painel', 'url' => route('home')],

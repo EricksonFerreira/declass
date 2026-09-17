@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Clockify;
 
+use App\Actions\Clockify\Calendario\DeleteCalendarioAction;
+use App\Actions\Clockify\Calendario\ListarCalendarioAction;
+use App\Actions\Clockify\Calendario\MoverCalendarioAction;
+use App\Actions\Clockify\Calendario\SaveCalendarioAction;
 use App\Http\Controllers\Controller;
 use App\Models\ClockifyProjeto;
 use App\Models\User;
-use App\Actions\Clockify\Calendario\ListarCalendarioAction;
-use App\Actions\Clockify\Calendario\SaveCalendarioAction;
-use App\Actions\Clockify\Calendario\DeleteCalendarioAction;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -24,7 +26,7 @@ class ClockifyCalendarioController extends Controller
         foreach ($alocacoes as $aloc) {
             $events[] = [
                 'id' => $aloc->id,
-                'title' => ($aloc->user->nome ?? 'Usuário') . ' - ' . ($aloc->projeto->nome ?? 'Projeto'),
+                'title' => ($aloc->user->nome ?? 'Usuário').' - '.($aloc->projeto->nome ?? 'Projeto'),
                 'start' => $aloc->data_inicio->toDateString(),
                 'end' => $aloc->data_fim->addDay()->toDateString(),
                 'color' => $aloc->projeto->cor ?? '#007bff',
@@ -43,12 +45,12 @@ class ClockifyCalendarioController extends Controller
 
         foreach ($trackers as $tracker) {
             $events[] = [
-                'id' => 'tracker-' . $tracker->id,
-                'title' => ($tracker->user->nome ?? 'Usuário') . ': ' . ($tracker->descricao ?: 'Sem descrição') . ' (' . $tracker->formatted_duration . ')',
+                'id' => 'tracker-'.$tracker->id,
+                'title' => ($tracker->user->nome ?? 'Usuário').': '.($tracker->descricao ?: 'Sem descrição').' ('.$tracker->formatted_duration.')',
                 'start' => $tracker->inicio->toIso8601String(),
                 'end' => $tracker->fim ? $tracker->fim->toIso8601String() : null,
                 'color' => $tracker->projeto->cor ?? '#28a745',
-                'description' => ($tracker->projeto->nome ?? 'Sem Projeto') . ' - ' . ($tracker->descricao ?: 'Sem descrição'),
+                'description' => ($tracker->projeto->nome ?? 'Sem Projeto').' - '.($tracker->descricao ?: 'Sem descrição'),
                 'extendedProps' => [
                     'type' => 'tracker',
                 ],
@@ -84,6 +86,22 @@ class ClockifyCalendarioController extends Controller
 
         return redirect()->route('clockify.calendario.index')
             ->with('success', 'Alocação agendada no calendário com sucesso!');
+    }
+
+    public function mover(Request $request, $id, MoverCalendarioAction $action): JsonResponse
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:alocacao,tracker',
+            'inicio' => 'required|date',
+            'fim' => 'nullable|date|after_or_equal:inicio',
+        ]);
+
+        $action->handle((int) $id, $validated['type'], $validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registro movido com sucesso!',
+        ]);
     }
 
     public function destroy($id, DeleteCalendarioAction $action): RedirectResponse

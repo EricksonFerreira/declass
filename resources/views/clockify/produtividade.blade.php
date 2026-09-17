@@ -9,6 +9,8 @@
 
 @section('css')
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 <style>
     .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .prod-kpi {
@@ -32,6 +34,12 @@
     .c-emerald { --accent:#059669; }
     .c-indigo { --accent:#4f46e5; }
     .c-amber { --accent:#d97706; }
+
+    /* Select2 compacto para alinhar com form-control-sm */
+    .select2-container--bootstrap4 .select2-selection--multiple { min-height: 31px; }
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__rendered { padding: 0 8px; }
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice { margin-top: 3px; font-size: 12px; }
+    .select2-container { max-width: 100%; }
 </style>
 @stop
 
@@ -51,7 +59,7 @@
                 @if (Auth::user()->can('gerenciar-empresa'))
                     <div class="form-group mr-3 mb-2">
                         <label for="user_ids" class="mr-2 text-sm text-bold text-muted">Colaboradores:</label>
-                        <select name="user_ids[]" id="user_ids" class="form-control form-control-sm select2" multiple="multiple" style="min-width: 250px;">
+                        <select name="user_ids[]" id="user_ids" class="form-control form-control-sm select2" multiple="multiple" style="width: 300px; max-width: 100%;">
                             @foreach ($usuarios as $user)
                                 <option value="{{ $user->id }}" @selected(in_array($user->id, (array)$selectedUserIds))>{{ $user->nome }}</option>
                             @endforeach
@@ -179,6 +187,20 @@
 
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    if ($.fn.select2) {
+        $('#user_ids').select2({
+            theme: 'bootstrap4',
+            width: 'resolve',
+            placeholder: 'Todos os colaboradores',
+            allowClear: true,
+            closeOnSelect: false
+        });
+    }
+});
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('dailyHoursChart').getContext('2d');

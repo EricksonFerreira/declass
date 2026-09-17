@@ -9,15 +9,29 @@
 
 @section('css')
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 <style>
+    /* =====================================================
+       PADRÃO VISUAL DO SISTEMA (mesmo da tela de projeto)
+    ===================================================== */
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f6f9; }
+
+    .dash-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+    }
+    .dash-card > .card-header:first-child { border-radius: 12px 12px 0 0; }
+    .dash-card > .card-header { border-bottom: 1px solid #eef1f6; }
+
     .dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .dash-kpi {
-        background: #fff; border-radius: 14px; padding: 20px 18px;
-        box-shadow: 0 1px 4px rgba(0,0,0,.06); border: 1px solid #eef1f6;
+        background: #fff; border-radius: 12px; padding: 18px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: none;
         position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s;
     }
     .dash-kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
-    .dash-kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--accent, #0891b2); }
     .dash-kpi__label { font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#64748b; margin:0 0 6px; }
     .dash-kpi__value { font-family:'Plus Jakarta Sans',sans-serif; font-size:26px; font-weight:800; color:#0f172a; line-height:1.1; margin:0; letter-spacing:-.02em; }
     .dash-kpi__sub { font-size:12px; color:#94a3b8; margin:4px 0 0; }
@@ -26,33 +40,40 @@
     .c-emerald { --accent:#059669; --accent-soft:#d1fae5; }
     .c-amber { --accent:#d97706; --accent-soft:#fef3c7; }
     .c-indigo { --accent:#4f46e5; --accent-soft:#e0e7ff; }
+    .c-violet { --accent:#7c3aed; --accent-soft:#ede9fe; }
 
     .dash-nav-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .dash-nav-card {
-        display: flex; align-items: center; gap: 16px; padding: 20px;
-        background: linear-gradient(135deg, #0f172a, #1e293b 60%, var(--accent, #0891b2));
-        color: #fff; border-radius: 16px; text-decoration: none !important;
-        box-shadow: 0 8px 24px rgba(15,23,42,.14); transition: transform .18s, box-shadow .18s;
+        display: flex; align-items: center; gap: 16px; padding: 18px 20px;
+        background: #fff; color: #0f172a; border-radius: 12px; border: none;
+        text-decoration: none !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,.03); transition: transform .18s, box-shadow .18s;
         position: relative; overflow: hidden;
     }
-    .dash-nav-card::before { content:''; position:absolute; inset:0; background:radial-gradient(circle at top right, rgba(255,255,255,.18), transparent 40%); pointer-events:none; }
-    .dash-nav-card:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(15,23,42,.2); color:#fff; }
-    .dash-nav-card__icon { width:48px; height:48px; border-radius:14px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
-    .dash-nav-card__text h3 { font-family:'Plus Jakarta Sans',sans-serif; font-size:16px; font-weight:700; margin:0 0 2px; }
-    .dash-nav-card__text p { margin:0; font-size:12px; color:rgba(255,255,255,.75); }
-    .dash-nav-card__arrow { margin-left:auto; font-size:16px; color:rgba(255,255,255,.7); }
+    .dash-nav-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.08); color:#0f172a; }
+    .dash-nav-card__icon { width:44px; height:44px; border-radius:10px; background:var(--accent-soft,#e0f5fa); display:flex; align-items:center; justify-content:center; font-size:17px; color:var(--accent,#0891b2); flex-shrink:0; }
+    .dash-nav-card__text h3 { font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; font-weight:700; margin:0 0 2px; color:#0f172a; }
+    .dash-nav-card__text p { margin:0; font-size:12px; color:#94a3b8; }
+    .dash-nav-card__arrow { margin-left:auto; font-size:15px; color:#cbd5e1; transition: color .18s; }
+    .dash-nav-card:hover .dash-nav-card__arrow { color: var(--accent, #0891b2); }
 
     .dash-section-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#94a3b8; margin:28px 0 14px; display:flex; align-items:center; gap:10px; }
     .dash-section-title::after { content:''; flex:1; height:1px; background:#e2e5ef; }
 
-    .dash-sparkline-wrap { background:#fff; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,.06); border:1px solid #eef1f6; margin-bottom:24px; }
-    .dash-sparkline-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:700; color:#1a1d2e; margin:0 0 12px; }
+    .tracker-row { transition: background .15s; }
+    .tracker-row:hover { background-color: #f8fafc; }
+
+    /* Select2 compacto para alinhar com form-control-sm */
+    .select2-container--bootstrap4 .select2-selection--multiple { min-height: 31px; }
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__rendered { padding: 0 8px; }
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice { margin-top: 3px; font-size: 12px; }
+    .select2-container { max-width: 100%; }
 </style>
 @stop
 
 @section('content')
     <!-- Filtros -->
-    <div class="card shadow-sm mb-4">
+    <div class="card dash-card mb-4">
         <div class="card-body p-3">
             <form action="{{ route('home') }}" method="GET" class="form-inline">
                 <div class="form-group mr-3 mb-2">
@@ -66,17 +87,17 @@
                 @if (Auth::user()->can('gerenciar-empresa'))
                     <div class="form-group mr-3 mb-2">
                         <label for="user_ids" class="mr-2 text-sm text-bold text-muted">Colaboradores:</label>
-                        <select name="user_ids[]" id="user_ids" class="form-control form-control-sm select2" multiple="multiple" style="min-width: 250px;">
+                        <select name="user_ids[]" id="user_ids" class="form-control form-control-sm select2" multiple="multiple" style="width: 300px; max-width: 100%;">
                             @foreach ($usuarios as $user)
                                 <option value="{{ $user->id }}" @selected(in_array($user->id, (array)$selectedUserIds))>{{ $user->nome }}</option>
                             @endforeach
                         </select>
                     </div>
                 @endif
-                <button type="submit" class="btn btn-sm btn-primary mb-2 font-weight-bold">
+                <button type="submit" class="btn btn-sm btn-primary mb-2 font-weight-bold shadow-sm">
                     <i class="fas fa-filter mr-1"></i> Filtrar
                 </button>
-                <a href="{{ route('home') }}" class="btn btn-sm btn-default mb-2 ml-2">Limpar</a>
+                <a href="{{ route('home') }}" class="btn btn-sm btn-default mb-2 ml-2 font-weight-bold shadow-sm">Limpar</a>
             </form>
         </div>
     </div>
@@ -112,7 +133,7 @@
     <!-- Navegação Rápida para Sub-telas -->
     <p class="dash-section-title">Análises Detalhadas</p>
     <div class="dash-nav-grid">
-        <a href="{{ route('home.produtividade', request()->query()) }}" class="dash-nav-card" style="--accent:#0891b2;">
+        <a href="{{ route('home.produtividade', request()->query()) }}" class="dash-nav-card c-teal">
             <div class="dash-nav-card__icon"><i class="fas fa-chart-line"></i></div>
             <div class="dash-nav-card__text">
                 <h3>Produtividade</h3>
@@ -120,7 +141,7 @@
             </div>
             <span class="dash-nav-card__arrow"><i class="fas fa-chevron-right"></i></span>
         </a>
-        <a href="{{ route('home.equipe', request()->query()) }}" class="dash-nav-card" style="--accent:#059669;">
+        <a href="{{ route('home.equipe', request()->query()) }}" class="dash-nav-card c-emerald">
             <div class="dash-nav-card__icon"><i class="fas fa-users"></i></div>
             <div class="dash-nav-card__text">
                 <h3>Equipe</h3>
@@ -128,7 +149,7 @@
             </div>
             <span class="dash-nav-card__arrow"><i class="fas fa-chevron-right"></i></span>
         </a>
-        <a href="{{ route('home.projetos', request()->query()) }}" class="dash-nav-card" style="--accent:#7c3aed;">
+        <a href="{{ route('home.projetos', request()->query()) }}" class="dash-nav-card c-violet">
             <div class="dash-nav-card__icon"><i class="fas fa-project-diagram"></i></div>
             <div class="dash-nav-card__text">
                 <h3>Projetos</h3>
@@ -141,17 +162,17 @@
     <div class="row">
         <!-- Rastreadores Ativos -->
         <div class="col-md-6">
-            <div class="card card-outline card-danger shadow-sm">
-                <div class="card-header">
-                    <h3 class="card-title text-sm text-bold"><i class="fas fa-spinner fa-pulse text-danger mr-1"></i> Rastreadores Ativos</h3>
-                    <div class="card-tools">
-                        <span class="badge badge-danger">{{ $activeTrackers->count() }}</span>
-                    </div>
+            <div class="card dash-card">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h3 class="card-title text-bold text-dark mb-0">
+                        <i class="fas fa-spinner fa-pulse text-danger mr-2"></i> Rastreadores Ativos
+                        <span class="badge badge-danger ml-1">{{ $activeTrackers->count() }}</span>
+                    </h3>
                 </div>
                 <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
                     <ul class="nav nav-pills flex-column">
                         @forelse ($activeTrackers as $active)
-                            <li class="nav-item border-bottom p-3">
+                            <li class="nav-item border-bottom p-3 tracker-row">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <span class="text-bold text-dark">{{ $active->user->nome }}</span>
@@ -175,9 +196,17 @@
 
         <!-- Mini Gráfico de Horas -->
         <div class="col-md-6">
-            <div class="dash-sparkline-wrap">
-                <p class="dash-sparkline-title"><i class="fas fa-chart-bar mr-2 text-primary"></i> Horas por dia no período</p>
-                <canvas id="sparklineChart" height="180"></canvas>
+            <div class="card dash-card">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h3 class="card-title text-bold text-dark mb-0">
+                        <i class="fas fa-chart-bar text-primary mr-2"></i> Horas por dia no período
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 180px;">
+                        <canvas id="sparklineChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -185,6 +214,20 @@
 
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    if ($.fn.select2) {
+        $('#user_ids').select2({
+            theme: 'bootstrap4',
+            width: 'resolve',
+            placeholder: 'Todos os colaboradores',
+            allowClear: true,
+            closeOnSelect: false
+        });
+    }
+});
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('sparklineChart').getContext('2d');

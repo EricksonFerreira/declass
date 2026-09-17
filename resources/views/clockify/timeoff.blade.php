@@ -66,6 +66,17 @@
                                                 <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Rejeitar</button>
                                             </form>
                                         @endif
+                                        @if (auth()->user()->can('gerenciar-empresa') || $to->user_id === auth()->id())
+                                            <button type="button" class="btn btn-xs btn-info mr-1 btn-edit-timeoff"
+                                                data-id="{{ $to->id }}"
+                                                data-user="{{ $to->user_id }}"
+                                                data-tipo="{{ $to->tipo }}"
+                                                data-inicio="{{ $to->data_inicio->format('Y-m-d') }}"
+                                                data-fim="{{ $to->data_fim->format('Y-m-d') }}"
+                                                data-obs="{{ $to->observacao }}">
+                                                <i class="fas fa-edit"></i> Editar
+                                            </button>
+                                        @endif
                                         <form action="{{ route('clockify.timeoff.destroy', $to->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
                                             @csrf
                                             @method('DELETE')
@@ -137,8 +148,31 @@
 @section('js')
     <script>
         $(function() {
+            var updateUrlTemplate = "{{ route('clockify.timeoff.update', ['id' => '__ID__']) }}";
+            var storeUrl = "{{ route('clockify.timeoff.store') }}";
+
             $('#btn-create-timeoff').on('click', function() {
-                $('#timeoff-form')[0].reset();
+                var form = $('#timeoff-form');
+                form[0].reset();
+                form.attr('action', storeUrl);
+                $('#timeoff-formMethod').val('POST');
+                $('#timeoffDrawerTitle').text('Solicitar Time Off');
+                $('#timeoffDrawerBackdrop').addClass('show');
+                $('#timeoffDrawer').addClass('open');
+            });
+
+            // Editar: abre o mesmo drawer preenchido, enviando como PUT
+            $('.btn-edit-timeoff').on('click', function() {
+                var d = $(this).data();
+                var form = $('#timeoff-form');
+                form.attr('action', updateUrlTemplate.replace('__ID__', d.id));
+                $('#timeoff-formMethod').val('PUT');
+                $('#timeoffDrawerTitle').text('Editar Time Off');
+                $('#user_id').val(d.user);
+                $('#tipo').val(d.tipo);
+                $('#data_inicio').val(d.inicio);
+                $('#data_fim').val(d.fim);
+                $('#observacao').val(d.obs || '');
                 $('#timeoffDrawerBackdrop').addClass('show');
                 $('#timeoffDrawer').addClass('open');
             });
