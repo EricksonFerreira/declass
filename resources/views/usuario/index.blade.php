@@ -63,6 +63,12 @@
                         $iniciais = collect($partesNome)->filter()->take(2)
                             ->map(fn($parte) => mb_strtoupper(mb_substr($parte, 0, 1)))->implode('');
                         $iniciais = $iniciais ?: 'US';
+                        $perfilNome = $usuario->tipoUsuario?->name;
+                        $perfilLabel = match ($perfilNome) {
+                            'lider' => 'Líder',
+                            null => 'Sem perfil',
+                            default => ucfirst($perfilNome),
+                        };
                     @endphp
 
                     <article class="ux-card">
@@ -73,14 +79,13 @@
                                 <div class="ux-card__title">{{ $usuario->nome }}</div>
                                 <div class="ux-card__sub">{{ $usuario->email ?: 'Sem e-mail' }}</div>
                             </div>
-                            @if ($usuario->tipoUsuario)
-                                <div class="ux-card__badges">
-                                    <span class="ux-card__badge ux-card__badge--blue">{{ $usuario->tipoUsuario->name }}</span>
-                                </div>
-                            @endif
                         </div>
 
                         <div class="ux-card__meta">
+                            <div class="ux-card__meta-row">
+                                <span class="ux-card__meta-label"><i class="fas fa-id-badge mr-1"></i>Perfil de acesso</span>
+                                <strong class="ux-card__meta-value">{{ $perfilLabel }}</strong>
+                            </div>
                             <div class="ux-card__meta-row">
                                 <span class="ux-card__meta-label"><i class="fas fa-user-tag mr-1"></i>Cargo</span>
                                 <strong class="ux-card__meta-value">{{ $usuario->cargo ?: 'Sem cargo' }}</strong>
@@ -161,7 +166,7 @@
                         <tr>
                             <th class="pl-3" style="min-width: 220px;">Usuário</th>
                             <th style="min-width: 220px;">Contato</th>
-                            <th style="width: 140px;">Regra</th>
+                            <th style="width: 140px;">Perfil de acesso</th>
                             <th>Cargo</th>
                             <th class="text-center" style="min-width: 300px;">Ações</th>
                         </tr>
@@ -173,6 +178,12 @@
                                 $canAlterarSenha = auth()->user()->hasPermissao('usuario.alterarSenha');
                                 $canExcluir = auth()->user()->hasPermissao('usuario.destroy');
                                 $temAlgumaAcao = $canEditar || $canAlterarSenha || $canExcluir;
+                                $perfilNome = $usuario->tipoUsuario?->name;
+                                $perfilLabel = match ($perfilNome) {
+                                    'lider' => 'Líder',
+                                    null => 'Sem perfil',
+                                    default => ucfirst($perfilNome),
+                                };
                             @endphp
 
                             <tr>
@@ -194,7 +205,7 @@
 
                                 <td class="align-middle">
                                     @if ($usuario->tipoUsuario)
-                                        <span class="badge badge-info px-2 py-1">{{ $usuario->tipoUsuario->name }}</span>
+                                        <span class="badge badge-info px-2 py-1">{{ $perfilLabel }}</span>
                                     @else
                                         <span class="text-muted">—</span>
                                     @endif
