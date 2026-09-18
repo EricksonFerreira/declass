@@ -7,27 +7,89 @@
     <x-page-title :title="$titulo" />
 @stop
 
+@push('css')
+    @include('partials.ux-index-styles')
+@endpush
+
 @section('content')
+    @if (!empty($filters))
+        <div class="veiculo-filter-sticky">
+            <x-filter
+                :filters="$filters"
+                :additionalFilters="$additionalFilters"
+                :itensFiltered="$itensFiltered"
+                :nomeFiltro="$nomeFiltro"
+            />
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-md-12">
             <div class="card card-outline card-primary shadow-sm">
                 <div class="card-header">
                     <h3 class="card-title text-bold text-sm">Registros <span class="badge badge-primary">{{ $funcoes->total() }}</span></h3>
                     <div class="card-tools d-flex align-items-center" style="gap: 10px;">
+                        <form action="{{ route($nomeFiltro . '.setPerPage') }}" method="POST" class="mb-0">
+                            @csrf
+                            <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
+                        </form>
+                        @include('partials.ux-view-toggle', ['viewKey' => 'funcoes_index_view'])
                         <button type="button" class="btn btn-sm btn-primary" id="btn-create-funcao">
                             <i class="fas fa-plus mr-1"></i> Nova Função
                         </button>
-
-                        <form action="{{ route('clockify.funcoes.index') }}" method="GET" class="input-group input-group-sm mb-0" style="width: 200px;">
-                            <input type="text" name="search" class="form-control float-right" placeholder="Procurar..." value="{{ request('search') }}">
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
-                            </div>
-                        </form>
                     </div>
                 </div>
-                <div class="card-body table-responsive p-0">
-                    <table class="table table-hover table-striped table-bordered table-sm text-nowrap mb-0">
+                <div class="card-body p-0 ux-index-body" data-view="cards">
+                    <div class="ux-cards">
+                        @forelse ($funcoes as $funcao)
+                            <article class="ux-card">
+                                <div class="ux-card__accent"></div>
+                                <div class="ux-card__head">
+                                    <div class="ux-card__avatar"><i class="fas fa-briefcase"></i></div>
+                                    <div class="ux-card__head-info">
+                                        <div class="ux-card__title">{{ $funcao->nome }}</div>
+                                        <div class="ux-card__sub">{{ $funcao->users_count }} colaborador(es) vinculado(s)</div>
+                                    </div>
+                                    <div class="ux-card__badges">
+                                        <span class="ux-card__badge ux-card__badge--{{ $funcao->ativo ? 'green' : 'red' }}">
+                                            {{ $funcao->ativo ? 'Ativa' : 'Inativa' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="ux-card__meta">
+                                    <div class="ux-card__meta-row">
+                                        <span class="ux-card__meta-label"><i class="fas fa-money-bill-wave mr-1"></i>Custo/Hora</span>
+                                        <strong class="ux-card__meta-value">
+                                            {{ $funcao->custo_hora !== null ? 'R$ ' . number_format($funcao->custo_hora, 2, ',', '.') : '—' }}
+                                        </strong>
+                                    </div>
+                                    <div class="ux-card__meta-row">
+                                        <span class="ux-card__meta-label"><i class="fas fa-users mr-1"></i>Colaboradores</span>
+                                        <strong class="ux-card__meta-value">{{ $funcao->users_count }}</strong>
+                                    </div>
+                                </div>
+                                <div class="ux-card__foot">
+                                    <button type="button" class="btn btn-xs btn-warning"
+                                        onclick="editFuncao({{ json_encode($funcao) }})">
+                                        <i class="fa fa-edit mr-1"></i>Editar
+                                    </button>
+                                    <form action="{{ route('clockify.funcoes.destroy', $funcao->id) }}" method="POST" class="d-inline"
+                                        onsubmit="return confirm('Deseja realmente excluir esta função?{{ $funcao->users_count > 0 ? ' Os ' . $funcao->users_count . ' colaborador(es) vinculado(s) ficarão sem função.' : '' }}')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                    </form>
+                                </div>
+                            </article>
+                        @empty
+                            <div class="text-center text-muted py-4 w-100">
+                                <i class="fas fa-briefcase fa-2x mb-2 d-block"></i>
+                                Nenhuma função cadastrada.
+                            </div>
+                        @endforelse
+                    </div>
+                    <div class="ux-table table-responsive">
+                        <table class="table table-hover table-striped table-bordered table-sm text-nowrap mb-0">
                         <thead>
                             <tr>
                                 <th>Nome</th>
@@ -79,6 +141,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
                 @if($funcoes->hasPages())
                     <div class="card-footer py-2 d-flex justify-content-end">

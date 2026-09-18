@@ -11,21 +11,43 @@ use App\Actions\Clockify\Projeto\ListarProjetosAction;
 use App\Actions\Clockify\Projeto\SaveProjetoAction;
 use App\Actions\Clockify\Projeto\UpdateProjetoAction;
 use App\Actions\Clockify\Projeto\DeleteProjetoAction;
+use App\Traits\AtualizaFiltrosTrait;
+use App\Traits\FiltroTrait;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ClockifyProjetoController extends Controller
 {
+    use AtualizaFiltrosTrait;
+    use FiltroTrait;
+
+    private string $nomeFiltro = 'clockify.projetos';
+
     public function index(Request $request, ListarProjetosAction $action): View
     {
-        $projetos = $action->handle($request->search);
+        $this->configurarSessao();
+
+        $itensFiltered = session("{$this->nomeFiltro}.filtro", []);
+        $perPage = session("{$this->nomeFiltro}.perPage", 15);
+        $projetos = $action->handle($request->search, $itensFiltered, $perPage);
         $clientes = ClockifyCliente::where('ativo', true)->orderBy('nome')->get();
+
+        $filters = $this->obterFiltrosPrincipais($clientes);
+        $additionalFilters = $this->obterFiltrosSecundarios();
+        $this->atualizarFiltros($itensFiltered, $filters);
+        $this->atualizarFiltros($itensFiltered, $additionalFilters);
 
         return view('clockify.projetos', [
             'titulo' => 'Projetos',
             'projetos' => $projetos,
             'clientes' => $clientes,
+            'filters' => $filters,
+            'additionalFilters' => $additionalFilters,
+            'itensFiltered' => $itensFiltered,
+            'nomeFiltro' => $this->nomeFiltro,
+            'perPages' => [10, 15, 25, 50, 100],
+            'perPage' => $perPage,
             'selectedProjectId' => null,
             'selectedStartDate' => null,
             'selectedEndDate' => null,
@@ -43,6 +65,63 @@ class ClockifyProjetoController extends Controller
                 ['name' => 'Projetos', 'active' => true],
             ],
         ]);
+    }
+
+    public function filtro(Request $request): RedirectResponse
+    {
+        $this->criarFiltros($request, $this->nomeFiltro);
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function removerFiltro(Request $request): RedirectResponse
+    {
+        $this->removeSessao($this->nomeFiltro, $request->input('atributo'));
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function setPerPage(Request $request): RedirectResponse
+    {
+        $request->session()->put("{$this->nomeFiltro}.perPage", $request->input('perPage'));
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    private function configurarSessao(): void
+    {
+        session()->put("{$this->nomeFiltro}.urlPadrao", 'projetos');
+        session()->put("{$this->nomeFiltro}.rotaRedirect", 'clockify.projetos.index');
+    }
+
+    private function obterFiltrosPrincipais($clientes): array
+    {
+        $clienteOptions = [['value' => '', 'label' => 'Selecione o cliente', 'selected' => false]];
+        foreach ($clientes as $cliente) {
+            $clienteOptions[] = ['value' => (string) $cliente->id, 'label' => $cliente->nome, 'selected' => false];
+        }
+
+        return [
+            ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
+            ['name' => 'clockify_cliente_id', 'label' => 'Cliente', 'type' => 'select', 'typeWhere' => 'where', 'options' => $clienteOptions],
+            ['name' => 'status', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
+                ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
+                ['value' => 'em_andamento', 'label' => 'Em andamento', 'selected' => false],
+                ['value' => 'concluido', 'label' => 'Concluído', 'selected' => false],
+                ['value' => 'cancelado', 'label' => 'Cancelado', 'selected' => false],
+            ]],
+        ];
+    }
+
+    private function obterFiltrosSecundarios(): array
+    {
+        return [
+            ['name' => 'ativo', 'label' => 'Ativo', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
+                ['value' => '', 'label' => 'Todos', 'selected' => false],
+                ['value' => '1', 'label' => 'Sim', 'selected' => false],
+                ['value' => '0', 'label' => 'Não', 'selected' => false],
+            ]],
+        ];
     }
 
     public function store(Request $request, SaveProjetoAction $action): RedirectResponse

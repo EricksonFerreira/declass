@@ -9,14 +9,14 @@
 
 @section('content')
     <div class="row">
-        <!-- Listagem de Time Off -->
+        <!-- Listagem de Folgas e Férias -->
         <div class="col-md-12">
             <div class="card card-outline card-primary shadow-sm">
                 <div class="card-header">
                     <h3 class="card-title text-bold text-sm">Histórico de Folgas e Férias</h3>
                     <div class="card-tools">
                         <button type="button" class="btn btn-sm btn-primary" id="btn-create-timeoff">
-                            <i class="fas fa-plus mr-1"></i> Solicitar Time Off
+                            <i class="fas fa-plus mr-1"></i> Solicitar Folga ou Férias
                         </button>
                     </div>
                 </div>
@@ -88,7 +88,7 @@
                                 <tr>
                                     <td colspan="7" class="text-center text-muted py-4">
                                         <i class="fas fa-calendar-times fa-2x mb-2 d-block"></i>
-                                        Nenhuma solicitação de Time Off encontrada.
+                                        Nenhuma solicitação de folga ou férias encontrada.
                                     </td>
                                 </tr>
                             @endforelse
@@ -105,7 +105,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-side-drawer id="timeoffDrawer" title="Solicitar Time Off" formId="timeoff-form" action="{{ route('clockify.timeoff.store') }}">
+    <x-side-drawer id="timeoffDrawer" title="Solicitar Folga ou Férias" formId="timeoff-form" action="{{ route('clockify.timeoff.store') }}">
         <input type="hidden" name="id" id="timeoff_id" value="{{ old('id') }}">
         @if (auth()->user()->can('gerenciar-empresa'))
             <div class="form-group">
@@ -158,18 +158,18 @@
                 form.attr('action', storeUrl);
                 $('#timeoff-formMethod').val('POST');
                 $('#timeoff_id').val('');
-                $('#timeoffDrawerTitle').text('Solicitar Time Off');
+                $('#timeoffDrawerTitle').text('Solicitar Folga ou Férias');
                 $('#timeoffDrawerBackdrop').addClass('show');
                 $('#timeoffDrawer').addClass('open');
             });
 
             @if ($errors->any())
                 @if (old('_method') === 'PUT')
-                    $('#timeoffDrawerTitle').text('Editar Time Off');
+                    $('#timeoffDrawerTitle').text('Editar Solicitação');
                     $('#timeoff-form').attr('action', updateUrlTemplate.replace('__ID__', '{{ old('id') }}'));
                     $('#timeoff-formMethod').val('PUT');
                 @else
-                    $('#timeoffDrawerTitle').text('Solicitar Time Off');
+                    $('#timeoffDrawerTitle').text('Solicitar Folga ou Férias');
                     $('#timeoff-form').attr('action', storeUrl);
                     $('#timeoff-formMethod').val('POST');
                 @endif
@@ -183,7 +183,7 @@
                 var form = $('#timeoff-form');
                 form.attr('action', updateUrlTemplate.replace('__ID__', d.id));
                 $('#timeoff-formMethod').val('PUT');
-                $('#timeoffDrawerTitle').text('Editar Time Off');
+                $('#timeoffDrawerTitle').text('Editar Solicitação');
                 $('#timeoff_id').val(d.id);
                 $('#user_id').val(d.user);
                 $('#tipo').val(d.tipo);

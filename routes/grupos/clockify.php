@@ -39,6 +39,9 @@ Route::name('clockify.')->group(function () {
     Route::delete('timeoff/{id}', [ClockifyTimeOffController::class, 'destroy'])->name('timeoff.destroy');
 
     // Resources
+    Route::get('clientes/filtro', [ClockifyClienteController::class, 'filtro'])->name('clientes.filtro');
+    Route::get('clientes/removerfiltro', [ClockifyClienteController::class, 'removerFiltro'])->name('clientes.removerFiltro');
+    Route::post('clientes/setperpage', [ClockifyClienteController::class, 'setPerPage'])->name('clientes.setPerPage');
     Route::resource('clientes', ClockifyClienteController::class)->except(['create', 'show', 'edit']);
 
     // Projetos com rotas de planejamento
@@ -51,9 +54,23 @@ Route::name('clockify.')->group(function () {
     Route::post('projetos/{id}/planejar-equipe', [ClockifyProjetoController::class, 'planejarEquipeStore'])->name('projetos.planejar-equipe.store');
     Route::get('planejar-equipe', [ClockifyProjetoController::class, 'planejarEquipeGeral'])->name('projetos.planejar-equipe-geral');
     Route::post('planejar-equipe', [ClockifyProjetoController::class, 'planejarEquipeGeralStore'])->name('projetos.planejar-equipe-geral.store');
+    Route::get('projetos/filtro', [ClockifyProjetoController::class, 'filtro'])->name('projetos.filtro');
+    Route::get('projetos/removerfiltro', [ClockifyProjetoController::class, 'removerFiltro'])->name('projetos.removerFiltro');
+    Route::post('projetos/setperpage', [ClockifyProjetoController::class, 'setPerPage'])->name('projetos.setPerPage');
     Route::resource('projetos', ClockifyProjetoController::class)->except(['create', 'edit']);
 
+    Route::get('tags/filtro', [ClockifyTagController::class, 'filtro'])->name('tags.filtro');
+    Route::get('tags/removerfiltro', [ClockifyTagController::class, 'removerFiltro'])->name('tags.removerFiltro');
+    Route::post('tags/setperpage', [ClockifyTagController::class, 'setPerPage'])->name('tags.setPerPage');
     Route::resource('tags', ClockifyTagController::class)->except(['create', 'show', 'edit']);
+
+    Route::get('funcoes/filtro', [FuncaoController::class, 'filtro'])->name('funcoes.filtro');
+    Route::get('funcoes/removerfiltro', [FuncaoController::class, 'removerFiltro'])->name('funcoes.removerFiltro');
+    Route::post('funcoes/setperpage', [FuncaoController::class, 'setPerPage'])->name('funcoes.setPerPage');
     Route::resource('funcoes', FuncaoController::class)->except(['create', 'show', 'edit']);
+
+    Route::get('times/filtro', [ClockifyTimeController::class, 'filtro'])->name('times.filtro');
+    Route::get('times/removerfiltro', [ClockifyTimeController::class, 'removerFiltro'])->name('times.removerFiltro');
+    Route::post('times/setperpage', [ClockifyTimeController::class, 'setPerPage'])->name('times.setPerPage');
     Route::resource('times', ClockifyTimeController::class)->except(['create', 'show', 'edit']);
 });

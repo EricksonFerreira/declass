@@ -3,18 +3,21 @@
 namespace App\Actions\Clockify\Cliente;
 
 use App\Models\ClockifyCliente;
+use App\Support\FiltroQuery;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ListarClientesAction
 {
-    public function handle(?string $search): LengthAwarePaginator
+    public function handle(?string $search, array $filtros = [], int $perPage = 15): LengthAwarePaginator
     {
-        return ClockifyCliente::query()
+        $query = ClockifyCliente::query()
             ->when($search, function ($query, $search) {
                 $query->where('nome', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
-            })
-            ->orderBy('nome')
-            ->paginate(15);
+            });
+
+        FiltroQuery::aplicar($query, $filtros, ['nome', 'email', 'telefone', 'ativo']);
+
+        return $query->orderBy('nome')->paginate($perPage);
     }
 }

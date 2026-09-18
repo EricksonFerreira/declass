@@ -7,27 +7,98 @@
     <x-page-title :title="$titulo" />
 @stop
 
+@push('css')
+    @include('partials.ux-index-styles')
+@endpush
+
 @section('content')
+    @if (!empty($filters))
+        <div class="veiculo-filter-sticky">
+            <x-filter
+                :filters="$filters"
+                :additionalFilters="$additionalFilters"
+                :itensFiltered="$itensFiltered"
+                :nomeFiltro="$nomeFiltro"
+            />
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-md-12">
             <div class="card card-outline card-primary shadow-sm">
                 <div class="card-header">
                     <h3 class="card-title text-bold text-sm">Registros <span class="badge badge-primary">{{ $projetos->total() }}</span></h3>
                     <div class="card-tools d-flex align-items-center" style="gap: 10px;">
+                        <form action="{{ route($nomeFiltro . '.setPerPage') }}" method="POST" class="mb-0">
+                            @csrf
+                            <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
+                        </form>
+                        @include('partials.ux-view-toggle', ['viewKey' => 'projetos_index_view'])
                         <button type="button" class="btn btn-sm btn-primary" id="btn-create-projeto">
                             <i class="fas fa-plus mr-1"></i> Novo Projeto
                         </button>
-
-                        <form action="{{ route('clockify.projetos.index') }}" method="GET" class="input-group input-group-sm mb-0" style="width: 200px;">
-                            <input type="text" name="search" class="form-control float-right" placeholder="Procurar..." value="{{ request('search') }}">
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
-                            </div>
-                        </form>
                     </div>
                 </div>
-                <div class="card-body table-responsive p-0">
-                    <table class="table table-hover table-striped table-bordered table-sm text-nowrap mb-0">
+                <div class="card-body p-0 ux-index-body" data-view="cards">
+                    <div class="ux-cards">
+                        @forelse ($projetos as $projeto)
+                            <article class="ux-card">
+                                <div class="ux-card__accent" style="background: {{ $projeto->cor ?? '#1e293b' }}"></div>
+                                <div class="ux-card__head">
+                                    <div class="ux-card__avatar" style="background: {{ $projeto->cor ?? '#334155' }}"><i class="fas fa-project-diagram"></i></div>
+                                    <div class="ux-card__head-info">
+                                        <div class="ux-card__title">{{ $projeto->nome }}</div>
+                                        <div class="ux-card__sub">{{ $projeto->cliente->nome ?? 'Sem cliente' }}</div>
+                                    </div>
+                                    <div class="ux-card__badges">
+                                        <span class="ux-card__badge ux-card__badge--{{ $projeto->ativo ? 'green' : 'red' }}">
+                                            {{ $projeto->ativo ? 'Ativo' : 'Inativo' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="ux-card__meta">
+                                    <div class="ux-card__meta-row">
+                                        <span class="ux-card__meta-label"><i class="fas fa-money-bill-wave mr-1"></i>Faturamento</span>
+                                        <strong class="ux-card__meta-value">
+                                            {{ $projeto->valor_faturado > 0 ? 'R$ ' . number_format($projeto->valor_faturado, 2, ',', '.') : '—' }}
+                                        </strong>
+                                    </div>
+                                    <div class="ux-card__meta-row">
+                                        <span class="ux-card__meta-label"><i class="far fa-calendar-check mr-1"></i>Entrega prevista</span>
+                                        <strong class="ux-card__meta-value">
+                                            {{ $projeto->data_entrega_previsao ? $projeto->data_entrega_previsao->format('d/m/Y') : 'Sem planejamento' }}
+                                        </strong>
+                                    </div>
+                                    <div class="ux-card__meta-row ux-card__meta-row--full">
+                                        <span class="ux-card__meta-label"><i class="fas fa-align-left mr-1"></i>Descrição</span>
+                                        <strong class="ux-card__meta-value">{{ $projeto->descricao ?: '—' }}</strong>
+                                    </div>
+                                </div>
+                                <div class="ux-card__foot">
+                                    <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary">
+                                        <i class="fas fa-eye mr-1"></i>Detalhes
+                                    </a>
+                                    <button type="button" class="btn btn-xs btn-warning"
+                                        onclick="editProjeto({{ json_encode($projeto) }})">
+                                        <i class="fa fa-edit mr-1"></i>Editar
+                                    </button>
+                                    <form action="{{ route('clockify.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"
+                                        onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                    </form>
+                                </div>
+                            </article>
+                        @empty
+                            <div class="text-center text-muted py-4 w-100">
+                                <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
+                                Nenhum projeto cadastrado.
+                            </div>
+                        @endforelse
+                    </div>
+                    <div class="ux-table table-responsive">
+                        <table class="table table-hover table-striped table-bordered table-sm text-nowrap mb-0">
                         <thead>
                             <tr>
                                 <th style="width: 50px;" class="text-center">Cor</th>
@@ -111,6 +182,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
                 @if($projetos->hasPages())
                     <div class="card-footer py-2 d-flex justify-content-end">

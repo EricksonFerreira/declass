@@ -3,19 +3,22 @@
 namespace App\Actions\Clockify\Funcao;
 
 use App\Models\Funcao;
+use App\Support\FiltroQuery;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ListarFuncoesAction
 {
-    public function handle(?string $search): LengthAwarePaginator
+    public function handle(?string $search, array $filtros = [], int $perPage = 15): LengthAwarePaginator
     {
-        return Funcao::query()
+        $query = Funcao::query()
             ->where('empresa_id', auth()->user()->empresa_id)
             ->withCount('users')
             ->when($search, function ($query, $search) {
                 $query->where('nome', 'like', "%{$search}%");
-            })
-            ->orderBy('nome')
-            ->paginate(15);
+            });
+
+        FiltroQuery::aplicar($query, $filtros, ['nome', 'ativo']);
+
+        return $query->orderBy('nome')->paginate($perPage);
     }
 }

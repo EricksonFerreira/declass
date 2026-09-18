@@ -3,17 +3,20 @@
 namespace App\Actions\Clockify\Tag;
 
 use App\Models\ClockifyTag;
+use App\Support\FiltroQuery;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ListarTagsAction
 {
-    public function handle(?string $search): LengthAwarePaginator
+    public function handle(?string $search, array $filtros = [], int $perPage = 15): LengthAwarePaginator
     {
-        return ClockifyTag::query()
+        $query = ClockifyTag::query()
             ->when($search, function ($query, $search) {
                 $query->where('nome', 'like', "%{$search}%");
-            })
-            ->orderBy('nome')
-            ->paginate(15);
+            });
+
+        FiltroQuery::aplicar($query, $filtros, ['nome', 'ativo']);
+
+        return $query->orderBy('nome')->paginate($perPage);
     }
 }

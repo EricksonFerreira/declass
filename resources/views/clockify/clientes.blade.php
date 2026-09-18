@@ -7,7 +7,22 @@
     <x-page-title :title="$titulo" />
 @stop
 
+@push('css')
+    @include('partials.ux-index-styles')
+@endpush
+
 @section('content')
+    @if (!empty($filters))
+        <div class="veiculo-filter-sticky">
+            <x-filter
+                :filters="$filters"
+                :additionalFilters="$additionalFilters"
+                :itensFiltered="$itensFiltered"
+                :nomeFiltro="$nomeFiltro"
+            />
+        </div>
+    @endif
+
     <div class="row">
         <!-- Listagem de Clientes -->
         <div class="col-md-12">
@@ -15,20 +30,70 @@
                 <div class="card-header">
                     <h3 class="card-title text-bold text-sm">Registros <span class="badge badge-primary">{{ $clientes->total() }}</span></h3>
                     <div class="card-tools d-flex align-items-center" style="gap: 10px;">
+                        <form action="{{ route($nomeFiltro . '.setPerPage') }}" method="POST" class="mb-0">
+                            @csrf
+                            <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
+                        </form>
+                        @include('partials.ux-view-toggle', ['viewKey' => 'clientes_index_view'])
                         <button type="button" class="btn btn-sm btn-primary" id="btn-create-cliente">
                             <i class="fas fa-plus mr-1"></i> Novo Cliente
                         </button>
-                        
-                        <form action="{{ route('clockify.clientes.index') }}" method="GET" class="input-group input-group-sm mb-0" style="width: 200px;">
-                            <input type="text" name="search" class="form-control float-right" placeholder="Procurar..." value="{{ request('search') }}">
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
-                            </div>
-                        </form>
                     </div>
                 </div>
-                <div class="card-body table-responsive p-0">
-                    <table class="table table-hover table-striped table-bordered table-sm text-nowrap mb-0">
+                <div class="card-body p-0 ux-index-body" data-view="cards">
+                    <div class="ux-cards">
+                        @forelse ($clientes as $cliente)
+                            @php
+                                $nomeCliente = trim((string) ($cliente->nome ?? 'Cliente'));
+                                $partes = preg_split('/\s+/', $nomeCliente) ?: [];
+                                $iniciais = collect($partes)->filter()->take(2)
+                                    ->map(fn($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('') ?: 'CL';
+                            @endphp
+                            <article class="ux-card">
+                                <div class="ux-card__accent"></div>
+                                <div class="ux-card__head">
+                                    <div class="ux-card__avatar">{{ $iniciais }}</div>
+                                    <div class="ux-card__head-info">
+                                        <div class="ux-card__title">{{ $cliente->nome }}</div>
+                                        <div class="ux-card__sub">{{ $cliente->email ?: 'Sem e-mail' }}</div>
+                                    </div>
+                                    <div class="ux-card__badges">
+                                        <span class="ux-card__badge ux-card__badge--{{ $cliente->ativo ? 'green' : 'red' }}">
+                                            {{ $cliente->ativo ? 'Ativo' : 'Inativo' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="ux-card__meta">
+                                    <div class="ux-card__meta-row">
+                                        <span class="ux-card__meta-label"><i class="fas fa-phone-alt mr-1"></i>Telefone</span>
+                                        <strong class="ux-card__meta-value">{{ $cliente->telefone ?: '—' }}</strong>
+                                    </div>
+                                    <div class="ux-card__meta-row">
+                                        <span class="ux-card__meta-label"><i class="fas fa-envelope mr-1"></i>E-mail</span>
+                                        <strong class="ux-card__meta-value">{{ $cliente->email ?: '—' }}</strong>
+                                    </div>
+                                </div>
+                                <div class="ux-card__foot">
+                                    <button type="button" class="btn btn-xs btn-warning"
+                                        onclick="editCliente({{ json_encode($cliente) }})">
+                                        <i class="fa fa-edit mr-1"></i>Editar
+                                    </button>
+                                    <form action="{{ route('clockify.clientes.destroy', $cliente->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este cliente?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                    </form>
+                                </div>
+                            </article>
+                        @empty
+                            <div class="text-center text-muted py-4 w-100">
+                                <i class="fas fa-user-slash fa-2x mb-2 d-block"></i>
+                                Nenhum cliente cadastrado.
+                            </div>
+                        @endforelse
+                    </div>
+                    <div class="ux-table table-responsive">
+                        <table class="table table-hover table-striped table-bordered table-sm text-nowrap mb-0">
                         <thead>
                             <tr>
                                 <th>Nome</th>
@@ -71,6 +136,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
                 @if($clientes->hasPages())
                     <div class="card-footer py-2 d-flex justify-content-end">

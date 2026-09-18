@@ -7,24 +7,44 @@ use Illuminate\Support\Facades\Schema;
 
 class SchemaCache
 {
+    private const MAP_KEY = 'schema_map_v1';
+
+    private static ?array $map = null;
+
+    /**
+     * Mapa completo de tabelas e colunas, cacheado em uma unica chave.
+     * Evita uma query no store de cache por cada verificacao de schema.
+     */
+    private static function map(): array
+    {
+        if (self::$map !== null) {
+            return self::$map;
+        }
+
+        return self::$map = Cache::rememberForever(self::MAP_KEY, function () {
+            $map = [];
+
+            foreach (Schema::getTables() as $table) {
+                $map[$table['name']] = array_fill_keys(Schema::getColumnListing($table['name']), true);
+            }
+
+            return $map;
+        });
+    }
+
     public static function hasTable(string $table): bool
     {
-        return Cache::rememberForever("schema_table_{$table}", function () use ($table) {
-            return Schema::hasTable($table);
-        });
+        return isset(self::map()[$table]);
     }
 
     public static function hasColumn(string $table, string $column): bool
     {
-        $key = "schema_column_{$table}_{$column}";
-        return Cache::rememberForever($key, function () use ($table, $column) {
-            return Schema::hasColumn($table, $column);
-        });
+        return isset(self::map()[$table][$column]);
     }
 
     public static function clear(): void
     {
-        // Não fazemos ideia de quais chaves existem, então quem precisar
-        // limpar o cache de schema deve rodar: php artisan cache:clear
+        self::$map = null;
+        Cache::forget(self::MAP_KEY);
     }
 }

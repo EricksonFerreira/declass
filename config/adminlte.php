@@ -344,11 +344,6 @@ return [
             'route' => 'clockify.calendario.index',
             'icon' => 'fas fa-calendar-alt',
         ],
-        [
-            'text' => 'Time Off',
-            'route' => 'clockify.timeoff.index',
-            'icon' => 'fas fa-plane',
-        ],
 
         // ANÁLISE
         [
@@ -417,11 +412,6 @@ return [
             'icon' => 'fas fa-project-diagram',
         ],
         [
-            'text' => 'Planejar Equipe',
-            'route' => 'clockify.projetos.planejar-equipe-geral',
-            'icon' => 'fas fa-users-cog',
-        ],
-        [
             'text' => 'Clientes',
             'route' => 'clockify.clientes.index',
             'icon' => 'fas fa-user-friends',
@@ -430,6 +420,11 @@ return [
             'text' => 'Equipe',
             'route' => 'clockify.times.index',
             'icon' => 'fas fa-users',
+        ],
+        [
+            'text' => 'Folgas e Férias',
+            'route' => 'clockify.timeoff.index',
+            'icon' => 'fas fa-plane',
         ],
         [
             'text' => 'Funções',
