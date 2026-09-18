@@ -166,8 +166,8 @@ class DemoEmpresaSeeder extends Seeder
     private function seedTags(): void
     {
         $tags = [
-            'Desenvolvimento', 'Reunião', 'Suporte', 'Documentação',
-            'Homologação', 'Urgente', 'Interno', 'Não faturável',
+            'Campo', 'Escritório', 'Medição', 'Documentação',
+            'Fiscalização', 'Urgente', 'Interno', 'Não faturável',
         ];
 
         foreach ($tags as $nome) {
@@ -218,7 +218,7 @@ class DemoEmpresaSeeder extends Seeder
         ], 'paulo.diretor');
 
         $julia = $this->seedUsuarioExtra($roles['colaborador'], [
-            'nome' => 'Julia Costa', 'cargo' => 'Estagiária', 'jornada_diaria' => 4,
+            'nome' => 'Julia Costa', 'cargo' => 'Estagiária de Engenharia', 'jornada_diaria' => 4,
         ], 'julia.costa');
 
         $this->seedProjetosExtras($admin, $fernanda);
@@ -250,11 +250,11 @@ class DemoEmpresaSeeder extends Seeder
         $liderId = $fernanda?->id ?? $admin->id;
 
         DB::table('clockify_projetos')->updateOrInsert(
-            ['empresa_id' => $this->empresaId, 'nome' => 'Auditoria Interna — Compliance'],
+            ['empresa_id' => $this->empresaId, 'nome' => 'Due Diligence — Terreno Distrito Sul'],
             [
                 'clockify_cliente_id' => $clienteId,
                 'codigo' => '2025-060-200.01',
-                'descricao' => 'Auditoria interna de processos e conformidade. Acesso restrito à diretoria.',
+                'descricao' => 'Análise técnica e documental para aquisição de terreno. Acesso restrito à diretoria.',
                 'status' => 'em_andamento',
                 'publico' => false,
                 'responsavel_id' => $admin->id,
@@ -268,11 +268,11 @@ class DemoEmpresaSeeder extends Seeder
         );
 
         DB::table('clockify_projetos')->updateOrInsert(
-            ['empresa_id' => $this->empresaId, 'nome' => 'Portal Legado — Descontinuado'],
+            ['empresa_id' => $this->empresaId, 'nome' => 'Terraplenagem — Loteamento Alto Serra'],
             [
                 'clockify_cliente_id' => $clienteId,
                 'codigo' => '2023-015-088.02',
-                'descricao' => 'Projeto encerrado pelo cliente antes da entrega final.',
+                'descricao' => 'Obra suspensa pelo cliente durante a fase de terraplenagem.',
                 'status' => 'cancelado',
                 'publico' => true,
                 'responsavel_id' => $liderId,
@@ -285,7 +285,7 @@ class DemoEmpresaSeeder extends Seeder
 
         $privado = DB::table('clockify_projetos')
             ->where('empresa_id', $this->empresaId)
-            ->where('nome', 'Auditoria Interna — Compliance')->first();
+            ->where('nome', 'Due Diligence — Terreno Distrito Sul')->first();
 
         if ($privado) {
             $this->projetos['privado'] = $privado;
@@ -300,7 +300,7 @@ class DemoEmpresaSeeder extends Seeder
 
         $cancelado = DB::table('clockify_projetos')
             ->where('empresa_id', $this->empresaId)
-            ->where('nome', 'Portal Legado — Descontinuado')->first();
+            ->where('nome', 'Terraplenagem — Loteamento Alto Serra')->first();
         if ($cancelado) {
             $this->projetos['cancelado'] = $cancelado;
         }
@@ -315,11 +315,11 @@ class DemoEmpresaSeeder extends Seeder
         // para a demo mostrar percentuais variados no Consumo x Estimado:
         // ~80% confortável, ~90% no limite e >100% estourado.
         $mapa = [
-            'Sistema de Agendamento de Consultas' => ['2024-087-101.01', $admin->id, 850],
-            'Integração ERP × E-commerce' => ['2025-012-118.02', $admin->id, 700],
-            'Portal de Orçamentos Online' => ['2025-033-142.05', $liderId, 620],
-            'App de Rastreamento de Frota' => ['2025-041-158.01', $admin->id, 560],
-            'Redesign do Site Institucional' => ['2024-156-099.03', $liderId, 480],
+            'Projeto Executivo de Instalações — Ala Norte' => ['2024-087-101.01', $admin->id, 850],
+            'Reforma da Unidade Fabril — Planta Norte' => ['2025-012-118.02', $admin->id, 700],
+            'Loteamento Residencial Vista Alegre — Lote 2' => ['2025-033-142.05', $liderId, 620],
+            'Edifício Comercial Parque Central' => ['2025-041-158.01', $admin->id, 560],
+            'Ampliação da Ala Sul — Hospital Regional' => ['2024-156-099.03', $liderId, 480],
         ];
 
         foreach ($mapa as $nome => [$codigo, $responsavelId, $orcado]) {
@@ -330,12 +330,12 @@ class DemoEmpresaSeeder extends Seeder
 
         // Estimativas por função coerentes com o orçado total do projeto.
         $estimativas = [
-            'Sistema de Agendamento de Consultas' => ['Técnico' => 530, 'Designer' => 130, 'Gerente de Projetos' => 115, 'Analista de QA' => 75],
-            'Integração ERP × E-commerce' => ['Técnico' => 500, 'Gerente de Projetos' => 120, 'Analista de QA' => 80],
-            'Portal de Orçamentos Online' => ['Técnico' => 390, 'Designer' => 120, 'Gerente de Projetos' => 75, 'Analista de QA' => 35],
-            'App de Rastreamento de Frota' => ['Técnico' => 350, 'Designer' => 95, 'Gerente de Projetos' => 70, 'Analista de QA' => 45],
-            'Redesign do Site Institucional' => ['Técnico' => 200, 'Designer' => 220, 'Gerente de Projetos' => 60],
-            'Auditoria Interna — Compliance' => ['Técnico' => 40, 'Gerente de Projetos' => 20],
+            'Projeto Executivo de Instalações — Ala Norte' => ['Engenheiro Civil' => 530, 'Projetista CAD/BIM' => 130, 'Coordenador de Equipe' => 115, 'Técnico de Edificações' => 75],
+            'Reforma da Unidade Fabril — Planta Norte' => ['Engenheiro Civil' => 500, 'Coordenador de Equipe' => 120, 'Técnico de Edificações' => 80],
+            'Loteamento Residencial Vista Alegre — Lote 2' => ['Engenheiro Civil' => 390, 'Projetista CAD/BIM' => 120, 'Coordenador de Equipe' => 75, 'Técnico de Edificações' => 35],
+            'Edifício Comercial Parque Central' => ['Engenheiro Civil' => 350, 'Projetista CAD/BIM' => 95, 'Coordenador de Equipe' => 70, 'Técnico de Edificações' => 45],
+            'Ampliação da Ala Sul — Hospital Regional' => ['Engenheiro Civil' => 200, 'Projetista CAD/BIM' => 220, 'Coordenador de Equipe' => 60],
+            'Due Diligence — Terreno Distrito Sul' => ['Engenheiro Civil' => 40, 'Coordenador de Equipe' => 20],
         ];
 
         foreach ($estimativas as $nomeProjeto => $porFuncao) {
@@ -366,7 +366,7 @@ class DemoEmpresaSeeder extends Seeder
     {
         $projeto = DB::table('clockify_projetos')
             ->where('empresa_id', $this->empresaId)
-            ->where('nome', 'Portal de Orçamentos Online')->first();
+            ->where('nome', 'Loteamento Residencial Vista Alegre — Lote 2')->first();
 
         if (! $projeto) {
             return;
@@ -376,7 +376,7 @@ class DemoEmpresaSeeder extends Seeder
         $fim = $inicio->copy()->addWeeks(4)->endOfWeek();
 
         DB::table('clockify_projeto_cronogramas')->updateOrInsert(
-            ['clockify_projeto_id' => $projeto->id, 'nome' => 'Versão 2 — Entrega Sprint 4'],
+            ['clockify_projeto_id' => $projeto->id, 'nome' => 'Etapa 2 — Estrutura e Contenções'],
             [
                 'data_inicio' => $inicio->toDateString(),
                 'data_fim' => $fim->toDateString(),
@@ -390,7 +390,7 @@ class DemoEmpresaSeeder extends Seeder
 
         $cronogramaId = DB::table('clockify_projeto_cronogramas')
             ->where('clockify_projeto_id', $projeto->id)
-            ->where('nome', 'Versão 2 — Entrega Sprint 4')->value('id');
+            ->where('nome', 'Etapa 2 — Estrutura e Contenções')->value('id');
 
         if (! $cronogramaId) {
             return;
@@ -416,8 +416,9 @@ class DemoEmpresaSeeder extends Seeder
     {
         $linhas = [];
         $descricoes = [
-            'Análise e desenvolvimento', 'Revisão de requisitos', 'Testes e validação',
-            'Documentação técnica', 'Reunião de acompanhamento', 'Correção de bugs',
+            'Levantamento quantitativo de materiais', 'Conferência de pranchas e especificações',
+            'Apoio em medição de serviços', 'Organização de relatórios fotográficos',
+            'Atualização de planilhas de controle', 'Reunião de acompanhamento',
         ];
 
         if ($julia) {
@@ -450,7 +451,7 @@ class DemoEmpresaSeeder extends Seeder
                     $linhas[] = $this->tracker(
                         $u->id, $this->projetos['privado']->id,
                         $dia->copy()->setTime(14, 0), 2,
-                        'Auditoria — análise de processos'
+                        'Vistoria — análise técnica do terreno'
                     );
                 }
             }
@@ -468,7 +469,7 @@ class DemoEmpresaSeeder extends Seeder
                 $linhas[] = $this->tracker(
                     $equipe[$i % $equipe->count()], $this->projetos['cancelado']->id,
                     $dia->copy()->setTime(9, 30), 3 + ($i % 4),
-                    'Desenvolvimento — portal legado'
+                    'Execução — terraplenagem e base estabilizada'
                 );
             }
         }

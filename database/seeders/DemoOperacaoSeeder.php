@@ -49,39 +49,39 @@ class DemoOperacaoSeeder extends Seeder
 
     private const DESCRICOES = [
         'dev' => [
-            'Desenvolvimento de nova funcionalidade',
-            'Correcao de bugs reportados pelo cliente',
-            'Code review de pull requests',
-            'Refatoracao do modulo de relatorios',
-            'Integracao com API externa',
-            'Ajustes de performance em queries lentas',
-            'Daily meeting e alinhamento da sprint',
-            'Deploy e validacao em homologacao',
-            'Escrita de testes automatizados',
-            'Documentacao tecnica do modulo',
+            'Fiscalizacao da execucao de fundacoes',
+            'Levantamento quantitativo de materiais',
+            'Analise e revisao de projeto estrutural',
+            'Visita tecnica a obra — medicao de servicos',
+            'Elaboracao de relatorio de progresso',
+            'Reuniao de alinhamento com a fiscalizacao',
+            'Revisao de memorial descritivo',
+            'Acompanhamento de concretagem em campo',
+            'Verificacao de especificacoes tecnicas',
+            'Atualizacao do cronograma fisico-financeiro',
         ],
         'design' => [
-            'Prototipacao de telas no Figma',
-            'Revisao de identidade visual',
-            'Ajustes de layout responsivo',
-            'Criacao de componentes do design system',
-            'Reuniao de alinhamento com o cliente',
-            'Exportacao de assets para o time',
+            'Modelagem BIM da arquitetura',
+            'Detalhamento de projeto estrutural',
+            'Compatibilizacao de projetos complementares',
+            'Revisao de pranchas de instalacoes',
+            'Atualizacao do modelo apos alteracao',
+            'Exportacao de pranchas para aprovacao',
         ],
         'gestao' => [
-            'Reuniao de planejamento da sprint',
-            'Atualizacao do cronograma do projeto',
-            'Follow-up com o cliente',
-            'Revisao de backlog e prioridades',
+            'Reuniao de planejamento da etapa',
+            'Atualizacao do cronograma da obra',
+            'Follow-up com cliente e fiscalizacao',
+            'Revisao da medicao do periodo',
             'Apresentacao de progresso para diretoria',
-            'Onboarding de novo membro da equipe',
+            'Visita tecnica de acompanhamento',
         ],
         'qa' => [
-            'Execucao de casos de teste',
-            'Testes de regressao da release',
-            'Reporte e triagem de bugs',
-            'Validacao de correcoes em homologacao',
-            'Automacao de cenarios criticos',
+            'Inspecao de qualidade do concreto',
+            'Verificacao de armaduras e formas',
+            'Coleta de corpos de prova para ensaio',
+            'Checklist de seguranca NR-18',
+            'Controle tecnologico de materiais',
         ],
     ];
 
@@ -113,10 +113,10 @@ class DemoOperacaoSeeder extends Seeder
     private function seedFuncoes(): array
     {
         $mapa = [
-            'dev' => ['nomes' => ['Técnico', 'Desenvolvedor', 'Eng. Auxiliar'], 'custo' => 95.00],
-            'design' => ['nomes' => ['Designer'], 'custo' => 85.00],
-            'gestao' => ['nomes' => ['Gerente de Projetos', 'Coord. Equipe'], 'custo' => 120.00],
-            'qa' => ['nomes' => ['Analista de QA', 'QA'], 'custo' => 75.00],
+            'dev' => ['nomes' => ['Engenheiro Civil', 'Técnico', 'Desenvolvedor', 'Eng. Auxiliar'], 'custo' => 95.00],
+            'design' => ['nomes' => ['Projetista CAD/BIM', 'Designer'], 'custo' => 85.00],
+            'gestao' => ['nomes' => ['Coordenador de Equipe', 'Gerente de Projetos', 'Coord. Equipe'], 'custo' => 120.00],
+            'qa' => ['nomes' => ['Técnico de Edificações', 'Analista de QA', 'QA'], 'custo' => 75.00],
         ];
 
         $out = [];
@@ -154,12 +154,12 @@ class DemoOperacaoSeeder extends Seeder
         $agora = now();
 
         $pessoas = [
-            ['Ana Souza', 'ana.souza', 'Desenvolvedora', $funcoes['dev']],
-            ['Bruno Carvalho', 'bruno.carvalho', 'Desenvolvedor', $funcoes['dev']],
-            ['Camila Duarte', 'camila.duarte', 'Designer UX/UI', $funcoes['design']],
-            ['Diego Nogueira', 'diego.nogueira', 'Analista de QA', $funcoes['qa']],
-            ['Fernanda Lima', 'fernanda.lima', 'Gerente de Projetos', $funcoes['gestao']],
-            ['Rafael Teixeira', 'rafael.teixeira', 'Desenvolvedor', $funcoes['dev']],
+            ['Ana Souza', 'ana.souza', 'Engenheira Civil', $funcoes['dev']],
+            ['Bruno Carvalho', 'bruno.carvalho', 'Engenheiro Civil', $funcoes['dev']],
+            ['Camila Duarte', 'camila.duarte', 'Projetista BIM', $funcoes['design']],
+            ['Diego Nogueira', 'diego.nogueira', 'Técnico de Edificações', $funcoes['qa']],
+            ['Fernanda Lima', 'fernanda.lima', 'Coordenadora de Equipe', $funcoes['gestao']],
+            ['Rafael Teixeira', 'rafael.teixeira', 'Engenheiro Auxiliar', $funcoes['dev']],
         ];
 
         $ids = [];
@@ -195,9 +195,9 @@ class DemoOperacaoSeeder extends Seeder
         $agora = now();
         $clientes = [
             ['Construtora Horizonte', 'contato@construtora-horizonte.com.br'],
-            ['ViaLog Transportes', 'ti@vialog.com.br'],
-            ['Grupo SaúdeVida', 'digital@gruposaudevida.com.br'],
-            ['VarejoMax Supermercados', 'projetos@varejomax.com.br'],
+            ['Incorporadora Vila Nova', 'obras@vilanova-inc.com.br'],
+            ['Hospital Regional Santa Cruz', 'engenharia@hrsantacruz.org.br'],
+            ['Indústria MetalFort', 'projetos@metalfort.ind.br'],
         ];
 
         $ids = [];
@@ -236,59 +236,59 @@ class DemoOperacaoSeeder extends Seeder
         $agora = now();
         $projetos = [
             [
-                'nome' => 'Portal de Orçamentos Online',
+                'nome' => 'Loteamento Residencial Vista Alegre — Lote 2',
                 'cliente' => $clienteIds[0],
                 'cor' => '#2563eb',
-                'horas_orcadas' => 320,
+                'horas_orcadas' => 620,
                 'valor_hora' => 110.00,
-                'valor_faturado' => 35200.00,
+                'valor_faturado' => 68200.00,
                 'entrega' => Carbon::now()->addDays(45)->toDateString(),
                 'status' => 'em_andamento',
-                'descricao' => 'Portal web para emissão e aprovação de orçamentos de obras.',
+                'descricao' => 'Infraestrutura completa do lote 2: terraplenagem, redes de água e esgoto, pavimentação e drenagem.',
             ],
             [
-                'nome' => 'App de Rastreamento de Frota',
+                'nome' => 'Edifício Comercial Parque Central',
                 'cliente' => $clienteIds[1],
                 'cor' => '#16a34a',
-                'horas_orcadas' => 480,
+                'horas_orcadas' => 560,
                 'valor_hora' => 105.00,
-                'valor_faturado' => 50400.00,
+                'valor_faturado' => 58800.00,
                 'entrega' => Carbon::now()->addDays(90)->toDateString(),
                 'status' => 'em_andamento',
-                'descricao' => 'Aplicativo de telemetria e rastreamento em tempo real.',
+                'descricao' => 'Gerenciamento de obra do edifício corporativo de 12 pavimentos.',
             ],
             [
-                'nome' => 'Redesign do Site Institucional',
+                'nome' => 'Ampliação da Ala Sul — Hospital Regional',
                 'cliente' => $clienteIds[2],
                 'cor' => '#db2777',
-                'horas_orcadas' => 120,
+                'horas_orcadas' => 480,
                 'valor_hora' => 90.00,
-                'valor_faturado' => 10800.00,
+                'valor_faturado' => 43200.00,
                 'entrega' => Carbon::now()->subDays(20)->toDateString(),
                 'status' => 'concluido',
-                'descricao' => 'Novo site institucional responsivo com área de pacientes.',
+                'descricao' => 'Ampliação de 800m² da ala sul com adaptação de instalações hospitalares.',
             ],
             [
-                'nome' => 'Integração ERP × E-commerce',
+                'nome' => 'Reforma da Unidade Fabril — Planta Norte',
                 'cliente' => $clienteIds[3],
                 'cor' => '#b45309',
-                'horas_orcadas' => 200,
+                'horas_orcadas' => 700,
                 'valor_hora' => 115.00,
-                'valor_faturado' => 23000.00,
+                'valor_faturado' => 80500.00,
                 'entrega' => Carbon::now()->addDays(30)->toDateString(),
                 'status' => 'em_andamento',
-                'descricao' => 'Sincronização de estoque, pedidos e faturamento.',
+                'descricao' => 'Retrofit estrutural e adequação de segurança da planta industrial.',
             ],
             [
-                'nome' => 'Sistema de Agendamento de Consultas',
+                'nome' => 'Projeto Executivo de Instalações — Ala Norte',
                 'cliente' => $clienteIds[2],
                 'cor' => '#7c3aed',
-                'horas_orcadas' => 260,
+                'horas_orcadas' => 850,
                 'valor_hora' => 100.00,
-                'valor_faturado' => 26000.00,
+                'valor_faturado' => 85000.00,
                 'entrega' => Carbon::now()->addDays(60)->toDateString(),
                 'status' => 'em_andamento',
-                'descricao' => 'Agenda online para clínicas com confirmação por WhatsApp.',
+                'descricao' => 'Projeto executivo de instalações hidrossanitárias, elétricas e de climatização.',
             ],
         ];
 
@@ -362,14 +362,14 @@ class DemoOperacaoSeeder extends Seeder
 
         $timeId = DB::table('clockify_times')
             ->where('empresa_id', $this->empresaId)
-            ->where('nome', 'Squad Produtos Digitais')
+            ->where('nome', 'Equipe de Fiscalização — Obras Sul')
             ->value('id');
 
         if (! $timeId) {
             $timeId = DB::table('clockify_times')->insertGetId([
                 'empresa_id' => $this->empresaId,
-                'nome' => 'Squad Produtos Digitais',
-                'descricao' => 'Equipe principal de desenvolvimento',
+                'nome' => 'Equipe de Fiscalização — Obras Sul',
+                'descricao' => 'Equipe principal de campo e fiscalização de obras',
                 'usuinc' => 1,
                 'datainc' => $agora,
                 'created_at' => $agora,
@@ -489,7 +489,7 @@ class DemoOperacaoSeeder extends Seeder
             'empresa_id' => $this->empresaId,
             'user_id' => $userIds[0],
             'clockify_projeto_id' => $projetoIds[0],
-            'descricao' => 'Desenvolvimento de nova funcionalidade',
+            'descricao' => 'Fiscalização da execução de fundações',
             'inicio' => Carbon::now()->subHours(2)->toDateTimeString(),
             'fim' => null,
             'faturavel' => 1,
@@ -586,7 +586,7 @@ class DemoOperacaoSeeder extends Seeder
                 ],
                 [
                     'horas_por_dia' => $horas,
-                    'observacao' => 'Alocação planejada da sprint',
+                    'observacao' => 'Alocação planejada da etapa',
                     'trabalho_junto' => 0,
                     'usuinc' => 1,
                     'datainc' => $agora,

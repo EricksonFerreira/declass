@@ -18,6 +18,15 @@ class DemoLimpezaSeeder extends Seeder
     private const EMAIL_DOMAIN = '%@demo.declock.app';
 
     private const PROJETOS_DEMO = [
+        // Lote engenharia/serviços (atual)
+        'Loteamento Residencial Vista Alegre — Lote 2',
+        'Edifício Comercial Parque Central',
+        'Ampliação da Ala Sul — Hospital Regional',
+        'Reforma da Unidade Fabril — Planta Norte',
+        'Projeto Executivo de Instalações — Ala Norte',
+        'Due Diligence — Terreno Distrito Sul',
+        'Terraplenagem — Loteamento Alto Serra',
+        // Lote anterior (dados já semeados em empresas antigas)
         'Portal de Orçamentos Online',
         'App de Rastreamento de Frota',
         'Redesign do Site Institucional',
@@ -29,6 +38,10 @@ class DemoLimpezaSeeder extends Seeder
 
     private const CLIENTES_DEMO = [
         'Construtora Horizonte',
+        'Incorporadora Vila Nova',
+        'Hospital Regional Santa Cruz',
+        'Indústria MetalFort',
+        // Lote anterior
         'ViaLog Transportes',
         'Grupo SaúdeVida',
         'VarejoMax Supermercados',
@@ -74,7 +87,7 @@ class DemoLimpezaSeeder extends Seeder
 
         $timeId = DB::table('clockify_times')
             ->where('empresa_id', $empresaId)
-            ->where('nome', 'Squad Produtos Digitais')
+            ->whereIn('nome', ['Equipe de Fiscalização — Obras Sul', 'Squad Produtos Digitais'])
             ->value('id');
 
         if ($timeId) {
