@@ -30,6 +30,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cron Token
+    |--------------------------------------------------------------------------
+    |
+    | Token secreto usado no endpoint HTTP /cron/schedule-run/{token} para
+    | hospedagens que só permitem agendar chamadas de URL (cron via wget/curl).
+    |
+    */
+
+    'cron_token' => env('CRON_TOKEN'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |

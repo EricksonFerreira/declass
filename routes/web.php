@@ -172,3 +172,15 @@ Route::post('/limpar-cache', function () {
 
     return back()->with('success', 'Cache limpo com sucesso!');
 })->middleware(['auth', 'can:acessar-superadmin'])->name('limpar-cache');
+
+// Endpoint para cron via URL (hospedagem compartilhada sem acesso a CLI):
+// configure CRON_TOKEN no .env e agende GET https://<dominio>/cron/schedule-run/<token> a cada minuto.
+Route::get('/cron/schedule-run/{token}', function (string $token) {
+    $expected = (string) config('app.cron_token');
+
+    abort_if($expected === '' || ! hash_equals($expected, $token), 404);
+
+    Artisan::call('schedule:run');
+
+    return response('ok');
+})->name('cron.schedule-run');
