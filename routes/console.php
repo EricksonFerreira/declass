@@ -12,3 +12,9 @@ Artisan::command('inspire', function () {
 Schedule::call(function () {
     app(ReservaService::class)->processarReservasAtrasadasEAjustarSaldo();
 })->everyMinute()->name('reservas-atraso');
+
+Schedule::command('clockify:lembrete-horas')
+    ->dailyAt('18:00')
+    ->weekdays()
+    ->name('lembrete-horas')
+    ->withoutOverlapping();

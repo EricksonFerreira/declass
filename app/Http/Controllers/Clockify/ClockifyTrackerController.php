@@ -114,8 +114,8 @@ class ClockifyTrackerController extends Controller
     public function manualStore(Request $request, SalvarManualTrackerAction $action): RedirectResponse
     {
         $validated = $request->validate([
-            'clockify_projeto_id' => 'nullable|exists:clockify_projetos,id',
-            'descricao' => 'nullable|string',
+            'clockify_projeto_id' => 'required|exists:clockify_projetos,id',
+            'descricao' => 'required|string|max:255',
             'inicio' => 'required|date_format:Y-m-d\TH:i',
             'fim' => 'required|date_format:Y-m-d\TH:i|after:inicio',
             'faturavel' => 'nullable|boolean',
@@ -201,28 +201,52 @@ class ClockifyTrackerController extends Controller
             ->whereBetween('inicio', [$startOfWeek->startOfDay(), $endOfWeek->endOfDay()])
             ->get();
 
+        $prevStart = (clone $startOfWeek)->subWeek();
+        $prevTrackers = ClockifyTimeTracker::where('user_id', $userId)
+            ->where('descricao', 'Lançado via Timesheet')
+            ->whereBetween('inicio', [$prevStart->startOfDay(), (clone $prevStart)->endOfWeek()->endOfDay()])
+            ->get();
+
         $matrix = [];
+        $tsMatrix = [];
+        $prevTsMatrix = [];
         foreach ($projetos as $proj) {
             $matrix[$proj->id] = [
                 'projeto' => $proj,
                 'days' => array_fill(0, 7, 0.0),
             ];
+            $tsMatrix[$proj->id] = array_fill(0, 7, 0.0);
+            $prevTsMatrix[$proj->id] = array_fill(0, 7, 0.0);
         }
 
         $matrix[0] = [
             'projeto' => null,
             'days' => array_fill(0, 7, 0.0),
         ];
+        $tsMatrix[0] = array_fill(0, 7, 0.0);
+        $prevTsMatrix[0] = array_fill(0, 7, 0.0);
 
         foreach ($trackers as $tracker) {
             $projId = $tracker->clockify_projeto_id ?: 0;
             $dayIndex = $tracker->inicio->dayOfWeekIso - 1;
-            
+
             if ($dayIndex >= 0 && $dayIndex <= 6) {
                 $hours = $tracker->duration_in_seconds / 3600.0;
                 if (isset($matrix[$projId])) {
                     $matrix[$projId]['days'][$dayIndex] += round($hours, 2);
+                    if ($tracker->descricao === 'Lançado via Timesheet') {
+                        $tsMatrix[$projId][$dayIndex] += round($hours, 2);
+                    }
                 }
+            }
+        }
+
+        foreach ($prevTrackers as $tracker) {
+            $projId = $tracker->clockify_projeto_id ?: 0;
+            $dayIndex = $tracker->inicio->dayOfWeekIso - 1;
+
+            if ($dayIndex >= 0 && $dayIndex <= 6 && isset($prevTsMatrix[$projId])) {
+                $prevTsMatrix[$projId][$dayIndex] += round($tracker->duration_in_seconds / 3600.0, 2);
             }
         }
 
@@ -233,6 +257,8 @@ class ClockifyTrackerController extends Controller
             'weekDays' => $weekDays,
             'weekOffset' => $weekOffset,
             'matrix' => $matrix,
+            'tsMatrix' => $tsMatrix,
+            'prevTsMatrix' => $prevTsMatrix,
             'projetos' => $projetos,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],

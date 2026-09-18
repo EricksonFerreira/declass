@@ -71,6 +71,29 @@
 </div>
 
 
+<?php if($previsao): ?>
+    <?php if($previsao['estourado']): ?>
+        <div class="alert alert-danger d-flex align-items-center" style="gap:.6rem;">
+            <i class="fas fa-exclamation-triangle fa-lg"></i>
+            <div>
+                <strong>Estimativa esgotada.</strong>
+                O projeto já consumiu <?php echo e($fmtHora($totais['consumida'])); ?> de <?php echo e($fmtHora($totais['estimada'])); ?> estimadas
+                (<?php echo e($fmtPct($totais['pct'])); ?>). Novas horas aumentam o estouro.
+            </div>
+        </div>
+    <?php elseif(($totais['pct'] ?? 0) >= 80 || ($previsao['dias'] ?? 99) <= 10): ?>
+        <div class="alert alert-warning d-flex align-items-center" style="gap:.6rem;">
+            <i class="fas fa-exclamation-triangle fa-lg"></i>
+            <div>
+                <strong>Atenção: <?php echo e($fmtPct($totais['pct'])); ?> da estimativa consumida.</strong>
+                Na velocidade atual (~<?php echo e(number_format($previsao['media_diaria'], 1, ',', '.')); ?>h/dia),
+                a estimativa esgota em <strong>~<?php echo e($previsao['dias']); ?> <?php echo e($previsao['dias'] === 1 ? 'dia' : 'dias'); ?></strong>.
+            </div>
+        </div>
+    <?php endif; ?>
+<?php endif; ?>
+
+
 <div class="row mb-3">
     <div class="col-lg-2 col-sm-4 col-6 mb-2">
         <div class="card p-3 h-100">

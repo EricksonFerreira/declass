@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\ClockifyProjeto;
 use App\Models\ClockifyProjetoEstimativa;
+use App\Models\ClockifyTimeTracker;
 use App\Models\Funcao;
+use Carbon\Carbon;
 use App\Support\EmpresaContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -149,6 +151,42 @@ class ConsumoProjetoService
             'estimada' => $temEstimativa ? round($totEst, 2) : null,
             'pct' => $temEstimativa && $totEst > 0 ? round(($totCons / $totEst) * 100, 2) : null,
         ];
+    }
+
+    /**
+     * Previsão de estouro da estimativa: média diária de consumo desde o primeiro
+     * lançamento do projeto e dias restantes até consumir 100% da estimativa.
+     *
+     * @return array{estourado: bool, media_diaria: float|null, dias: int|null}|null
+     */
+    public function previsaoEstouro(ClockifyProjeto $projeto, float $consumida, ?float $estimada): ?array
+    {
+        if ($estimada === null || $estimada <= 0) {
+            return null;
+        }
+
+        if ($consumida >= $estimada) {
+            return ['estourado' => true, 'media_diaria' => null, 'dias' => 0];
+        }
+
+        $primeiroInicio = ClockifyTimeTracker::where('clockify_projeto_id', $projeto->id)
+            ->whereNotNull('inicio')
+            ->min('inicio');
+
+        if (! $primeiroInicio) {
+            return null;
+        }
+
+        $diasDesdeInicio = max(1, Carbon::parse($primeiroInicio)->startOfDay()->diffInDays(now()->startOfDay()) + 1);
+        $mediaDiaria = $consumida / $diasDesdeInicio;
+
+        if ($mediaDiaria <= 0) {
+            return null;
+        }
+
+        $dias = (int) ceil(($estimada - $consumida) / $mediaDiaria);
+
+        return ['estourado' => false, 'media_diaria' => round($mediaDiaria, 2), 'dias' => $dias];
     }
 
     /**

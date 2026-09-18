@@ -341,15 +341,15 @@
                 <div class="row">
                     <div class="col-md-4 mb-3 mb-md-0">
                         <div class="form-group mb-0">
-                            <label class="text-xs text-muted text-bold">Descrição</label>
-                            <input type="text" name="descricao" class="form-control form-control-sm" placeholder="Ex: Ajustes de CSS">
+                            <label class="text-xs text-muted text-bold">Descrição <span class="text-danger">*</span></label>
+                            <input type="text" name="descricao" class="form-control form-control-sm" placeholder="Ex: Ajustes de CSS" required>
                         </div>
                     </div>
                     <div class="col-md-3 mb-3 mb-md-0">
                         <div class="form-group mb-0">
-                            <label class="text-xs text-muted text-bold">Projeto</label>
-                            <select name="clockify_projeto_id" class="form-control form-control-sm select2">
-                                <option value="">Sem Projeto</option>
+                            <label class="text-xs text-muted text-bold">Projeto <span class="text-danger">*</span></label>
+                            <select name="clockify_projeto_id" class="form-control form-control-sm select2" required>
+                                <option value="">Selecione o projeto</option>
                                 <?php $__currentLoopData = $projetos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $proj): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <option value="<?php echo e($proj->id); ?>"><?php echo e($proj->nome); ?></option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -610,23 +610,38 @@
             var timerEl = document.getElementById('live-timer');
             if (timerEl) {
                 var startTime = new Date(timerEl.getAttribute('data-start'));
-                
+                var TIMER_WARN_HOURS = 8;
+                var warnedLongTimer = false;
+
                 setInterval(function() {
                     var now = new Date();
                     var diffMs = now - startTime;
                     if (diffMs < 0) diffMs = 0;
-                    
+
                     var diffSecs = Math.floor(diffMs / 1000);
                     var hours = Math.floor(diffSecs / 3600);
                     var minutes = Math.floor((diffSecs / 60) % 60);
                     var seconds = diffSecs % 60;
-                    
-                    var formatted = 
+
+                    var formatted =
                         (hours < 10 ? '0' + hours : hours) + ':' +
                         (minutes < 10 ? '0' + minutes : minutes) + ':' +
                         (seconds < 10 ? '0' + seconds : seconds);
-                        
+
                     timerEl.innerText = formatted;
+
+                    if (!warnedLongTimer && diffSecs >= TIMER_WARN_HOURS * 3600) {
+                        warnedLongTimer = true;
+                        timerEl.classList.remove('text-success');
+                        timerEl.classList.add('text-warning');
+                        $('#stop-tracker-form').after(
+                            '<div class="alert alert-warning d-flex align-items-center mb-0 mt-3" id="timer-long-warn" role="alert">' +
+                            '<i class="fas fa-exclamation-triangle mr-2"></i>' +
+                            '<div>Seu cronômetro está rodando há mais de ' + TIMER_WARN_HOURS + 'h. Esqueceu de parar?</div>' +
+                            '<button type="button" class="close ml-auto" data-dismiss="alert" aria-label="Fechar"><span aria-hidden="true">&times;</span></button>' +
+                            '</div>'
+                        );
+                    }
                 }, 1000);
             }
         });

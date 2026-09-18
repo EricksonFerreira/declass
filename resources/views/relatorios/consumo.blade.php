@@ -19,7 +19,7 @@
     $fmtHora = fn ($v) => $v === null ? '—' : number_format($v, 2, ',', '.');
     $fmtPct  = fn ($v) => $v === null ? '—' : number_format($v, 2, ',', '.').'%';
     $corPct  = fn ($v) => $v === null ? 'text-muted' : ($v > 100 ? 'text-danger' : 'text-success');
-    $bgPct   = fn ($v) => $v === null ? '' : ($v > 100 ? 'bg-danger' : 'bg-success');
+    $bgPct   = fn ($v) => $v === null ? '' : ($v > 100 ? 'bg-danger' : ($v >= 80 ? 'bg-warning' : 'bg-success'));
 @endphp
 
 <div class="card">
@@ -126,7 +126,7 @@
         <i class="fas fa-info-circle mr-1"></i>
         Horas <strong>consumidas</strong> são os lançamentos reais da equipe (rastreador/timesheet);
         <strong>estimadas</strong> são as horas previstas por função, configuradas no detalhe de cada projeto.
-        Semáforo: <span class="badge bg-success">≤ 100%</span> dentro do estimado, <span class="badge bg-danger">&gt; 100%</span> estouro.
+        Semáforo: <span class="badge bg-success">&lt; 80%</span> saudável, <span class="badge bg-warning">≥ 80%</span> atenção, <span class="badge bg-danger">&gt; 100%</span> estouro.
     </div>
 </div>
 @endsection

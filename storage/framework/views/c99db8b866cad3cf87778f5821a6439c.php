@@ -67,8 +67,11 @@
     <form action="<?php echo e(route('clockify.timesheet.save', ['week' => $weekOffset])); ?>" method="POST">
         <?php echo csrf_field(); ?>
         <div class="card card-outline card-primary shadow-sm mb-4">
-            <div class="card-header bg-light">
-                <h3 class="card-title text-sm text-bold text-muted">Lançamento Semanal de Horas</h3>
+            <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap" style="gap:8px;">
+                <h3 class="card-title text-sm text-bold text-muted mb-0">Lançamento Semanal de Horas</h3>
+                <button type="button" id="btn-copy-prev" class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-copy mr-1"></i> Copiar semana anterior
+                </button>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -103,15 +106,21 @@
                                         <?php endif; ?>
                                     </td>
                                     <?php $__currentLoopData = $data['days']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dayIndex => $hours): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php
+                                            $tsVal = round($tsMatrix[$projId][$dayIndex] ?? 0, 2);
+                                            $otherVal = round($hours - $tsVal, 2);
+                                        ?>
                                         <td class="align-middle p-1">
-                                            <?php if($hours > 0): ?>
-                                                <!-- If it has logged hours, show read-only or prefix -->
-                                                <div class="font-weight-bold text-secondary"><?php echo e(number_format($hours, 1)); ?>h</div>
-                                            <?php else: ?>
-                                                <input type="number" step="0.5" min="0" max="24" 
-                                                    name="hours[<?php echo e($projId); ?>][<?php echo e($dayIndex); ?>]" 
-                                                    class="form-control form-control-sm text-center hour-input border-0" 
-                                                    placeholder="-">
+                                            <input type="number" step="0.5" min="0" max="24"
+                                                name="hours[<?php echo e($projId); ?>][<?php echo e($dayIndex); ?>]"
+                                                value="<?php echo e($tsVal > 0 ? $tsVal : ''); ?>"
+                                                data-other="<?php echo e($otherVal > 0 ? $otherVal : 0); ?>"
+                                                class="form-control form-control-sm text-center hour-input border-0"
+                                                placeholder="-">
+                                            <?php if($otherVal > 0): ?>
+                                                <small class="text-info d-block" style="font-size:.68rem;" title="Horas lançadas pelo rastreador ou manualmente">
+                                                    <i class="fas fa-stopwatch"></i> <?php echo e(number_format($otherVal, 1, ',', '.')); ?>h
+                                                </small>
                                             <?php endif; ?>
                                         </td>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -161,77 +170,60 @@
 <?php $__env->startSection('js'); ?>
     <script>
         $(document).ready(function() {
-            // Live calculator for row and column totals when inputs change
+            var prevWeek = <?php echo json_encode($prevTsMatrix, 15, 512) ?>;
+
             $('.hour-input').on('input', function() {
                 recalculate();
             });
 
             function recalculate() {
+                var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
                 var grandTotal = 0.0;
 
-                // 1. Recalculate daily column totals from pre-filled values
-                var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
-                
-                // Add initial values from php matrix
-                <?php $__currentLoopData = $matrix; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $projId => $data): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <?php $__currentLoopData = $data['days']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dayIndex => $hours): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        dailyTotals[<?php echo e($dayIndex); ?>] += <?php echo e((float) $hours); ?>;
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-
-                // Add newly input values
                 $('#timesheet-table tbody tr').each(function() {
                     var rowTotal = 0.0;
-                    
-                    // Add existing logged hours
-                    var projId = $(this).data('project');
-                    if (projId !== undefined) {
-                        // Gather inputs from this row
-                        $(this).find('.hour-input').each(function(index) {
-                            var val = parseFloat($(this).val()) || 0.0;
-                            rowTotal += val;
-                            var colIndex = index;
-                            // Find the correct colIndex in matrix (must match input index offset)
-                            var matches = $(this).attr('name').match(/\[([0-9]+)\]$/);
-                            if (matches && matches[1]) {
-                                colIndex = parseInt(matches[1]);
-                            }
-                            dailyTotals[colIndex] += val;
-                        });
-                    }
-                });
-
-                // 2. Set row totals and calculate grand total
-                $('#timesheet-table tbody tr').each(function() {
-                    var projId = $(this).data('project');
-                    var baseHours = 0.0;
-                    if (projId === 0) {
-                        baseHours = <?php echo e(array_sum($matrix[0]['days'])); ?>;
-                    } else if (projId > 0) {
-                        // Find matching row in matrix
-                        <?php $__currentLoopData = $matrix; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pId => $d): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            if (projId == <?php echo e($pId); ?>) {
-                                baseHours = <?php echo e(array_sum($d['days'])); ?>;
-                            }
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    }
-                    var inputSum = 0.0;
                     $(this).find('.hour-input').each(function() {
-                        inputSum += parseFloat($(this).val()) || 0.0;
+                        var other = parseFloat($(this).data('other')) || 0.0;
+                        var val = parseFloat($(this).val()) || 0.0;
+                        var cell = other + val;
+                        rowTotal += cell;
+
+                        var matches = $(this).attr('name').match(/\[([0-9]+)\]$/);
+                        var colIndex = matches && matches[1] ? parseInt(matches[1]) : 0;
+                        dailyTotals[colIndex] += cell;
                     });
-                    var total = baseHours + inputSum;
-                    $(this).find('.row-total').text(total.toFixed(1) + 'h');
-                    grandTotal += total;
+                    $(this).find('.row-total').text(rowTotal.toFixed(1) + 'h');
+                    grandTotal += rowTotal;
                 });
 
-                // 3. Update column total views
                 $('.col-total').each(function(index) {
                     $(this).text(dailyTotals[index].toFixed(1) + 'h');
                 });
-
-                // 4. Update grand total view
                 $('#grand-total').text(grandTotal.toFixed(1) + 'h');
             }
+
+            $('#btn-copy-prev').on('click', function() {
+                var filled = 0;
+                $('#timesheet-table tbody tr').each(function() {
+                    var projId = $(this).data('project');
+                    var days = prevWeek[projId];
+                    if (!days) return;
+                    $(this).find('.hour-input').each(function() {
+                        var matches = $(this).attr('name').match(/\[([0-9]+)\]$/);
+                        var dayIndex = matches && matches[1] ? parseInt(matches[1]) : 0;
+                        if (days[dayIndex] > 0) {
+                            $(this).val(days[dayIndex]);
+                            filled++;
+                        }
+                    });
+                });
+                recalculate();
+                if (filled === 0) {
+                    alert('A semana anterior não tem horas lançadas via Timesheet para copiar.');
+                }
+            });
+
+            recalculate();
         });
     </script>
 <?php $__env->stopSection(); ?>

@@ -91,12 +91,15 @@ class ConsumoRelatorioController extends Controller
             ? round((float) $projeto->valor_faturado - $totais['custo'], 2)
             : null;
 
+        $previsao = $service->previsaoEstouro($projeto, $totais['consumida'], $totais['estimada']);
+
         return view('relatorios.consumo_show', [
             'titulo' => 'Consumo × Estimado: '.$projeto->nome,
             'projeto' => $projeto,
             'linhasFuncao' => $linhasFuncao,
             'membros' => $membros,
             'totais' => $totais,
+            'previsao' => $previsao,
             'funcoes' => $service->funcoesParaSelect(),
             'statusLabels' => ClockifyProjeto::STATUS_LABELS,
             'breadcrumb' => [

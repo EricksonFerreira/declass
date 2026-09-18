@@ -52,6 +52,29 @@
     </div>
 </div>
 
+{{-- Alerta de estouro de estimativa --}}
+@if ($previsao)
+    @if ($previsao['estourado'])
+        <div class="alert alert-danger d-flex align-items-center" style="gap:.6rem;">
+            <i class="fas fa-exclamation-triangle fa-lg"></i>
+            <div>
+                <strong>Estimativa esgotada.</strong>
+                O projeto já consumiu {{ $fmtHora($totais['consumida']) }} de {{ $fmtHora($totais['estimada']) }} estimadas
+                ({{ $fmtPct($totais['pct']) }}). Novas horas aumentam o estouro.
+            </div>
+        </div>
+    @elseif (($totais['pct'] ?? 0) >= 80 || ($previsao['dias'] ?? 99) <= 10)
+        <div class="alert alert-warning d-flex align-items-center" style="gap:.6rem;">
+            <i class="fas fa-exclamation-triangle fa-lg"></i>
+            <div>
+                <strong>Atenção: {{ $fmtPct($totais['pct']) }} da estimativa consumida.</strong>
+                Na velocidade atual (~{{ number_format($previsao['media_diaria'], 1, ',', '.') }}h/dia),
+                a estimativa esgota em <strong>~{{ $previsao['dias'] }} {{ $previsao['dias'] === 1 ? 'dia' : 'dias' }}</strong>.
+            </div>
+        </div>
+    @endif
+@endif
+
 {{-- KPIs --}}
 <div class="row mb-3">
     <div class="col-lg-2 col-sm-4 col-6 mb-2">
