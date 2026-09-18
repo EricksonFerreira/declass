@@ -336,7 +336,7 @@ return [
                     'icon' => 'fas fa-stopwatch',
                 ],
                 [
-                    'text' => 'Timesheet',
+                    'text' => 'Planilha de Horas',
                     'route' => 'clockify.timesheet',
                     'icon' => 'fas fa-table',
                 ],
