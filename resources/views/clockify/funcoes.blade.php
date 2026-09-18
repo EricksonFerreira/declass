@@ -215,9 +215,9 @@
             $('#funcao-form').attr('action', '{{ url('admin/funcoes') }}/' + funcao.id);
             $('#funcao-formMethod').val('PUT');
             $('#funcao_id').val(funcao.id);
-            $('#nome').val(funcao.nome);
-            $('#custo_hora').val(funcao.custo_hora);
-            $('#ativo').val(funcao.ativo ? '1' : '0');
+            $('#funcao-form #nome').val(funcao.nome);
+            $('#funcao-form #custo_hora').val(funcao.custo_hora);
+            $('#funcao-form #ativo').val(funcao.ativo ? '1' : '0');
 
             $('#status-group').show();
             $('#funcaoDrawerBackdrop').addClass('show');

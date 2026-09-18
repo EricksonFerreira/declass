@@ -235,9 +235,9 @@
             $('#time-form').attr('action', '{{ url('admin/times') }}/' + time.id);
             $('#time-formMethod').val('PUT');
             $('#time_id').val(time.id);
-            $('#nome').val(time.nome);
-            $('#descricao').val(time.descricao);
-            $('#lider_id').val(time.lider_id || '');
+            $('#time-form #nome').val(time.nome);
+            $('#time-form #descricao').val(time.descricao);
+            $('#time-form #lider_id').val(time.lider_id || '');
 
             $('.user-checkbox').prop('checked', false);
             userIds.forEach(function(id) {

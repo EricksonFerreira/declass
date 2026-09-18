@@ -183,7 +183,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     <script>
         $(function() {
-            $('#telefone').mask('(00) 00000-0000');
+            $('#cliente-form #telefone').mask('(00) 00000-0000');
             
             $('#btn-create-cliente').on('click', function() {
                 $('#clienteDrawerTitle').text('Cadastrar Novo Cliente');
@@ -217,11 +217,11 @@
             $('#cliente-form').attr('action', '{{ url('admin/clientes') }}/' + cliente.id);
             $('#cliente-formMethod').val('PUT');
             $('#cliente_id').val(cliente.id);
-            $('#nome').val(cliente.nome);
-            $('#email').val(cliente.email);
-            $('#telefone').val(cliente.telefone);
-            $('#endereco').val(cliente.endereco);
-            $('#ativo').val(cliente.ativo ? "1" : "0");
+            $('#cliente-form #nome').val(cliente.nome);
+            $('#cliente-form #email').val(cliente.email);
+            $('#cliente-form #telefone').val(cliente.telefone);
+            $('#cliente-form #endereco').val(cliente.endereco);
+            $('#cliente-form #ativo').val(cliente.ativo ? "1" : "0");
             
             $('#status-group').show();
             $('#clienteDrawerBackdrop').addClass('show');

@@ -182,8 +182,8 @@
             $('#tag-form').attr('action', '{{ url('admin/tags') }}/' + tag.id);
             $('#tag-formMethod').val('PUT');
             $('#tag_id').val(tag.id);
-            $('#nome').val(tag.nome);
-            $('#ativo').val(tag.ativo ? "1" : "0");
+            $('#tag-form #nome').val(tag.nome);
+            $('#tag-form #ativo').val(tag.ativo ? "1" : "0");
             
             $('#status-group').show();
             $('#tagDrawerBackdrop').addClass('show');

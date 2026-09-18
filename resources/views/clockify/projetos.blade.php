@@ -300,7 +300,7 @@
                 $('#projeto-formMethod').val('POST');
                 $('#projeto-form')[0].reset();
                 $('#projeto_id').val('');
-                $('#clockify_cliente_id').val('').trigger('change');
+                $('#projeto-form #clockify_cliente_id').val('').trigger('change');
                 $('#status-group').hide();
                 $('#projetoDrawerBackdrop').addClass('show');
                 $('#projetoDrawer').addClass('open');
@@ -327,15 +327,15 @@
             $('#projeto-form').attr('action', '{{ url('admin/projetos') }}/' + projeto.id);
             $('#projeto-formMethod').val('PUT');
             $('#projeto_id').val(projeto.id);
-            $('#nome').val(projeto.nome);
-            $('#clockify_cliente_id').val(projeto.clockify_cliente_id).trigger('change');
-            $('#responsavel_id').val(projeto.responsavel_id || '');
-            $('#descricao').val(projeto.descricao);
-            $('#valor_faturado').val(projeto.valor_faturado);
-            $('#valor_hora').val(projeto.valor_hora);
-            $('#cor').val(projeto.cor ?? '#0284c7');
-            $('#publico').val(projeto.publico ? '1' : '0');
-            $('#ativo').val(projeto.ativo ? '1' : '0');
+            $('#projeto-form #nome').val(projeto.nome);
+            $('#projeto-form #clockify_cliente_id').val(projeto.clockify_cliente_id).trigger('change');
+            $('#projeto-form #responsavel_id').val(projeto.responsavel_id || '');
+            $('#projeto-form #descricao').val(projeto.descricao);
+            $('#projeto-form #valor_faturado').val(projeto.valor_faturado);
+            $('#projeto-form #valor_hora').val(projeto.valor_hora);
+            $('#projeto-form #cor').val(projeto.cor ?? '#0284c7');
+            $('#projeto-form #publico').val(projeto.publico ? '1' : '0');
+            $('#projeto-form #ativo').val(projeto.ativo ? '1' : '0');
 
             $('#status-group').show();
             $('#projetoDrawerBackdrop').addClass('show');

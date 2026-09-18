@@ -278,11 +278,11 @@
                 $('#timeoff-formMethod').val('PUT');
                 $('#timeoffDrawerTitle').text('Editar Solicitação');
                 $('#timeoff_id').val(d.id);
-                $('#user_id').val(d.user);
-                $('#tipo').val(d.tipo);
-                $('#data_inicio').val(d.inicio);
-                $('#data_fim').val(d.fim);
-                $('#observacao').val(d.obs || '');
+                $('#timeoff-form #user_id').val(d.user);
+                $('#timeoff-form #tipo').val(d.tipo);
+                $('#timeoff-form #data_inicio').val(d.inicio);
+                $('#timeoff-form #data_fim').val(d.fim);
+                $('#timeoff-form #observacao').val(d.obs || '');
                 $('#timeoffDrawerBackdrop').addClass('show');
                 $('#timeoffDrawer').addClass('open');
             });
