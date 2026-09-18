@@ -131,7 +131,6 @@
     @php
         $etapas = [
             ['rota' => 'onboarding.empresa',      'label' => 'Empresa'],
-            ['rota' => 'onboarding.cores',        'label' => 'Identidade Visual'],
             ['rota' => 'onboarding.orientacoes',  'label' => 'Primeiros Passos'],
         ];
         $etapaAtiva = $etapaAtiva ?? 'onboarding.empresa';

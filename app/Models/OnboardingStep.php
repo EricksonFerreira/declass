@@ -107,15 +107,6 @@ class OnboardingStep extends Model
                 'feito' => $this->step_usuario_criado || $temColaborador,
                 'visivel' => $podeConvidar,
             ],
-            [
-                'key' => 'step_site_configurado',
-                'label' => 'Personalizar a identidade visual',
-                'descricao' => 'Configure o logo e as cores da sua marca no painel.',
-                'rota' => 'onboarding.cores',
-                'icone' => 'palette',
-                'feito' => $this->step_site_configurado,
-                'visivel' => true,
-            ],
         ];
 
         return array_values(array_filter($steps, fn ($s) => $s['visivel']));

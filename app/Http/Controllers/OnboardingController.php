@@ -53,7 +53,7 @@ class OnboardingController extends Controller
             ['step_empresa_configurada' => true]
         );
 
-        return redirect()->route('onboarding.cores');
+        return redirect()->route('onboarding.orientacoes');
     }
 
     /**
