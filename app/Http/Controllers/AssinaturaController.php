@@ -35,7 +35,7 @@ class AssinaturaController extends Controller
     public function index(Request $request): View
     {
         $titulo = 'Assinaturas';
-        $subtitulo = 'Gestão de planos contratados por cada locadora';
+        $subtitulo = 'Gestão de planos contratados por cada empresa';
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new \App\DTO\BreadCrumbItem('Home', route('home')),
             new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
@@ -684,7 +684,7 @@ class AssinaturaController extends Controller
         abort_unless($plano->ativo, 404);
         $empresa = Auth::user()->empresa;
 
-        $totalVeiculos = $empresa ? $empresa->users()->count() : 0;
+        $totalUsuarios = $empresa ? $empresa->users()->count() : 0;
         $assinaturaAtual = $empresa?->planoAtivo()->with('plano')->first();
         $erroDowngrade = null;
 
@@ -697,7 +697,7 @@ class AssinaturaController extends Controller
             }
         }
 
-        return view('assinatura.contratar', compact('plano', 'periodicidade', 'empresa', 'totalVeiculos', 'assinaturaAtual', 'erroDowngrade', 'cartoesSalvos'));
+        return view('assinatura.contratar', compact('plano', 'periodicidade', 'empresa', 'totalUsuarios', 'assinaturaAtual', 'erroDowngrade', 'cartoesSalvos'));
     }
 
     private function resolverEmpresaDaAssinatura(EmpresaPlano $assinatura): ?Empresa
@@ -717,7 +717,7 @@ class AssinaturaController extends Controller
         $data = $request->validate([
             'plano_id' => 'required|exists:planos,id',
             'periodicidade' => 'required|in:mensal,anual',
-            'metodo_pagamento' => 'required|in:pix,cartao',
+            'metodo_pagamento' => 'required|in:cartao',
             'renovacao_automatica' => 'nullable|boolean',
             'dia_vencimento' => 'nullable|integer|min:1|max:28',
         ], [
@@ -955,7 +955,7 @@ class AssinaturaController extends Controller
         abort_unless($empresa && $pagamento->empresa_id === $empresa->id && $pagamento->status === 'pendente', 403);
 
         $data = $request->validate([
-            'metodo' => 'required|in:pix,cartao',
+            'metodo' => 'required|in:cartao',
             'renovacao_automatica' => 'nullable|boolean',
         ]);
 
@@ -1182,7 +1182,7 @@ class AssinaturaController extends Controller
 
         $data = $request->validate([
             'periodicidade' => 'required|in:mensal,anual',
-            'metodo_cobranca' => 'required|in:pix,cartao,manual',
+            'metodo_cobranca' => 'required|in:cartao',
             'renovacao_automatica' => 'nullable|boolean',
             'dia_vencimento' => 'nullable|integer|min:1|max:28',
         ]);
@@ -1203,6 +1203,13 @@ class AssinaturaController extends Controller
 
             $mudanca = is_array($assinatura->metadados['mudanca'] ?? null) ? $assinatura->metadados['mudanca'] : [];
             $veiculosDesativar = is_array($mudanca['veiculos_desativar'] ?? null) ? $mudanca['veiculos_desativar'] : [];
+        }
+
+        // Plano nao vendavel (ex.: trial gratuito) nao pode ser renovado —
+        // o caminho e contratar um plano na aba "Trocar Plano".
+        if (! $planoRenovar?->ativo) {
+            return redirect()->route('assinatura.meu-plano')
+                ->with('error', 'Seu período de teste não pode ser renovado. Escolha um plano para continuar usando o DECLOCK.');
         }
 
         $this->planoService->contratar(

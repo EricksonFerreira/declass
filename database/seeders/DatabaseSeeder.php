@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             PermissoesSistemaSeeder::class,
             PermissoesNovasFuncionalidadesSeeder::class,
             ClockifyMockDataSeeder::class,
+            PlanosDeclockSeeder::class,
         ]);
     }
 }

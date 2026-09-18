@@ -80,11 +80,18 @@
                 @if ($dias >= 0 && $dias <= 7)
                     <div class="alert alert-warning py-2 mb-3" style="font-size:.875rem;">
                         <i class="fas fa-clock mr-1"></i>
-                        Seu plano vence em <strong>{{ $dias }} dia(s)</strong>. Renove para não perder o acesso.
-                        <button type="button" class="btn btn-warning btn-sm ml-2"
-                                data-toggle="modal" data-target="#modalRenovar">
-                            Renovar agora
-                        </button>
+                        @if ($assinatura->plano?->ativo)
+                            Seu plano vence em <strong>{{ $dias }} dia(s)</strong>. Renove para não perder o acesso.
+                            <button type="button" class="btn btn-warning btn-sm ml-2"
+                                    data-toggle="modal" data-target="#modalRenovar">
+                                Renovar agora
+                            </button>
+                        @else
+                            Seu período de teste termina em <strong>{{ $dias }} dia(s)</strong>. Assine um plano para não perder o acesso.
+                            <button type="button" class="btn btn-warning btn-sm ml-2" onclick="irParaAba('tab-planos')">
+                                Ver planos
+                            </button>
+                        @endif
                     </div>
                 @elseif ($dias < 0)
                     <div class="alert alert-danger py-2 mb-3" style="font-size:.875rem;">
@@ -171,11 +178,13 @@
                             @endif
 
                             <div class="plan-actions">
-                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalRenovar">
-                                    <i class="fas fa-sync-alt mr-1"></i> Renovar
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary" onclick="irParaAba('tab-planos')">
-                                    <i class="fas fa-exchange-alt mr-1"></i> Trocar
+                                @if ($assinatura->plano?->ativo)
+                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalRenovar">
+                                        <i class="fas fa-sync-alt mr-1"></i> Renovar
+                                    </button>
+                                @endif
+                                <button type="button" class="btn {{ $assinatura->plano?->ativo ? 'btn-outline-secondary' : 'btn-primary' }}" onclick="irParaAba('tab-planos')">
+                                    <i class="fas fa-exchange-alt mr-1"></i> {{ $assinatura->plano?->ativo ? 'Trocar' : 'Assinar plano' }}
                                 </button>
                                 @if (!$assinatura->temMudancaAgendada())
                                     <form method="POST" action="{{ route('assinatura.cancelar') }}" class="m-0" style="flex:1;min-width:100px;">
@@ -205,14 +214,6 @@
                                             {{ $item->descricao }}
                                         </li>
                                     @endforeach
-                                    @php
-                                        $storageMb = $assinatura->plano->limite_armazenamento_mb ?? 0;
-                                        $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
-                                    @endphp
-                                    <li class="mb-1 d-flex align-items-start" style="font-size:.82rem;">
-                                        <i class="fas fa-database text-success mr-2 mt-1 flex-shrink-0" style="font-size:.7rem;"></i>
-                                        Armazenamento: {{ $storageTxt }}
-                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -655,10 +656,9 @@
 
                     <div class="row" id="metodosCards">
                         @foreach ([
-                            ['pix',    'fas fa-qrcode',      'PIX',               'Pagamento instantâneo com QR Code.'],
                             ['cartao', 'fas fa-credit-card', 'Cartão de Crédito', 'Pague com cartão de crédito.'],
                         ] as [$v, $ic, $nm, $desc])
-                            <div class="col-md-4 mb-2">
+                            <div class="col-md-12 mb-2">
                                 <label class="metodo-alt-opt card border text-center p-3 h-100"
                                        style="cursor:pointer;margin-bottom:0;transition:border-color .15s,background .15s;"
                                        for="met_{{ $v }}" onclick="onAlterarMetodoChange('{{ $v }}')">
@@ -688,7 +688,7 @@
 </div>
 
 {{-- ══ MODAL: Renovar Plano ══ --}}
-@if ($assinatura)
+@if ($assinatura && $assinatura->plano?->ativo)
 <div class="modal fade" id="modalRenovar" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -737,16 +737,14 @@
                         <label class="font-weight-bold mb-2">Método de Pagamento</label>
                         <div class="row">
                             @foreach ([
-                                ['pix',    'fas fa-qrcode',      'PIX'],
                                 ['cartao', 'fas fa-credit-card', 'Cartão de Crédito'],
                             ] as [$v, $ic, $nm])
-                                <div class="col-4">
+                                <div class="col-12">
                                     <label class="renovar-metodo-opt card border text-center p-2"
                                            style="cursor:pointer;margin-bottom:0;" for="rm_{{ $v }}"
                                            onclick="onRenovarMetodoChange('{{ $v }}')">
                                         <input type="radio" name="metodo_cobranca" value="{{ $v }}" id="rm_{{ $v }}"
-                                               class="d-none"
-                                               {{ ($assinatura->metodo_cobranca ?? '') === $v ? 'checked' : '' }}>
+                                               class="d-none" checked>
                                         <i class="{{ $ic }}" style="font-size:1.3rem;color:#0a1628;display:block;margin-bottom:.3rem;"></i>
                                         <span style="font-size:.78rem;font-weight:600;">{{ $nm }}</span>
                                     </label>

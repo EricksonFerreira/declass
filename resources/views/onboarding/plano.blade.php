@@ -123,11 +123,6 @@
                         @foreach ($plano->itens as $item)
                             <li><i class="fas fa-check"></i> {{ $item->descricao }}</li>
                         @endforeach
-                        @php
-                            $storageMb = $plano->limite_armazenamento_mb ?? 0;
-                            $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
-                        @endphp
-                        <li><i class="fas fa-database"></i> Armazenamento: {{ $storageTxt }}</li>
                     </ul>
                 </div>
             @endforeach

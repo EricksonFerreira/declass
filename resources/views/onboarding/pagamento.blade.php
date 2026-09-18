@@ -55,13 +55,6 @@
                     </span>
                 @endif
             </div>
-            @php
-                $storageMb = $plano->limite_armazenamento_mb ?? 0;
-                $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
-            @endphp
-            <div style="font-size:.8rem; color:#64748b; margin-top:.15rem;">
-                <i class="fas fa-database mr-1"></i> Armazenamento: {{ $storageTxt }}
-            </div>
         </div>
         <div style="text-align:right;">
             <div style="font-size:.72rem; color:#94a3b8; font-weight:600;">por mês</div>
@@ -81,19 +74,14 @@
         @csrf
         <input type="hidden" name="plano_id" value="{{ $plano->id }}">
         <input type="hidden" name="periodicidade" value="{{ $periodicidade }}">
-        <input type="hidden" name="metodo_pagamento" id="inputMetodo" value="">
+        <input type="hidden" name="metodo_pagamento" id="inputMetodo" value="automatico">
 
         <div style="margin-bottom:1rem;">
             <label class="form-label">Método de pagamento <span style="color:#ef4444;">*</span></label>
         </div>
 
         <div class="metodo-grid">
-            <div class="metodo-card" onclick="selecionarMetodo('pix', this)">
-                <div class="metodo-icon"><i class="fas fa-qrcode"></i></div>
-                <div class="metodo-nome">PIX</div>
-                <div class="metodo-desc">Pagamento instantâneo via chave PIX. Ativação mais rápida.</div>
-            </div>
-            <div class="metodo-card" onclick="selecionarMetodo('automatico', this)">
+            <div class="metodo-card selected" onclick="selecionarMetodo('automatico', this)">
                 <div class="metodo-icon"><i class="fas fa-credit-card"></i></div>
                 <div class="metodo-nome">Cartão de Crédito</div>
                 <div class="metodo-desc">Cobrança recorrente automática na data escolhida.</div>
@@ -105,7 +93,7 @@
         </div>
 
         {{-- Campo dia de vencimento (só para automático) --}}
-        <div id="divDiaVenc" style="display:none; margin-bottom:1.25rem;">
+        <div id="divDiaVenc" style="margin-bottom:1.25rem;">
             <label class="form-label">Dia do mês para cobrança automática</label>
             <div style="max-width:180px;">
                 <input type="number" name="dia_vencimento" class="form-control" min="1" max="28" placeholder="Ex.: 10">

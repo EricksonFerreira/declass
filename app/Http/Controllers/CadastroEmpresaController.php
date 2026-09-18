@@ -137,15 +137,18 @@ class CadastroEmpresaController extends Controller
             $plano = $planoSlug !== ''
                 ? \App\Models\Plano::where('ativo', true)->where('slug', $planoSlug)->first()
                 : null;
-            // Sem escolha valida, trial vai no plano completo para a melhor demo.
-            $plano ??= \App\Models\Plano::where('ativo', true)->orderByDesc('ordem')->first();
+            // Sem escolha valida, a empresa entra no plano trial gratuito
+            // (seed PlanosDeclockSeeder). Se o seed ainda nao rodou, cai
+            // para o plano mais completo como seguranca.
+            $plano ??= \App\Models\Plano::where('slug', \Database\Seeders\PlanosDeclockSeeder::SLUG_TRIAL)->first()
+                ?? \App\Models\Plano::where('ativo', true)->orderByDesc('ordem')->first();
 
             if ($plano) {
                 app(\App\Services\EmpresaPlanoService::class)->contratar(
                     empresa: $empresa,
                     plano: $plano,
                     periodicidade: 'mensal',
-                    metodoPagamento: 'pix',
+                    metodoPagamento: 'manual',
                     diaVencimento: null,
                     criadoPorUserId: $user->id,
                 );

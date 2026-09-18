@@ -195,10 +195,13 @@ class EmpresaPlanoService
                 'criado_por_user_id' => $criadoPorUserId,
             ]);
 
-            // Cria o primeiro pagamento pendente.
+            // Cria o primeiro pagamento pendente — plano gratuito (trial)
+            // ja nasce quitado, sem cobranca pendente para o cliente pagar.
             $vencimentoPagamento = $diaVencimento
                 ? now()->setDay(min($diaVencimento, now()->daysInMonth))->addDays(3)->toDateString()
                 : now()->addDays(self::TRIAL_DIAS)->toDateString();
+
+            $gratuito = $valor <= 0;
 
             EmpresaPlanoPagamento::create([
                 'empresa_plano_id' => $assinatura->id,
@@ -206,10 +209,13 @@ class EmpresaPlanoService
                 'valor' => $valor,
                 'periodicidade' => $periodicidade,
                 'metodo' => $metodoCobranca,
-                'status' => 'pendente',
+                'status' => $gratuito ? 'pago' : 'pendente',
+                'pago_em' => $gratuito ? now() : null,
                 'data_vencimento' => $vencimentoPagamento,
                 'referencia_interna' => 'INI-'.strtoupper(substr($plano->slug, 0, 4)).'-'.now()->format('YmdHis'),
-                'instrucoes_pagamento' => $this->instrucoesPagamento($metodoCobranca, $valor, $renovacaoAutomatica),
+                'instrucoes_pagamento' => $gratuito
+                    ? 'Período de teste gratuito — nenhuma cobrança é feita.'
+                    : $this->instrucoesPagamento($metodoCobranca, $valor, $renovacaoAutomatica),
                 'pix_chave' => $metodoCobranca === 'pix' ? env('PIX_CHAVE') : null,
                 'metadados' => ['acao' => 'contratacao'],
                 'registrado_por_user_id' => $criadoPorUserId,

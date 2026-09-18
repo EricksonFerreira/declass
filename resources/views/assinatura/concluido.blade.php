@@ -12,11 +12,16 @@
 <div class="row justify-content-center">
     <div class="col-lg-8">
 
+        @php $isTrial = $assinatura?->status === 'trial'; @endphp
         <div class="text-center mb-4">
             <div style="font-size:4rem;margin-bottom:.75rem;">&#9989;</div>
             <h2 class="font-weight-bold" style="color:#0a1628;">Tudo pronto!</h2>
             <p class="text-muted" style="font-size:1rem;max-width:480px;margin:0 auto;">
-                Seu plano foi contratado e o pagamento confirmado. Aproveite todos os recursos liberados.
+                @if ($isTrial)
+                    Seu período de teste gratuito foi ativado. Aproveite todos os recursos do DECLOCK.
+                @else
+                    Seu plano foi contratado e o pagamento confirmado. Aproveite todos os recursos liberados.
+                @endif
             </p>
         </div>
 
@@ -54,10 +59,16 @@
                             </tr>
                             <tr>
                                 <td class="text-muted pl-0">Metodo</td>
-                                <td class="font-weight-bold">{{ ucfirst($pagamento->metodo ?? $assinatura->metodo_cobranca ?? '—') }}</td>
+                                <td class="font-weight-bold">
+                                    @if ($isTrial)
+                                        Grátis
+                                    @else
+                                        {{ ucfirst($pagamento->metodo ?? $assinatura->metodo_cobranca ?? '—') }}
+                                    @endif
+                                </td>
                             </tr>
                             @endif
-                            @if ($pagamento?->pago_em)
+                            @if ($pagamento?->pago_em && ! $isTrial)
                             <tr>
                                 <td class="text-muted pl-0">Pago em</td>
                                 <td class="font-weight-bold">{{ $pagamento->pago_em->format('d/m/Y H:i') }}</td>
@@ -84,26 +95,16 @@
 
                 <hr class="my-3">
                 <div class="d-flex" style="gap:1.5rem;flex-wrap:wrap;">
-                    @if ($plano->limite_veiculos)
-                        <div>
-                            <span class="text-muted" style="font-size:.78rem;">Limite de veiculos</span>
-                            <div class="font-weight-bold" style="font-size:1.1rem;">{{ $plano->limite_veiculos }}</div>
-                        </div>
-                    @endif
-                    @if ($plano->limite_usuarios)
-                        <div>
-                            <span class="text-muted" style="font-size:.78rem;">Limite de usuarios</span>
-                            <div class="font-weight-bold" style="font-size:1.1rem;">{{ $plano->limite_usuarios }}</div>
-                        </div>
-                    @endif
-                    @php
-                        $storageMb = $plano->limite_armazenamento_mb ?? 0;
-                        $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
-                    @endphp
                     <div>
-                        <span class="text-muted" style="font-size:.78rem;">Armazenamento</span>
-                        <div class="font-weight-bold" style="font-size:1.1rem;"><i class="fas fa-database mr-1"></i>{{ $storageTxt }}</div>
+                        <span class="text-muted" style="font-size:.78rem;">Usuarios</span>
+                        <div class="font-weight-bold" style="font-size:1.1rem;"><i class="fas fa-users mr-1"></i>{{ $plano->limite_usuarios ?? 'Ilimitado' }}</div>
                     </div>
+                    @if ($isTrial)
+                        <div>
+                            <span class="text-muted" style="font-size:.78rem;">Duracao do teste</span>
+                            <div class="font-weight-bold" style="font-size:1.1rem;"><i class="fas fa-hourglass-half mr-1"></i>7 dias</div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

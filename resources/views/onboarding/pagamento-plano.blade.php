@@ -59,13 +59,6 @@
 .sec-num { width: 20px; height: 20px; border-radius: 50%; background: #0a1628; color: #fff;
     font-size: .65rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
 
-/* QR */
-.qr-box { text-align: center; padding: 1.5rem; }
-.qr-box img { max-width: 200px; border-radius: 12px; border: 3px solid #e2e8f0; margin-bottom: 1rem; }
-.qr-code-text { font-family: monospace; font-size: .75rem; background: #f8fafc; border: 1px solid #e2e8f0;
-    border-radius: 8px; padding: .6rem .8rem; word-break: break-all; color: #334155; }
-.pix-expira { font-size: .75rem; color: #92400e; margin-top: .5rem; }
-
 /* Stripe card element */
 #card-element { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: .75rem; background: #f8fafc; }
 #card-element.StripeElement--focus { border-color: #0a1628; box-shadow: 0 0 0 3px rgba(10,22,40,.08); }
@@ -133,16 +126,9 @@
 
         {{-- Passo 1: escolher método --}}
         <div id="secMetodo">
-            <div class="sec-title"><span class="sec-num">1</span> Escolha a forma de pagamento</div>
+            <div class="sec-title"><span class="sec-num">1</span> Forma de pagamento</div>
             <div style="display:flex; flex-direction:column; gap:.75rem; margin-bottom:1.5rem;">
-                <button type="button" class="metodo-btn {{ $metodo === 'pix' ? 'ativo' : '' }}" id="btnPix" onclick="escolherMetodo('pix')">
-                    <div class="metodo-icon"><i class="fas fa-qrcode"></i></div>
-                    <div>
-                        <div class="metodo-label">PIX</div>
-                        <div class="metodo-desc">Pagamento instantâneo via QR Code. Ativação imediata após confirmação.</div>
-                    </div>
-                </button>
-                <button type="button" class="metodo-btn {{ $metodo === 'cartao' ? 'ativo' : '' }}" id="btnCartao" onclick="escolherMetodo('cartao')">
+                <button type="button" class="metodo-btn ativo" id="btnCartao" onclick="escolherMetodo('cartao')">
                     <div class="metodo-icon"><i class="fas fa-credit-card"></i></div>
                     <div>
                         <div class="metodo-label">Cartão de Crédito</div>
@@ -180,29 +166,6 @@
                 </button>
                 <button type="button" class="btn btn-primary" onclick="avancarParaPagamento()">
                     Continuar <i class="fas fa-arrow-right"></i>
-                </button>
-            </div>
-        </div>
-
-        {{-- Passo 2 PIX: gera QR --}}
-        <div id="secPix" style="display:none;">
-            <div class="sec-title"><span class="sec-num">2</span> Pague com PIX</div>
-            <div class="qr-box" id="qrBox">
-                <div style="color:#94a3b8; padding:2rem;">
-                    <i class="fas fa-spinner fa-spin fa-2x"></i>
-                    <p style="margin-top:.75rem; font-size:.85rem;">Gerando QR Code…</p>
-                </div>
-            </div>
-            <div class="alert alert-info" style="font-size:.82rem;">
-                <i class="fas fa-info-circle mr-1"></i>
-                Após o pagamento, a confirmação é automática. Esta página atualiza sozinha.
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-top:.5rem;">
-                <button type="button" class="btn btn-secondary" onclick="voltarParaMetodo()">
-                    <i class="fas fa-arrow-left"></i> Voltar
-                </button>
-                <button type="button" class="btn btn-secondary" id="btnCopiarPix" style="display:none;" onclick="copiarPix()">
-                    <i class="fas fa-copy"></i> Copiar código
                 </button>
             </div>
         </div>
@@ -257,8 +220,8 @@
                         ['label' => 'Dados da empresa',     'icone' => 'building',        'feito' => true,  'atual' => false],
                         ['label' => 'Escolher plano',       'icone' => 'tags',             'feito' => true,  'atual' => false],
                         ['label' => 'Realizar pagamento',   'icone' => 'credit-card',      'feito' => false, 'atual' => true ],
-                        ['label' => 'Cadastrar estação',    'icone' => 'map-marker-alt',   'feito' => false, 'atual' => false],
-                        ['label' => 'Cadastrar frota',      'icone' => 'car',              'feito' => false, 'atual' => false],
+                        ['label' => 'Criar projetos',       'icone' => 'folder-open',      'feito' => false, 'atual' => false],
+                        ['label' => 'Montar equipe',        'icone' => 'users',            'feito' => false, 'atual' => false],
                     ];
                 @endphp
                 @foreach ($stepsOrient as $s)
@@ -299,24 +262,19 @@
 @push('scripts')
 <script>
 const pagamentoId  = {{ $pagamento->id }};
-const urlPix       = "{{ route('assinatura.pagamento.pix', $pagamento) }}";
-const urlStatus    = "{{ route('assinatura.pagamento.status', $pagamento) }}";
 const urlIntent    = "{{ route('assinatura.pagamento.cartao-intent', $pagamento) }}";
 const urlConfirmar = "{{ route('assinatura.pagamento.cartao-confirmar', $pagamento) }}";
 const urlOrient    = "{{ route('onboarding.orientacoes') }}";
 const csrfToken    = "{{ csrf_token() }}";
 
-let metodoAtual   = '{{ $metodo }}';
+let metodoAtual   = 'cartao';
 let stripeInst    = null;
 let cardElement   = null;
-let pixCodigoText = '';
-let pixPolling    = null;
 
 // ── Navegação entre steps ───────────────────────────────────────────────────
 
 function escolherMetodo(m) {
     metodoAtual = m;
-    document.getElementById('btnPix').classList.toggle('ativo', m === 'pix');
     document.getElementById('btnCartao').classList.toggle('ativo', m === 'cartao');
     document.getElementById('errMetodo').style.display = 'none';
     atualizarPagStep(1);
@@ -328,14 +286,8 @@ function avancarParaDetalhes() {
         return;
     }
     esconder('secMetodo');
-    if (metodoAtual === 'pix') {
-        mostrar('secPix');
-        atualizarPagStep(2);
-        gerarPix();
-    } else {
-        mostrar('secDiaVencimento');
-        atualizarPagStep(2);
-    }
+    mostrar('secDiaVencimento');
+    atualizarPagStep(2);
 }
 
 function avancarParaPagamento() {
@@ -346,12 +298,10 @@ function avancarParaPagamento() {
 }
 
 function voltarParaMetodo() {
-    esconder('secPix');
     esconder('secCartao');
     esconder('secDiaVencimento');
     mostrar('secMetodo');
     atualizarPagStep(1);
-    if (pixPolling) { clearInterval(pixPolling); pixPolling = null; }
 }
 
 function voltarParaDia() {
@@ -377,54 +327,6 @@ function atualizarPagStep(ativo) {
 
 function mostrar(id) { document.getElementById(id).style.display = 'block'; }
 function esconder(id) { document.getElementById(id).style.display = 'none'; }
-
-// ── PIX ─────────────────────────────────────────────────────────────────────
-
-async function gerarPix() {
-    const box = document.getElementById('qrBox');
-    box.innerHTML = '<div style="color:#94a3b8;padding:2rem;text-align:center;"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:.75rem;font-size:.85rem;">Gerando QR Code…</p></div>';
-
-    try {
-        const res  = await fetch(urlPix, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' } });
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
-
-        pixCodigoText = data.qr_text ?? '';
-        const expira  = data.expira_em ? new Date(data.expira_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-
-        box.innerHTML = `
-            <img src="${data.qr_image}" alt="QR Code PIX">
-            <div class="qr-code-text">${pixCodigoText}</div>
-            ${expira ? `<div class="pix-expira"><i class="fas fa-clock mr-1"></i>Válido até ${expira}</div>` : ''}
-        `;
-        document.getElementById('btnCopiarPix').style.display = 'inline-flex';
-
-        // Polling para detectar pagamento
-        pixPolling = setInterval(verificarStatusPix, 4000);
-    } catch (e) {
-        box.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle mr-1"></i>${e.message}</div>`;
-    }
-}
-
-async function verificarStatusPix() {
-    try {
-        const res  = await fetch(urlStatus, { headers: { 'Accept': 'application/json' } });
-        const data = await res.json();
-        if (data.pago) {
-            clearInterval(pixPolling);
-            mostrarSucesso();
-        }
-    } catch {}
-}
-
-function copiarPix() {
-    if (!pixCodigoText) return;
-    navigator.clipboard.writeText(pixCodigoText).then(() => {
-        const btn = document.getElementById('btnCopiarPix');
-        btn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
-        setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Copiar código'; }, 2000);
-    });
-}
 
 // ── Cartão (Stripe Elements) ─────────────────────────────────────────────────
 
@@ -495,7 +397,7 @@ async function processarCartao() {
 }
 
 function mostrarSucesso() {
-    ['secMetodo','secDiaVencimento','secPix','secCartao'].forEach(esconder);
+    ['secMetodo','secDiaVencimento','secCartao'].forEach(esconder);
     mostrar('secSucesso');
     [1,2,3].forEach(n => {
         const el = document.getElementById('pstep' + n);

@@ -32,13 +32,13 @@
     @endif
 
     @php
-        $usuariosExcedentes = $plano->limite_usuarios !== null && $totalVeiculos > $plano->limite_usuarios
-            ? $totalVeiculos - $plano->limite_usuarios : 0;
+        $usuariosExcedentes = $plano->limite_usuarios !== null && $totalUsuarios > $plano->limite_usuarios
+            ? $totalUsuarios - $plano->limite_usuarios : 0;
     @endphp
     @if ($usuariosExcedentes > 0)
         <div class="alert alert-warning">
             <i class="fas fa-users mr-1"></i>
-            <strong>Atencao:</strong> Sua equipe tem <strong>{{ $totalVeiculos }} usuário(s)</strong> e este plano permite apenas <strong>{{ $plano->limite_usuarios }}</strong>. Ajuste a equipe após a contratação para se enquadrar no limite.
+            <strong>Atencao:</strong> Sua equipe tem <strong>{{ $totalUsuarios }} usuário(s)</strong> e este plano permite apenas <strong>{{ $plano->limite_usuarios }}</strong>. Ajuste a equipe após a contratação para se enquadrar no limite.
         </div>
     @endif
 
@@ -58,7 +58,7 @@
                     <div class="plano-step-circle"><i class="fas fa-credit-card"></i></div>
                     <div class="plano-step-text">
                         <div class="plano-step-title">Pagamento</div>
-                        <div class="plano-step-sub">PIX ou cartao</div>
+                        <div class="plano-step-sub">Cartao de credito</div>
                     </div>
                 </div>
                 <div class="plano-step-line"></div>
@@ -137,13 +137,6 @@
                                 </li>
                             @endforeach
                         </ul>
-                        @php
-                            $storageMb = $plano->limite_armazenamento_mb ?? 0;
-                            $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
-                        @endphp
-                        <div class="mt-2" style="font-size:.83rem;">
-                            <i class="fas fa-database text-muted mr-1" style="font-size:.7rem;"></i> Armazenamento: {{ $storageTxt }}
-                        </div>
                     </div>
                 </div>
             </div>
@@ -162,7 +155,6 @@
                         <div class="card-body">
                             <div class="row" id="metodosGrid">
                                 @foreach ([
-                                    ['pix',    'fas fa-qrcode',      'PIX',               'Pagamento instantaneo via QR Code. Ativacao imediata apos confirmacao.'],
                                     ['cartao', 'fas fa-credit-card', 'Cartao de Credito',  'Pague com cartao de credito. Possibilidade de renovacao automatica.'],
                                     ['atendente', 'fas fa-headset',  'Falar com Atendente', 'Prefere ajuda? Fale com nossa equipe por e-mail ou WhatsApp.'],
                                 ] as [$val, $icon, $nome, $desc])
@@ -266,45 +258,8 @@
                                 </div>
                             </div>
 
-                            {{-- PIX --}}
-                            <div id="divPagamentoPix">
-                                <div id="pixLoading" class="text-center py-4">
-                                    <div class="spinner-border text-primary mb-2" style="width:2rem;height:2rem;"></div>
-                                    <p class="text-muted mb-0" style="font-size:.85rem;">Gerando QR Code PIX...</p>
-                                </div>
-                                <div id="pixConteudo" style="display:none;">
-                                    <div class="d-flex align-items-start" style="gap:1.5rem;flex-wrap:wrap;">
-                                        <div class="text-center flex-shrink-0">
-                                            <div style="padding:8px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;display:inline-block;">
-                                                <img id="pixQrImage" src="" alt="QR Code PIX" style="width:160px;height:160px;display:block;">
-                                            </div>
-                                            <div class="text-muted mt-1" style="font-size:.72rem;">Escaneie com seu banco</div>
-                                            <div id="pixExpira" class="mt-1" style="font-size:.72rem;color:#dc2626;font-weight:600;"></div>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <p class="font-weight-bold mb-1" style="font-size:.92rem;color:#064e3b;"><i class="fas fa-qrcode mr-1"></i> Pague <span id="pixValorExibido"></span> via PIX</p>
-                                            <p class="text-muted mb-2" style="font-size:.82rem;">Escaneie o QR Code ou copie o codigo abaixo.</p>
-                                            <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#6b7280;">Codigo PIX copia e cola</label>
-                                            <div class="input-group input-group-sm mb-2">
-                                                <input type="text" class="form-control" id="pixCopiaCola" readonly style="font-size:.72rem;font-family:monospace;background:#f8fafc;">
-                                                <div class="input-group-append">
-                                                    <button class="btn btn-outline-secondary" type="button" onclick="copiarPixCode()" title="Copiar">
-                                                        <i class="fas fa-copy" id="pixCopyIcon"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div id="pixAguardando" style="font-size:.8rem;color:#64748b;"><i class="fas fa-spinner fa-spin mr-1"></i> Aguardando confirmacao...</div>
-                                            <div id="pixPago" class="alert alert-success py-2 mb-0" style="display:none;font-size:.82rem;">
-                                                <i class="fas fa-check-circle mr-1"></i> <strong>Pagamento confirmado!</strong> Redirecionando...
-                                            </div>
-                                            <div id="pixErro" class="alert alert-danger py-2 mb-0" style="display:none;font-size:.82rem;"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                             {{-- Cartao: lista cartoes salvos + novo cartao --}}
-                            <div id="divPagamentoCartao" style="display:none;">
+                            <div id="divPagamentoCartao">
                                 <p class="font-weight-bold mb-3" style="font-size:.88rem;"><i class="fas fa-credit-card mr-1"></i> Selecione o cartao</p>
 
                                 <div id="cartoesSalvosContainer">
@@ -494,20 +449,13 @@ document.getElementById('btnAvancarPagamento').addEventListener('click', functio
         return;
     }
 
-    var nomeMetodo = { pix: 'PIX', cartao: 'Cartao de Credito', atendente: 'Atendente' }[metodo] || metodo;
+    var nomeMetodo = { cartao: 'Cartao de Credito', atendente: 'Atendente' }[metodo] || metodo;
     document.getElementById('resumoMetodo').textContent = nomeMetodo;
 
     document.getElementById('stepMetodo').style.display = 'none';
     document.getElementById('stepPagamento').style.display = 'block';
     document.getElementById('divBtnStep1').style.display = 'none';
-
-    if (metodo === 'pix') {
-        document.getElementById('divPagamentoPix').style.display = 'block';
-        document.getElementById('btnConfirmarPagamento').style.display = 'none';
-    } else if (metodo === 'cartao') {
-        document.getElementById('divPagamentoPix').style.display = 'none';
-        document.getElementById('divPagamentoCartao').style.display = 'block';
-    }
+    document.getElementById('divPagamentoCartao').style.display = 'block';
     atualizarStepper(2);
 });
 
@@ -559,105 +507,6 @@ document.getElementById('btnConfirmarPagamento').addEventListener('click', funct
         Swal.fire({ icon: 'error', title: 'Erro de conexão', text: 'Tente novamente.', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
     });
 });
-}
-
-// ── PIX ──
-var pixPollingTimer = null;
-
-function gerarPix(pagamentoId) {
-    document.getElementById('pixLoading').style.display = 'block';
-    document.getElementById('pixConteudo').style.display = 'none';
-    document.getElementById('pixErro').style.display = 'none';
-
-    fetch('{{ url('/admin/assinatura/pagamento') }}/' + pagamentoId + '/pix', {
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-    })
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-        document.getElementById('pixLoading').style.display = 'none';
-        if (data.error) {
-            document.getElementById('pixErro').textContent = data.error;
-            document.getElementById('pixErro').style.display = 'block';
-            return;
-        }
-        document.getElementById('pixQrImage').src = data.qr_image || '';
-        document.getElementById('pixCopiaCola').value = data.qr_text || '';
-        document.getElementById('pixValorExibido').textContent = 'R$ ' + (data.valor || '');
-        document.getElementById('pixConteudo').style.display = 'block';
-        if (data.expira_em) {
-            document.getElementById('pixExpira').textContent = 'Expira em: ' + new Date(data.expira_em).toLocaleTimeString('pt-BR');
-        }
-        iniciarPollingPix(pagamentoId);
-    })
-    .catch(function () {
-        document.getElementById('pixLoading').style.display = 'none';
-        document.getElementById('pixErro').textContent = 'Erro ao gerar PIX. Tente novamente.';
-        document.getElementById('pixErro').style.display = 'block';
-    });
-}
-
-function iniciarPollingPix(pagamentoId) {
-    if (pixPollingTimer) clearInterval(pixPollingTimer);
-    pixPollingTimer = setInterval(function () {
-        fetch('{{ url('/admin/assinatura/pagamento') }}/' + pagamentoId + '/status', {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            if (data.pago) {
-                clearInterval(pixPollingTimer);
-                document.getElementById('pixAguardando').style.display = 'none';
-                document.getElementById('pixPago').style.display = 'block';
-                atualizarStepper(3);
-                setTimeout(function () {
-                    window.location.href = '{{ route('assinatura.concluido') }}?pagamento=' + pagamentoId;
-                }, 2000);
-            }
-        })
-        .catch(function () {});
-    }, 4000);
-}
-
-function copiarPixCode() {
-    var el = document.getElementById('pixCopiaCola');
-    if (!el) return;
-    navigator.clipboard.writeText(el.value).then(function () {
-        var ic = document.getElementById('pixCopyIcon');
-        if (ic) { ic.className = 'fas fa-check text-success'; setTimeout(function () { ic.className = 'fas fa-copy'; }, 2000); }
-    });
-}
-
-// ── Cartao ──
-function inicializarCartao(pagamentoId) {
-    fetch('{{ url('/admin/assinatura/pagamento') }}/' + pagamentoId + '/cartao-intent?peek=1', {
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ peek: true }),
-    })
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-        if (data.stripe_key) {
-            stripe = Stripe(data.stripe_key);
-            var elements = stripe.elements({ locale: 'pt-BR' });
-            var card = elements.create('card', {
-                style: {
-                    base: { fontSize: '15px', color: '#0f172a', fontFamily: 'Inter, sans-serif', '::placeholder': { color: '#94a3b8' } },
-                }
-            });
-            card.mount('#card-element');
-            card.on('change', function (event) {
-                var erroEl = document.getElementById('card-errors');
-                if (event.error) {
-                    erroEl.textContent = event.error.message;
-                    erroEl.style.display = 'block';
-                } else {
-                    erroEl.textContent = '';
-                    erroEl.style.display = 'none';
-                }
-            });
-        }
-    });
 }
 
 var stripeNovoCard = null;
