@@ -8,99 +8,102 @@
 @stop
 
 @section('content')
-    <div class="row">
-        <!-- Listagem de Membros -->
-        <div class="col-md-8">
-            <div class="card card-outline card-primary">
-                <div class="card-header">
-                    <h3 class="card-title text-bold text-sm">Registros <span class="badge badge-primary">{{ $users->total() }}</span></h3>
-                    <div class="card-tools">
-                        <form action="{{ route('relatorios.membros') }}" method="GET" class="input-group input-group-sm" style="width: 200px;">
-                            <input type="text" name="search" class="form-control float-right" placeholder="Procurar..." value="{{ request('search') }}">
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="card-body table-responsive p-0">
-                    <table class="table table-hover table-striped table-bordered table-sm text-nowrap">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Email</th>
-                                <th>Cargo</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($users as $user)
-                                <tr>
-                                    <td>{{ $user->name }}</td>
-                                    <td>{{ $user->email }}</td>
-                                    <td>{{ $user->cargo ?? 'Sem Cargo' }}</td>
-                                    <td>
-                                        <button type="button" class="btn btn-xs btn-warning" onclick="editUser({{ json_encode($user) }})">
-                                            <i class="fa fa-edit"></i> Editar
-                                        </button>
-                                        <form action="{{ route('relatorios.membros.reset-password', $user->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <button type="button" class="btn btn-xs btn-info" onclick="confirmResetPassword(this)">
-                                                <i class="fa fa-key"></i> Resetar Senha
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('relatorios.membros.destroy', $user->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" class="btn btn-xs btn-danger" onclick="confirmDelete(this)"><i class="fa fa-trash"></i> Excluir</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted py-3">Nenhum membro encontrado.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <div class="card-footer clearfix">
-                    {{ $users->appends(request()->query())->links() }}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title font-weight-bold"><i class="fas fa-user-clock mr-1"></i> Registros
+                <span class="badge badge-primary ml-1">{{ $users->total() }}</span>
+            </h3>
+            <div class="card-tools">
+                <div class="d-flex align-items-center" style="gap: 8px;">
+                    <form action="{{ route('relatorios.membros') }}" method="GET" class="input-group input-group-sm" style="width: 200px;">
+                        <input type="text" name="search" class="form-control float-right" placeholder="Procurar..." value="{{ request('search') }}">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
+                        </div>
+                    </form>
+                    <button type="button" class="btn btn-sm btn-primary" id="btn-novo-membro">
+                        <i class="fas fa-plus mr-1"></i> Novo
+                    </button>
                 </div>
             </div>
         </div>
-
-        <!-- Formulário de Cadastro / Edição -->
-        <div class="col-md-4">
-            <div class="card card-outline card-success" id="form-card">
-                <div class="card-header">
-                    <h3 class="card-title text-bold text-sm" id="form-title">Cadastrar Novo Membro</h3>
-                </div>
-                <form id="user-form" action="{{ route('relatorios.membros.store') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="_method" id="form-method" value="POST">
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label for="name">Nome <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="name" class="form-control form-control-sm" required placeholder="Ex: João Silva">
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" name="email" id="email" class="form-control form-control-sm" placeholder="email@exemplo.com">
-                        </div>
-                        <div class="form-group">
-                            <label for="cargo">Cargo <span class="text-danger">*</span></label>
-                            <input type="text" name="cargo" id="cargo" class="form-control form-control-sm" required placeholder="Ex: Desenvolvedor, Designer">
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-sm btn-success float-right" id="save-btn">Salvar</button>
-                        <button type="button" class="btn btn-sm btn-default" id="cancel-btn" style="display: none;" onclick="resetForm()">Cancelar</button>
-                    </div>
-                </form>
-            </div>
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover table-sm text-nowrap mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th class="pl-3">Nome</th>
+                        <th>Email</th>
+                        <th>Cargo</th>
+                        <th class="pr-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($users as $user)
+                        <tr>
+                            <td class="pl-3 font-weight-bold">{{ $user->name }}</td>
+                            <td>{{ $user->email }}</td>
+                            <td>{{ $user->cargo ?? 'Sem Cargo' }}</td>
+                            <td class="pr-3">
+                                <button type="button" class="btn btn-xs btn-warning btn-editar-membro"
+                                        data-id="{{ $user->id }}"
+                                        data-name="{{ $user->name }}"
+                                        data-email="{{ $user->email }}"
+                                        data-cargo="{{ $user->cargo }}">
+                                    <i class="fa fa-edit"></i> Editar
+                                </button>
+                                <form action="{{ route('relatorios.membros.reset-password', $user->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="button" class="btn btn-xs btn-info" onclick="confirmResetPassword(this)">
+                                        <i class="fa fa-key"></i> Resetar Senha
+                                    </button>
+                                </form>
+                                <form action="{{ route('relatorios.membros.destroy', $user->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" class="btn btn-xs btn-danger" onclick="confirmDelete(this)"><i class="fa fa-trash"></i> Excluir</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                <i class="fas fa-user-clock fa-2x mb-2 d-block"></i>
+                                Nenhum membro encontrado.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer clearfix">
+            {{ $users->appends(request()->query())->links() }}
         </div>
     </div>
+
+    <x-modal id="membroDrawer" icon="fas fa-user-cog" title="Cadastrar Membro" formId="membroForm" action="{{ route('relatorios.membros.store') }}">
+        <input type="hidden" name="id" id="membro_id" value="{{ old('id') }}">
+        <div class="form-group">
+            <label for="membro_name">Nome <span class="text-danger">*</span></label>
+            <input type="text" name="name" id="membro_name" class="form-control form-control-sm @error('name') is-invalid @enderror" required placeholder="Ex: João Silva" value="{{ old('name') }}">
+            @error('name')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+        <div class="form-group">
+            <label for="membro_email">Email <span class="text-danger">*</span></label>
+            <input type="email" name="email" id="membro_email" class="form-control form-control-sm @error('email') is-invalid @enderror" required placeholder="email@exemplo.com" value="{{ old('email') }}">
+            @error('email')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+        <div class="form-group mb-0">
+            <label for="membro_cargo">Cargo <span class="text-danger">*</span></label>
+            <input type="text" name="cargo" id="membro_cargo" class="form-control form-control-sm @error('cargo') is-invalid @enderror" required placeholder="Ex: Desenvolvedor, Designer" value="{{ old('cargo') }}">
+            @error('cargo')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+    </x-modal>
 @stop
 
 @section('css')
@@ -112,7 +115,6 @@
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
-        // Alertar após ações com SweetAlert
         @if(session('success'))
             Swal.fire({
                 icon: 'success',
@@ -132,28 +134,70 @@
             });
         @endif
 
-        function editUser(user) {
-            $('#form-title').text('Editar Membro: ' + user.name);
-            $('#user-form').attr('action', '{{ url('admin/relatorios/membros') }}/' + user.id);
-            $('#form-method').val('PUT');
-            $('#name').val(user.name);
-            $('#email').val(user.email);
-            $('#cargo').val(user.cargo);
-            $('#cancel-btn').show();
-            $('#form-card').removeClass('card-success').addClass('card-warning');
-            $('#save-btn').removeClass('btn-success').addClass('btn-warning').text('Atualizar');
+        const $modal = $('#membroDrawer');
+        const $backdrop = $('#membroDrawerBackdrop');
+        const $form = $('#membroForm');
+        const $method = $('#membroFormMethod');
+        const $title = $('#membroDrawerTitle');
+
+        function abrirModal(titulo, action, method, data = null) {
+            $title.text(titulo);
+            $form.attr('action', action);
+            $method.val(method);
+
+            $form.find('.is-invalid').removeClass('is-invalid');
+            $form.find('.invalid-feedback').remove();
+
+            if (data) {
+                $('#membro_id').val(data.id || '');
+                $('#membro_name').val(data.name);
+                $('#membro_email').val(data.email);
+                $('#membro_cargo').val(data.cargo);
+            } else {
+                $form[0].reset();
+                $('#membro_id').val('');
+            }
+
+            $backdrop.addClass('show');
+            $modal.addClass('open');
         }
 
-        function resetForm() {
-            $('#form-title').text('Cadastrar Novo Membro');
-            $('#user-form').attr('action', '{{ route('relatorios.membros.store') }}');
-            $('#form-method').val('POST');
-            $('#user-form')[0].reset();
-            $('#cargo').val('');
-            $('#cancel-btn').hide();
-            $('#form-card').removeClass('card-warning').addClass('card-success');
-            $('#save-btn').removeClass('btn-warning').addClass('btn-success').text('Salvar');
+        function fecharModal() {
+            $modal.removeClass('open');
+            $backdrop.removeClass('show');
         }
+
+        $('#btn-novo-membro').on('click', function () {
+            abrirModal('Cadastrar Membro', "{{ route('relatorios.membros.store') }}", 'POST');
+        });
+
+        $(document).on('click', '.btn-editar-membro', function (e) {
+            e.preventDefault();
+            const $btn = $(this);
+            const id = $btn.data('id');
+            abrirModal('Editar Membro', "{{ url('admin/relatorios/membros') }}/" + id, 'PUT', {
+                id: id,
+                name: $btn.data('name'),
+                email: $btn.data('email'),
+                cargo: $btn.data('cargo')
+            });
+        });
+
+        $('#closemembroDrawer, #cancelmembroDrawer, #membroDrawerBackdrop').on('click', fecharModal);
+
+        @if ($errors->any())
+            abrirModal(
+                "{{ old('_method', 'POST') === 'PUT' ? 'Editar Membro' : 'Cadastrar Membro' }}",
+                "{{ old('_method', 'POST') === 'PUT' ? url('admin/relatorios/membros') . '/' . old('id', 0) : route('relatorios.membros.store') }}",
+                "{{ old('_method', 'POST') === 'PUT' ? 'PUT' : 'POST' }}",
+                {
+                    id: "{{ old('id') }}",
+                    name: "{{ old('name') }}",
+                    email: "{{ old('email') }}",
+                    cargo: "{{ old('cargo') }}"
+                }
+            );
+        @endif
 
         function confirmResetPassword(button) {
             const form = $(button).closest('form');
@@ -173,7 +217,6 @@
             });
         }
 
-        // Confirmação SweetAlert2 ao deletar
         function confirmDelete(button) {
             const form = $(button).closest('form');
             Swal.fire({

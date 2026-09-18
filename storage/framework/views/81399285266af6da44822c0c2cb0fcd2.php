@@ -50,12 +50,6 @@
 <style>
     .exp-card { font-family: 'Plus Jakarta Sans', sans-serif; }
 
-    .exp-icon {
-        width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
-        background: #e0f5fa; color: #0891b2;
-        display: flex; align-items: center; justify-content: center; font-size: 18px;
-    }
-
     .exp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #64748b; }
     .exp-hint  { font-size: 12px; color: #94a3b8; }
 
@@ -68,15 +62,10 @@
 <?php $__env->startSection('content'); ?>
 <div class="row">
     <div class="col-md-12">
-        <div class="card card-outline card-primary shadow-sm exp-card">
+        <div class="card exp-card">
             <div class="card-header">
-                <div class="d-flex align-items-center" style="gap: 12px;">
-                    <div class="exp-icon"><i class="fas fa-file-export"></i></div>
-                    <div>
-                        <h3 class="card-title text-bold text-sm mb-0">Exportar dados de tempo</h3>
-                        <small class="exp-hint">Gere um CSV com as horas registradas pela equipe no período.</small>
-                    </div>
-                </div>
+                <h3 class="card-title font-weight-bold"><i class="fas fa-file-export mr-1"></i> Parâmetros</h3>
+                <small class="exp-hint d-block mt-1">Gere um CSV com as horas registradas pela equipe no período.</small>
             </div>
             <form method="POST" action="<?php echo e(route('relatorios.exportar')); ?>">
                 <?php echo csrf_field(); ?>
