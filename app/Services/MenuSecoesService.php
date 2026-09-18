@@ -67,6 +67,7 @@ class MenuSecoesService
                 'cards' => [
                     ['Relatórios', 'fas fa-file-alt', 'relatorios.index', 'Resumos e visões de horas', '#7c3aed'],
                     ['Consumo × Estimado', 'fas fa-chart-bar', 'relatorios.consumo', 'Horas consumidas vs estimadas', '#b45309'],
+                    ['Matriz de Horas', 'fas fa-th', 'relatorios.matriz', 'Horas de cada colaborador por projeto', '#7c3aed'],
                     ['Exportar CSV', 'fas fa-file-export', 'relatorios.export', 'Baixe os dados em planilha', '#475569'],
                 ],
             ],

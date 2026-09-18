@@ -12,7 +12,7 @@ class LembreteHorasCommand extends Command
 {
     protected $signature = 'clockify:lembrete-horas';
 
-    protected $description = 'Notifica colaboradores que ainda não lançaram horas hoje';
+    protected $description = 'Notifica colaboradores que ainda não completaram a jornada de horas hoje';
 
     public function handle(): int
     {
@@ -41,12 +41,16 @@ class LembreteHorasCommand extends Command
                         continue;
                     }
 
-                    $lancou = ClockifyTimeTracker::withoutGlobalScopes()
+                    $segundosLancados = ClockifyTimeTracker::withoutGlobalScopes()
                         ->where('user_id', $user->id)
                         ->whereDate('inicio', $hoje)
-                        ->exists();
+                        ->selectRaw('SUM(GREATEST(TIMESTAMPDIFF(SECOND, inicio, COALESCE(fim, NOW())), 0)) as segundos')
+                        ->value('segundos') ?? 0;
 
-                    if ($lancou) {
+                    $jornada = (float) ($user->jornada_diaria ?? 8.0);
+                    $horasLancadas = round(((float) $segundosLancados) / 3600, 2);
+
+                    if ($jornada <= 0 || $horasLancadas >= $jornada) {
                         continue;
                     }
 
@@ -61,9 +65,14 @@ class LembreteHorasCommand extends Command
                         continue;
                     }
 
+                    $faltam = round($jornada - $horasLancadas, 2);
+                    $resumo = $horasLancadas > 0
+                        ? "Você lançou {$horasLancadas}h de {$jornada}h hoje — faltam {$faltam}h."
+                        : "Você ainda não lançou horas hoje (sua jornada é de {$jornada}h).";
+
                     $user->notify(new AvisoSistemaNotification(
-                        titulo: 'Horas não lançadas',
-                        mensagem: "Você ainda não lançou horas hoje ({$hoje->format('d/m/Y')}). Abra o rastreador para registrar.",
+                        titulo: 'Horas faltantes',
+                        mensagem: "{$resumo} ({$hoje->format('d/m/Y')}). Abra o rastreador para registrar.",
                         url: route('clockify.tracker.index'),
                         icone: 'fas fa-clock',
                         cor: 'warning',

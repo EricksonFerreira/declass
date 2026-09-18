@@ -107,6 +107,7 @@ class PapeisPermissoesSeeder extends Seeder
         'relatorios.consumo.status',
         'relatorios.consumo.estimativas.store',
         'relatorios.consumo.estimativas.destroy',
+        'relatorios.matriz',
     ];
 
     /**

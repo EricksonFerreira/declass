@@ -6,8 +6,8 @@ use App\Models\ClockifyProjeto;
 use App\Models\ClockifyProjetoEstimativa;
 use App\Models\ClockifyTimeTracker;
 use App\Models\Funcao;
-use Carbon\Carbon;
 use App\Support\EmpresaContext;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -151,6 +151,59 @@ class ConsumoProjetoService
             'estimada' => $temEstimativa ? round($totEst, 2) : null,
             'pct' => $temEstimativa && $totEst > 0 ? round(($totCons / $totEst) * 100, 2) : null,
         ];
+    }
+
+    /**
+     * Série temporal do consumo do projeto (aba A03): horas por dia e acumulado.
+     *
+     * @return array{labels: array<int, string>, diaria: array<int, float>, acumulada: array<int, float>}
+     */
+    public function evolucaoConsumo(ClockifyProjeto $projeto): array
+    {
+        $porDia = DB::table('clockify_time_trackers')
+            ->where('clockify_projeto_id', $projeto->id)
+            ->whereNotNull('inicio')
+            ->groupByRaw('DATE(inicio)')
+            ->selectRaw('DATE(inicio) as dia, SUM(GREATEST(TIMESTAMPDIFF(SECOND, inicio, COALESCE(fim, NOW())), 0)) as segundos')
+            ->orderBy('dia')
+            ->pluck('segundos', 'dia');
+
+        $labels = [];
+        $diaria = [];
+        $acumulada = [];
+        $total = 0.0;
+
+        foreach ($porDia as $dia => $segundos) {
+            $horas = round(((float) $segundos) / 3600, 2);
+            $total = round($total + $horas, 2);
+            $labels[] = Carbon::parse($dia)->format('d/m');
+            $diaria[] = $horas;
+            $acumulada[] = $total;
+        }
+
+        return ['labels' => $labels, 'diaria' => $diaria, 'acumulada' => $acumulada];
+    }
+
+    /**
+     * Matriz colaborador × projeto em segundos (aba B00).
+     *
+     * @param  array<int>|null  $projetoIds  null = todos os projetos da empresa
+     * @return Collection<int, object{user_id:int, nome:string, email:string|null, funcao_nome:string|null, clockify_projeto_id:int, segundos:float}>
+     */
+    public function matrizMembroProjeto(int $empresaId, ?array $projetoIds = null, ?string $inicio = null, ?string $fim = null): Collection
+    {
+        return DB::table('clockify_time_trackers as t')
+            ->join('users as u', 'u.id', '=', 't.user_id')
+            ->leftJoin('funcoes as f', 'f.id', '=', 'u.funcao_id')
+            ->where('t.empresa_id', $empresaId)
+            ->when($projetoIds !== null, fn ($q) => $q->whereIn('t.clockify_projeto_id', $projetoIds))
+            ->when($inicio, fn ($q) => $q->whereDate('t.inicio', '>=', $inicio))
+            ->when($fim, fn ($q) => $q->whereDate('t.inicio', '<=', $fim))
+            ->whereNotNull('t.inicio')
+            ->groupBy('t.user_id', 'u.nome', 'u.email', 'f.nome', 't.clockify_projeto_id')
+            ->selectRaw('t.user_id, u.nome, u.email, f.nome as funcao_nome, t.clockify_projeto_id, SUM(GREATEST(TIMESTAMPDIFF(SECOND, t.inicio, COALESCE(t.fim, NOW())), 0)) as segundos')
+            ->orderBy('u.nome')
+            ->get();
     }
 
     /**

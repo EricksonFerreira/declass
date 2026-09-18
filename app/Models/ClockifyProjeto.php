@@ -30,6 +30,7 @@ class ClockifyProjeto extends Model
         'empresa_id',
         'clockify_cliente_id',
         'responsavel_id',
+        'codigo',
         'nome',
         'descricao',
         'cor',

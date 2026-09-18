@@ -28,7 +28,12 @@
 <div class="card">
     <div class="card-body d-flex flex-wrap align-items-center justify-content-between" style="gap:1rem;">
         <div>
-            <h4 class="mb-1 font-weight-bold">{{ $projeto->nome }}</h4>
+            <h4 class="mb-1 font-weight-bold">
+                {{ $projeto->nome }}
+                @if ($projeto->codigo)
+                    <span class="badge badge-secondary align-middle" style="font-size:.65em;">{{ $projeto->codigo }}</span>
+                @endif
+            </h4>
             <div class="text-muted" style="font-size:.85rem;">
                 {{ $projeto->cliente?->nome ?? 'Sem cliente' }}
                 <span class="mx-2">·</span>
@@ -122,6 +127,18 @@
         </div>
     </div>
 </div>
+
+{{-- Evolução do consumo (curva acumulada × estimativa) --}}
+@if (count($evolucao['labels']) > 0)
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title font-weight-bold"><i class="fas fa-chart-line mr-1"></i> Evolução do consumo</h3>
+    </div>
+    <div class="card-body">
+        <canvas id="evolucaoChart" style="max-height: 260px;"></canvas>
+    </div>
+</div>
+@endif
 
 <div class="row">
     {{-- Funções: tabela + gráfico + editor de estimativas --}}
@@ -260,4 +277,62 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('js')
+@if (count($evolucao['labels']) > 0)
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    new Chart(document.getElementById('evolucaoChart'), {
+        type: 'line',
+        data: {
+            labels: @json($evolucao['labels']),
+            datasets: [
+                {
+                    label: 'HH acumulada',
+                    data: @json($evolucao['acumulada']),
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, .12)',
+                    fill: true,
+                    tension: .25,
+                    pointRadius: 2
+                },
+                {
+                    label: 'HH por dia',
+                    data: @json($evolucao['diaria']),
+                    type: 'bar',
+                    backgroundColor: 'rgba(96, 165, 250, .55)',
+                    borderRadius: 3
+                }
+                @if (($totais['estimada'] ?? 0) > 0)
+                ,{
+                    label: 'HH estimada',
+                    data: @json(array_fill(0, count($evolucao['labels']), $totais['estimada'])),
+                    borderColor: '#ef4444',
+                    borderDash: [6, 4],
+                    fill: false,
+                    pointRadius: 0
+                }
+                @endif
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Horas' } }
+            },
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString('pt-BR') + 'h'
+                    }
+                }
+            }
+        }
+    });
+</script>
+@endif
 @endsection

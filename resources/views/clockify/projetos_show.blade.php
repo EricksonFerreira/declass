@@ -83,7 +83,12 @@
                     <div class="d-flex align-items-center mb-3 mb-md-0">
                         <span class="badge text-white mr-3 shadow-sm" style="background-color: {{ $projeto->cor ?? '#6c757d' }}; width: 35px; height: 35px; display: inline-block; border-radius: 50%; border: 2px solid #fff;">&nbsp;</span>
                         <div>
-                            <h2 class="font-weight-bold text-dark mb-1" style="letter-spacing: -0.02em;">{{ $projeto->nome }}</h2>
+                            <h2 class="font-weight-bold text-dark mb-1" style="letter-spacing: -0.02em;">
+                                {{ $projeto->nome }}
+                                @if ($projeto->codigo)
+                                    <span class="badge badge-secondary align-middle" style="font-size:.7em;">{{ $projeto->codigo }}</span>
+                                @endif
+                            </h2>
                             <p class="text-muted mb-0">
                                 <i class="fas fa-user-tie text-secondary mr-1"></i> Cliente: <strong>{{ $projeto->cliente->nome ?? 'Sem Cliente' }}</strong>
                                 <span class="mx-2 text-muted">|</span>
@@ -479,9 +484,15 @@
                 @csrf
                 @method('PUT')
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label class="text-sm">Nome do Projeto <span class="text-danger">*</span></label>
-                        <input type="text" name="nome" class="form-control form-control-sm" required value="{{ $projeto->nome }}">
+                    <div class="form-row">
+                        <div class="col-8 form-group">
+                            <label class="text-sm">Nome do Projeto <span class="text-danger">*</span></label>
+                            <input type="text" name="nome" class="form-control form-control-sm" required value="{{ $projeto->nome }}">
+                        </div>
+                        <div class="col-4 form-group">
+                            <label class="text-sm">Código (CC)</label>
+                            <input type="text" name="codigo" class="form-control form-control-sm" maxlength="50" placeholder="Ex: 440-158.01" value="{{ $projeto->codigo }}">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="text-sm">Cliente</label>

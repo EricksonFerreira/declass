@@ -395,6 +395,11 @@ return [
                     'icon' => 'fas fa-chart-bar',
                 ],
                 [
+                    'text' => 'Matriz de Horas',
+                    'route' => 'relatorios.matriz',
+                    'icon' => 'fas fa-th',
+                ],
+                [
                     'text' => 'Exportar CSV',
                     'route' => 'relatorios.export',
                     'icon' => 'fas fa-file-export',

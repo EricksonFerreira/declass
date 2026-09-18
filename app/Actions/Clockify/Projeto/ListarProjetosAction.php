@@ -17,7 +17,10 @@ class ListarProjetosAction
                 app(\App\Services\VisibilidadeService::class)->projetosVisiveis($user, $query);
             })
             ->when($search, function ($query, $search) {
-                $query->where('nome', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('nome', 'like', "%{$search}%")
+                        ->orWhere('codigo', 'like', "%{$search}%");
+                });
             });
 
         FiltroQuery::aplicar($query, $filtros, ['nome', 'clockify_cliente_id', 'ativo', 'status']);

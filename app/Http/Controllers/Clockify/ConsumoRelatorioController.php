@@ -21,22 +21,7 @@ class ConsumoRelatorioController extends Controller
     {
         $empresaId = $service->empresaId();
 
-        $visibilidade = app(\App\Services\VisibilidadeService::class);
-
-        $projetos = $visibilidade
-            // Visibilidade: privado some para quem nao e responsavel/membro.
-            ->projetosVisiveis($request->user(), ClockifyProjeto::query()->with('cliente'))
-            // Escopo: admin ve todos; lider ve projetos que responde, dos
-            // quais e membro ou onde sua equipe aponta horas.
-            ->when(! $request->user()->isAdministrador(), function ($q) use ($request, $visibilidade) {
-                $idsEquipe = $visibilidade->idsEquipeLiderada($request->user());
-
-                $q->where(function ($sub) use ($request, $idsEquipe) {
-                    $sub->where('responsavel_id', $request->user()->id)
-                        ->orWhereHas('users', fn ($u) => $u->where('users.id', $request->user()->id))
-                        ->orWhereHas('trackers', fn ($t) => $t->whereIn('user_id', $idsEquipe));
-                });
-            })
+        $projetos = $this->projetosVisiveisQuery($request)->with('cliente')
             ->when($request->filled('busca'), fn ($q) => $q->where('nome', 'like', '%'.trim((string) $request->busca).'%'))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('cliente_id'), fn ($q) => $q->where('clockify_cliente_id', (int) $request->cliente_id))
@@ -69,6 +54,82 @@ class ConsumoRelatorioController extends Controller
                 ['name' => 'Análise'],
                 ['name' => 'Relatórios', 'url' => route('relatorios.index')],
                 ['name' => 'Consumo × Estimado', 'active' => true],
+            ],
+        ]);
+    }
+
+    /**
+     * Escopo de projetos visíveis para relatórios: visibilidade de projeto
+     * privado + recorte por liderança (admin vê todos).
+     */
+    private function projetosVisiveisQuery(Request $request)
+    {
+        $visibilidade = app(\App\Services\VisibilidadeService::class);
+
+        return $visibilidade
+            // Visibilidade: privado some para quem nao e responsavel/membro.
+            ->projetosVisiveis($request->user(), ClockifyProjeto::query())
+            // Escopo: admin ve todos; lider ve projetos que responde, dos
+            // quais e membro ou onde sua equipe aponta horas.
+            ->when(! $request->user()->isAdministrador(), function ($q) use ($request, $visibilidade) {
+                $idsEquipe = $visibilidade->idsEquipeLiderada($request->user());
+
+                $q->where(function ($sub) use ($request, $idsEquipe) {
+                    $sub->where('responsavel_id', $request->user()->id)
+                        ->orWhereHas('users', fn ($u) => $u->where('users.id', $request->user()->id))
+                        ->orWhereHas('trackers', fn ($t) => $t->whereIn('user_id', $idsEquipe));
+                });
+            });
+    }
+
+    /**
+     * Aba B00 — matriz colaborador × projeto com horas consumidas.
+     */
+    public function matriz(Request $request, ConsumoProjetoService $service): View
+    {
+        $empresaId = $service->empresaId();
+        $inicio = $request->input('data_inicio');
+        $fim = $request->input('data_fim');
+
+        $projetos = $this->projetosVisiveisQuery($request)
+            ->when($request->filled('busca'), fn ($q) => $q->where('nome', 'like', '%'.trim((string) $request->busca).'%'))
+            ->orderBy('nome')
+            ->get();
+
+        $linhas = $service->matrizMembroProjeto($empresaId, $projetos->pluck('id')->all(), $inicio, $fim);
+
+        // Pivot: membros em linhas, projetos em colunas.
+        $membros = [];
+        foreach ($linhas as $l) {
+            $membros[$l->user_id]['info'] ??= [
+                'nome' => $l->nome,
+                'email' => $l->email,
+                'funcao_nome' => $l->funcao_nome ?? 'Sem função',
+            ];
+            $membros[$l->user_id]['horas'][$l->clockify_projeto_id] = round(((float) $l->segundos) / 3600, 2);
+        }
+
+        $totaisProjeto = [];
+        $totaisMembro = [];
+        foreach ($membros as $uid => $m) {
+            $totaisMembro[$uid] = round(array_sum($m['horas']), 2);
+            foreach ($m['horas'] as $pid => $h) {
+                $totaisProjeto[$pid] = round(($totaisProjeto[$pid] ?? 0) + $h, 2);
+            }
+        }
+
+        return view('relatorios.matriz', [
+            'titulo' => 'Matriz de Horas',
+            'projetos' => $projetos,
+            'membros' => $membros,
+            'totaisProjeto' => $totaisProjeto,
+            'totaisMembro' => $totaisMembro,
+            'filtros' => $request->only('busca', 'data_inicio', 'data_fim'),
+            'breadcrumb' => [
+                ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Análise'],
+                ['name' => 'Relatórios', 'url' => route('relatorios.index')],
+                ['name' => 'Matriz de Horas', 'active' => true],
             ],
         ]);
     }
@@ -112,6 +173,7 @@ class ConsumoRelatorioController extends Controller
             : null;
 
         $previsao = $service->previsaoEstouro($projeto, $totais['consumida'], $totais['estimada']);
+        $evolucao = $service->evolucaoConsumo($projeto);
 
         return view('relatorios.consumo_show', [
             'titulo' => 'Consumo × Estimado: '.$projeto->nome,
@@ -120,6 +182,7 @@ class ConsumoRelatorioController extends Controller
             'membros' => $membros,
             'totais' => $totais,
             'previsao' => $previsao,
+            'evolucao' => $evolucao,
             'funcoes' => $service->funcoesParaSelect(),
             'statusLabels' => ClockifyProjeto::STATUS_LABELS,
             'breadcrumb' => [

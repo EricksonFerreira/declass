@@ -17,6 +17,7 @@
         ['Horas Trabalhadas', 'fas fa-clock', 'relatorios.horas', 'Horas apontadas por projeto e período', '#2563eb'],
         ['Relatório de Membros', 'fas fa-user-clock', 'relatorios.membros', 'Horas e custo por colaborador', '#16a34a'],
         ['Consumo × Estimado', 'fas fa-chart-bar', 'relatorios.consumo', 'Horas consumidas vs estimadas por projeto', '#b45309'],
+        ['Matriz de Horas', 'fas fa-th', 'relatorios.matriz', 'Horas de cada colaborador por projeto', '#7c3aed'],
         ['Exportar Dados', 'fas fa-file-export', 'relatorios.exportar', 'Baixe os dados em planilha CSV', '#475569'],
     ];
 @endphp

@@ -52,6 +52,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'cargo',
         'funcao_id',
         'custo_hora',
+        'jornada_diaria',
         'ativo',
     ];
 

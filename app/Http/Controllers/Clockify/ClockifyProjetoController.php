@@ -106,6 +106,7 @@ class ClockifyProjetoController extends Controller
 
         return [
             ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
+            ['name' => 'codigo', 'label' => 'Código (CC)', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'clockify_cliente_id', 'label' => 'Cliente', 'type' => 'select', 'typeWhere' => 'where', 'options' => $clienteOptions],
             ['name' => 'status', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
                 ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
@@ -131,6 +132,7 @@ class ClockifyProjetoController extends Controller
     {
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
+            'codigo' => 'nullable|string|max:50',
             'clockify_cliente_id' => 'nullable|exists:clockify_clientes,id',
             'responsavel_id' => 'nullable|exists:users,id',
             'descricao' => 'nullable|string',
@@ -170,6 +172,7 @@ class ClockifyProjetoController extends Controller
 
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
+            'codigo' => 'nullable|string|max:50',
             'clockify_cliente_id' => 'nullable|exists:clockify_clientes,id',
             'responsavel_id' => 'nullable|exists:users,id',
             'descricao' => 'nullable|string',

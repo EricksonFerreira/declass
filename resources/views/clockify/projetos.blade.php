@@ -49,7 +49,12 @@
                                 <div class="ux-card__head">
                                     <div class="ux-card__avatar" style="background: {{ $projeto->cor ?? '#334155' }}"><i class="fas fa-project-diagram"></i></div>
                                     <div class="ux-card__head-info">
-                                        <div class="ux-card__title">{{ $projeto->nome }}</div>
+                                        <div class="ux-card__title">
+                                            {{ $projeto->nome }}
+                                            @if ($projeto->codigo)
+                                                <span class="badge badge-secondary ml-1" style="font-weight:600;">{{ $projeto->codigo }}</span>
+                                            @endif
+                                        </div>
                                         <div class="ux-card__sub">{{ $projeto->cliente->nome ?? 'Sem cliente' }}</div>
                                     </div>
                                     <div class="ux-card__badges">
@@ -134,6 +139,9 @@
                                             @if (! $projeto->publico)
                                                 <span class="badge badge-secondary ml-1" title="Projeto privado: visível apenas para administradores, o responsável e os membros"><i class="fas fa-lock mr-1"></i>Privado</span>
                                             @endif
+                                            @if ($projeto->codigo)
+                                                <small class="text-muted d-block">CC: {{ $projeto->codigo }}</small>
+                                            @endif
                                         </div>
                                         @if($projeto->descricao)
                                             <small class="text-muted d-block text-truncate" style="max-width: 250px;" title="{{ $projeto->descricao }}">
@@ -215,12 +223,21 @@
     <!-- Side Drawer Component -->
     <x-modal id="projetoDrawer" icon="fas fa-project-diagram" title="Novo Projeto" formId="projeto-form" action="{{ route('clockify.projetos.store') }}">
         <input type="hidden" name="id" id="projeto_id" value="{{ old('id') }}">
-        <div class="form-group">
-            <label for="nome">Nome <span class="text-danger">*</span></label>
-            <input type="text" name="nome" id="nome" class="form-control form-control-sm @error('nome') is-invalid @enderror" value="{{ old('nome') }}" required placeholder="Ex: Novo Site XPAND">
-            @error('nome')
-                <span class="invalid-feedback">{{ $message }}</span>
-            @enderror
+        <div class="form-row">
+            <div class="col-8 form-group">
+                <label for="nome">Nome <span class="text-danger">*</span></label>
+                <input type="text" name="nome" id="nome" class="form-control form-control-sm @error('nome') is-invalid @enderror" value="{{ old('nome') }}" required placeholder="Ex: Novo Site XPAND">
+                @error('nome')
+                    <span class="invalid-feedback">{{ $message }}</span>
+                @enderror
+            </div>
+            <div class="col-4 form-group">
+                <label for="codigo">Código (CC)</label>
+                <input type="text" name="codigo" id="codigo" class="form-control form-control-sm @error('codigo') is-invalid @enderror" value="{{ old('codigo') }}" placeholder="Ex: 440-158.01" maxlength="50">
+                @error('codigo')
+                    <span class="invalid-feedback">{{ $message }}</span>
+                @enderror
+            </div>
         </div>
         <div class="form-group">
             <label for="clockify_cliente_id">Cliente</label>
@@ -352,6 +369,7 @@
             $('#projeto-formMethod').val('PUT');
             $('#projeto_id').val(projeto.id);
             $('#projeto-form #nome').val(projeto.nome);
+            $('#projeto-form #codigo').val(projeto.codigo || '');
             $('#projeto-form #clockify_cliente_id').val(projeto.clockify_cliente_id).trigger('change');
             $('#projeto-form #responsavel_id').val(projeto.responsavel_id || '');
             $('#projeto-form #descricao').val(projeto.descricao);

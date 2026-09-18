@@ -107,6 +107,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
 
     Route::middleware('auth')->group(function (): void {
         Route::get('relatorios/consumo', [\App\Http\Controllers\Clockify\ConsumoRelatorioController::class, 'index'])->name('relatorios.consumo');
+        Route::get('relatorios/matriz', [\App\Http\Controllers\Clockify\ConsumoRelatorioController::class, 'matriz'])->name('relatorios.matriz');
         Route::get('relatorios/consumo/{id}', [\App\Http\Controllers\Clockify\ConsumoRelatorioController::class, 'show'])->name('relatorios.consumo.show');
         Route::post('relatorios/consumo/{id}/estimativas', [\App\Http\Controllers\Clockify\ConsumoRelatorioController::class, 'estimativaStore'])->name('relatorios.consumo.estimativas.store');
         Route::delete('relatorios/consumo/estimativas/{estimativa}', [\App\Http\Controllers\Clockify\ConsumoRelatorioController::class, 'estimativaDestroy'])->name('relatorios.consumo.estimativas.destroy');

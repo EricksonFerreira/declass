@@ -85,6 +85,9 @@
                             <a href="{{ route('relatorios.consumo.show', $p->id) }}" class="font-weight-bold consumo-link-projeto">
                                 {{ $p->nome }}
                             </a>
+                            @if ($p->codigo)
+                                <small class="text-muted d-block">CC: {{ $p->codigo }}</small>
+                            @endif
                         </td>
                         <td>{{ $p->cliente?->nome ?? '—' }}</td>
                         <td><span class="badge badge-{{ $p->status_cor }}">{{ $p->status_label }}</span></td>
