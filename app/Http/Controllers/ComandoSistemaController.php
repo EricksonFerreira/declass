@@ -34,13 +34,11 @@ class ComandoSistemaController extends Controller
             ],
         ],
         [
-            'titulo' => 'Migrations e Seeders',
+            'titulo' => 'Migrations',
             'icone' => 'fas fa-database',
             'itens' => [
                 ['key' => 'migrate-status', 'nome' => 'Status das Migrations', 'artisan' => 'migrate:status', 'icone' => 'fas fa-list-ol', 'cor' => '#3b82f6'],
                 ['key' => 'migrate-force', 'nome' => 'Executar Migrations', 'artisan' => 'migrate', 'params' => ['--force' => true], 'icone' => 'fas fa-database', 'cor' => '#16a34a', 'confirm' => 'Executa as migrations pendentes no banco atual. Continuar?'],
-                ['key' => 'seed-permissoes', 'nome' => 'Seeder: Permissões do Sistema', 'artisan' => 'db:seed', 'params' => ['--class' => 'PermissoesSistemaSeeder'], 'icone' => 'fas fa-shield-alt', 'cor' => '#0d9488', 'confirm' => 'Recria as permissões a partir das rotas registradas (idempotente). Continuar?'],
-                ['key' => 'seed-novas', 'nome' => 'Seeder: Novas Funcionalidades', 'artisan' => 'db:seed', 'params' => ['--class' => 'PermissoesNovasFuncionalidadesSeeder'], 'icone' => 'fas fa-plus-circle', 'cor' => '#0d9488', 'confirm' => 'Executa o seeder de permissões das novas funcionalidades. Continuar?'],
             ],
         ],
         [
@@ -59,7 +57,7 @@ class ComandoSistemaController extends Controller
     {
         return view('comandos.index', [
             'titulo' => 'Comandos do Sistema',
-            'grupos' => self::COMANDOS,
+            'grupos' => $this->grupos(),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Configurações'],
@@ -72,7 +70,7 @@ class ComandoSistemaController extends Controller
     {
         $data = $request->validate(['comando' => 'required|string|max:60']);
 
-        $comando = collect(self::COMANDOS)
+        $comando = collect($this->grupos())
             ->flatMap(fn (array $grupo) => $grupo['itens'])
             ->firstWhere('key', $data['comando']);
 
@@ -103,6 +101,42 @@ class ComandoSistemaController extends Controller
                 'duracao' => round(microtime(true) - $inicio, 2),
             ], 500);
         }
+    }
+
+    /**
+     * Grupos da whitelist: comandos fixos + um item por seeder
+     * encontrado em database/seeders (descoberta automatica).
+     */
+    private function grupos(): array
+    {
+        $grupos = self::COMANDOS;
+
+        $seeders = collect(glob(database_path('seeders/*.php')) ?: [])
+            ->map(fn (string $arquivo) => pathinfo($arquivo, PATHINFO_FILENAME))
+            ->sort()
+            ->values();
+
+        if ($seeders->isNotEmpty()) {
+            $grupos[] = [
+                'titulo' => 'Seeders',
+                'icone' => 'fas fa-seedling',
+                'itens' => $seeders->map(function (string $classe) {
+                    $nome = trim((string) preg_replace('/(?<!^)[A-Z]/', ' $0', (string) preg_replace('/Seeder$/', '', $classe)));
+
+                    return [
+                        'key' => 'seed-'.strtolower((string) preg_replace('/(?<!^)[A-Z]/', '-$0', $classe)),
+                        'nome' => $classe === 'DatabaseSeeder' ? 'Seeder: Todos (DatabaseSeeder)' : 'Seeder: '.$nome,
+                        'artisan' => 'db:seed',
+                        'params' => ['--class' => $classe],
+                        'icone' => 'fas fa-seedling',
+                        'cor' => '#16a34a',
+                        'confirm' => "Executa php artisan db:seed --class={$classe} no banco atual. Continuar?",
+                    ];
+                })->all(),
+            ];
+        }
+
+        return $grupos;
     }
 
     private function assinaturaComando(array $comando): string
