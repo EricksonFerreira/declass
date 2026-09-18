@@ -10,23 +10,24 @@ class GetMemberStatsAction
 {
     /**
      * Retrieve daily work hours per selected members within a period.
-     *
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @param array|null $userIds
-     * @return array
      */
     public function handle(Carbon $startDate, Carbon $endDate, ?array $userIds = null): array
     {
         $start = $startDate->copy()->startOfDay();
         $end = $endDate->copy()->endOfDay();
 
+        // Escopo de visibilidade por usuario logado.
+        $idsVisiveis = \Illuminate\Support\Facades\Auth::user()?->idsVisiveis();
+
         // Fetch trackers in range
         $query = ClockifyTimeTracker::whereBetween('inicio', [$start, $end])
             ->whereNotNull('fim');
 
-        if (!empty($userIds)) {
+        if (! empty($userIds)) {
             $query->whereIn('user_id', $userIds);
+        }
+        if ($idsVisiveis !== null) {
+            $query->whereIn('user_id', $idsVisiveis);
         }
 
         $trackers = $query->with('user')->get();
@@ -41,8 +42,10 @@ class GetMemberStatsAction
         // Initialise member stats
         $memberStats = [];
         $selectedMembers = [];
-        if (!empty($userIds)) {
+        if (! empty($userIds)) {
             $selectedMembers = User::whereIn('id', $userIds)->orderBy('nome')->get();
+        } elseif ($idsVisiveis !== null) {
+            $selectedMembers = User::whereIn('id', $idsVisiveis)->orderBy('nome')->get();
         } else {
             $selectedMembers = User::orderBy('nome')->get();
         }
@@ -92,7 +95,7 @@ class GetMemberStatsAction
         $r = ($hash & 0xFF0000) >> 16;
         $g = ($hash & 0x00FF00) >> 8;
         $b = $hash & 0x0000FF;
+
         return sprintf('#%02x%02x%02x', $r, $g, $b);
     }
 }
-?>

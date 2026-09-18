@@ -103,9 +103,11 @@
 <?php endif; ?>
                         </form>
                         <?php echo $__env->make('partials.ux-view-toggle', ['viewKey' => 'projetos_index_view'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
-                        <button type="button" class="btn btn-sm btn-primary" id="btn-create-projeto">
-                            <i class="fas fa-plus mr-1"></i> Novo Projeto
-                        </button>
+                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('clockify.projetos.store')): ?>
+                            <button type="button" class="btn btn-sm btn-primary" id="btn-create-projeto">
+                                <i class="fas fa-plus mr-1"></i> Novo Projeto
+                            </button>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="card-body p-0 ux-index-body" data-view="cards">
@@ -124,6 +126,9 @@
                                             <?php echo e($projeto->ativo ? 'Ativo' : 'Inativo'); ?>
 
                                         </span>
+                                        <?php if($projeto->responsavel): ?>
+                                            <span class="ux-card__badge ux-card__badge--blue" title="Responsável pelo projeto"><i class="fas fa-user-tie mr-1"></i><?php echo e($projeto->responsavel->nome); ?></span>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <div class="ux-card__meta">
@@ -150,16 +155,20 @@
                                     <a href="<?php echo e(route('clockify.projetos.show', $projeto->id)); ?>" class="btn btn-xs btn-primary">
                                         <i class="fas fa-eye mr-1"></i>Detalhes
                                     </a>
-                                    <button type="button" class="btn btn-xs btn-warning"
-                                        onclick="editProjeto(<?php echo e(json_encode($projeto)); ?>)">
-                                        <i class="fa fa-edit mr-1"></i>Editar
-                                    </button>
-                                    <form action="<?php echo e(route('clockify.projetos.destroy', $projeto->id)); ?>" method="POST" class="d-inline"
-                                        onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
-                                        <?php echo csrf_field(); ?>
-                                        <?php echo method_field('DELETE'); ?>
-                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
-                                    </form>
+                                    <?php if($projeto->podeSerGerenciadoPor(auth()->user())): ?>
+                                        <button type="button" class="btn btn-xs btn-warning"
+                                            onclick="editProjeto(<?php echo e(json_encode($projeto)); ?>)">
+                                            <i class="fa fa-edit mr-1"></i>Editar
+                                        </button>
+                                    <?php endif; ?>
+                                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('clockify.projetos.destroy')): ?>
+                                        <form action="<?php echo e(route('clockify.projetos.destroy', $projeto->id)); ?>" method="POST" class="d-inline"
+                                            onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('DELETE'); ?>
+                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                        </form>
+                                    <?php endif; ?>
                                 </div>
                             </article>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -235,16 +244,20 @@
                                         <a href="<?php echo e(route('clockify.projetos.show', $projeto->id)); ?>" class="btn btn-xs btn-primary mr-1">
                                             <i class="fas fa-eye"></i> Detalhes
                                         </a>
-                                        <button type="button" class="btn btn-xs btn-warning mr-1"
-                                            onclick="editProjeto(<?php echo e(json_encode($projeto)); ?>)">
-                                            <i class="fa fa-edit"></i> Editar
-                                        </button>
-                                        <form action="<?php echo e(route('clockify.projetos.destroy', $projeto->id)); ?>" method="POST" class="d-inline"
-                                            onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
-                                            <?php echo csrf_field(); ?>
-                                            <?php echo method_field('DELETE'); ?>
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
-                                        </form>
+                                        <?php if($projeto->podeSerGerenciadoPor(auth()->user())): ?>
+                                            <button type="button" class="btn btn-xs btn-warning mr-1"
+                                                onclick="editProjeto(<?php echo e(json_encode($projeto)); ?>)">
+                                                <i class="fa fa-edit"></i> Editar
+                                            </button>
+                                        <?php endif; ?>
+                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('clockify.projetos.destroy')): ?>
+                                            <form action="<?php echo e(route('clockify.projetos.destroy', $projeto->id)); ?>" method="POST" class="d-inline"
+                                                onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
+                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                            </form>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -310,6 +323,16 @@ unset($__errorArgs, $__bag); ?>
                     <option value="<?php echo e($cliente->id); ?>" <?php if((string) old('clockify_cliente_id') === (string) $cliente->id): echo 'selected'; endif; ?>><?php echo e($cliente->nome); ?></option>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </select>
+        </div>
+        <div class="form-group">
+            <label for="responsavel_id">Responsável</label>
+            <select name="responsavel_id" id="responsavel_id" class="form-control form-control-sm">
+                <option value="">Sem responsável</option>
+                <?php $__currentLoopData = $usuarios; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $usuario): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <option value="<?php echo e($usuario->id); ?>" <?php echo e((string) old('responsavel_id') === (string) $usuario->id ? 'selected' : ''); ?>><?php echo e($usuario->nome); ?></option>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </select>
+            <small class="text-muted">O responsável pode editar este projeto e acompanhar seu consumo.</small>
         </div>
         <div class="form-group">
             <label for="descricao">Descrição</label>
@@ -414,6 +437,7 @@ unset($__errorArgs, $__bag); ?>
             $('#projeto_id').val(projeto.id);
             $('#nome').val(projeto.nome);
             $('#clockify_cliente_id').val(projeto.clockify_cliente_id).trigger('change');
+            $('#responsavel_id').val(projeto.responsavel_id || '');
             $('#descricao').val(projeto.descricao);
             $('#valor_faturado').val(projeto.valor_faturado);
             $('#valor_hora').val(projeto.valor_hora);

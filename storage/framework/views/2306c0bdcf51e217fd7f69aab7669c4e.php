@@ -103,9 +103,11 @@
 <?php endif; ?>
                         </form>
                         <?php echo $__env->make('partials.ux-view-toggle', ['viewKey' => 'times_index_view'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
-                        <button type="button" class="btn btn-sm btn-primary" id="btn-create-time">
-                            <i class="fas fa-plus mr-1"></i> Nova Equipe
-                        </button>
+                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('clockify.times.store')): ?>
+                            <button type="button" class="btn btn-sm btn-primary" id="btn-create-time">
+                                <i class="fas fa-plus mr-1"></i> Nova Equipe
+                            </button>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="card-body p-0 ux-index-body" data-view="cards">
@@ -121,6 +123,9 @@
                                     </div>
                                     <div class="ux-card__badges">
                                         <span class="ux-card__badge ux-card__badge--blue"><?php echo e($time->users->count()); ?> membro(s)</span>
+                                        <?php if($time->lider): ?>
+                                            <span class="ux-card__badge ux-card__badge--blue" title="Líder da equipe"><i class="fas fa-star mr-1"></i><?php echo e($time->lider->nome); ?></span>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <div class="ux-card__meta">
@@ -136,15 +141,17 @@
                                     </div>
                                 </div>
                                 <div class="ux-card__foot">
-                                    <button type="button" class="btn btn-xs btn-warning"
-                                        onclick="editTime(<?php echo e(json_encode($time)); ?>, <?php echo e(json_encode($time->users->pluck('id'))); ?>)">
-                                        <i class="fa fa-edit mr-1"></i>Editar
-                                    </button>
-                                    <form action="<?php echo e(route('clockify.times.destroy', $time->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
-                                        <?php echo csrf_field(); ?>
-                                        <?php echo method_field('DELETE'); ?>
-                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
-                                    </form>
+                                    <?php if($time->podeSerGerenciadoPor(auth()->user())): ?>
+                                        <button type="button" class="btn btn-xs btn-warning"
+                                            onclick="editTime(<?php echo e(json_encode($time)); ?>, <?php echo e(json_encode($time->users->pluck('id'))); ?>)">
+                                            <i class="fa fa-edit mr-1"></i>Editar
+                                        </button>
+                                        <form action="<?php echo e(route('clockify.times.destroy', $time->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('DELETE'); ?>
+                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                        </form>
+                                    <?php endif; ?>
                                 </div>
                             </article>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -159,6 +166,7 @@
                         <thead>
                             <tr>
                                 <th>Nome do Time</th>
+                                <th>Líder</th>
                                 <th>Descrição</th>
                                 <th>Membros</th>
                                 <th style="width: 150px;" class="text-center">Ações</th>
@@ -168,6 +176,13 @@
                             <?php $__empty_1 = true; $__currentLoopData = $times; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $time): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr>
                                     <td class="align-middle font-weight-bold"><?php echo e($time->nome); ?></td>
+                                    <td class="align-middle">
+                                        <?php if($time->lider): ?>
+                                            <span class="badge badge-warning" title="Líder da equipe"><i class="fas fa-star mr-1"></i><?php echo e($time->lider->nome); ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted text-xs">—</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="align-middle"><?php echo e($time->descricao ?? '-'); ?></td>
                                     <td class="align-middle">
                                         <?php $__currentLoopData = $time->users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $u): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -178,15 +193,19 @@
                                         <?php endif; ?>
                                     </td>
                                     <td class="align-middle text-center">
-                                        <button type="button" class="btn btn-xs btn-warning mr-1"
-                                            onclick="editTime(<?php echo e(json_encode($time)); ?>, <?php echo e(json_encode($time->users->pluck('id'))); ?>)">
-                                            <i class="fa fa-edit"></i> Editar
-                                        </button>
-                                        <form action="<?php echo e(route('clockify.times.destroy', $time->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
-                                            <?php echo csrf_field(); ?>
-                                            <?php echo method_field('DELETE'); ?>
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
-                                        </form>
+                                        <?php if($time->podeSerGerenciadoPor(auth()->user())): ?>
+                                            <button type="button" class="btn btn-xs btn-warning mr-1"
+                                                onclick="editTime(<?php echo e(json_encode($time)); ?>, <?php echo e(json_encode($time->users->pluck('id'))); ?>)">
+                                                <i class="fa fa-edit"></i> Editar
+                                            </button>
+                                            <form action="<?php echo e(route('clockify.times.destroy', $time->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
+                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                            </form>
+                                        <?php else: ?>
+                                            <span class="text-muted text-xs">Somente leitura</span>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -248,6 +267,18 @@ unset($__errorArgs, $__bag); ?>
             <label for="descricao">Descrição</label>
             <textarea name="descricao" id="descricao" rows="2" class="form-control form-control-sm" placeholder="Opcional..."><?php echo e(old('descricao')); ?></textarea>
         </div>
+        <?php if(auth()->user()->isAdministrador()): ?>
+            <div class="form-group">
+                <label for="lider_id">Líder da Equipe</label>
+                <select name="lider_id" id="lider_id" class="form-control form-control-sm">
+                    <option value="">Sem líder definido</option>
+                    <?php $__currentLoopData = $usuarios; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $usuario): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($usuario->id); ?>" <?php echo e((string) old('lider_id') === (string) $usuario->id ? 'selected' : ''); ?>><?php echo e($usuario->nome); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </select>
+                <small class="text-muted">O líder aprova folgas e gerencia os membros desta equipe.</small>
+            </div>
+        <?php endif; ?>
         <div class="form-group">
             <label>Selecionar Membros</label>
             <div style="max-height: 240px; overflow-y: auto; border: 1px solid #ced4da; padding: 10px; border-radius: 4px;">
@@ -308,6 +339,7 @@ unset($__errorArgs, $__bag); ?>
             $('#time_id').val(time.id);
             $('#nome').val(time.nome);
             $('#descricao').val(time.descricao);
+            $('#lider_id').val(time.lider_id || '');
 
             $('.user-checkbox').prop('checked', false);
             userIds.forEach(function(id) {

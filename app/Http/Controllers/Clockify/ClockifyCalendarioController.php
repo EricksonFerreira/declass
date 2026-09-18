@@ -9,7 +9,6 @@ use App\Actions\Clockify\Calendario\SaveCalendarioAction;
 use App\Http\Controllers\Controller;
 use App\Models\ClockifyProjeto;
 use App\Models\ClockifyTimeTracker;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,14 +21,15 @@ class ClockifyCalendarioController extends Controller
     {
         $empresaId = $request->user()->empresa_id;
 
+        $visibilidade = app(\App\Services\VisibilidadeService::class);
+        $idsVisiveis = $request->user()->idsVisiveis();
+
         $alocacoes = $action->handle();
         $projetos = ClockifyProjeto::where('empresa_id', $empresaId)->where('ativo', true)->orderBy('nome')->get();
-        $usuarios = User::where('empresa_id', $empresaId)
-            ->where(function ($q) {
-                $q->whereNull('tipo_usuario_id')->orWhere('tipo_usuario_id', '!=', 1);
-            })
-            ->orderBy('nome')
-            ->get();
+        $usuarios = $visibilidade->usuariosVisiveis($request->user())
+            ->filter(fn ($u) => (int) $u->getRawOriginal('tipo_usuario_id') !== 1)
+            ->sortBy('nome')
+            ->values();
 
         $events = [];
         foreach ($alocacoes as $aloc) {
@@ -52,11 +52,12 @@ class ClockifyCalendarioController extends Controller
             ];
         }
 
-        // Add logged time trackers to calendar
+        // Add logged time trackers to calendar (escopo de visibilidade)
         $trackers = ClockifyTimeTracker::with(['projeto', 'user'])
             ->where('empresa_id', $empresaId)
             ->whereNotNull('fim')
             ->whereNotNull('inicio')
+            ->when($idsVisiveis !== null, fn ($q) => $q->whereIn('user_id', $idsVisiveis))
             ->get();
 
         foreach ($trackers as $tracker) {
@@ -110,6 +111,12 @@ class ClockifyCalendarioController extends Controller
             'horas_por_dia' => 'nullable|numeric|min:0',
             'observacao' => 'nullable|string',
         ]);
+
+        // Alocar em nome de terceiros so para quem voce gerencia
+        // (admin ou lider do membro); demais alocam para si mesmos.
+        if (! $request->user()->podeGerenciarUsuario((int) $validated['user_id'])) {
+            $validated['user_id'] = $request->user()->id;
+        }
 
         $action->handle($validated);
 

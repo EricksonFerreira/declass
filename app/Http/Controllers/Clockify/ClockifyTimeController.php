@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Clockify;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Actions\Clockify\Time\DeleteTimeAction;
 use App\Actions\Clockify\Time\ListarTimesAction;
 use App\Actions\Clockify\Time\SaveTimeAction;
 use App\Actions\Clockify\Time\UpdateTimeAction;
-use App\Actions\Clockify\Time\DeleteTimeAction;
+use App\Http\Controllers\Controller;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\RedirectResponse;
@@ -28,7 +27,7 @@ class ClockifyTimeController extends Controller
         $itensFiltered = session("{$this->nomeFiltro}.filtro", []);
         $perPage = session("{$this->nomeFiltro}.perPage", 15);
         $times = $action->handle($request->search, $itensFiltered, $perPage);
-        $usuarios = User::orderBy('nome')->get();
+        $usuarios = app(\App\Services\VisibilidadeService::class)->usuariosVisiveis($request->user());
 
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
@@ -98,13 +97,20 @@ class ClockifyTimeController extends Controller
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
+            'lider_id' => 'nullable|exists:users,id',
             'users' => 'nullable|array',
             'users.*' => 'exists:users,id',
         ]);
 
+        // Quem nao e admin so pode criar time do qual e o lider.
+        if (! $request->user()->isAdministrador()) {
+            $validated['lider_id'] = $request->user()->id;
+        }
+
         $action->handle([
             'nome' => $validated['nome'],
             'descricao' => $validated['descricao'] ?? null,
+            'lider_id' => $validated['lider_id'] ?? null,
         ], $request->input('users'));
 
         return redirect()->route('clockify.times.index')
@@ -113,16 +119,31 @@ class ClockifyTimeController extends Controller
 
     public function update(Request $request, $id, UpdateTimeAction $action): RedirectResponse
     {
+        $time = \App\Models\ClockifyTime::findOrFail($id);
+
+        $visibilidade = app(\App\Services\VisibilidadeService::class);
+        if (! $visibilidade->podeGerenciarTime($request->user(), $time)) {
+            return redirect()->route('clockify.times.index')
+                ->with('error', 'Você só pode editar times que lidera.');
+        }
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
+            'lider_id' => 'nullable|exists:users,id',
             'users' => 'nullable|array',
             'users.*' => 'exists:users,id',
         ]);
 
+        // Lider nao transfere a lideranca do proprio time.
+        if (! $request->user()->isAdministrador()) {
+            $validated['lider_id'] = $time->lider_id;
+        }
+
         $action->handle((int) $id, [
             'nome' => $validated['nome'],
             'descricao' => $validated['descricao'] ?? null,
+            'lider_id' => $validated['lider_id'] ?? null,
         ], $request->input('users'));
 
         return redirect()->route('clockify.times.index')
@@ -131,6 +152,14 @@ class ClockifyTimeController extends Controller
 
     public function destroy($id, DeleteTimeAction $action): RedirectResponse
     {
+        $time = \App\Models\ClockifyTime::findOrFail($id);
+
+        $visibilidade = app(\App\Services\VisibilidadeService::class);
+        if (! $visibilidade->podeGerenciarTime(request()->user(), $time)) {
+            return redirect()->route('clockify.times.index')
+                ->with('error', 'Você só pode remover times que lidera.');
+        }
+
         $action->handle((int) $id);
 
         return redirect()->route('clockify.times.index')

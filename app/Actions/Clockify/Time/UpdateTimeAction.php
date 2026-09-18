@@ -3,6 +3,7 @@
 namespace App\Actions\Clockify\Time;
 
 use App\Models\ClockifyTime;
+use App\Services\VisibilidadeService;
 
 class UpdateTimeAction
 {
@@ -12,6 +13,8 @@ class UpdateTimeAction
         $time->update($data);
 
         $time->users()->sync($userIds ?? []);
+
+        app(VisibilidadeService::class)->promoverLiderDeTime($time->lider_id);
 
         return $time;
     }

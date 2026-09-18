@@ -95,6 +95,16 @@
             ],
         ],
     ];
+
+    // Esconde tiles de areas que o usuario nao pode acessar (evita 403 no clique).
+    $planoPermissao = app(\App\Services\PlanoPermissaoService::class);
+    $secoes = collect($secoes)->map(function ($secao) use ($planoPermissao) {
+        $secao['cards'] = array_values(array_filter($secao['cards'], function ($card) use ($planoPermissao) {
+            return $planoPermissao->usuarioPodeAcessarRota(auth()->user(), $card[2]);
+        }));
+
+        return $secao;
+    })->filter(fn ($secao) => count($secao['cards']) > 0)->values()->all();
 ?>
 
 <div class="home-launcher">

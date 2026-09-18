@@ -11,9 +11,14 @@ class HorasTrabalhadasAction
      */
     public function handle(): array
     {
+        // Escopo de visibilidade: admin ve a empresa; lider ve sua equipe;
+        // colaborador ve apenas os proprios apontamentos.
+        $idsVisiveis = \Illuminate\Support\Facades\Auth::user()->idsVisiveis();
+
         $linhas = ClockifyTimeTracker::query()
             ->selectRaw('clockify_projeto_id, user_id, SUM(TIMESTAMPDIFF(SECOND, inicio, COALESCE(fim, NOW()))) as segundos')
             ->whereNotNull('inicio')
+            ->when($idsVisiveis !== null, fn ($q) => $q->whereIn('user_id', $idsVisiveis))
             ->groupBy('clockify_projeto_id', 'user_id')
             ->havingRaw('SUM(TIMESTAMPDIFF(SECOND, inicio, COALESCE(fim, NOW()))) > 0')
             ->with(['projeto:id,nome', 'user:id,nome'])

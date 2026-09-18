@@ -16,6 +16,7 @@ class ClockifyTime extends Model
         'empresa_id',
         'nome',
         'descricao',
+        'lider_id',
         'usuinc',
         'datainc',
         'usuatu',
@@ -31,5 +32,18 @@ class ClockifyTime extends Model
     {
         return $this->belongsToMany(User::class, 'clockify_time_user', 'clockify_time_id', 'user_id')
             ->withTimestamps();
+    }
+
+    public function lider()
+    {
+        return $this->belongsTo(User::class, 'lider_id');
+    }
+
+    /**
+     * Admin pode gerenciar qualquer time; lider apenas o proprio time.
+     */
+    public function podeSerGerenciadoPor(User $user): bool
+    {
+        return app(\App\Services\VisibilidadeService::class)->podeGerenciarTime($user, $this);
     }
 }

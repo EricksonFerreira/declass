@@ -23,6 +23,18 @@ class ConsumoRelatorioController extends Controller
 
         $projetos = ClockifyProjeto::query()
             ->with('cliente')
+            // Escopo: admin ve todos; lider ve projetos que responde, dos
+            // quais e membro ou onde sua equipe aponta horas.
+            ->when(! $request->user()->isAdministrador(), function ($q) use ($request) {
+                $visibilidade = app(\App\Services\VisibilidadeService::class);
+                $idsEquipe = $visibilidade->idsEquipeLiderada($request->user());
+
+                $q->where(function ($sub) use ($request, $idsEquipe) {
+                    $sub->where('responsavel_id', $request->user()->id)
+                        ->orWhereHas('users', fn ($u) => $u->where('users.id', $request->user()->id))
+                        ->orWhereHas('trackers', fn ($t) => $t->whereIn('user_id', $idsEquipe));
+                });
+            })
             ->when($request->filled('busca'), fn ($q) => $q->where('nome', 'like', '%'.trim((string) $request->busca).'%'))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('cliente_id'), fn ($q) => $q->where('clockify_cliente_id', (int) $request->cliente_id))
@@ -65,6 +77,12 @@ class ConsumoRelatorioController extends Controller
     public function show(int $id, ConsumoProjetoService $service): View
     {
         $projeto = ClockifyProjeto::with(['cliente', 'estimativas.funcao'])->findOrFail($id);
+
+        abort_unless(
+            app(\App\Services\VisibilidadeService::class)->podeVerProjeto(request()->user(), $projeto),
+            403,
+            'Você não tem acesso a este projeto.'
+        );
 
         $linhasFuncao = $service->linhasPorFuncao($projeto);
         $membros = $service->consumoPorMembro($projeto)->map(function ($m) {

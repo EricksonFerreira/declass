@@ -2,11 +2,11 @@
 
 namespace App\Actions\Clockify\Dashboard;
 
-use App\Models\ClockifyTimeTracker;
-use App\Models\User;
+use App\Models\ClockifyCalendario;
 use App\Models\ClockifyProjeto;
 use App\Models\ClockifyTimeOff;
-use App\Models\ClockifyCalendario;
+use App\Models\ClockifyTimeTracker;
+use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
@@ -25,11 +25,18 @@ class LoadTeamOverviewAction
             $endDate = $startDate->copy()->addDays(30)->endOfDay();
         }
 
-        $members = User::orderBy('nome')->get();
+        // Escopo de visibilidade: admin ve a equipe toda; lider ve os
+        // membros dos times que lidera; colaborador ve apenas a si mesmo.
+        $idsVisiveis = \Illuminate\Support\Facades\Auth::user()->idsVisiveis();
+
+        $members = User::orderBy('nome')
+            ->when($idsVisiveis !== null, fn ($q) => $q->whereIn('id', $idsVisiveis))
+            ->get();
 
         // Active trackers
         $activeTrackers = ClockifyTimeTracker::with(['user', 'projeto'])
             ->whereNull('fim')
+            ->when($idsVisiveis !== null, fn ($q) => $q->whereIn('user_id', $idsVisiveis))
             ->orderBy('inicio', 'desc')
             ->get();
 
@@ -41,7 +48,8 @@ class LoadTeamOverviewAction
         $activeUserIds = $activeTrackers->pluck('user_id')->unique()->toArray();
 
         // Load Time Offs for this period
-        $timeOffs = ClockifyTimeOff::where(function ($query) use ($startDate, $endDate) {
+        $timeOffs = ClockifyTimeOff::when($idsVisiveis !== null, fn ($q) => $q->whereIn('user_id', $idsVisiveis))
+            ->where(function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('data_inicio', [$startDate, $endDate])
                     ->orWhereBetween('data_fim', [$startDate, $endDate])
                     ->orWhere(function ($sub) use ($startDate, $endDate) {
@@ -53,6 +61,7 @@ class LoadTeamOverviewAction
 
         // Load Planned Allocations (ClockifyCalendario) for this period
         $allocations = ClockifyCalendario::with('projeto')
+            ->when($idsVisiveis !== null, fn ($q) => $q->whereIn('user_id', $idsVisiveis))
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('data_inicio', [$startDate, $endDate])
                     ->orWhereBetween('data_fim', [$startDate, $endDate])
@@ -130,12 +139,12 @@ class LoadTeamOverviewAction
 
             foreach ($plannerDays as $pDay) {
                 $dayDate = Carbon::parse($pDay['date_str']);
-                
+
                 // 1. Check for Time Off
-                $dayTimeOff = $memberTimeOffs->first(fn($off) => $dayDate->between($off->data_inicio->startOfDay(), $off->data_fim->endOfDay()));
+                $dayTimeOff = $memberTimeOffs->first(fn ($off) => $dayDate->between($off->data_inicio->startOfDay(), $off->data_fim->endOfDay()));
 
                 // 2. Check for Planned Allocations
-                $dayAlloc = $memberAllocations->first(fn($al) => $dayDate->between($al->data_inicio->startOfDay(), $al->data_fim->endOfDay()));
+                $dayAlloc = $memberAllocations->first(fn ($al) => $dayDate->between($al->data_inicio->startOfDay(), $al->data_fim->endOfDay()));
 
                 if ($dayTimeOff) {
                     $memberPlannerDays[$pDay['date_str']] = [
@@ -153,7 +162,7 @@ class LoadTeamOverviewAction
                         $label = 'Excesso';
                     } elseif ($hoursAlloc < 8.0) {
                         $color = 'green-light';
-                        $label = $hoursAlloc . 'h aloc.';
+                        $label = $hoursAlloc.'h aloc.';
                     }
 
                     $memberPlannerDays[$pDay['date_str']] = [
@@ -168,7 +177,7 @@ class LoadTeamOverviewAction
                     ];
                 } else {
                     // 3. Fallback to real logged hours
-                    $daySeconds = $memberTrackers->filter(fn($t) => $t->inicio->format('Y-m-d') === $pDay['date_str'])
+                    $daySeconds = $memberTrackers->filter(fn ($t) => $t->inicio->format('Y-m-d') === $pDay['date_str'])
                         ->sum('duration_in_seconds');
                     $dayHours = round($daySeconds / 3600, 1);
 
@@ -202,7 +211,7 @@ class LoadTeamOverviewAction
 
             // Initials for avatar
             $nameParts = explode(' ', $member->nome);
-            $initials = strtoupper(substr($nameParts[0], 0, 1) . (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : ''));
+            $initials = strtoupper(substr($nameParts[0], 0, 1).(isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : ''));
 
             // Format allocations sub-list for UI timeline projects expansion
             $formattedAllocations = [];
@@ -232,13 +241,14 @@ class LoadTeamOverviewAction
         $statusOrder = ['tracking' => 0, 'recent' => 1, 'offline' => 2, 'inactive' => 3];
         usort($memberStatus, function ($a, $b) use ($statusOrder) {
             $diff = ($statusOrder[$a['status']] ?? 4) <=> ($statusOrder[$b['status']] ?? 4);
+
             return $diff !== 0 ? $diff : $b['period_hours'] <=> $a['period_hours'];
         });
 
         // Top Member
         arsort($memberHoursMap);
-        $topMemberName = !empty($memberHoursMap) && max($memberHoursMap) > 0 ? array_key_first($memberHoursMap) : 'Nenhum';
-        $topMemberHours = !empty($memberHoursMap) ? max($memberHoursMap) : 0;
+        $topMemberName = ! empty($memberHoursMap) && max($memberHoursMap) > 0 ? array_key_first($memberHoursMap) : 'Nenhum';
+        $topMemberHours = ! empty($memberHoursMap) ? max($memberHoursMap) : 0;
 
         // Top Project
         $topProjectStats = ClockifyTimeTracker::select('clockify_projeto_id', DB::raw('SUM(TIMESTAMPDIFF(SECOND, inicio, fim)) as total_seconds'))
@@ -256,8 +266,8 @@ class LoadTeamOverviewAction
 
         // Distribution for chart
         $distribution = collect($memberStatus)
-            ->filter(fn($m) => $m['period_hours'] > 0)
-            ->map(fn($m) => ['nome' => $m['nome'], 'hours' => $m['period_hours']])
+            ->filter(fn ($m) => $m['period_hours'] > 0)
+            ->map(fn ($m) => ['nome' => $m['nome'], 'hours' => $m['period_hours']])
             ->sortByDesc('hours')
             ->values()
             ->toArray();
@@ -274,7 +284,7 @@ class LoadTeamOverviewAction
             ->take(20)
             ->get();
 
-        $inactiveMembers = collect($memberStatus)->filter(fn($m) => $m['status'] === 'inactive')->values()->toArray();
+        $inactiveMembers = collect($memberStatus)->filter(fn ($m) => $m['status'] === 'inactive')->values()->toArray();
 
         // Convert total time
         $totalHoursDecimal = $totalPeriodSeconds / 3600;

@@ -258,6 +258,48 @@ class User extends Authenticatable implements MustVerifyEmail
         return in_array($roleName, ['administrador', 'admin'], true);
     }
 
+    public function times()
+    {
+        return $this->belongsToMany(ClockifyTime::class, 'clockify_time_user', 'user_id', 'clockify_time_id')
+            ->withTimestamps();
+    }
+
+    public function equipesLideradas()
+    {
+        return $this->hasMany(ClockifyTime::class, 'lider_id');
+    }
+
+    public function projetosResponsavel()
+    {
+        return $this->hasMany(ClockifyProjeto::class, 'responsavel_id');
+    }
+
+    /**
+     * Lidera ao menos um time ou responde por ao menos um projeto.
+     */
+    public function isLider(): bool
+    {
+        return app(\App\Services\VisibilidadeService::class)->isLider($this);
+    }
+
+    /**
+     * Ids de usuarios cujos registros este usuario pode ver.
+     * null = sem restricao (admin/superadmin).
+     */
+    public function idsVisiveis(): ?array
+    {
+        return app(\App\Services\VisibilidadeService::class)->idsVisiveis($this);
+    }
+
+    /**
+     * Pode gerenciar (aprovar/editar) registros do usuario alvo:
+     * admin sempre; lider somente sobre membros dos times que lidera.
+     */
+    public function podeGerenciarUsuario(?int $targetUserId): bool
+    {
+        return app(\App\Services\VisibilidadeService::class)->podeGerenciarUsuario($this, $targetUserId);
+    }
+
     /**
      * Super admin do sistema (global): tipo_usuario_id = 1.
      * Possui acesso total, independente da empresa.

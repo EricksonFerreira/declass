@@ -9,7 +9,6 @@ use App\Actions\Clockify\TimeOff\RejeitarTimeOffAction;
 use App\Actions\Clockify\TimeOff\SaveTimeOffAction;
 use App\Actions\Clockify\TimeOff\UpdateTimeOffAction;
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\RedirectResponse;
@@ -31,7 +30,7 @@ class ClockifyTimeOffController extends Controller
         $itensFiltered = session("{$this->nomeFiltro}.filtro", []);
         $perPage = session("{$this->nomeFiltro}.perPage", 15);
         $timeoffs = $action->handle($itensFiltered, $perPage);
-        $usuarios = User::orderBy('nome')->get();
+        $usuarios = app(\App\Services\VisibilidadeService::class)->usuariosVisiveis(Auth::user());
 
         $filters = $this->obterFiltrosPrincipais($usuarios);
         $additionalFilters = $this->obterFiltrosSecundarios();
@@ -101,7 +100,8 @@ class ClockifyTimeOffController extends Controller
             ]],
         ];
 
-        if (Auth::user()->can('gerenciar-empresa')) {
+        $idsVisiveis = Auth::user()->idsVisiveis();
+        if ($idsVisiveis === null || count($idsVisiveis) > 1) {
             $options = [['value' => '', 'label' => 'Todos', 'selected' => false]];
             foreach ($usuarios as $usuario) {
                 $options[] = ['value' => (string) $usuario->id, 'label' => $usuario->nome, 'selected' => false];
@@ -128,7 +128,9 @@ class ClockifyTimeOffController extends Controller
             'observacao' => 'nullable|string',
         ]);
 
-        if (! Auth::user()->can('gerenciar-empresa')) {
+        // Somente quem gerencia o usuario alvo (admin ou seu lider) pode
+        // registrar folga em nome de terceiros; demais registram para si.
+        if (! Auth::user()->podeGerenciarUsuario((int) $validated['user_id'])) {
             $validated['user_id'] = Auth::id();
         }
 
@@ -142,9 +144,12 @@ class ClockifyTimeOffController extends Controller
     {
         $timeoff = \App\Models\ClockifyTimeOff::findOrFail($id);
 
-        if (! Auth::user()->can('gerenciar-empresa') && $timeoff->user_id !== Auth::id()) {
+        $podeEditar = (int) $timeoff->user_id === (int) Auth::id()
+            || Auth::user()->podeGerenciarUsuario($timeoff->user_id);
+
+        if (! $podeEditar) {
             return redirect()->route('clockify.timeoff.index')
-                ->with('error', 'Você só pode editar suas próprias solicitações.');
+                ->with('error', 'Você só pode editar solicitações próprias ou da sua equipe.');
         }
 
         $validated = $request->validate([
@@ -155,7 +160,7 @@ class ClockifyTimeOffController extends Controller
             'observacao' => 'nullable|string',
         ]);
 
-        if (! Auth::user()->can('gerenciar-empresa')) {
+        if (! Auth::user()->podeGerenciarUsuario((int) $validated['user_id'])) {
             $validated['user_id'] = Auth::id();
         }
 
@@ -167,8 +172,10 @@ class ClockifyTimeOffController extends Controller
 
     public function approve(Request $request, $id, AprovarTimeOffAction $action): RedirectResponse
     {
-        if (! Auth::user()->can('gerenciar-empresa')) {
-            return redirect()->back()->with('error', 'Apenas administradores podem aprovar folgas.');
+        $timeoff = \App\Models\ClockifyTimeOff::findOrFail($id);
+
+        if (! Auth::user()->podeGerenciarUsuario($timeoff->user_id)) {
+            return redirect()->back()->with('error', 'Você só pode aprovar solicitações da sua equipe.');
         }
 
         $action->handle((int) $id);
@@ -179,8 +186,10 @@ class ClockifyTimeOffController extends Controller
 
     public function reject(Request $request, $id, RejeitarTimeOffAction $action): RedirectResponse
     {
-        if (! Auth::user()->can('gerenciar-empresa')) {
-            return redirect()->back()->with('error', 'Apenas administradores podem rejeitar folgas.');
+        $timeoff = \App\Models\ClockifyTimeOff::findOrFail($id);
+
+        if (! Auth::user()->podeGerenciarUsuario($timeoff->user_id)) {
+            return redirect()->back()->with('error', 'Você só pode rejeitar solicitações da sua equipe.');
         }
 
         $action->handle((int) $id);

@@ -34,9 +34,11 @@
                             <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                         </form>
                         @include('partials.ux-view-toggle', ['viewKey' => 'times_index_view'])
-                        <button type="button" class="btn btn-sm btn-primary" id="btn-create-time">
-                            <i class="fas fa-plus mr-1"></i> Nova Equipe
-                        </button>
+                        @can('clockify.times.store')
+                            <button type="button" class="btn btn-sm btn-primary" id="btn-create-time">
+                                <i class="fas fa-plus mr-1"></i> Nova Equipe
+                            </button>
+                        @endcan
                     </div>
                 </div>
                 <div class="card-body p-0 ux-index-body" data-view="cards">
@@ -52,6 +54,9 @@
                                     </div>
                                     <div class="ux-card__badges">
                                         <span class="ux-card__badge ux-card__badge--blue">{{ $time->users->count() }} membro(s)</span>
+                                        @if ($time->lider)
+                                            <span class="ux-card__badge ux-card__badge--blue" title="Líder da equipe"><i class="fas fa-star mr-1"></i>{{ $time->lider->nome }}</span>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="ux-card__meta">
@@ -67,15 +72,17 @@
                                     </div>
                                 </div>
                                 <div class="ux-card__foot">
-                                    <button type="button" class="btn btn-xs btn-warning"
-                                        onclick="editTime({{ json_encode($time) }}, {{ json_encode($time->users->pluck('id')) }})">
-                                        <i class="fa fa-edit mr-1"></i>Editar
-                                    </button>
-                                    <form action="{{ route('clockify.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
-                                    </form>
+                                    @if ($time->podeSerGerenciadoPor(auth()->user()))
+                                        <button type="button" class="btn btn-xs btn-warning"
+                                            onclick="editTime({{ json_encode($time) }}, {{ json_encode($time->users->pluck('id')) }})">
+                                            <i class="fa fa-edit mr-1"></i>Editar
+                                        </button>
+                                        <form action="{{ route('clockify.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                        </form>
+                                    @endif
                                 </div>
                             </article>
                         @empty
@@ -90,6 +97,7 @@
                         <thead>
                             <tr>
                                 <th>Nome do Time</th>
+                                <th>Líder</th>
                                 <th>Descrição</th>
                                 <th>Membros</th>
                                 <th style="width: 150px;" class="text-center">Ações</th>
@@ -99,6 +107,13 @@
                             @forelse ($times as $time)
                                 <tr>
                                     <td class="align-middle font-weight-bold">{{ $time->nome }}</td>
+                                    <td class="align-middle">
+                                        @if ($time->lider)
+                                            <span class="badge badge-warning" title="Líder da equipe"><i class="fas fa-star mr-1"></i>{{ $time->lider->nome }}</span>
+                                        @else
+                                            <span class="text-muted text-xs">—</span>
+                                        @endif
+                                    </td>
                                     <td class="align-middle">{{ $time->descricao ?? '-' }}</td>
                                     <td class="align-middle">
                                         @foreach ($time->users as $u)
@@ -109,15 +124,19 @@
                                         @endif
                                     </td>
                                     <td class="align-middle text-center">
-                                        <button type="button" class="btn btn-xs btn-warning mr-1"
-                                            onclick="editTime({{ json_encode($time) }}, {{ json_encode($time->users->pluck('id')) }})">
-                                            <i class="fa fa-edit"></i> Editar
-                                        </button>
-                                        <form action="{{ route('clockify.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
-                                        </form>
+                                        @if ($time->podeSerGerenciadoPor(auth()->user()))
+                                            <button type="button" class="btn btn-xs btn-warning mr-1"
+                                                onclick="editTime({{ json_encode($time) }}, {{ json_encode($time->users->pluck('id')) }})">
+                                                <i class="fa fa-edit"></i> Editar
+                                            </button>
+                                            <form action="{{ route('clockify.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                            </form>
+                                        @else
+                                            <span class="text-muted text-xs">Somente leitura</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
@@ -155,6 +174,18 @@
             <label for="descricao">Descrição</label>
             <textarea name="descricao" id="descricao" rows="2" class="form-control form-control-sm" placeholder="Opcional...">{{ old('descricao') }}</textarea>
         </div>
+        @if (auth()->user()->isAdministrador())
+            <div class="form-group">
+                <label for="lider_id">Líder da Equipe</label>
+                <select name="lider_id" id="lider_id" class="form-control form-control-sm">
+                    <option value="">Sem líder definido</option>
+                    @foreach ($usuarios as $usuario)
+                        <option value="{{ $usuario->id }}" {{ (string) old('lider_id') === (string) $usuario->id ? 'selected' : '' }}>{{ $usuario->nome }}</option>
+                    @endforeach
+                </select>
+                <small class="text-muted">O líder aprova folgas e gerencia os membros desta equipe.</small>
+            </div>
+        @endif
         <div class="form-group">
             <label>Selecionar Membros</label>
             <div style="max-height: 240px; overflow-y: auto; border: 1px solid #ced4da; padding: 10px; border-radius: 4px;">
@@ -206,6 +237,7 @@
             $('#time_id').val(time.id);
             $('#nome').val(time.nome);
             $('#descricao').val(time.descricao);
+            $('#lider_id').val(time.lider_id || '');
 
             $('.user-checkbox').prop('checked', false);
             userIds.forEach(function(id) {

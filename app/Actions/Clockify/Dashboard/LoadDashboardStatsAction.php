@@ -13,10 +13,14 @@ class LoadDashboardStatsAction
     public function handle(?string $startDateStr = null, ?string $endDateStr = null, ?int $filterUserId = null): array
     {
         $currentUserId = Auth::id();
-        
-        // If a user filter is specified, check if user can view team statistics (or restrict to self)
+
+        // Filtro por usuario respeita o escopo de visibilidade:
+        // admin qualquer um; lider os da sua equipe; colaborador so a si.
+        $visibilidade = app(\App\Services\VisibilidadeService::class);
+        $idsVisiveis = Auth::user()->idsVisiveis();
+
         $targetUserId = $filterUserId;
-        if (!$targetUserId || (!Auth::user()->can('gerenciar-empresa') && $targetUserId !== $currentUserId)) {
+        if (! $targetUserId || ! $visibilidade->podeVerUsuario(Auth::user(), $targetUserId)) {
             $targetUserId = $currentUserId;
         }
 
@@ -33,6 +37,7 @@ class LoadDashboardStatsAction
                 ->where('fim', '<=', $end)
                 ->get()
                 ->sum('duration_in_seconds');
+
             return round($seconds / 3600.0, 2);
         };
 
@@ -79,10 +84,12 @@ class LoadDashboardStatsAction
             ->whereNotNull('fim')
             ->whereBetween('inicio', [$startDate, $endDate]);
 
-        // If not manager, restrict activity list to target user
-        if (!Auth::user()->can('gerenciar-empresa')) {
-            $teamActivitiesQuery->where('user_id', $currentUserId);
-        } elseif ($filterUserId) {
+        // A lista de atividades respeita o escopo de visibilidade;
+        // um filtro explicito restringe ao usuario escolhido.
+        if ($idsVisiveis !== null) {
+            $teamActivitiesQuery->whereIn('user_id', $idsVisiveis);
+        }
+        if ($filterUserId) {
             $teamActivitiesQuery->where('user_id', $filterUserId);
         }
 
@@ -93,7 +100,7 @@ class LoadDashboardStatsAction
         // 6. Get currently active trackers
         $activeTrackersQuery = ClockifyTimeTracker::with(['user', 'projeto'])
             ->whereNull('fim');
-            
+
         if ($filterUserId) {
             $activeTrackersQuery->where('user_id', $filterUserId);
         }

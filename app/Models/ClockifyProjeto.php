@@ -29,6 +29,7 @@ class ClockifyProjeto extends Model
     protected $fillable = [
         'empresa_id',
         'clockify_cliente_id',
+        'responsavel_id',
         'nome',
         'descricao',
         'cor',
@@ -61,6 +62,19 @@ class ClockifyProjeto extends Model
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(ClockifyCliente::class, 'clockify_cliente_id');
+    }
+
+    public function responsavel(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsavel_id');
+    }
+
+    /**
+     * Admin pode gerenciar qualquer projeto; responsavel apenas o proprio.
+     */
+    public function podeSerGerenciadoPor(User $user): bool
+    {
+        return app(\App\Services\VisibilidadeService::class)->podeGerenciarProjeto($user, $this);
     }
 
     public function users(): BelongsToMany

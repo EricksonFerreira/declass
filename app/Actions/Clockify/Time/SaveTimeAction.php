@@ -3,6 +3,7 @@
 namespace App\Actions\Clockify\Time;
 
 use App\Models\ClockifyTime;
+use App\Services\VisibilidadeService;
 
 class SaveTimeAction
 {
@@ -10,9 +11,11 @@ class SaveTimeAction
     {
         $time = ClockifyTime::create($data);
 
-        if (!empty($userIds)) {
+        if (! empty($userIds)) {
             $time->users()->sync($userIds);
         }
+
+        app(VisibilidadeService::class)->promoverLiderDeTime($time->lider_id);
 
         return $time;
     }

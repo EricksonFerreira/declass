@@ -117,20 +117,32 @@ class ReportController extends Controller
 
     public function export(Request $request, ExportReportAction $action)
     {
+        $visibilidade = app(\App\Services\VisibilidadeService::class);
+        $idsVisiveis = auth()->user()->idsVisiveis();
+
         if ($request->isMethod('post')) {
+            $userIds = collect($request->input('user_ids', []))->map(fn ($id) => (int) $id);
+
+            // Nao permite exportar dados fora do escopo de visibilidade.
+            if ($idsVisiveis !== null) {
+                $userIds = $userIds->filter(fn ($id) => in_array($id, $idsVisiveis, true))->values();
+
+                if ($userIds->isEmpty()) {
+                    $userIds = collect($idsVisiveis);
+                }
+            }
+
             return $action->execute(
                 $request->input('data_inicio'),
                 $request->input('data_fim'),
-                $request->input('user_ids', []),
+                $userIds->all(),
                 $request->input('report_type')
             );
         }
-        $users = User::where('empresa_id', auth()->user()->empresa_id)
-            ->where(function ($q) {
-                $q->whereNull('tipo_usuario_id')->orWhere('tipo_usuario_id', '!=', 1);
-            })
-            ->orderBy('nome')
-            ->get();
+        $users = $visibilidade->usuariosVisiveis(auth()->user())
+            ->filter(fn ($u) => (int) $u->getRawOriginal('tipo_usuario_id') !== 1)
+            ->sortBy('nome')
+            ->values();
         $breadcrumb = [
             ['name' => 'Home', 'url' => route('home')],
             ['name' => 'Análise'],

@@ -2,19 +2,17 @@
 
 namespace App\Http\Controllers\Clockify;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\ClockifyProjeto;
-use App\Actions\Clockify\Dashboard\LoadDashboardStatsAction;
 use App\Actions\Clockify\Dashboard\GetMemberStatsAction;
+use App\Actions\Clockify\Dashboard\LoadDashboardStatsAction;
+use App\Actions\Clockify\Dashboard\LoadProductivityAction;
+use App\Actions\Clockify\Dashboard\LoadProjectsOverviewAction;
+use App\Actions\Clockify\Dashboard\LoadTeamOverviewAction;
+use App\Http\Controllers\Controller;
+use App\Models\ClockifyProjeto;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Carbon\Carbon;
-
-use App\Actions\Clockify\Dashboard\LoadProductivityAction;
-use App\Actions\Clockify\Dashboard\LoadTeamOverviewAction;
-use App\Actions\Clockify\Dashboard\LoadProjectsOverviewAction;
-
 
 class ClockifyDashboardController extends Controller
 {
@@ -29,10 +27,19 @@ class ClockifyDashboardController extends Controller
             $filterUserIds = [(int) $request->input('user_id')];
         }
 
+        // Escopo de visibilidade: filtro por usuario limitado aos ids visiveis.
+        $visibilidade = app(\App\Services\VisibilidadeService::class);
+        $idsVisiveis = $request->user()->idsVisiveis();
+        if ($idsVisiveis !== null) {
+            $filterUserIds = $filterUserIds
+                ? array_values(array_intersect(array_map('intval', $filterUserIds), $idsVisiveis))
+                : null;
+        }
+
         // Load generic dashboard stats (uses first user if needed)
         $primaryUserId = $filterUserIds ? $filterUserIds[0] : null;
         $stats = $statsAction->handle($dataInicio, $dataFim, $primaryUserId);
-        $usuarios = User::orderBy('nome')->get();
+        $usuarios = $visibilidade->usuariosVisiveis($request->user());
 
         // Active trackers come from $stats['activeTrackers']
         $activeTrackers = $stats['activeTrackers'];
@@ -73,13 +80,23 @@ class ClockifyDashboardController extends Controller
 
     public function produtividade(Request $request, LoadProductivityAction $action): View
     {
+        $visibilidade = app(\App\Services\VisibilidadeService::class);
+        $idsVisiveis = $request->user()->idsVisiveis();
+
+        $filterUserIds = $request->input('user_ids');
+        if ($idsVisiveis !== null && $filterUserIds) {
+            $filterUserIds = array_values(array_intersect(array_map('intval', $filterUserIds), $idsVisiveis));
+        } elseif ($idsVisiveis !== null) {
+            $filterUserIds = $idsVisiveis;
+        }
+
         $data = $action->handle(
             $request->input('data_inicio'),
             $request->input('data_fim'),
-            $request->input('user_ids')
+            $filterUserIds
         );
 
-        $usuarios = User::orderBy('nome')->get();
+        $usuarios = $visibilidade->usuariosVisiveis($request->user());
 
         return view('clockify.produtividade', array_merge($data, [
             'titulo' => 'Produtividade',
@@ -116,6 +133,7 @@ class ClockifyDashboardController extends Controller
                 ];
             }
             $data['activeTrackersFormatted'] = $trackersFormatted;
+
             return response()->json($data);
         }
 
@@ -131,7 +149,6 @@ class ClockifyDashboardController extends Controller
             ],
         ]));
     }
-
 
     public function projetos(Request $request, LoadProjectsOverviewAction $action): View
     {
@@ -158,6 +175,4 @@ class ClockifyDashboardController extends Controller
             ],
         ]));
     }
-
 }
-

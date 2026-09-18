@@ -13,11 +13,19 @@ class ListarTimeOffsAction
     {
         $query = ClockifyTimeOff::with('user');
 
-        if (!Auth::user()->can('gerenciar-empresa')) {
-            $query->where('user_id', Auth::id());
+        // Escopo de visibilidade: admin ve tudo; lider ve sua equipe;
+        // colaborador ve apenas as proprias solicitacoes.
+        $idsVisiveis = Auth::user()->idsVisiveis();
+        if ($idsVisiveis !== null) {
+            $query->whereIn('user_id', $idsVisiveis);
         }
 
         FiltroQuery::aplicar($query, $filtros, ['user_id', 'tipo', 'status']);
+
+        // Um colaborador nao pode burlar o escopo filtrando por user_id de terceiros.
+        if ($idsVisiveis !== null && ! empty($filtros['user_id'])) {
+            $query->whereIn('user_id', $idsVisiveis);
+        }
 
         return $query->orderBy('data_inicio', 'desc')->paginate($perPage);
     }

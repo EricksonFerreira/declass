@@ -146,7 +146,7 @@
                                     </div>
                                 </div>
                                 <div class="ux-card__foot">
-                                    <?php if(strtolower($to->status ?? '') === 'pendente' && auth()->user()->can('gerenciar-empresa')): ?>
+                                    <?php if(strtolower($to->status ?? '') === 'pendente' && auth()->user()->podeGerenciarUsuario($to->user_id)): ?>
                                         <form action="<?php echo e(route('clockify.timeoff.approve', $to->id)); ?>" method="POST" class="d-inline">
                                             <?php echo csrf_field(); ?>
                                             <button type="submit" class="btn btn-xs btn-success"><i class="fa fa-check mr-1"></i>Aprovar</button>
@@ -156,7 +156,7 @@
                                             <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-times mr-1"></i>Rejeitar</button>
                                         </form>
                                     <?php endif; ?>
-                                    <?php if(auth()->user()->can('gerenciar-empresa') || $to->user_id === auth()->id()): ?>
+                                    <?php if($to->user_id === auth()->id() || auth()->user()->podeGerenciarUsuario($to->user_id)): ?>
                                         <button type="button" class="btn btn-xs btn-warning btn-edit-timeoff"
                                             data-id="<?php echo e($to->id); ?>"
                                             data-user="<?php echo e($to->user_id); ?>"
@@ -166,12 +166,12 @@
                                             data-obs="<?php echo e($to->observacao); ?>">
                                             <i class="fas fa-edit mr-1"></i>Editar
                                         </button>
+                                        <form action="<?php echo e(route('clockify.timeoff.destroy', $to->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('DELETE'); ?>
+                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                        </form>
                                     <?php endif; ?>
-                                    <form action="<?php echo e(route('clockify.timeoff.destroy', $to->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
-                                        <?php echo csrf_field(); ?>
-                                        <?php echo method_field('DELETE'); ?>
-                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
-                                    </form>
                                 </div>
                             </article>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -217,7 +217,7 @@
                                     </td>
                                     <td class="align-middle"><?php echo e(Str::limit($to->observacao, 40) ?? '-'); ?></td>
                                     <td class="align-middle text-center">
-                                        <?php if(strtolower($to->status ?? '') === 'pendente' && auth()->user()->can('gerenciar-empresa')): ?>
+                                        <?php if(strtolower($to->status ?? '') === 'pendente' && auth()->user()->podeGerenciarUsuario($to->user_id)): ?>
                                             <form action="<?php echo e(route('clockify.timeoff.approve', $to->id)); ?>" method="POST" class="d-inline mr-1">
                                                 <?php echo csrf_field(); ?>
                                                 <button type="submit" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Aprovar</button>
@@ -227,7 +227,7 @@
                                                 <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Rejeitar</button>
                                             </form>
                                         <?php endif; ?>
-                                        <?php if(auth()->user()->can('gerenciar-empresa') || $to->user_id === auth()->id()): ?>
+                                        <?php if($to->user_id === auth()->id() || auth()->user()->podeGerenciarUsuario($to->user_id)): ?>
                                             <button type="button" class="btn btn-xs btn-info mr-1 btn-edit-timeoff"
                                                 data-id="<?php echo e($to->id); ?>"
                                                 data-user="<?php echo e($to->user_id); ?>"
@@ -237,12 +237,12 @@
                                                 data-obs="<?php echo e($to->observacao); ?>">
                                                 <i class="fas fa-edit"></i> Editar
                                             </button>
+                                            <form action="<?php echo e(route('clockify.timeoff.destroy', $to->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
+                                                <button type="submit" class="btn btn-xs btn-default text-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                            </form>
                                         <?php endif; ?>
-                                        <form action="<?php echo e(route('clockify.timeoff.destroy', $to->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
-                                            <?php echo csrf_field(); ?>
-                                            <?php echo method_field('DELETE'); ?>
-                                            <button type="submit" class="btn btn-xs btn-default text-danger"><i class="fa fa-trash"></i> Excluir</button>
-                                        </form>
                                     </td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -279,7 +279,7 @@
 <?php endif; ?>
 <?php $component->withAttributes(['id' => 'timeoffDrawer','icon' => 'fas fa-plane','title' => 'Solicitar Folga ou Férias','formId' => 'timeoff-form','action' => ''.e(route('clockify.timeoff.store')).'']); ?>
         <input type="hidden" name="id" id="timeoff_id" value="<?php echo e(old('id')); ?>">
-        <?php if(auth()->user()->can('gerenciar-empresa')): ?>
+        <?php if($usuarios->count() > 1): ?>
             <div class="form-group">
                 <label for="user_id">Colaborador</label>
                 <select name="user_id" id="user_id" class="form-control form-control-sm" required>

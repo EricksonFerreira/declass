@@ -34,9 +34,11 @@
                             <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                         </form>
                         @include('partials.ux-view-toggle', ['viewKey' => 'projetos_index_view'])
-                        <button type="button" class="btn btn-sm btn-primary" id="btn-create-projeto">
-                            <i class="fas fa-plus mr-1"></i> Novo Projeto
-                        </button>
+                        @can('clockify.projetos.store')
+                            <button type="button" class="btn btn-sm btn-primary" id="btn-create-projeto">
+                                <i class="fas fa-plus mr-1"></i> Novo Projeto
+                            </button>
+                        @endcan
                     </div>
                 </div>
                 <div class="card-body p-0 ux-index-body" data-view="cards">
@@ -54,6 +56,9 @@
                                         <span class="ux-card__badge ux-card__badge--{{ $projeto->ativo ? 'green' : 'red' }}">
                                             {{ $projeto->ativo ? 'Ativo' : 'Inativo' }}
                                         </span>
+                                        @if ($projeto->responsavel)
+                                            <span class="ux-card__badge ux-card__badge--blue" title="Responsável pelo projeto"><i class="fas fa-user-tie mr-1"></i>{{ $projeto->responsavel->nome }}</span>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="ux-card__meta">
@@ -78,16 +83,20 @@
                                     <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary">
                                         <i class="fas fa-eye mr-1"></i>Detalhes
                                     </a>
-                                    <button type="button" class="btn btn-xs btn-warning"
-                                        onclick="editProjeto({{ json_encode($projeto) }})">
-                                        <i class="fa fa-edit mr-1"></i>Editar
-                                    </button>
-                                    <form action="{{ route('clockify.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"
-                                        onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
-                                    </form>
+                                    @if ($projeto->podeSerGerenciadoPor(auth()->user()))
+                                        <button type="button" class="btn btn-xs btn-warning"
+                                            onclick="editProjeto({{ json_encode($projeto) }})">
+                                            <i class="fa fa-edit mr-1"></i>Editar
+                                        </button>
+                                    @endif
+                                    @can('clockify.projetos.destroy')
+                                        <form action="{{ route('clockify.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"
+                                            onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                        </form>
+                                    @endcan
                                 </div>
                             </article>
                         @empty
@@ -160,16 +169,20 @@
                                         <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary mr-1">
                                             <i class="fas fa-eye"></i> Detalhes
                                         </a>
-                                        <button type="button" class="btn btn-xs btn-warning mr-1"
-                                            onclick="editProjeto({{ json_encode($projeto) }})">
-                                            <i class="fa fa-edit"></i> Editar
-                                        </button>
-                                        <form action="{{ route('clockify.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"
-                                            onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
-                                        </form>
+                                        @if ($projeto->podeSerGerenciadoPor(auth()->user()))
+                                            <button type="button" class="btn btn-xs btn-warning mr-1"
+                                                onclick="editProjeto({{ json_encode($projeto) }})">
+                                                <i class="fa fa-edit"></i> Editar
+                                            </button>
+                                        @endif
+                                        @can('clockify.projetos.destroy')
+                                            <form action="{{ route('clockify.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"
+                                                onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                            </form>
+                                        @endcan
                                     </td>
                                 </tr>
                             @empty
@@ -211,6 +224,16 @@
                     <option value="{{ $cliente->id }}" @selected((string) old('clockify_cliente_id') === (string) $cliente->id)>{{ $cliente->nome }}</option>
                 @endforeach
             </select>
+        </div>
+        <div class="form-group">
+            <label for="responsavel_id">Responsável</label>
+            <select name="responsavel_id" id="responsavel_id" class="form-control form-control-sm">
+                <option value="">Sem responsável</option>
+                @foreach ($usuarios as $usuario)
+                    <option value="{{ $usuario->id }}" {{ (string) old('responsavel_id') === (string) $usuario->id ? 'selected' : '' }}>{{ $usuario->nome }}</option>
+                @endforeach
+            </select>
+            <small class="text-muted">O responsável pode editar este projeto e acompanhar seu consumo.</small>
         </div>
         <div class="form-group">
             <label for="descricao">Descrição</label>
@@ -306,6 +329,7 @@
             $('#projeto_id').val(projeto.id);
             $('#nome').val(projeto.nome);
             $('#clockify_cliente_id').val(projeto.clockify_cliente_id).trigger('change');
+            $('#responsavel_id').val(projeto.responsavel_id || '');
             $('#descricao').val(projeto.descricao);
             $('#valor_faturado').val(projeto.valor_faturado);
             $('#valor_hora').val(projeto.valor_hora);

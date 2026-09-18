@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Clockify;
 
-use App\Http\Controllers\Controller;
-use App\Models\ClockifyCliente;
-use App\Models\ClockifyProjeto;
-use App\Models\ClockifyTime;
-use App\Models\ClockifyCalendario;
+use App\Actions\Clockify\Projeto\DeleteProjetoAction;
 use App\Actions\Clockify\Projeto\ListarProjetosAction;
 use App\Actions\Clockify\Projeto\SaveProjetoAction;
 use App\Actions\Clockify\Projeto\UpdateProjetoAction;
-use App\Actions\Clockify\Projeto\DeleteProjetoAction;
+use App\Http\Controllers\Controller;
+use App\Models\ClockifyCalendario;
+use App\Models\ClockifyCliente;
+use App\Models\ClockifyProjeto;
+use App\Models\ClockifyTime;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +32,7 @@ class ClockifyProjetoController extends Controller
         $perPage = session("{$this->nomeFiltro}.perPage", 15);
         $projetos = $action->handle($request->search, $itensFiltered, $perPage);
         $clientes = ClockifyCliente::where('ativo', true)->orderBy('nome')->get();
+        $usuarios = app(\App\Services\VisibilidadeService::class)->usuariosVisiveis($request->user());
 
         $filters = $this->obterFiltrosPrincipais($clientes);
         $additionalFilters = $this->obterFiltrosSecundarios();
@@ -42,6 +43,7 @@ class ClockifyProjetoController extends Controller
             'titulo' => 'Projetos',
             'projetos' => $projetos,
             'clientes' => $clientes,
+            'usuarios' => $usuarios,
             'filters' => $filters,
             'additionalFilters' => $additionalFilters,
             'itensFiltered' => $itensFiltered,
@@ -127,16 +129,22 @@ class ClockifyProjetoController extends Controller
     public function store(Request $request, SaveProjetoAction $action): RedirectResponse
     {
         $validated = $request->validate([
-            'nome'                       => 'required|string|max:255',
-            'clockify_cliente_id'        => 'nullable|exists:clockify_clientes,id',
-            'descricao'                  => 'nullable|string',
-            'cor'                        => 'nullable|string|max:7',
-            'publico'                    => 'nullable|boolean',
-            'valor_faturado'             => 'nullable|string',
-            'valor_hora'                 => 'nullable|string',
-            'data_entrega_previsao'      => 'nullable|date',
+            'nome' => 'required|string|max:255',
+            'clockify_cliente_id' => 'nullable|exists:clockify_clientes,id',
+            'responsavel_id' => 'nullable|exists:users,id',
+            'descricao' => 'nullable|string',
+            'cor' => 'nullable|string|max:7',
+            'publico' => 'nullable|boolean',
+            'valor_faturado' => 'nullable|string',
+            'valor_hora' => 'nullable|string',
+            'data_entrega_previsao' => 'nullable|date',
             'horas_diarias_planejamento' => 'nullable|numeric|min:0',
         ]);
+
+        // Quem nao e admin so pode criar projeto do qual e o responsavel.
+        if (! $request->user()->isAdministrador()) {
+            $validated['responsavel_id'] = $request->user()->id;
+        }
 
         $action->handle(array_merge($validated, [
             'publico' => $request->has('publico') ? (bool) $request->publico : true,
@@ -148,22 +156,35 @@ class ClockifyProjetoController extends Controller
 
     public function update(Request $request, $id, UpdateProjetoAction $action): RedirectResponse
     {
+        $projeto = \App\Models\ClockifyProjeto::findOrFail($id);
+
+        if (! $projeto->podeSerGerenciadoPor($request->user())) {
+            return redirect()->route('clockify.projetos.index')
+                ->with('error', 'Você só pode editar projetos pelos quais é responsável.');
+        }
+
         $validated = $request->validate([
-            'nome'                       => 'required|string|max:255',
-            'clockify_cliente_id'        => 'nullable|exists:clockify_clientes,id',
-            'descricao'                  => 'nullable|string',
-            'cor'                        => 'nullable|string|max:7',
-            'publico'                    => 'nullable|boolean',
-            'ativo'                      => 'nullable|boolean',
-            'valor_faturado'             => 'nullable|string',
-            'valor_hora'                 => 'nullable|string',
-            'data_entrega_previsao'      => 'nullable|date',
+            'nome' => 'required|string|max:255',
+            'clockify_cliente_id' => 'nullable|exists:clockify_clientes,id',
+            'responsavel_id' => 'nullable|exists:users,id',
+            'descricao' => 'nullable|string',
+            'cor' => 'nullable|string|max:7',
+            'publico' => 'nullable|boolean',
+            'ativo' => 'nullable|boolean',
+            'valor_faturado' => 'nullable|string',
+            'valor_hora' => 'nullable|string',
+            'data_entrega_previsao' => 'nullable|date',
             'horas_diarias_planejamento' => 'nullable|numeric|min:0',
         ]);
 
+        // Responsavel nao transfere a titularidade do proprio projeto.
+        if (! $request->user()->isAdministrador()) {
+            $validated['responsavel_id'] = $projeto->responsavel_id;
+        }
+
         $action->handle((int) $id, array_merge($validated, [
             'publico' => $request->has('publico') ? (bool) $request->publico : true,
-            'ativo'   => $request->has('ativo') ? (bool) $request->ativo : true,
+            'ativo' => $request->has('ativo') ? (bool) $request->ativo : true,
         ]));
 
         return redirect()->route('clockify.projetos.show', $id)
@@ -181,13 +202,14 @@ class ClockifyProjetoController extends Controller
     public function planejamento(Request $request, $id): View
     {
         $projeto = ClockifyProjeto::with('cronogramas.planejamentos')->findOrFail((int) $id);
-        
+        $this->abortUnlessGerenciaProjeto($request, $projeto);
+
         $selectedCronogramaId = $request->input('cronograma_id');
         $selectedCronograma = null;
         if ($selectedCronogramaId) {
             $selectedCronograma = $projeto->cronogramas->firstWhere('id', (int) $selectedCronogramaId);
         }
-        if (!$selectedCronograma) {
+        if (! $selectedCronograma) {
             $selectedCronograma = $projeto->cronograma_ativo ?: $projeto->cronogramas->first();
         }
 
@@ -203,7 +225,7 @@ class ClockifyProjetoController extends Controller
         }
 
         return view('clockify.projetos_planejamento', [
-            'titulo' => 'Planejamento de Entrega: ' . $projeto->nome,
+            'titulo' => 'Planejamento de Entrega: '.$projeto->nome,
             'projeto' => $projeto,
             'selectedCronograma' => $selectedCronograma,
             'existingPlanning' => $existingPlanning,
@@ -220,6 +242,8 @@ class ClockifyProjetoController extends Controller
     public function planejamentoStore(Request $request, $id): RedirectResponse
     {
         $projeto = ClockifyProjeto::findOrFail((int) $id);
+        $this->abortUnlessGerenciaProjeto($request, $projeto);
+
         $request->validate([
             'cronograma_id' => 'required|exists:clockify_projeto_cronogramas,id',
             'planejamento' => 'required|array',
@@ -263,7 +287,7 @@ class ClockifyProjetoController extends Controller
                 }
             }
 
-            if (!empty($insertData)) {
+            if (! empty($insertData)) {
                 \App\Models\ClockifyProjetoPlanejamento::insert($insertData);
             }
 
@@ -294,6 +318,8 @@ class ClockifyProjetoController extends Controller
     public function cronogramaStore(Request $request, $id): RedirectResponse
     {
         $projeto = ClockifyProjeto::findOrFail((int) $id);
+        $this->abortUnlessGerenciaProjeto($request, $projeto);
+
         $request->validate([
             'nome' => 'required|string|max:255',
             'status' => 'required|in:valido,invalido,rascunho',
@@ -327,10 +353,11 @@ class ClockifyProjetoController extends Controller
     public function cronogramaNovo($id): RedirectResponse
     {
         $projeto = ClockifyProjeto::findOrFail((int) $id);
-        
+        $this->abortUnlessGerenciaProjeto(request(), $projeto);
+
         $nextNum = $projeto->cronogramas()->count() + 1;
-        $nome = 'Versão ' . $nextNum;
-        
+        $nome = 'Versão '.$nextNum;
+
         $cronograma = $projeto->cronogramas()->create([
             'clockify_projeto_id' => $projeto->id,
             'nome' => $nome,
@@ -338,20 +365,27 @@ class ClockifyProjetoController extends Controller
             'horas_orcadas' => $projeto->horas_orcadas,
             'valor_hora' => $projeto->valor_hora,
         ]);
-        
+
         return redirect()->route('clockify.projetos.planejamento', [
             $projeto->id,
-            'cronograma_id' => $cronograma->id
-        ])->with('success', 'Nova versão criada: ' . $nome);
+            'cronograma_id' => $cronograma->id,
+        ])->with('success', 'Nova versão criada: '.$nome);
     }
 
     public function show($id): View
     {
         $projeto = ClockifyProjeto::with(['cliente', 'cronogramas.planejamentos'])->findOrFail((int) $id);
+
+        abort_unless(
+            app(\App\Services\VisibilidadeService::class)->podeVerProjeto(request()->user(), $projeto),
+            403,
+            'Você não tem acesso a este projeto.'
+        );
+
         $clientes = ClockifyCliente::where('ativo', true)->orderBy('nome')->get();
 
         return view('clockify.projetos_show', [
-            'titulo' => 'Detalhes do Projeto: ' . $projeto->nome,
+            'titulo' => 'Detalhes do Projeto: '.$projeto->nome,
             'projeto' => $projeto,
             'clientes' => $clientes,
             'breadcrumb' => [
@@ -367,7 +401,8 @@ class ClockifyProjetoController extends Controller
     {
         $cronograma = \App\Models\ClockifyProjetoCronograma::findOrFail((int) $id);
         $projetoId = $cronograma->clockify_projeto_id;
-        
+        $this->abortUnlessGerenciaProjeto(request(), ClockifyProjeto::findOrFail($projetoId));
+
         \DB::transaction(function () use ($cronograma) {
             $cronograma->planejamentos()->delete();
             $cronograma->delete();
@@ -380,6 +415,8 @@ class ClockifyProjetoController extends Controller
     public function planejarEquipe($id): View
     {
         $projeto = ClockifyProjeto::with(['cliente', 'cronogramas'])->findOrFail((int) $id);
+        $this->abortUnlessGerenciaProjeto(request(), $projeto);
+
         $times = ClockifyTime::with('users')->orderBy('nome')->get();
 
         $alocacoes = ClockifyCalendario::with('user')
@@ -389,21 +426,21 @@ class ClockifyProjetoController extends Controller
 
         // Compute overall date range across all cronogramas with dates set
         $cronogramasComDatas = $projeto->cronogramas->filter(
-            fn($c) => $c->data_inicio && $c->data_fim
+            fn ($c) => $c->data_inicio && $c->data_fim
         );
         $dataInicioGlobal = $cronogramasComDatas->min('data_inicio');
-        $dataFimGlobal    = $cronogramasComDatas->max('data_fim');
+        $dataFimGlobal = $cronogramasComDatas->max('data_fim');
 
         return view('clockify.projetos_planejar_equipe', [
-            'titulo'            => 'Planejar Equipe: ' . $projeto->nome,
-            'projeto'           => $projeto,
-            'times'             => $times,
-            'cronograma'        => $projeto->cronograma_ativo,
-            'cronogramas'       => $projeto->cronogramas,
-            'dataInicioGlobal'  => $dataInicioGlobal ? $dataInicioGlobal->format('Y-m-d') : '',
-            'dataFimGlobal'     => $dataFimGlobal    ? $dataFimGlobal->format('Y-m-d')    : '',
-            'alocacoes'         => $alocacoes,
-            'breadcrumb'        => [
+            'titulo' => 'Planejar Equipe: '.$projeto->nome,
+            'projeto' => $projeto,
+            'times' => $times,
+            'cronograma' => $projeto->cronograma_ativo,
+            'cronogramas' => $projeto->cronogramas,
+            'dataInicioGlobal' => $dataInicioGlobal ? $dataInicioGlobal->format('Y-m-d') : '',
+            'dataFimGlobal' => $dataFimGlobal ? $dataFimGlobal->format('Y-m-d') : '',
+            'alocacoes' => $alocacoes,
+            'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Gerenciar'],
                 ['name' => 'Projetos', 'url' => route('clockify.projetos.index')],
@@ -416,15 +453,16 @@ class ClockifyProjetoController extends Controller
     public function planejarEquipeStore(Request $request, $id): RedirectResponse
     {
         $projeto = ClockifyProjeto::findOrFail((int) $id);
+        $this->abortUnlessGerenciaProjeto($request, $projeto);
 
         $request->validate([
-            'alocacoes'                          => 'nullable|array',
-            'alocacoes.*.user_id'                => 'required|exists:users,id',
+            'alocacoes' => 'nullable|array',
+            'alocacoes.*.user_id' => 'required|exists:users,id',
             'alocacoes.*.clockify_projeto_cronograma_id' => 'nullable|exists:clockify_projeto_cronogramas,id',
-            'alocacoes.*.observacao'             => 'nullable|string',
-            'alocacoes.*.horas_por_dia'          => 'nullable|numeric|min:0',
-            'alocacoes.*.data_inicio'            => 'required_with:alocacoes.*.checked|nullable|date',
-            'alocacoes.*.data_fim'               => 'required_with:alocacoes.*.checked|nullable|date|after_or_equal:alocacoes.*.data_inicio',
+            'alocacoes.*.observacao' => 'nullable|string',
+            'alocacoes.*.horas_por_dia' => 'nullable|numeric|min:0',
+            'alocacoes.*.data_inicio' => 'required_with:alocacoes.*.checked|nullable|date',
+            'alocacoes.*.data_fim' => 'required_with:alocacoes.*.checked|nullable|date|after_or_equal:alocacoes.*.data_inicio',
         ]);
 
         $alocacoesData = $request->input('alocacoes', []);
@@ -435,14 +473,14 @@ class ClockifyProjetoController extends Controller
             foreach ($alocacoesData as $data) {
                 if (isset($data['checked']) && $data['checked'] == '1') {
                     ClockifyCalendario::create([
-                        'empresa_id'                     => session('empresa_id') ?? 1,
-                        'user_id'                        => $data['user_id'],
-                        'clockify_projeto_id'            => $projeto->id,
+                        'empresa_id' => session('empresa_id') ?? 1,
+                        'user_id' => $data['user_id'],
+                        'clockify_projeto_id' => $projeto->id,
                         'clockify_projeto_cronograma_id' => $data['clockify_projeto_cronograma_id'] ?? null,
-                        'data_inicio'                    => $data['data_inicio'],
-                        'data_fim'                       => $data['data_fim'],
-                        'horas_por_dia'                  => $data['horas_por_dia'] ?? 8,
-                        'observacao'                     => $data['observacao'] ?? null,
+                        'data_inicio' => $data['data_inicio'],
+                        'data_fim' => $data['data_fim'],
+                        'horas_por_dia' => $data['horas_por_dia'] ?? 8,
+                        'observacao' => $data['observacao'] ?? null,
                     ]);
                 }
             }
@@ -490,6 +528,8 @@ class ClockifyProjetoController extends Controller
         $projetoId = $request->input('projeto_id');
         $alocacoesData = $request->input('alocacoes', []);
 
+        $this->abortUnlessGerenciaProjeto($request, ClockifyProjeto::findOrFail((int) $projetoId));
+
         \DB::transaction(function () use ($projetoId, $alocacoesData) {
             // Delete existing allocations for this project
             ClockifyCalendario::where('clockify_projeto_id', $projetoId)->delete();
@@ -511,5 +551,17 @@ class ClockifyProjetoController extends Controller
 
         return redirect()->route('clockify.projetos.show', $projetoId)
             ->with('success', 'Planejamento de equipe salvo com sucesso!');
+    }
+
+    /**
+     * Bloqueia gestao de projeto por quem nao e admin nem responsavel.
+     */
+    private function abortUnlessGerenciaProjeto(Request $request, ClockifyProjeto $projeto): void
+    {
+        abort_unless(
+            $projeto->podeSerGerenciadoPor($request->user()),
+            403,
+            'Você só pode gerenciar projetos pelos quais é responsável.'
+        );
     }
 }
