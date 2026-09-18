@@ -34,6 +34,42 @@
     .version-row:hover {
         background-color: #f8fafc;
     }
+
+    /* Mobile: versoes viram cards empilhados com rotulos */
+    @media (max-width: 767.98px) {
+        .versoes-table thead { display: none; }
+        .versoes-table,
+        .versoes-table tbody,
+        .versoes-table tr,
+        .versoes-table td { display: block; width: 100%; }
+
+        .versoes-table tr.version-row {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .versoes-table td {
+            border: none !important;
+            padding: 5px 0 !important;
+            text-align: left !important;
+        }
+        .versoes-table td::before {
+            content: attr(data-label);
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #94a3b8;
+            margin-bottom: 2px;
+        }
+        .versoes-table td[data-label=""]::before { display: none; }
+        .versoes-table td.cell-acoes { padding-top: 10px !important; border-top: 1px dashed #e2e8f0 !important; }
+    }
 </style>
 @stop
 
@@ -350,7 +386,7 @@
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0">
+                    <table class="table table-hover table-striped mb-0 versoes-table">
                         <thead class="thead-light">
                             <tr class="text-xs text-uppercase">
                                 <th class="pl-4">Nome da Versão / Etapa</th>
@@ -367,15 +403,15 @@
                         <tbody>
                             @forelse($projeto->cronogramas as $cron)
                                 <tr class="version-row">
-                                    <td class="pl-4 align-middle font-weight-bold text-dark">
+                                    <td class="pl-4 align-middle font-weight-bold text-dark" data-label="Versão / Etapa">
                                         <i class="far fa-folder mr-1 text-secondary"></i> {{ $cron->nome }}
                                     </td>
-                                    <td class="align-middle text-center">
+                                    <td class="align-middle text-center" data-label="Status">
                                         <span class="badge badge-{{ $cron->status == 'valido' ? 'success' : ($cron->status == 'rascunho' ? 'warning' : 'secondary') }} px-2 py-1">
                                             {{ $cron->status == 'valido' ? 'VÁLIDO / ATIVO' : strtoupper($cron->status) }}
                                         </span>
                                     </td>
-                                    <td class="align-middle text-center text-sm font-weight-bold text-secondary">
+                                    <td class="align-middle text-center text-sm font-weight-bold text-secondary" data-label="Período Planejado">
                                         @if($cron->data_inicio && $cron->data_fim)
                                             <i class="far fa-calendar-alt mr-1"></i> {{ $cron->data_inicio->format('d/m/Y') }} a {{ $cron->data_fim->format('d/m/Y') }}
                                             <br><small class="text-muted">({{ $cron->dias_uteis_planejamento }} dias úteis)</small>
@@ -383,22 +419,22 @@
                                             <span class="text-muted">-</span>
                                         @endif
                                     </td>
-                                    <td class="align-middle text-right font-weight-bold text-sm text-secondary">
+                                    <td class="align-middle text-right font-weight-bold text-sm text-secondary" data-label="Horas Orçadas">
                                         {{ number_format($cron->horas_orcadas, 1, ',', '.') }} h
                                     </td>
-                                    <td class="align-middle text-right font-weight-bold text-sm text-dark">
+                                    <td class="align-middle text-right font-weight-bold text-sm text-dark" data-label="Horas Planejadas">
                                         {{ number_format($cron->horas_planejadas, 1, ',', '.') }} h
                                     </td>
-                                    <td class="align-middle text-right text-sm text-secondary">
+                                    <td class="align-middle text-right text-sm text-secondary" data-label="Preço da Hora">
                                         R$ {{ number_format($cron->valor_hora, 2, ',', '.') }}
                                     </td>
-                                    <td class="align-middle text-right font-weight-bold text-sm text-success">
+                                    <td class="align-middle text-right font-weight-bold text-sm text-success" data-label="Custo Estimado">
                                         R$ {{ number_format($cron->custo_planejado, 2, ',', '.') }}
                                     </td>
-                                    <td class="align-middle text-right font-weight-bold text-sm text-primary">
+                                    <td class="align-middle text-right font-weight-bold text-sm text-primary" data-label="Faturado (Etapa)">
                                         R$ {{ number_format($cron->valor_faturado ?? 0.00, 2, ',', '.') }}
                                     </td>
-                                    <td class="align-middle text-center">
+                                    <td class="align-middle text-center cell-acoes" data-label="">
                                         <!-- Editar abre o planejador com a versão correspondente -->
                                         <a href="{{ route('clockify.projetos.planejamento', [$projeto->id, 'cronograma_id' => $cron->id]) }}" class="btn btn-xs btn-info font-weight-bold mr-1">
                                             <i class="fas fa-edit mr-1"></i> Editar
