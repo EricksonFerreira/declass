@@ -237,7 +237,7 @@
         <div id="secSucesso" style="display:none; text-align:center; padding:1.5rem 0;">
             <div style="font-size:3rem; margin-bottom:.75rem;">🎉</div>
             <div style="font-size:1.2rem; font-weight:900; color:#15803d; margin-bottom:.5rem;">Pagamento confirmado!</div>
-            <div style="font-size:.85rem; color:#64748b; margin-bottom:1.5rem;">Seu plano foi ativado. Vamos configurar o resto da sua locadora.</div>
+            <div style="font-size:.85rem; color:#64748b; margin-bottom:1.5rem;">Seu plano foi ativado. Vamos configurar o resto da sua empresa.</div>
             <a href="{{ route('onboarding.orientacoes') }}" class="btn btn-primary btn-lg">
                 Continuar configuração <i class="fas fa-arrow-right"></i>
             </a>

@@ -70,7 +70,7 @@
   </div>
 
   <div class="footer">
-    DECLOCK — Sistema de Gestão de Frotas e Locadoras<br>
+    DECLOCK — Sistema de Gestão de Tempo e Projetos<br>
     Este é um e-mail automático, por favor não responda diretamente.
   </div>
 </div>

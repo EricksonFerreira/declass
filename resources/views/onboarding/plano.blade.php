@@ -74,7 +74,7 @@
 
 @section('content')
 <div class="onb-card onb-card-wide">
-    <h1 class="onb-card-title">Escolha o plano ideal para sua locadora</h1>
+    <h1 class="onb-card-title">Escolha o plano ideal para sua empresa</h1>
     <p class="onb-card-sub">Sem taxa de implantação. Cancele quando quiser. Você pode mudar de plano a qualquer momento.</p>
 
     @if (session('success'))

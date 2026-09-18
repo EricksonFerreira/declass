@@ -93,6 +93,18 @@
             line-height: 1.55;
         }
         .note strong { color: #0f172a; }
+        .btn-primary:disabled { opacity: .65; cursor: not-allowed; transform: none; }
+        .btn-spinner {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: btn-spin .7s linear infinite;
+            margin-right: 8px;
+            vertical-align: -2px;
+        }
+        @keyframes btn-spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 
@@ -122,7 +134,7 @@
 
                 <div class="row">
                     <label>Empresa <span class="req">*</span></label>
-                    <input id="empresa_nome" name="empresa_nome" value="{{ old('empresa_nome') }}" placeholder="Nome da locadora" required>
+                    <input id="empresa_nome" name="empresa_nome" value="{{ old('empresa_nome') }}" placeholder="Nome da empresa" required>
                 </div>
 
                 <div class="grid">
@@ -308,6 +320,13 @@ document.querySelector('form').addEventListener('submit', function (e) {
             return;
         }
     });
+
+    // Validacao passou — mostra "Processando..." e bloqueia duplo clique
+    var btn = this.querySelector('button[type="submit"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-spinner"></span>Processando...';
+    }
 });
 </script>
 </body>
