@@ -28,6 +28,7 @@ class PlanoPermissaoService
         'profile.',
         'onboarding.',
         'assinatura.',
+        'menu.',
         'site.reserva.',
         'site.multa.',
     ];

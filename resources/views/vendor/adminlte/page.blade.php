@@ -68,6 +68,9 @@
             @include('adminlte::partials.sidebar.right-sidebar')
         @endif
 
+        {{-- Menu inferior (mobile) --}}
+        @include('partials.mobile-bottom-nav')
+
     </div>
 @stop
 
