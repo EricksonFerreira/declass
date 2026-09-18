@@ -464,6 +464,15 @@ return [
             ],
         ],
 
+        // ASSINATURA — visivel para admin mesmo sem plano (rota ignorada pelo
+        // middleware): e o caminho de pagamento quando o trial expira.
+        [
+            'text' => 'Assinatura',
+            'route' => 'assinatura.index',
+            'icon' => 'fas fa-credit-card',
+            'can' => 'gerenciar-empresa',
+        ],
+
         // AJUDA
         [
             'text' => 'Central de Ajuda (FAQ)',

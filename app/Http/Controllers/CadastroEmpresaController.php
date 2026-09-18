@@ -15,7 +15,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -26,38 +25,38 @@ class CadastroEmpresaController extends Controller
     {
         return view('auth.cadastro-empresa', [
             'planoPreferido' => (string) $request->query('plano', ''),
-            'semSite'        => (bool) $request->boolean('sem_site', false),
+            'semSite' => (bool) $request->boolean('sem_site', false),
         ]);
     }
 
     public function store(Request $request, ReplicacaoBaseService $replicacaoBaseService, PermissaoSyncService $permissaoSyncService): RedirectResponse
     {
         $data = $request->validate([
-            'empresa_nome'     => 'required|string|max:200',
-            'empresa_cnpj'     => ['nullable', 'string', 'max:20', function ($attr, $value, $fail) {
-                if ($value && !self::validarCnpj($value)) {
+            'empresa_nome' => 'required|string|max:200',
+            'empresa_cnpj' => ['nullable', 'string', 'max:20', function ($attr, $value, $fail) {
+                if ($value && ! self::validarCnpj($value)) {
                     $fail('CNPJ invalido.');
                 }
             }],
-            'empresa_email'    => ['nullable', 'email', 'max:200', function ($attr, $value, $fail) {
-                if ($value && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+            'empresa_email' => ['nullable', 'email', 'max:200', function ($attr, $value, $fail) {
+                if ($value && ! filter_var($value, FILTER_VALIDATE_EMAIL)) {
                     $fail('E-mail da empresa invalido.');
                 }
             }],
             'empresa_telefone' => ['nullable', 'string', 'max:30', function ($attr, $value, $fail) {
-                if ($value && !self::validarTelefone($value)) {
+                if ($value && ! self::validarTelefone($value)) {
                     $fail('Telefone invalido. Use o formato (XX) XXXXX-XXXX.');
                 }
             }],
-            'admin_nome'       => 'required|string|max:200',
-            'admin_email'      => ['required', 'email', 'max:200', Rule::unique('users', 'email')],
-            'plano'            => 'nullable|string|max:50',
-            'sem_site'         => 'nullable|boolean',
+            'admin_nome' => 'required|string|max:200',
+            'admin_email' => ['required', 'email', 'max:200', Rule::unique('users', 'email')],
+            'plano' => 'nullable|string|max:50',
+            'sem_site' => 'nullable|boolean',
         ], [
             'empresa_nome.required' => 'Informe o nome da empresa.',
-            'admin_nome.required'   => 'Informe o nome do responsavel.',
-            'admin_email.required'  => 'Informe o e-mail do responsavel.',
-            'admin_email.unique'    => 'Este e-mail ja esta em uso.',
+            'admin_nome.required' => 'Informe o nome do responsavel.',
+            'admin_email.required' => 'Informe o e-mail do responsavel.',
+            'admin_email.unique' => 'Este e-mail ja esta em uso.',
         ]);
 
         $senhaPadrao = 'Senh@123';
@@ -77,15 +76,15 @@ class CadastroEmpresaController extends Controller
             $contador = 0;
             while (Empresa::where('slug', $slug)->exists()) {
                 $contador++;
-                $slug = $slugPrimeira . $contador;
+                $slug = $slugPrimeira.$contador;
             }
 
             $empresa = Empresa::create([
-                'nome'     => $data['empresa_nome'],
-                'slug'     => $slug,
-                'ativo'    => 'S',
-                'cnpj'     => $data['empresa_cnpj'] ?? null,
-                'email'    => $data['empresa_email'] ?? $data['admin_email'],
+                'nome' => $data['empresa_nome'],
+                'slug' => $slug,
+                'ativo' => 'S',
+                'cnpj' => $data['empresa_cnpj'] ?? null,
+                'email' => $data['empresa_email'] ?? $data['admin_email'],
                 'telefone' => $data['empresa_telefone'] ?? null,
             ]);
 
@@ -106,7 +105,7 @@ class CadastroEmpresaController extends Controller
             } catch (\Throwable $e) {
                 Log::warning('Replicacao parcial ao criar empresa.', [
                     'empresa_id' => $empresa->id,
-                    'erro'       => $e->getMessage(),
+                    'erro' => $e->getMessage(),
                 ]);
             }
 
@@ -123,28 +122,49 @@ class CadastroEmpresaController extends Controller
             $roleId = $role?->id;
 
             $user = User::create([
-                'nome'              => $data['admin_nome'],
-                'email'             => $data['admin_email'],
-                'password'          => $senhaPadrao,
-                'empresa_id'        => $empresa->id,
-                'role_id'           => $roleId,
-                'forcar_troca_senha'=> true,
+                'nome' => $data['admin_nome'],
+                'email' => $data['admin_email'],
+                'password' => $senhaPadrao,
+                'empresa_id' => $empresa->id,
+                'role_id' => $roleId,
+                'forcar_troca_senha' => true,
             ]);
+
+            // Trial de 7 dias: a primeira assinatura libera o acesso completo
+            // (status 'trial' conta como plano ativo). Sem isso a empresa nova
+            // nao tinha plano e todas as rotas ficavam bloqueadas.
+            $planoSlug = trim((string) ($data['plano'] ?? ''));
+            $plano = $planoSlug !== ''
+                ? \App\Models\Plano::where('ativo', true)->where('slug', $planoSlug)->first()
+                : null;
+            // Sem escolha valida, trial vai no plano completo para a melhor demo.
+            $plano ??= \App\Models\Plano::where('ativo', true)->orderByDesc('ordem')->first();
+
+            if ($plano) {
+                app(\App\Services\EmpresaPlanoService::class)->contratar(
+                    empresa: $empresa,
+                    plano: $plano,
+                    periodicidade: 'mensal',
+                    metodoPagamento: 'pix',
+                    diaVencimento: null,
+                    criadoPorUserId: $user->id,
+                );
+            }
 
             OnboardingStep::updateOrCreate(
                 ['empresa_id' => $empresa->id],
                 [
                     'step_empresa_configurada' => true,
-                    'step_usuario_criado'      => true,
-                    'concluido'                => false,
+                    'step_usuario_criado' => true,
+                    'concluido' => false,
                 ]
             );
 
             return [
                 'empresa' => $empresa,
-                'user'    => $user,
-                'email'   => $user->email,
-                'senha'   => $senhaPadrao,
+                'user' => $user,
+                'email' => $user->email,
+                'senha' => $senhaPadrao,
             ];
         });
 
@@ -154,8 +174,8 @@ class CadastroEmpresaController extends Controller
                 ->send(new BoasVindasAdminMail($payload['empresa'], $payload['user'], $payload['senha']));
         } catch (\Throwable $e) {
             Log::error('Falha ao enviar e-mail de boas-vindas ao admin.', [
-                'email'     => $payload['user']->email,
-                'empresa'   => $payload['empresa']->nome,
+                'email' => $payload['user']->email,
+                'empresa' => $payload['empresa']->nome,
                 'exception' => $e->getMessage(),
             ]);
         }
@@ -169,8 +189,8 @@ class CadastroEmpresaController extends Controller
             }
         } catch (\Throwable $e) {
             Log::error('Falha ao enviar e-mail de boas-vindas a empresa.', [
-                'email'     => $payload['empresa']->email,
-                'empresa'   => $payload['empresa']->nome,
+                'email' => $payload['empresa']->email,
+                'empresa' => $payload['empresa']->nome,
                 'exception' => $e->getMessage(),
             ]);
         }
@@ -184,8 +204,12 @@ class CadastroEmpresaController extends Controller
     public static function validarCnpj(string $cnpj): bool
     {
         $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
-        if (strlen($cnpj) !== 14) return false;
-        if (preg_match('/^(\d)\1{13}$/', $cnpj)) return false;
+        if (strlen($cnpj) !== 14) {
+            return false;
+        }
+        if (preg_match('/^(\d)\1{13}$/', $cnpj)) {
+            return false;
+        }
 
         $soma1 = 0;
         $peso1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
@@ -193,7 +217,9 @@ class CadastroEmpresaController extends Controller
             $soma1 += (int) $cnpj[$i] * $peso1[$i];
         }
         $dig1 = $soma1 % 11 < 2 ? 0 : 11 - ($soma1 % 11);
-        if ((int) $cnpj[12] !== $dig1) return false;
+        if ((int) $cnpj[12] !== $dig1) {
+            return false;
+        }
 
         $soma2 = 0;
         $peso2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
@@ -201,7 +227,9 @@ class CadastroEmpresaController extends Controller
             $soma2 += (int) $cnpj[$i] * $peso2[$i];
         }
         $dig2 = $soma2 % 11 < 2 ? 0 : 11 - ($soma2 % 11);
-        if ((int) $cnpj[13] !== $dig2) return false;
+        if ((int) $cnpj[13] !== $dig2) {
+            return false;
+        }
 
         return true;
     }
@@ -209,6 +237,7 @@ class CadastroEmpresaController extends Controller
     public static function validarTelefone(string $telefone): bool
     {
         $telefone = preg_replace('/[^0-9]/', '', $telefone);
+
         return in_array(strlen($telefone), [10, 11], true);
     }
 
@@ -216,7 +245,7 @@ class CadastroEmpresaController extends Controller
     {
         $email = (string) session('cadastro_empresa_email', '');
         $senha = (string) session('cadastro_empresa_senha', '');
-        $slug  = (string) session('cadastro_empresa_slug', '');
+        $slug = (string) session('cadastro_empresa_slug', '');
 
         return view('auth.cadastro-empresa-success', compact('email', 'senha', 'slug'));
     }

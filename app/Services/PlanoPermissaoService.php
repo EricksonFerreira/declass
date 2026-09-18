@@ -6,9 +6,8 @@ use App\Models\Empresa;
 use App\Models\Permissao;
 use App\Models\Plano;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Schema;
 use App\Support\SchemaCache;
+use Illuminate\Database\Eloquent\Collection;
 
 class PlanoPermissaoService
 {
@@ -96,7 +95,7 @@ class PlanoPermissaoService
 
     public function permissoesPermitidasDoPlano(Plano $plano): Collection
     {
-        if (!SchemaCache::hasTable('plano_permissao')) {
+        if (! SchemaCache::hasTable('plano_permissao')) {
             return Permissao::query()
                 ->where('guard_name', 'web')
                 ->orderBy('grupo')
@@ -118,7 +117,7 @@ class PlanoPermissaoService
             ->map(fn ($id) => (int) $id)
             ->all();
 
-        if (!empty($ids)) {
+        if (! empty($ids)) {
             return $ids;
         }
 
@@ -147,7 +146,7 @@ class PlanoPermissaoService
             return false;
         }
 
-        if (!SchemaCache::hasTable('plano_permissao')) {
+        if (! SchemaCache::hasTable('plano_permissao')) {
             return true;
         }
 
@@ -274,6 +273,18 @@ class PlanoPermissaoService
         }
 
         return false;
+    }
+
+    /**
+     * Rotas liberadas para qualquer usuario autenticado — espelha a regra do
+     * middleware (prefixos ignorados + lista alwaysAllowed). Usado tambem por
+     * hasPermissao/Gate para que itens como home e assinatura.* nao sumam do
+     * menu quando a empresa esta sem plano ativo.
+     */
+    public function rotaSempreLiberada(string $routeName): bool
+    {
+        return $this->shouldIgnoreRoute($routeName)
+            || in_array($routeName, $this->alwaysAllowedRoutes, true);
     }
 
     private function shouldIgnoreRoute(string $routeName): bool

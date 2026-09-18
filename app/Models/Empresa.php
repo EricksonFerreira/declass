@@ -2,24 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use App\Models\EmpresaPlano;
-use App\Models\EmpresaPlanoPagamento;
-use App\Models\OnboardingStep;
-use App\Models\ArquivoRastreado;
-use App\Models\Concerns\HasAuditColumns;
 
 class Empresa extends Model
 {
-    use HasFactory, HasAuditColumns;
+    use HasAuditColumns, HasFactory;
 
     public const DEFAULT_TEMPLATE_SLUG = 'empresa-padrao';
 
@@ -126,6 +121,13 @@ class Empresa extends Model
     {
         return $this->hasOne(EmpresaPlano::class, 'empresa_id')
             ->whereIn('status', ['ativo', 'trial', 'aguardando_pagamento', 'inadimplente', 'cancelado'])
+            // Trial so libera acesso dentro do prazo — vencido, a empresa
+            // fica sem plano ativo e precisa contratar de fato.
+            ->where(function ($q) {
+                $q->where('status', '<>', 'trial')
+                    ->orWhereNull('data_vencimento')
+                    ->orWhere('data_vencimento', '>=', now()->startOfDay());
+            })
             ->latestOfMany('id');
     }
 
@@ -152,7 +154,7 @@ class Empresa extends Model
             return null;
         }
 
-        if (!Storage::disk('public')->exists($path)) {
+        if (! Storage::disk('public')->exists($path)) {
             return null;
         }
 
@@ -163,15 +165,16 @@ class Empresa extends Model
     {
         $bytes = $this->storage_used_bytes;
         if ($bytes >= 1073741824) {
-            return number_format($bytes / 1073741824, 2, ',', '.') . ' GB';
+            return number_format($bytes / 1073741824, 2, ',', '.').' GB';
         }
         if ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 2, ',', '.') . ' MB';
+            return number_format($bytes / 1048576, 2, ',', '.').' MB';
         }
         if ($bytes >= 1024) {
-            return number_format($bytes / 1024, 0, ',', '.') . ' KB';
+            return number_format($bytes / 1024, 0, ',', '.').' KB';
         }
-        return $bytes . ' B';
+
+        return $bytes.' B';
     }
 
     public function getStorageUsedBytesAttribute(): int
@@ -185,13 +188,17 @@ class Empresa extends Model
         if ($plano && $plano->limite_armazenamento_mb > 0) {
             return (int) $plano->limite_armazenamento_mb * 1048576;
         }
+
         return 1073741824;
     }
 
     public function getStoragePercentAttribute(): int
     {
         $limit = $this->storage_limit_bytes;
-        if ($limit <= 0) return 0;
+        if ($limit <= 0) {
+            return 0;
+        }
+
         return (int) round(($this->storage_used_bytes / $limit) * 100);
     }
 
@@ -200,11 +207,12 @@ class Empresa extends Model
         $used = $this->storage_used;
         $limit = $this->storage_limit_bytes;
         if ($limit >= 1073741824) {
-            return $used . ' / ' . number_format($limit / 1073741824, 2, ',', '.') . ' GB';
+            return $used.' / '.number_format($limit / 1073741824, 2, ',', '.').' GB';
         }
         if ($limit >= 1048576) {
-            return $used . ' / ' . number_format($limit / 1048576, 2, ',', '.') . ' MB';
+            return $used.' / '.number_format($limit / 1048576, 2, ',', '.').' MB';
         }
+
         return $used;
     }
 

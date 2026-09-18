@@ -323,6 +323,12 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
+        // Rotas liberadas para qualquer autenticado (home, assinatura.*,
+        // onboarding.*) nao dependem de plano nem de papel — igual ao middleware.
+        if (app(\App\Services\PlanoPermissaoService::class)->rotaSempreLiberada($permissao)) {
+            return true;
+        }
+
         if ($this->isAdministrador()) {
             return app(\App\Services\PlanoPermissaoService::class)->usuarioPodeUsarPermissao($this, $permissao);
         }
