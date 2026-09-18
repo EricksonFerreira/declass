@@ -25,7 +25,9 @@ class ClockifyCalendarioController extends Controller
         $idsVisiveis = $request->user()->idsVisiveis();
 
         $alocacoes = $action->handle();
-        $projetos = ClockifyProjeto::where('empresa_id', $empresaId)->where('ativo', true)->orderBy('nome')->get();
+        $projetos = $visibilidade
+            ->projetosVisiveis($request->user(), ClockifyProjeto::where('empresa_id', $empresaId)->where('ativo', true))
+            ->orderBy('nome')->get();
         $usuarios = $visibilidade->usuariosVisiveis($request->user())
             ->filter(fn ($u) => (int) $u->getRawOriginal('tipo_usuario_id') !== 1)
             ->sortBy('nome')
@@ -116,6 +118,15 @@ class ClockifyCalendarioController extends Controller
         // (admin ou lider do membro); demais alocam para si mesmos.
         if (! $request->user()->podeGerenciarUsuario((int) $validated['user_id'])) {
             $validated['user_id'] = $request->user()->id;
+        }
+
+        // Projeto privado so recebe alocacao de quem pode usa-lo
+        // (admin, responsavel ou membro do projeto).
+        $projeto = ClockifyProjeto::find($validated['clockify_projeto_id']);
+        $alocado = \App\Models\User::find((int) $validated['user_id']);
+        if ($projeto && $alocado
+            && ! app(\App\Services\VisibilidadeService::class)->podeUsarProjeto($alocado, $projeto)) {
+            abort(403);
         }
 
         $action->handle($validated);

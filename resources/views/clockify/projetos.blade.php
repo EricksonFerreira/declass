@@ -59,6 +59,9 @@
                                         @if ($projeto->responsavel)
                                             <span class="ux-card__badge ux-card__badge--blue" title="Responsável pelo projeto"><i class="fas fa-user-tie mr-1"></i>{{ $projeto->responsavel->nome }}</span>
                                         @endif
+                                        @if (! $projeto->publico)
+                                            <span class="ux-card__badge ux-card__badge--gray" title="Projeto privado: visível apenas para administradores, o responsável e os membros"><i class="fas fa-lock mr-1"></i>Privado</span>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="ux-card__meta">
@@ -85,7 +88,7 @@
                                     </a>
                                     @if ($projeto->podeSerGerenciadoPor(auth()->user()))
                                         <button type="button" class="btn btn-xs btn-warning"
-                                            onclick="editProjeto({{ json_encode($projeto) }})">
+                                            onclick="editProjeto({{ json_encode($projeto) }}, {{ json_encode($projeto->users->pluck('id')->values()) }})">
                                             <i class="fa fa-edit mr-1"></i>Editar
                                         </button>
                                     @endif
@@ -128,6 +131,9 @@
                                     <td class="align-middle">
                                         <div class="font-weight-bold">
                                             <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="text-dark font-weight-bold" style="text-decoration: none;">{{ $projeto->nome }}</a>
+                                            @if (! $projeto->publico)
+                                                <span class="badge badge-secondary ml-1" title="Projeto privado: visível apenas para administradores, o responsável e os membros"><i class="fas fa-lock mr-1"></i>Privado</span>
+                                            @endif
                                         </div>
                                         @if($projeto->descricao)
                                             <small class="text-muted d-block text-truncate" style="max-width: 250px;" title="{{ $projeto->descricao }}">
@@ -171,7 +177,7 @@
                                         </a>
                                         @if ($projeto->podeSerGerenciadoPor(auth()->user()))
                                             <button type="button" class="btn btn-xs btn-warning mr-1"
-                                                onclick="editProjeto({{ json_encode($projeto) }})">
+                                                onclick="editProjeto({{ json_encode($projeto) }}, {{ json_encode($projeto->users->pluck('id')->values()) }})">
                                                 <i class="fa fa-edit"></i> Editar
                                             </button>
                                         @endif
@@ -259,6 +265,23 @@
                 <option value="1" @selected(old('publico', '1') === '1')>Público</option>
                 <option value="0" @selected(old('publico') === '0')>Privado</option>
             </select>
+            <small class="text-muted d-block mt-1">
+                <strong>Público:</strong> todos da empresa veem o projeto e podem apontar horas nele.<br>
+                <strong>Privado:</strong> apenas administradores, o responsável e os membros abaixo veem o projeto e podem apontar horas.
+            </small>
+        </div>
+        <div class="form-group">
+            <label>Membros do Projeto</label>
+            <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; padding: 10px; border-radius: 4px;">
+                @foreach ($usuarios as $usuario)
+                    <div class="custom-control custom-checkbox mb-1">
+                        <input class="custom-control-input membro-checkbox" type="checkbox" name="membros[]" id="membro-{{ $usuario->id }}" value="{{ $usuario->id }}"
+                            {{ in_array($usuario->id, (array) old('membros', [])) ? 'checked' : '' }}>
+                        <label for="membro-{{ $usuario->id }}" class="custom-control-label font-weight-normal text-sm">{{ $usuario->nome }}</label>
+                    </div>
+                @endforeach
+            </div>
+            <small class="text-muted">Membros sempre veem o projeto e podem apontar horas — obrigatório quando a visibilidade é Privado.</small>
         </div>
         <div class="form-group" id="status-group" style="display: none;">
             <label for="ativo">Status</label>
@@ -301,6 +324,7 @@
                 $('#projeto-form')[0].reset();
                 $('#projeto_id').val('');
                 $('#projeto-form #clockify_cliente_id').val('').trigger('change');
+                $('.membro-checkbox').prop('checked', false);
                 $('#status-group').hide();
                 $('#projetoDrawerBackdrop').addClass('show');
                 $('#projetoDrawer').addClass('open');
@@ -322,7 +346,7 @@
             @endif
         });
 
-        function editProjeto(projeto) {
+        function editProjeto(projeto, membrosIds) {
             $('#projetoDrawerTitle').text('Editar Projeto: ' + projeto.nome);
             $('#projeto-form').attr('action', '{{ url('admin/projetos') }}/' + projeto.id);
             $('#projeto-formMethod').val('PUT');
@@ -336,6 +360,11 @@
             $('#projeto-form #cor').val(projeto.cor ?? '#0284c7');
             $('#projeto-form #publico').val(projeto.publico ? '1' : '0');
             $('#projeto-form #ativo').val(projeto.ativo ? '1' : '0');
+
+            var ids = (membrosIds || []).map(String);
+            $('.membro-checkbox').each(function() {
+                $(this).prop('checked', ids.indexOf(String($(this).val())) !== -1);
+            });
 
             $('#status-group').show();
             $('#projetoDrawerBackdrop').addClass('show');

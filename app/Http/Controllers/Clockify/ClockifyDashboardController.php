@@ -159,7 +159,9 @@ class ClockifyDashboardController extends Controller
             $projectId ? (int) $projectId : null
         );
 
-        $projetos = ClockifyProjeto::orderBy('nome')->get();
+        $projetos = app(\App\Services\VisibilidadeService::class)
+            ->projetosVisiveis($request->user(), ClockifyProjeto::query())
+            ->orderBy('nome')->get();
 
         return view('clockify.projetos_overview', array_merge($data, [
             'titulo' => 'Projetos',

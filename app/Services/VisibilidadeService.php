@@ -160,6 +160,11 @@ class VisibilidadeService
             return true;
         }
 
+        // Projeto privado: fora responsavel/membro/admin, ninguem mais ve.
+        if (! $projeto->publico) {
+            return false;
+        }
+
         $idsEquipe = $this->idsEquipeLiderada($user);
         if ($idsEquipe !== []
             && $projeto->trackers()->whereIn('user_id', $idsEquipe)->exists()) {
@@ -168,6 +173,40 @@ class VisibilidadeService
 
         // Colaborador que apontou horas no projeto tambem o ve.
         return $projeto->trackers()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Pode usar o projeto para apontar horas/alocar (admin sempre;
+     * projeto publico qualquer usuario; privado so responsavel e membros).
+     */
+    public function podeUsarProjeto(User $user, ClockifyProjeto $projeto): bool
+    {
+        if ($user->isAdministrador() || $projeto->publico) {
+            return true;
+        }
+
+        if ((int) $projeto->responsavel_id === (int) $user->id) {
+            return true;
+        }
+
+        return $projeto->users()->where('users.id', $user->id)->exists();
+    }
+
+    /**
+     * Restringe uma query de projetos aos que o usuario pode ver/usar:
+     * admin ve tudo; demais veem publicos + os que respondem ou sao membros.
+     */
+    public function projetosVisiveis(User $user, $query)
+    {
+        if ($user->isAdministrador()) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($user) {
+            $q->where('publico', true)
+                ->orWhere('responsavel_id', $user->id)
+                ->orWhereHas('users', fn ($m) => $m->where('users.id', $user->id));
+        });
     }
 
     /**

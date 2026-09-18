@@ -15,6 +15,7 @@ use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ClockifyProjetoController extends Controller
@@ -30,7 +31,7 @@ class ClockifyProjetoController extends Controller
 
         $itensFiltered = session("{$this->nomeFiltro}.filtro", []);
         $perPage = session("{$this->nomeFiltro}.perPage", 15);
-        $projetos = $action->handle($request->search, $itensFiltered, $perPage);
+        $projetos = $action->handle($request->search, $itensFiltered, $perPage, $request->user());
         $clientes = ClockifyCliente::where('ativo', true)->orderBy('nome')->get();
         $usuarios = app(\App\Services\VisibilidadeService::class)->usuariosVisiveis($request->user());
 
@@ -139,6 +140,8 @@ class ClockifyProjetoController extends Controller
             'valor_hora' => 'nullable|string',
             'data_entrega_previsao' => 'nullable|date',
             'horas_diarias_planejamento' => 'nullable|numeric|min:0',
+            'membros' => 'nullable|array',
+            'membros.*' => [Rule::exists('users', 'id')->where('empresa_id', $request->user()->empresa_id)],
         ]);
 
         // Quem nao e admin so pode criar projeto do qual e o responsavel.
@@ -146,9 +149,11 @@ class ClockifyProjetoController extends Controller
             $validated['responsavel_id'] = $request->user()->id;
         }
 
-        $action->handle(array_merge($validated, [
+        $projeto = $action->handle(array_merge($validated, [
             'publico' => $request->has('publico') ? (bool) $request->publico : true,
         ]));
+
+        $projeto->users()->sync($validated['membros'] ?? []);
 
         return redirect()->route('clockify.projetos.index')
             ->with('success', 'Projeto criado com sucesso!');
@@ -175,6 +180,8 @@ class ClockifyProjetoController extends Controller
             'valor_hora' => 'nullable|string',
             'data_entrega_previsao' => 'nullable|date',
             'horas_diarias_planejamento' => 'nullable|numeric|min:0',
+            'membros' => 'nullable|array',
+            'membros.*' => [Rule::exists('users', 'id')->where('empresa_id', $request->user()->empresa_id)],
         ]);
 
         // Responsavel nao transfere a titularidade do proprio projeto.
@@ -182,10 +189,12 @@ class ClockifyProjetoController extends Controller
             $validated['responsavel_id'] = $projeto->responsavel_id;
         }
 
-        $action->handle((int) $id, array_merge($validated, [
+        $projeto = $action->handle((int) $id, array_merge($validated, [
             'publico' => $request->has('publico') ? (bool) $request->publico : true,
             'ativo' => $request->has('ativo') ? (bool) $request->ativo : true,
         ]));
+
+        $projeto->users()->sync($validated['membros'] ?? []);
 
         return redirect()->route('clockify.projetos.show', $id)
             ->with('success', 'Projeto atualizado com sucesso!');
@@ -498,7 +507,9 @@ class ClockifyProjetoController extends Controller
             return redirect()->route('clockify.projetos.planejar-equipe', (int) $projetoId);
         }
 
-        $projetos = ClockifyProjeto::with('cliente')->where('ativo', true)->orderBy('nome')->get();
+        $projetos = app(\App\Services\VisibilidadeService::class)
+            ->projetosVisiveis($request->user(), ClockifyProjeto::with('cliente')->where('ativo', true))
+            ->orderBy('nome')->get();
 
         return view('clockify.projetos_planejar_equipe', [
             'titulo' => 'Planejar Equipe',

@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Clockify;
 
+use App\Actions\Clockify\Tracker\DeleteTrackerAction;
+use App\Actions\Clockify\Tracker\IniciarTrackerAction;
+use App\Actions\Clockify\Tracker\PararTrackerAction;
+use App\Actions\Clockify\Tracker\SalvarManualTrackerAction;
+use App\Actions\Clockify\Tracker\SaveTimesheetAction;
+use App\Actions\Clockify\Tracker\UpdateActiveTrackerAction;
+use App\Actions\Clockify\Tracker\UpdateTrackerAction;
 use App\Http\Controllers\Controller;
 use App\Models\ClockifyProjeto;
 use App\Models\ClockifyTag;
 use App\Models\ClockifyTimeTracker;
-use App\Actions\Clockify\Tracker\IniciarTrackerAction;
-use App\Actions\Clockify\Tracker\PararTrackerAction;
-use App\Actions\Clockify\Tracker\SalvarManualTrackerAction;
-use App\Actions\Clockify\Tracker\DeleteTrackerAction;
-use App\Actions\Clockify\Tracker\UpdateTrackerAction;
-use App\Actions\Clockify\Tracker\UpdateActiveTrackerAction;
-use App\Actions\Clockify\Tracker\SaveTimesheetAction;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,15 +62,17 @@ class ClockifyTrackerController extends Controller
             $search = $request->input('search');
             $pastTrackersQuery->where(function ($q) use ($search) {
                 $q->where('descricao', 'like', "%$search%")
-                  ->orWhereHas('projeto', function ($q2) use ($search) {
+                    ->orWhereHas('projeto', function ($q2) use ($search) {
                         $q2->where('nome', 'like', "%$search%");
-                  });
+                    });
             });
         }
 
         $pastTrackers = $pastTrackersQuery->orderBy('inicio', 'desc')->paginate(20);
 
-        $projetos = ClockifyProjeto::where('ativo', true)->orderBy('nome')->get();
+        $projetos = app(\App\Services\VisibilidadeService::class)
+            ->projetosVisiveis(Auth::user(), ClockifyProjeto::where('ativo', true))
+            ->orderBy('nome')->get();
         $tags = ClockifyTag::where('ativo', true)->orderBy('nome')->get();
 
         return view('clockify.tracker', [
@@ -89,6 +91,8 @@ class ClockifyTrackerController extends Controller
 
     public function start(Request $request, IniciarTrackerAction $action): RedirectResponse
     {
+        $this->abortUnlessPodeUsarProjeto($request, $request->input('clockify_projeto_id'));
+
         $action->handle([
             'clockify_projeto_id' => $request->input('clockify_projeto_id'),
             'descricao' => $request->input('descricao'),
@@ -101,6 +105,8 @@ class ClockifyTrackerController extends Controller
 
     public function stop(Request $request, PararTrackerAction $action): RedirectResponse
     {
+        $this->abortUnlessPodeUsarProjeto($request, $request->input('clockify_projeto_id'));
+
         $action->handle(
             $request->input('descricao'),
             $request->input('clockify_projeto_id') ? (int) $request->input('clockify_projeto_id') : null,
@@ -123,6 +129,8 @@ class ClockifyTrackerController extends Controller
             'tags.*' => 'exists:clockify_tags,id',
         ]);
 
+        $this->abortUnlessPodeUsarProjeto($request, $validated['clockify_projeto_id']);
+
         $action->handle($validated, $request->input('tags'));
 
         return redirect()->route('clockify.tracker.index')
@@ -143,19 +151,20 @@ class ClockifyTrackerController extends Controller
             $validated['clockify_projeto_id'] = null;
         }
 
+        $this->abortUnlessPodeUsarProjeto($request, $validated['clockify_projeto_id'] ?? null);
+
         $action->handle((int) $id, $validated, $request->input('tags'));
 
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Registro de tempo atualizado com sucesso!'
+                'message' => 'Registro de tempo atualizado com sucesso!',
             ]);
         }
 
         return redirect()->route('clockify.tracker.index')
             ->with('success', 'Registro de tempo atualizado com sucesso!');
     }
-
 
     public function updateActive(Request $request, UpdateActiveTrackerAction $action): \Illuminate\Http\JsonResponse
     {
@@ -195,7 +204,9 @@ class ClockifyTrackerController extends Controller
         }
 
         $userId = Auth::id();
-        $projetos = ClockifyProjeto::where('ativo', true)->orderBy('nome')->get();
+        $projetos = app(\App\Services\VisibilidadeService::class)
+            ->projetosVisiveis(Auth::user(), ClockifyProjeto::where('ativo', true))
+            ->orderBy('nome')->get();
 
         $trackers = ClockifyTimeTracker::where('user_id', $userId)
             ->whereBetween('inicio', [$startOfWeek->startOfDay(), $endOfWeek->endOfDay()])
@@ -273,9 +284,41 @@ class ClockifyTrackerController extends Controller
         $weekOffset = (int) $request->input('week', 0);
         $startOfWeek = Carbon::now()->startOfWeek()->addWeeks($weekOffset);
 
-        $action->handle($request->input('hours', []), $startOfWeek);
+        $hoursInput = $request->input('hours', []);
+        $visibilidade = app(\App\Services\VisibilidadeService::class);
+        $idsPermitidos = $visibilidade
+            ->projetosVisiveis($request->user(), ClockifyProjeto::query())
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        foreach (array_keys($hoursInput) as $projId) {
+            if ((int) $projId !== 0 && ! in_array((int) $projId, $idsPermitidos, true)) {
+                abort(403);
+            }
+        }
+
+        $action->handle($hoursInput, $startOfWeek);
 
         return redirect()->route('clockify.timesheet', ['week' => $weekOffset])
             ->with('success', 'Planilha de horas salva com sucesso!');
+    }
+
+    /**
+     * Projeto privado so pode receber apontamentos de admin, responsavel
+     * ou membro; projeto publico e livre para todos do tenant.
+     */
+    private function abortUnlessPodeUsarProjeto(Request $request, $projetoId): void
+    {
+        if (! $projetoId) {
+            return;
+        }
+
+        $projeto = ClockifyProjeto::find($projetoId);
+
+        if ($projeto
+            && ! app(\App\Services\VisibilidadeService::class)->podeUsarProjeto($request->user(), $projeto)) {
+            abort(403);
+        }
     }
 }

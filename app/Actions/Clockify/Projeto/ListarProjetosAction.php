@@ -3,14 +3,19 @@
 namespace App\Actions\Clockify\Projeto;
 
 use App\Models\ClockifyProjeto;
+use App\Models\User;
 use App\Support\FiltroQuery;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ListarProjetosAction
 {
-    public function handle(?string $search, array $filtros = [], int $perPage = 15): LengthAwarePaginator
+    public function handle(?string $search, array $filtros = [], int $perPage = 15, ?User $user = null): LengthAwarePaginator
     {
-        $query = ClockifyProjeto::with('cliente')
+        $query = ClockifyProjeto::with(['cliente', 'users:id'])
+            ->when($user, function ($query, $user) {
+                // Visibilidade: privado so aparece para admin, responsavel e membros.
+                app(\App\Services\VisibilidadeService::class)->projetosVisiveis($user, $query);
+            })
             ->when($search, function ($query, $search) {
                 $query->where('nome', 'like', "%{$search}%");
             });

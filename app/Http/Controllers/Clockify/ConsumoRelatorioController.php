@@ -21,12 +21,14 @@ class ConsumoRelatorioController extends Controller
     {
         $empresaId = $service->empresaId();
 
-        $projetos = ClockifyProjeto::query()
-            ->with('cliente')
+        $visibilidade = app(\App\Services\VisibilidadeService::class);
+
+        $projetos = $visibilidade
+            // Visibilidade: privado some para quem nao e responsavel/membro.
+            ->projetosVisiveis($request->user(), ClockifyProjeto::query()->with('cliente'))
             // Escopo: admin ve todos; lider ve projetos que responde, dos
             // quais e membro ou onde sua equipe aponta horas.
-            ->when(! $request->user()->isAdministrador(), function ($q) use ($request) {
-                $visibilidade = app(\App\Services\VisibilidadeService::class);
+            ->when(! $request->user()->isAdministrador(), function ($q) use ($request, $visibilidade) {
                 $idsEquipe = $visibilidade->idsEquipeLiderada($request->user());
 
                 $q->where(function ($sub) use ($request, $idsEquipe) {
