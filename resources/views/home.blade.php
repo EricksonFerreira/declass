@@ -23,6 +23,23 @@
             ],
         ],
         [
+            'titulo' => 'Painel',
+            'cards' => [
+                ['Visão Geral', 'fas fa-tachometer-alt', 'dashboard', 'Visão geral com gráficos e KPIs', '#2563eb'],
+                ['Produtividade', 'fas fa-chart-line', 'home.produtividade', 'Horas e evolução da equipe', '#0d9488'],
+                ['Equipe', 'fas fa-users', 'home.equipe', 'Quem está rastreando, status e alertas', '#16a34a'],
+                ['Projetos', 'fas fa-project-diagram', 'home.projetos', 'Saúde e horas por projeto', '#0284c7'],
+            ],
+        ],
+        [
+            'titulo' => 'Relatórios',
+            'cards' => [
+                ['Relatórios', 'fas fa-file-alt', 'relatorios.index', 'Resumos e visões de horas', '#7c3aed'],
+                ['Consumo × Estimado', 'fas fa-chart-bar', 'relatorios.consumo', 'Horas consumidas vs estimadas', '#b45309'],
+                ['Exportar CSV', 'fas fa-file-export', 'relatorios.export', 'Baixe os dados em planilha', '#475569'],
+            ],
+        ],
+        [
             'titulo' => 'Gerenciar',
             'cards' => [
                 ['Projetos', 'fas fa-project-diagram', 'clockify.projetos.index', 'Cadastro e status dos projetos', '#0284c7'],
@@ -33,16 +50,6 @@
                 ['Funções', 'fas fa-briefcase', 'clockify.funcoes.index', 'Funções e custo por hora', '#b45309'],
                 ['Tags', 'fas fa-tags', 'clockify.tags.index', 'Etiquetas de classificação', '#db2777'],
                 ['Usuários', 'fas fa-user-cog', 'usuario.index', 'Colaboradores e permissões', '#475569'],
-            ],
-        ],
-        [
-            'titulo' => 'Análise',
-            'cards' => [
-                ['Painel', 'fas fa-tachometer-alt', 'dashboard', 'Visão geral com gráficos e KPIs', '#2563eb'],
-                ['Produtividade', 'fas fa-chart-line', 'home.produtividade', 'Horas e evolução da equipe', '#0d9488'],
-                ['Relatórios', 'fas fa-file-alt', 'relatorios.index', 'Resumos e visões de horas', '#7c3aed'],
-                ['Consumo × Estimado', 'fas fa-chart-bar', 'relatorios.consumo', 'Horas consumidas vs estimadas', '#b45309'],
-                ['Exportar CSV', 'fas fa-file-export', 'relatorios.export', 'Baixe os dados em planilha', '#475569'],
             ],
         ],
         [
