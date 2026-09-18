@@ -23,6 +23,8 @@ class DemoLimpezaSeeder extends Seeder
         'Redesign do Site Institucional',
         'Integração ERP × E-commerce',
         'Sistema de Agendamento de Consultas',
+        'Auditoria Interna — Compliance',
+        'Portal Legado — Descontinuado',
     ];
 
     private const CLIENTES_DEMO = [
@@ -64,6 +66,9 @@ class DemoLimpezaSeeder extends Seeder
             DB::table('clockify_projeto_estimativas')->whereIn('clockify_projeto_id', $projetoIds)->delete();
             DB::table('clockify_projeto_user')->whereIn('clockify_projeto_id', $projetoIds)->delete();
             DB::table('clockify_calendarios')->whereIn('clockify_projeto_id', $projetoIds)->delete();
+            $cronogramaIds = DB::table('clockify_projeto_cronogramas')->whereIn('clockify_projeto_id', $projetoIds)->pluck('id');
+            DB::table('clockify_projeto_planejamentos')->whereIn('clockify_projeto_cronograma_id', $cronogramaIds)->delete();
+            DB::table('clockify_projeto_cronogramas')->whereIn('id', $cronogramaIds)->delete();
             DB::table('clockify_projetos')->whereIn('id', $projetoIds)->delete();
         }
 

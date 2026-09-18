@@ -20,6 +20,11 @@ class DemoOperacaoSeeder extends Seeder
 {
     private int $empresaId;
 
+    private ?int $empresaIdOverride = null;
+
+    /** Sufixo que torna os e-mails demo unicos por empresa ('.e1157'). */
+    private string $emailSufixo = '';
+
     /** @var array<int> ids dos usuarios demo criados */
     private array $demoUserIds = [];
 
@@ -27,6 +32,20 @@ class DemoOperacaoSeeder extends Seeder
     private array $projetoIds = [];
 
     private const EMAIL_DOMAIN = '@demo.declock.app';
+
+    /**
+     * Aponta o seeder para outra empresa. Como e-mails sao globalmente
+     * unicos, empresas diferentes da 1 recebem sufixo no login
+     * (ana.souza.e1157@demo.declock.app) — continua coberto pelo
+     * padrao '%@demo.declock.app' do DemoLimpezaSeeder.
+     */
+    public function paraEmpresa(int $empresaId): static
+    {
+        $this->empresaIdOverride = $empresaId;
+        $this->emailSufixo = $empresaId === 1 ? '' : '.e'.$empresaId;
+
+        return $this;
+    }
 
     private const DESCRICOES = [
         'dev' => [
@@ -68,7 +87,7 @@ class DemoOperacaoSeeder extends Seeder
 
     public function run(): void
     {
-        $this->empresaId = (int) env('DEMO_EMPRESA_ID', 1);
+        $this->empresaId = $this->empresaIdOverride ?? (int) env('DEMO_EMPRESA_ID', 1);
 
         $this->command->info("Semeando dados demo na empresa {$this->empresaId}...");
 
@@ -84,7 +103,7 @@ class DemoOperacaoSeeder extends Seeder
         $this->seedTimeOffs($userIds);
         $this->seedCalendarios($projetoIds, $userIds);
 
-        $this->command->info('Demo semeada: ' . count($userIds) . ' usuarios, ' . count($projetoIds) . ' projetos.');
+        $this->command->info('Demo semeada: '.count($userIds).' usuarios, '.count($projetoIds).' projetos.');
     }
 
     /**
@@ -145,7 +164,7 @@ class DemoOperacaoSeeder extends Seeder
 
         $ids = [];
         foreach ($pessoas as [$nome, $login, $cargo, $funcaoId]) {
-            $email = $login . self::EMAIL_DOMAIN;
+            $email = $login.$this->emailSufixo.self::EMAIL_DOMAIN;
 
             $id = DB::table('users')->where('email', $email)->value('id');
             if (! $id) {
@@ -193,7 +212,7 @@ class DemoOperacaoSeeder extends Seeder
                     'empresa_id' => $this->empresaId,
                     'nome' => $nome,
                     'email' => $email,
-                    'telefone' => '(85) 9' . rand(8000, 9999) . '-' . rand(1000, 9999),
+                    'telefone' => '(85) 9'.rand(8000, 9999).'-'.rand(1000, 9999),
                     'ativo' => 1,
                     'usuinc' => 1,
                     'datainc' => $agora,
@@ -505,7 +524,7 @@ class DemoOperacaoSeeder extends Seeder
             }
         }
 
-        $this->command->info('Apontamentos criados: ' . count($rows));
+        $this->command->info('Apontamentos criados: '.count($rows));
     }
 
     /**
