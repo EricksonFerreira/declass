@@ -34,6 +34,49 @@
         font-size: .72rem;
         font-weight: 800;
     }
+
+    /* Mobile: notificacoes viram cards empilhados com rotulos */
+    @media (max-width: 767.98px) {
+        .notif-table thead { display: none; }
+        .notif-table,
+        .notif-table tbody,
+        .notif-table tr,
+        .notif-table td { display: block; width: 100%; }
+
+        .notif-table tbody tr {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .notif-table tbody tr.table-warning {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .notif-table td {
+            border: none !important;
+            padding: 5px 0 !important;
+            text-align: left !important;
+        }
+        .notif-table td::before {
+            content: attr(data-label);
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #94a3b8;
+            margin-bottom: 3px;
+        }
+        .notif-table td[data-label=""]::before { display: none; }
+        .notif-table td.cell-acoes {
+            padding-top: 10px !important;
+            border-top: 1px dashed #e2e8f0 !important;
+        }
+    }
 </style>
 @stop
 
@@ -84,7 +127,7 @@
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0">
+                    <table class="table table-hover table-striped mb-0 notif-table">
                         <thead class="thead-light">
                             <tr class="text-xs text-uppercase">
                                 <th class="pl-4">Status</th>
@@ -106,7 +149,7 @@
                                     $lida = (bool) $notificacao->read_at;
                                 @endphp
                                 <tr class="{{ $lida ? '' : 'table-warning' }}">
-                                    <td class="pl-4 align-middle">
+                                    <td class="pl-4 align-middle" data-label="Status">
                                         <span class="notif-badge badge badge-{{ $cor }}"><i class="{{ $icone }}"></i></span>
                                         @if(!$lida)
                                             <span class="badge badge-danger px-2 py-1 text-xs ml-1">Nova</span>
@@ -114,10 +157,10 @@
                                             <span class="badge badge-secondary px-2 py-1 text-xs ml-1">Lida</span>
                                         @endif
                                     </td>
-                                    <td class="align-middle font-weight-bold text-dark text-sm">{{ $tituloItem }}</td>
-                                    <td class="align-middle text-muted text-sm">{{ $mensagem }}</td>
-                                    <td class="align-middle text-sm text-secondary">{{ $notificacao->created_at?->format('d/m/Y H:i') }}</td>
-                                    <td class="align-middle text-center">
+                                    <td class="align-middle font-weight-bold text-dark text-sm" data-label="Assunto">{{ $tituloItem }}</td>
+                                    <td class="align-middle text-muted text-sm" data-label="Mensagem">{{ $mensagem }}</td>
+                                    <td class="align-middle text-sm text-secondary" data-label="Data">{{ $notificacao->created_at?->format('d/m/Y H:i') }}</td>
+                                    <td class="align-middle text-center cell-acoes" data-label="">
                                         @if($url)
                                             <a href="{{ $url }}" class="btn btn-xs btn-info font-weight-bold mr-1">
                                                 <i class="fas fa-external-link-alt mr-1"></i> Abrir
