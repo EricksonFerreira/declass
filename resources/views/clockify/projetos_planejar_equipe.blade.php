@@ -4,7 +4,6 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" />
 @stop
 
 @section('css')
@@ -78,6 +77,45 @@
 
     .toggle-icon { transition: transform 0.2s ease; }
     .team-row.expanded .toggle-icon { transform: rotate(90deg); }
+
+    /* Mobile: a tabela de membros vira cards empilhados com rotulos */
+    @media (max-width: 767.98px) {
+        .expand-inner { padding: 10px 12px; }
+
+        .member-table thead { display: none; }
+        .member-table,
+        .member-table tbody,
+        .member-table tr,
+        .member-table td { display: block; width: 100%; }
+
+        .member-table tr.member-row {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 10px 12px;
+            background: #fff;
+        }
+        .member-table tr.member-row-allocated { border-left: 4px solid #28a745; }
+        .member-table tr.member-row-allocated td { border-left: none !important; }
+
+        .member-table td {
+            border: none !important;
+            padding: 5px 0 !important;
+        }
+        .member-table td::before {
+            content: attr(data-label);
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #94a3b8;
+            margin-bottom: 3px;
+        }
+        .member-table td[data-label=""]::before { display: none; }
+        .member-table td .form-control { width: 100%; }
+        .member-table .member-checkbox { transform: scale(1.35); margin-left: 3px; }
+    }
 </style>
 @stop
 
@@ -184,6 +222,7 @@
             <input type="hidden" id="global-min-date" value="{{ $dataInicioGlobal }}">
             <input type="hidden" id="global-max-date" value="{{ $dataFimGlobal }}">
 
+            <div class="table-responsive">
             <table class="table table-hover mb-0" id="teams-table">
                 <thead class="thead-light">
                     <tr class="text-xs text-uppercase">
@@ -191,7 +230,7 @@
                         <th>Equipe / Time</th>
                         <th class="text-center">Membros</th>
                         <th class="text-center">Alocados neste Projeto</th>
-                        <th class="text-center">Período coberto</th>
+                        <th class="text-center d-none d-md-table-cell">Período coberto</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -219,7 +258,7 @@
                                     <span class="text-muted text-xs">—</span>
                                 @endif
                             </td>
-                            <td class="align-middle text-center">
+                            <td class="align-middle text-center d-none d-md-table-cell">
                                 @if($dataInicioGlobal && $dataFimGlobal)
                                     <small class="text-muted">
                                         {{ \Carbon\Carbon::parse($dataInicioGlobal)->format('d/m/Y') }}
@@ -267,7 +306,7 @@
                                                     @endphp
                                                     <tr class="member-row {{ $isAllocated ? 'member-row-allocated' : '' }}"
                                                         id="member-row-{{ $key }}">
-                                                        <td class="text-center align-middle pl-3">
+                                                        <td class="text-center align-middle pl-3" data-label="Alocar">
                                                             <input type="hidden"
                                                                    name="alocacoes[{{ $key }}][checked]"
                                                                    id="hidden-check-{{ $key }}"
@@ -278,12 +317,12 @@
                                                                    {{ $isAllocated ? 'checked' : '' }}
                                                                    onchange="toggleMember('{{ $key }}', this)">
                                                         </td>
-                                                        <td class="align-middle font-weight-bold text-dark">
+                                                        <td class="align-middle font-weight-bold text-dark" data-label="Membro">
                                                             <input type="hidden" name="alocacoes[{{ $key }}][user_id]" value="{{ $user->id }}">
                                                             {{ $user->name ?? $user->nome }}
                                                         </td>
                                                         {{-- Etapa --}}
-                                                        <td class="align-middle">
+                                                        <td class="align-middle" data-label="Etapa do Projeto">
                                                             <select name="alocacoes[{{ $key }}][clockify_projeto_cronograma_id]"
                                                                     id="etapa-{{ $key }}"
                                                                     class="form-control form-control-sm etapa-select"
@@ -308,21 +347,21 @@
                                                                 @endforeach
                                                             </select>
                                                         </td>
-                                                        <td class="align-middle">
+                                                        <td class="align-middle" data-label="Função / Tarefa">
                                                             <input type="text"
                                                                    name="alocacoes[{{ $key }}][observacao]"
                                                                    class="form-control form-control-sm"
                                                                    placeholder="Ex: Dev Front-end, QA..."
                                                                    value="{{ $aloc['observacao'] ?? '' }}">
                                                         </td>
-                                                        <td class="align-middle">
+                                                        <td class="align-middle" data-label="Horas/Dia">
                                                             <input type="number"
                                                                    name="alocacoes[{{ $key }}][horas_por_dia]"
                                                                    class="form-control form-control-sm text-center font-weight-bold"
                                                                    step="0.5" min="0.5" max="24"
                                                                    value="{{ $aloc['horas_por_dia'] ?? 8 }}">
                                                         </td>
-                                                        <td class="align-middle">
+                                                        <td class="align-middle" data-label="Data Início">
                                                             <input type="date"
                                                                    name="alocacoes[{{ $key }}][data_inicio]"
                                                                    id="start-{{ $key }}"
@@ -336,7 +375,7 @@
                                                                 <span class="date-hint">mín: {{ \Carbon\Carbon::parse($dataInicioGlobal)->format('d/m/Y') }}</span>
                                                             @endif
                                                         </td>
-                                                        <td class="align-middle">
+                                                        <td class="align-middle" data-label="Data Fim">
                                                             <input type="date"
                                                                    name="alocacoes[{{ $key }}][data_fim]"
                                                                    id="end-{{ $key }}"
@@ -368,6 +407,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
 
             {{-- Actions --}}
             <div class="d-flex justify-content-between align-items-center p-3 border-top bg-white" style="border-radius: 0 0 12px 12px;">
