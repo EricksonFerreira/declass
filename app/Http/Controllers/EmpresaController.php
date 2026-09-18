@@ -9,12 +9,9 @@ use App\Http\Requests\Empresa\UpdateEmpresaRequest;
 use App\Http\Requests\Empresa\UpdateEmpresaSiteApresentacaoRequest;
 use App\Models\ArquivoRastreado;
 use App\Models\Empresa;
-use App\Models\EmpresaContrato;
-use App\Models\Plano;
 use App\Support\ArquivoAnexoHelper;
 use App\Services\BreadcrumbService;
 use App\Services\EmpresaService;
-use App\Services\PdfService;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\JsonResponse;
@@ -182,7 +179,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     protected $breadcrumbService;
 
-    public function __construct(EmpresaService $empresaService, BreadcrumbService $breadcrumbService, private readonly PdfService $pdfService)
+    public function __construct(EmpresaService $empresaService, BreadcrumbService $breadcrumbService)
     {
         $this->middleware('can:gerenciar-empresa', ['except' => ['minhaEmpresa']]);
 
@@ -331,10 +328,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresa', 'assinatura.meu-plano', $empresa->nome);
 
-        $contratos = $empresa->contratos()->latest('id')->take(10)->get();
-        $planos = Plano::query()->ativos()->orderBy('nome')->get(['id', 'nome', 'descricao', 'valor_mensal', 'valor_anual']);
-
-        return view('empresa.show', compact('empresa', 'breadcrumb', 'contratos', 'planos'));
+        return view('empresa.show', compact('empresa', 'breadcrumb'));
     }
 
     public function show($id)
@@ -345,220 +339,8 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         }
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome, 'Configurações');
-        $contratos = $empresa->contratos()->latest('id')->take(10)->get();
-        $planos = Plano::query()->ativos()->orderBy('nome')->get(['id', 'nome', 'descricao', 'valor_mensal', 'valor_anual']);
 
-        return view('empresa.show', compact('empresa', 'breadcrumb', 'contratos', 'planos'));
-    }
-
-    public function gerarContrato(Request $request, Empresa $empresa)
-    {
-        if (! auth()->user()?->can('acessar-superadmin')) {
-            abort(403);
-        }
-
-        $data = $request->validate([
-            'razao_social' => ['required', 'string', 'max:255'],
-            'cnpj_cliente' => ['required', 'string', 'max:30'],
-            'email_cliente' => ['nullable', 'email', 'max:255'],
-            'telefone_cliente' => ['nullable', 'string', 'max:30'],
-            'endereco_cliente' => ['required', 'string', 'max:255'],
-            'representante_nome' => ['required', 'string', 'max:255'],
-            'plano_id' => ['required', 'integer', 'exists:planos,id'],
-            'quantidade_veiculos' => ['required', 'integer', 'min:1'],
-            'valor' => ['required', 'numeric', 'min:0'],
-        ]);
-
-        $plano = Plano::query()->findOrFail((int) $data['plano_id']);
-        $numero = 'EMP-' . $empresa->id . '-' . now()->format('YmdHis');
-        $titulo = 'Contrato da empresa ' . $empresa->nome;
-
-        $snapshot = [
-            'empresa' => [
-                'id' => $empresa->id,
-                'nome' => $empresa->nome,
-                'cnpj' => $empresa->cnpj,
-                'email' => $empresa->email,
-                'telefone' => $empresa->telefone,
-            ],
-            'contrato' => array_merge($data, [
-                'numero' => $numero,
-                'titulo' => $titulo,
-                'gerado_em' => now()->toDateTimeString(),
-                'limite_veiculos_extenso' => $this->numeroPorExtenso((int) $data['quantidade_veiculos']),
-            ]),
-            'plano' => [
-                'id' => $plano->id,
-                'nome' => $plano->nome,
-                'valor_mensal' => (float) $plano->valor_mensal,
-                'valor_anual' => (float) $plano->valor_anual,
-            ],
-        ];
-
-        $pdfContent = $this->pdfService->gerarConteudo('pdf.contratos.empresa-modelo', [
-            'documento' => $snapshot,
-        ]);
-
-        $pdfPath = 'contratos/empresa/' . $empresa->id . '/' . $numero . '.pdf';
-        Storage::disk('public')->put($pdfPath, $pdfContent);
-
-        $conteudoHtml = view('pdf.contratos.empresa-modelo', [
-            'documento' => $snapshot,
-        ])->render();
-
-        $contratoData = [
-            'empresa_id' => $empresa->id,
-            'numero' => $numero,
-            'titulo' => $titulo,
-            'status' => 'gerado',
-        ];
-
-        if (Schema::hasColumn('empresa_contratos', 'snapshot')) {
-            $contratoData['snapshot'] = $snapshot;
-        }
-
-        if (Schema::hasColumn('empresa_contratos', 'conteudo_html')) {
-            $contratoData['conteudo_html'] = $conteudoHtml;
-        }
-
-        if (Schema::hasColumn('empresa_contratos', 'arquivo_pdf_path')) {
-            $contratoData['arquivo_pdf_path'] = $pdfPath;
-        }
-
-        if (Schema::hasColumn('empresa_contratos', 'gerado_em')) {
-            $contratoData['gerado_em'] = now();
-        }
-
-        if (Schema::hasColumn('empresa_contratos', 'gerado_por')) {
-            $contratoData['gerado_por'] = auth()->id();
-        }
-
-        EmpresaContrato::create($contratoData);
-
-        return redirect()->route('empresa.show', $empresa->id)
-            ->with('success', 'Contrato gerado com sucesso.');
-    }
-
-    private function numeroPorExtenso(int $numero): string
-    {
-        $map = [
-            1 => 'um',
-            2 => 'dois',
-            3 => 'três',
-            4 => 'quatro',
-            5 => 'cinco',
-            6 => 'seis',
-            7 => 'sete',
-            8 => 'oito',
-            9 => 'nove',
-            10 => 'dez',
-            11 => 'onze',
-            12 => 'doze',
-            13 => 'treze',
-            14 => 'catorze',
-            15 => 'quinze',
-            16 => 'dezesseis',
-            17 => 'dezessete',
-            18 => 'dezoito',
-            19 => 'dezenove',
-            20 => 'vinte',
-        ];
-
-        return $map[$numero] ?? (string) $numero;
-    }
-
-    public function downloadContrato(Empresa $empresa, EmpresaContrato $contrato)
-    {
-        if ((int) $contrato->empresa_id !== (int) $empresa->id) {
-            abort(404);
-        }
-
-        if (! $contrato->arquivo_pdf_path || ! Storage::disk('public')->exists($contrato->arquivo_pdf_path)) {
-            return back()->with('error', 'Arquivo do contrato nao encontrado.');
-        }
-
-        return Storage::disk('public')->download($contrato->arquivo_pdf_path, $contrato->numero . '.pdf');
-    }
-
-    public function uploadContratoAssinado(Request $request, Empresa $empresa, EmpresaContrato $contrato)
-    {
-        if ((int) $contrato->empresa_id !== (int) $empresa->id) {
-            abort(404);
-        }
-
-        if (strtolower((string) $contrato->status) === 'assinado') {
-            return back()->with('error', 'Este contrato ja esta assinado e nao pode ser alterado.');
-        }
-
-        $data = $request->validate([
-            'pdf_assinado' => ['required', 'file', 'mimes:pdf', 'max:10240'],
-        ]);
-
-        $arquivo = $request->file('pdf_assinado');
-        if (! $arquivo || ! $arquivo->isValid()) {
-            return back()->with('error', 'Nao foi possivel ler o arquivo enviado.');
-        }
-
-        $diretorio = 'contratos/empresa/' . $empresa->id;
-        $numeroBase = trim((string) ($contrato->numero ?: ('EMP-' . $empresa->id . '-' . $contrato->id)));
-        $numeroBase = preg_replace('/[^A-Za-z0-9\-_]/', '-', $numeroBase) ?: ('EMP-' . $empresa->id . '-' . $contrato->id);
-        $nomeArquivo = $numeroBase . '-assinado.pdf';
-        $caminho = $diretorio . '/' . $nomeArquivo;
-
-        if ($diretorio === '' || $nomeArquivo === '') {
-            return back()->with('error', 'Nao foi possivel montar o caminho do arquivo.');
-        }
-
-        $pathName = $arquivo->getPathname();
-        if ($pathName === '' || ! is_string($pathName)) {
-            return back()->with('error', 'Nao foi possivel localizar o arquivo enviado.');
-        }
-
-        $stream = @fopen($pathName, 'rb');
-        if (! $stream) {
-            return back()->with('error', 'Nao foi possivel salvar o PDF assinado.');
-        }
-
-        Storage::disk('public')->put($caminho, $stream);
-
-        if (is_resource($stream)) {
-            fclose($stream);
-        }
-
-        $contrato->arquivo_pdf_path = $caminho;
-        if (Schema::hasColumn('empresa_contratos', 'status')) {
-            $contrato->status = 'assinado';
-        }
-        if (Schema::hasColumn('empresa_contratos', 'assinado_em')) {
-            $contrato->assinado_em = now();
-        }
-        if (Schema::hasColumn('empresa_contratos', 'assinado_por')) {
-            $contrato->assinado_por = auth()->id();
-        }
-        $contrato->save();
-
-        return redirect()->route('empresa.show', $empresa->id)
-            ->with('success', 'PDF assinado anexado com sucesso.');
-    }
-
-    public function removerContrato(Empresa $empresa, EmpresaContrato $contrato)
-    {
-        if ((int) $contrato->empresa_id !== (int) $empresa->id) {
-            abort(404);
-        }
-
-        if (strtolower((string) $contrato->status) === 'assinado' || $contrato->assinado_em) {
-            return back()->with('error', 'Contrato assinado nao pode ser removido.');
-        }
-
-        if ($contrato->arquivo_pdf_path && Storage::disk('public')->exists($contrato->arquivo_pdf_path)) {
-            Storage::disk('public')->delete($contrato->arquivo_pdf_path);
-        }
-
-        $contrato->delete();
-
-        return redirect()->route('empresa.show', $empresa->id)
-            ->with('success', 'Contrato removido com sucesso.');
+        return view('empresa.show', compact('empresa', 'breadcrumb'));
     }
 
     public function armazenamento(Request $request, $id)

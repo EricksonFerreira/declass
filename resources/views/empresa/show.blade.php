@@ -12,18 +12,8 @@
     $plano = $planoAtivo?->plano;
     $statusBadge = $planoAtivo?->status_badge ?? ['label' => 'Sem plano', 'class' => 'badge-secondary'];
     $totalUsers = $empresa->users()->count();
-    $totalVeiculos = \App\Models\Veiculo::where('empresa_id', $empresa->id)->where('ativo', true)->where('vendido', false)->count();
     $logoUrl = $empresa->logo_url;
     $iniciais = collect(preg_split('/\s+/', trim($empresa->nome)))->filter()->take(2)->map(fn($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('') ?: 'EM';
-    $planosContrato = $planos ?? collect();
-    $representantePadrao = $empresa->representante ?? auth()->user()?->nome ?? $empresa->users()->orderBy('id')->value('nome') ?? $empresa->nome;
-    $razaoSocialPadrao = $empresa->nome;
-    $cnpjPadrao = $empresa->cnpj ?? '';
-    $enderecoPadrao = trim((string) ($empresa->endereco ?? ''));
-    $emailPadrao = $empresa->email ?? auth()->user()?->email ?? '';
-    $telefonePadrao = $empresa->telefone ?? '';
-    $quantidadeVeiculosPadrao = (int) ($planoAtivo?->plano?->limite_veiculos ?? 15);
-    $valorPadrao = $planoAtivo?->valor_cobrado ?? $plano?->valor_mensal ?? $plano?->valor_anual ?? '';
 @endphp
 
 @push('css')
@@ -76,60 +66,6 @@
         padding: 12px 16px;
     }
 
-    .rs-contratos-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 12px;
-        padding: 12px;
-    }
-
-    .rs-contrato-card {
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
-        padding: 14px;
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-    }
-
-    .rs-contrato-top {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        align-items: flex-start;
-        margin-bottom: 10px;
-    }
-
-    .rs-contrato-numero {
-        font-size: .78rem;
-        color: #64748b;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .rs-contrato-titulo {
-        font-size: .98rem;
-        font-weight: 800;
-        line-height: 1.25;
-        margin-top: 3px;
-    }
-
-    .rs-contrato-meta {
-        font-size: .78rem;
-        color: #64748b;
-    }
-
-    .rs-contrato-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 12px;
-    }
-
-    .rs-contrato-actions .btn,
-    .rs-contrato-actions form {
-        margin: 0;
-    }
-
     .rs-modal-mini .modal-dialog {
         max-width: 760px;
     }
@@ -174,12 +110,8 @@
                         <span>Usuarios</span>
                         <strong>{{ $totalUsers }}</strong>
                     </div>
-                    <div class="rs-kpi-divider"></div>
-                    <div class="rs-kpi">
-                        <span>Veiculos</span>
-                        <strong>{{ $totalVeiculos }}</strong>
-                    </div>
                     @if($plano)
+                        <div class="rs-kpi-divider"></div>
                         <div class="rs-kpi-divider"></div>
                         <div class="rs-kpi rs-kpi--accent">
                             <span>Plano</span>
@@ -256,13 +188,6 @@
                     <span>Pagamentos</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" id="tab-contratos" data-toggle="tab" href="#pane-contratos" role="tab">
-                    <i class="fas fa-file-signature"></i>
-                    <span>Contratos</span>
-                </a>
-            </li>
-
             <li class="nav-item ml-auto" style="display:flex;gap:10px;align-items:center;">
                 <a href="{{ route('empresa.editar') }}" class="rs-btn rs-btn--primary rs-btn--sm">
                     <i class="fas fa-pen mr-1"></i> Editar
@@ -525,23 +450,6 @@
                     </div>
                 </div>
                 @endif
-            </div>
-
-            {{-- TAB 4 — CONTRATOS --}}
-            <div class="tab-pane fade" id="pane-contratos" role="tabpanel">
-                <x-empresa.contratos
-                    :empresa="$empresa"
-                    :contratos="$contratos"
-                    :planos-contrato="$planosContrato"
-                    :razao-social-padrao="$razaoSocialPadrao"
-                    :cnpj-padrao="$cnpjPadrao"
-                    :email-padrao="$emailPadrao"
-                    :telefone-padrao="$telefonePadrao"
-                    :endereco-padrao="$enderecoPadrao"
-                    :representante-padrao="$representantePadrao"
-                    :quantidade-veiculos-padrao="$quantidadeVeiculosPadrao"
-                    :valor-padrao="$valorPadrao"
-                />
             </div>
 
         </div>

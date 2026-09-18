@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\EmpresaPlano;
 use App\Models\EmpresaPlanoPagamento;
-use App\Models\EmpresaContrato;
 use App\Models\OnboardingStep;
 use App\Models\ArquivoRastreado;
 use App\Models\Concerns\HasAuditColumns;
@@ -133,11 +132,6 @@ class Empresa extends Model
     public function pagamentosPlano()
     {
         return $this->hasMany(EmpresaPlanoPagamento::class, 'empresa_id');
-    }
-
-    public function contratos(): HasMany
-    {
-        return $this->hasMany(EmpresaContrato::class, 'empresa_id');
     }
 
     public function arquivosRastreados()
