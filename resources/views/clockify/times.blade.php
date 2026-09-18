@@ -74,7 +74,7 @@
                                 <div class="ux-card__foot">
                                     @if ($time->podeSerGerenciadoPor(auth()->user()))
                                         <button type="button" class="btn btn-xs btn-warning"
-                                            onclick="editTime({{ json_encode($time) }}, {{ json_encode($time->users->pluck('id')) }})">
+                                            onclick="editTime({{ json_encode($time->only(['id', 'nome', 'descricao', 'lider_id'])) }}, {{ json_encode($time->users->pluck('id')->values()) }})">
                                             <i class="fa fa-edit mr-1"></i>Editar
                                         </button>
                                         <form action="{{ route('clockify.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
@@ -126,7 +126,7 @@
                                     <td class="align-middle text-center">
                                         @if ($time->podeSerGerenciadoPor(auth()->user()))
                                             <button type="button" class="btn btn-xs btn-warning mr-1"
-                                                onclick="editTime({{ json_encode($time) }}, {{ json_encode($time->users->pluck('id')) }})">
+                                                onclick="editTime({{ json_encode($time->only(['id', 'nome', 'descricao', 'lider_id'])) }}, {{ json_encode($time->users->pluck('id')->values()) }})">
                                                 <i class="fa fa-edit"></i> Editar
                                             </button>
                                             <form action="{{ route('clockify.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
