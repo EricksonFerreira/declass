@@ -327,28 +327,28 @@ return [
 
         // REGISTRAR TEMPO
         [
-            'header' => 'REGISTRAR TEMPO',
-        ],
-        [
-            'text' => 'Rastreador',
-            'route' => 'clockify.tracker.index',
+            'text' => 'Registrar Tempo',
             'icon' => 'fas fa-stopwatch',
-        ],
-        [
-            'text' => 'Timesheet',
-            'route' => 'clockify.timesheet',
-            'icon' => 'fas fa-table',
-        ],
-        [
-            'text' => 'Calendário',
-            'route' => 'clockify.calendario.index',
-            'icon' => 'fas fa-calendar-alt',
+            'submenu' => [
+                [
+                    'text' => 'Rastreador',
+                    'route' => 'clockify.tracker.index',
+                    'icon' => 'fas fa-stopwatch',
+                ],
+                [
+                    'text' => 'Timesheet',
+                    'route' => 'clockify.timesheet',
+                    'icon' => 'fas fa-table',
+                ],
+                [
+                    'text' => 'Calendário',
+                    'route' => 'clockify.calendario.index',
+                    'icon' => 'fas fa-calendar-alt',
+                ],
+            ],
         ],
 
         // ANÁLISE
-        [
-            'header' => 'ANÁLISE',
-        ],
         [
             'text' => 'Painel',
             'icon' => 'fas fa-chart-pie',
@@ -404,42 +404,45 @@ return [
 
         // GERENCIAR
         [
-            'header' => 'GERENCIAR',
-        ],
-        [
-            'text' => 'Projetos',
-            'route' => 'clockify.projetos.index',
-            'icon' => 'fas fa-project-diagram',
-        ],
-        [
-            'text' => 'Clientes',
-            'route' => 'clockify.clientes.index',
-            'icon' => 'fas fa-user-friends',
-        ],
-        [
-            'text' => 'Equipe',
-            'route' => 'clockify.times.index',
-            'icon' => 'fas fa-users',
-        ],
-        [
-            'text' => 'Folgas e Férias',
-            'route' => 'clockify.timeoff.index',
-            'icon' => 'fas fa-plane',
-        ],
-        [
-            'text' => 'Funções',
-            'route' => 'clockify.funcoes.index',
-            'icon' => 'fas fa-briefcase',
-        ],
-        [
-            'text' => 'Tags',
-            'route' => 'clockify.tags.index',
-            'icon' => 'fas fa-tags',
-        ],
-        [
-            'text' => 'Usuários',
-            'route' => 'usuario.index',
-            'icon' => 'fas fa-user-cog',
+            'text' => 'Gerenciar',
+            'icon' => 'fas fa-folder-open',
+            'submenu' => [
+                [
+                    'text' => 'Projetos',
+                    'route' => 'clockify.projetos.index',
+                    'icon' => 'fas fa-project-diagram',
+                ],
+                [
+                    'text' => 'Clientes',
+                    'route' => 'clockify.clientes.index',
+                    'icon' => 'fas fa-user-friends',
+                ],
+                [
+                    'text' => 'Equipe',
+                    'route' => 'clockify.times.index',
+                    'icon' => 'fas fa-users',
+                ],
+                [
+                    'text' => 'Folgas e Férias',
+                    'route' => 'clockify.timeoff.index',
+                    'icon' => 'fas fa-plane',
+                ],
+                [
+                    'text' => 'Funções',
+                    'route' => 'clockify.funcoes.index',
+                    'icon' => 'fas fa-briefcase',
+                ],
+                [
+                    'text' => 'Tags',
+                    'route' => 'clockify.tags.index',
+                    'icon' => 'fas fa-tags',
+                ],
+                [
+                    'text' => 'Usuários',
+                    'route' => 'usuario.index',
+                    'icon' => 'fas fa-user-cog',
+                ],
+            ],
         ],
 
         // SISTEMA (somente superadmin — 'can' não funciona em header, por isso é submenu)
@@ -462,9 +465,6 @@ return [
         ],
 
         // AJUDA
-        [
-            'header' => 'AJUDA',
-        ],
         [
             'text' => 'Central de Ajuda (FAQ)',
             'route' => 'assinatura.ajuda',
