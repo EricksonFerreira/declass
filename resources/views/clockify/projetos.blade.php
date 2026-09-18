@@ -194,7 +194,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-side-drawer id="projetoDrawer" title="Novo Projeto" formId="projeto-form" action="{{ route('clockify.projetos.store') }}">
+    <x-modal id="projetoDrawer" icon="fas fa-project-diagram" title="Novo Projeto" formId="projeto-form" action="{{ route('clockify.projetos.store') }}">
         <input type="hidden" name="id" id="projeto_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="nome">Nome <span class="text-danger">*</span></label>
@@ -244,7 +244,7 @@
                 <option value="0">Inativo</option>
             </select>
         </div>
-    </x-side-drawer>
+    </x-modal>
 @stop
 
 @section('js')

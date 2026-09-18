@@ -4,7 +4,6 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="'Consumo × Estimado — '.$projeto->nome" />
 @stop
 
 @section('content')
@@ -184,7 +183,7 @@
                         @endforeach
                     </select>
                     <input type="text" name="nova_funcao" class="form-control form-control-sm" placeholder="Ou digite a função" style="width:160px;">
-                    <input type="number" name="horas_estimadas" class="form-control form-control-sm" placeholder="Horas" step="0.25" min="0.01" style="width:110px;" required>
+                    <input type="number" name="horas_estimadas" class="form-control form-control-sm" placeholder="Horas" step="0.01" min="0.01" style="width:110px;" required>
                     <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-plus mr-1"></i> Adicionar estimativa</button>
                 </form>
                 <small class="text-muted d-block mt-2">

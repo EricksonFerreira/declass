@@ -32,6 +32,9 @@ Route::name('clockify.')->group(function () {
 
     // Time Off
     Route::get('timeoff', [ClockifyTimeOffController::class, 'index'])->name('timeoff.index');
+    Route::get('timeoff/filtro', [ClockifyTimeOffController::class, 'filtro'])->name('timeoff.filtro');
+    Route::get('timeoff/removerfiltro', [ClockifyTimeOffController::class, 'removerFiltro'])->name('timeoff.removerFiltro');
+    Route::post('timeoff/setperpage', [ClockifyTimeOffController::class, 'setPerPage'])->name('timeoff.setPerPage');
     Route::post('timeoff', [ClockifyTimeOffController::class, 'store'])->name('timeoff.store');
     Route::put('timeoff/{id}', [ClockifyTimeOffController::class, 'update'])->name('timeoff.update');
     Route::post('timeoff/{id}/approve', [ClockifyTimeOffController::class, 'approve'])->name('timeoff.approve');

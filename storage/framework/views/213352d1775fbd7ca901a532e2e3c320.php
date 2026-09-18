@@ -11,8 +11,8 @@
     $steps      = $step->stepsParaExibir($planoAtivo);
     $pendentes  = collect($steps)->where('feito', false);
     if ($pendentes->isEmpty()) return;
-    $pagFeito    = $step->step_pagamento_realizado;
-    $stepsLivres = ['step_empresa_configurada', 'step_plano_contratado', 'step_pagamento_realizado'];
+    $acessoLiberado = (bool) ($step->step_plano_contratado || $step->step_pagamento_realizado);
+    $stepsLivres    = ['step_empresa_configurada', 'step_plano_contratado'];
 ?>
 
 <style>
@@ -55,7 +55,7 @@
 </style>
 
 
-<div id="onb-bubble" title="Configuração da locadora">
+<div id="onb-bubble" title="Configuração da conta">
     <div id="onb-bubble-ring"></div>
     <i class="fas fa-rocket"></i>
     <span id="onb-bubble-badge"><?php echo e($pendentes->count()); ?></span>
@@ -65,7 +65,7 @@
 <div id="onb-panel" aria-hidden="true">
     <div id="onb-panel-header">
         <div>
-            <div id="onb-panel-title"><i class="fas fa-rocket mr-1"></i> Configure sua locadora</div>
+            <div id="onb-panel-title"><i class="fas fa-rocket mr-1"></i> Comece a usar o DECLOCK</div>
             <div id="onb-panel-sub"><?php echo e($pct); ?>% concluído · <?php echo e($pendentes->count()); ?> passo(s) restante(s)</div>
         </div>
         <button type="button" id="onb-panel-close" aria-label="Fechar">&times;</button>
@@ -76,7 +76,7 @@
     <div id="onb-panel-steps">
         <?php $__currentLoopData = $steps; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <?php
-                $bloqueado = !$pagFeito && !in_array($s['key'], $stepsLivres);
+                $bloqueado = !$acessoLiberado && !in_array($s['key'], $stepsLivres);
                 $url = null;
                 if (!$s['feito'] && !$bloqueado && Route::has($s['rota'])) {
                     $url = route($s['rota'], $s['params'] ?? []);
@@ -98,7 +98,7 @@
                 <div class="onb-step-info">
                     <div class="onb-step-label"><?php echo e($s['label']); ?></div>
                     <?php if($bloqueado): ?>
-                        <div class="onb-step-hint">Disponível após confirmar o pagamento</div>
+                        <div class="onb-step-hint">Disponível após ativar o teste grátis</div>
                     <?php endif; ?>
                 </div>
                 <?php if($url): ?>

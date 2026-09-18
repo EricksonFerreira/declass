@@ -12,15 +12,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-
-    .dash-card {
-        border-radius: 12px;
-        border: none;
-        box-shadow: 0 4px 18px rgba(0,0,0,0.05);
-    }
-    .dash-card > .card-header:first-child { border-radius: 12px 12px 0 0; }
-    .dash-card > .card-header { border-bottom: 1px solid #eef1f6; }
+    .exp-card { font-family: 'Plus Jakarta Sans', sans-serif; }
 
     .exp-icon {
         width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
@@ -39,13 +31,13 @@
 
 @section('content')
 <div class="row">
-    <div class="col-lg-8 col-md-10 mx-auto">
-        <div class="card dash-card">
-            <div class="card-header bg-white py-3">
-                <div class="d-flex align-items-center" style="gap: 14px;">
+    <div class="col-md-12">
+        <div class="card card-outline card-primary shadow-sm exp-card">
+            <div class="card-header">
+                <div class="d-flex align-items-center" style="gap: 12px;">
                     <div class="exp-icon"><i class="fas fa-file-export"></i></div>
                     <div>
-                        <h3 class="card-title mb-0" style="font-weight: 800; font-size: 16px; color: #0f172a;">Exportar dados de tempo</h3>
+                        <h3 class="card-title text-bold text-sm mb-0">Exportar dados de tempo</h3>
                         <small class="exp-hint">Gere um CSV com as horas registradas pela equipe no período.</small>
                     </div>
                 </div>
@@ -85,7 +77,7 @@
                         <small class="exp-hint">Deixe vazio para incluir todos os usuários.</small>
                     </div>
                 </div>
-                <div class="card-footer bg-white d-flex justify-content-end" style="gap: 8px; border-top: 1px solid #eef1f6;">
+                <div class="card-footer d-flex justify-content-end" style="gap: 8px; background:#f8fafc; border-top:1px solid #e5e7eb;">
                     <a href="{{ route('relatorios.index') }}" class="btn btn-default font-weight-bold shadow-sm">
                         Voltar
                     </a>

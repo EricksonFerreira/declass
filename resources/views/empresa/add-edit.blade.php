@@ -23,13 +23,8 @@
             <div class="card-header card-header-empresa border-0">
                 <div>
                     <h4 class="mb-1">{{ $titulo }}</h4>
-                    <p class="mb-0 text-muted">Configure os dados da empresa e as informações de pagamento.</p>
+                    <p class="mb-0 text-muted">Configure os dados da empresa.</p>
                 </div>
-                @if(isset($empresa))
-                    <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="btn btn-outline-primary btn-sm mt-2 mt-md-0">
-                        Configurar site de apresentação
-                    </a>
-                @endif
             </div>
 
             <div class="card-body p-4">
@@ -56,10 +51,6 @@
                         <div class="div"></div>
                         <button type="button" class="empresa-wizard-step" data-empresa-step-btn="4">
                             <span class="num">4</span> Identidade
-                        </button>
-                        <div class="div"></div>
-                        <button type="button" class="empresa-wizard-step" data-empresa-step-btn="5">
-                            <span class="num">5</span> Pagamento
                         </button>
                     </div>
                 </div>
@@ -127,24 +118,13 @@
                 </div>
 
                 <div class="col-12 mt-2" data-empresa-step="3">
-                    <div class="empresa-section-title" id="sec-dominio">Domínio e Site</div>
+                    <div class="empresa-section-title" id="sec-dominio">Domínio</div>
                 </div>
 
                 <div class="row" data-empresa-step="3">
                     <div class="form-group form-group-empresa col-6">
                         <x-form-input type="text" class="form-control form-control-sm" id="dominio" name="dominio"
                             label="Domínio" value="{{ $empresa->dominio ?? '' }}" />
-                    </div>
-                    <div class="form-group form-group-empresa col-6">
-                        @php
-                            $siteApresentacaoAtivo = old('site_apresentacao_ativo', $empresa->site_apresentacao_ativo ?? 'S');
-                        @endphp
-                        <label for="site_apresentacao_ativo">Site de apresentação</label>
-                        <select class="form-control form-control-sm" id="site_apresentacao_ativo" name="site_apresentacao_ativo">
-                            <option value="S" {{ $siteApresentacaoAtivo === 'S' ? 'selected' : '' }}>Sim, exibir site de apresentação</option>
-                            <option value="N" {{ $siteApresentacaoAtivo === 'N' ? 'selected' : '' }}>Não, mostrar login no domínio</option>
-                        </select>
-                        <small class="text-muted d-block mt-1">Se desativado, o domínio da empresa abre direto a página de login do sistema.</small>
                     </div>
                 </div>
 
@@ -212,107 +192,6 @@
                 <div class="col-12" data-empresa-step="4">
                     <div class="empresa-theme-preview" id="empresa-theme-preview"></div>
                     <small class="text-muted">Prévia aproximada das cores para fundo/realces no acesso do colaborador.</small>
-                </div>
-
-                <div class="col-12 mt-2" data-empresa-step="5">
-                    <div class="empresa-section-title" id="sec-faturamento">Pagamento</div>
-                </div>
-
-                <div class="col-lg-8" data-empresa-step="5">
-                    <div class="form-group form-group-empresa">
-                        <label for="gateway_pagamento">Gateway de pagamento padrão</label>
-                        <select name="gateway_pagamento" id="gateway_pagamento" class="form-control form-control-sm">
-                        @php
-                            $gatewaySelecionado = old('gateway_pagamento', $empresa->gateway_pagamento ?? 'stripe');
-                        @endphp
-                        <option value="nenhum" {{ $gatewaySelecionado === 'nenhum' ? 'selected' : '' }}>Nenhum gateway</option>
-                        <option value="stripe" {{ $gatewaySelecionado === 'stripe' ? 'selected' : '' }}>Stripe</option>
-                        <option value="mercado_livre" {{ $gatewaySelecionado === 'mercado_livre' ? 'selected' : '' }}>Mercado Livre</option>
-                        <option value="paypal" {{ $gatewaySelecionado === 'paypal' ? 'selected' : '' }}>PayPal</option>
-                    </select>
-                        <small class="text-muted d-block mt-1">Se selecionar "Nenhum", a empresa seguirá sem cobrança online configurada.</small>
-                    </div>
-                </div>
-
-                <div class="col-lg-4" data-empresa-step="5">
-                    <div class="form-group form-group-empresa">
-                        <label for="moeda_pagamento">Moeda de pagamento</label>
-                        @php
-                            $moedaSelecionada = strtoupper(old('moeda_pagamento', $empresa->moeda_pagamento ?? 'BRL'));
-                        @endphp
-                        <select id="moeda_pagamento" name="moeda_pagamento" class="form-control form-control-sm">
-                            <option value="BRL" {{ $moedaSelecionada === 'BRL' ? 'selected' : '' }}>BRL - Real Brasileiro</option>
-                            <option value="USD" {{ $moedaSelecionada === 'USD' ? 'selected' : '' }}>USD - Dolar Americano</option>
-                            <option value="EUR" {{ $moedaSelecionada === 'EUR' ? 'selected' : '' }}>EUR - Euro</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-12 gateway-fields gateway-stripe" data-empresa-step="5">
-                    <div class="gateway-title">Stripe</div>
-                </div>
-                <div class="col-lg-6 gateway-fields gateway-stripe" data-empresa-step="5">
-                    <div class="form-group form-group-empresa">
-                        <label for="stripe_public_key">Stripe Public Key</label>
-                        <input type="text" class="form-control form-control-sm" id="stripe_public_key" name="stripe_public_key"
-                               value="{{ old('stripe_public_key', $empresa->stripe_public_key ?? '') }}">
-                    </div>
-                </div>
-                <div class="col-lg-6 gateway-fields gateway-stripe" data-empresa-step="5">
-                    <div class="form-group form-group-empresa">
-                        <label for="stripe_secret">Stripe Secret</label>
-                        <input type="text" class="form-control form-control-sm" id="stripe_secret" name="stripe_secret"
-                               value="">
-                        <small class="text-muted d-block mt-1">Deixe em branco para manter o secret atual.</small>
-                    </div>
-                </div>
-
-                <div class="col-12 gateway-fields gateway-mercado_livre" data-empresa-step="5">
-                    <div class="gateway-title">Mercado Livre</div>
-                </div>
-                <div class="col-lg-6 gateway-fields gateway-mercado_livre" data-empresa-step="5">
-                    <div class="form-group form-group-empresa">
-                        <label for="mercado_livre_public_key">Mercado Livre Public Key</label>
-                        <input type="text" class="form-control form-control-sm" id="mercado_livre_public_key" name="mercado_livre_public_key"
-                               value="{{ old('mercado_livre_public_key', $empresa->mercado_livre_public_key ?? '') }}">
-                    </div>
-                </div>
-                <div class="col-lg-6 gateway-fields gateway-mercado_livre" data-empresa-step="5">
-                    <div class="form-group form-group-empresa">
-                        <label for="mercado_livre_access_token">Mercado Livre Access Token</label>
-                        <input type="text" class="form-control form-control-sm" id="mercado_livre_access_token" name="mercado_livre_access_token"
-                               value="">
-                        <small class="text-muted d-block mt-1">Deixe em branco para manter o token atual.</small>
-                    </div>
-                </div>
-
-                <div class="col-12 gateway-fields gateway-paypal" data-empresa-step="5">
-                    <div class="gateway-title">PayPal</div>
-                </div>
-                <div class="col-lg-4 gateway-fields gateway-paypal" data-empresa-step="5">
-                    <div class="form-group form-group-empresa">
-                        <label for="paypal_client_id">PayPal Client ID</label>
-                        <input type="text" class="form-control form-control-sm" id="paypal_client_id" name="paypal_client_id"
-                               value="{{ old('paypal_client_id', $empresa->paypal_client_id ?? '') }}">
-                    </div>
-                </div>
-                <div class="col-lg-4 gateway-fields gateway-paypal" data-empresa-step="5">
-                    <div class="form-group form-group-empresa">
-                        <label for="paypal_client_secret">PayPal Client Secret</label>
-                        <input type="text" class="form-control form-control-sm" id="paypal_client_secret" name="paypal_client_secret"
-                               value="">
-                        <small class="text-muted d-block mt-1">Deixe em branco para manter o secret atual.</small>
-                    </div>
-                </div>
-                <div class="col-lg-4 gateway-fields gateway-paypal" data-empresa-step="5">
-                    <div class="form-group form-group-empresa">
-                        <label for="paypal_mode">PayPal Mode</label>
-                        <select id="paypal_mode" name="paypal_mode" class="form-control form-control-sm">
-                            @php $paypalMode = old('paypal_mode', $empresa->paypal_mode ?? 'sandbox'); @endphp
-                            <option value="sandbox" {{ $paypalMode === 'sandbox' ? 'selected' : '' }}>Sandbox</option>
-                            <option value="live" {{ $paypalMode === 'live' ? 'selected' : '' }}>Live</option>
-                        </select>
-                    </div>
                 </div>
 
                 <div class="col-12 empresa-wizard-footer">
@@ -489,17 +368,6 @@
         scroll-margin-top: 90px;
     }
 
-    .gateway-title {
-        background: #0f172a;
-        color: #ffffff;
-        border-radius: 8px;
-        padding: .4rem .7rem;
-        font-size: .86rem;
-        font-weight: 700;
-        margin-bottom: 6px;
-        display: inline-block;
-    }
-
     .form-group-empresa {
         margin-bottom: 1rem;
     }
@@ -559,14 +427,12 @@
 <script>
     (function () {
         const isEdit = @json($isEdit);
-        const gateway = document.getElementById('gateway_pagamento');
         const cnpjInput = document.getElementById('cnpj');
         const telefoneInput = document.getElementById('telefone');
         const corPrimaria = document.getElementById('cor_primaria');
         const corSecundaria = document.getElementById('cor_secundaria');
         const corTerciaria = document.getElementById('cor_terciaria');
         const themePreview = document.getElementById('empresa-theme-preview');
-        const blocks = document.querySelectorAll('.gateway-fields');
 
         function onlyDigits(value) {
             return String(value || '').replace(/\D+/g, '');
@@ -599,14 +465,6 @@
             });
         }
 
-        function syncGatewayFields() {
-            const selecionado = gateway ? gateway.value : 'nenhum';
-            blocks.forEach((block) => {
-                const visible = block.classList.contains('gateway-' + selecionado);
-                block.classList.toggle('d-none', !visible);
-            });
-        }
-
         function syncThemePreview() {
             if (!themePreview) {
                 return;
@@ -620,7 +478,7 @@
 
         // Wizard/Steps do cadastro de empresa
         (function initEmpresaWizard() {
-            const maxStep = 5;
+            const maxStep = 4;
             const storageKey = 'empresaWizardStep';
 
             const prevBtn = document.getElementById('empresaWizardPrev');
@@ -711,12 +569,8 @@
                 const mapa = {
                     nome: 1, ativo: 1, slug: 1, cnpj: 1,
                     email: 2, telefone: 2, representante: 2, endereco: 2,
-                    dominio: 3, site_apresentacao_ativo: 3,
+                    dominio: 3,
                     logo: 4, cor_primaria: 4, cor_secundaria: 4, cor_terciaria: 4,
-                    gateway_pagamento: 5, moeda_pagamento: 5,
-                    stripe_public_key: 5, stripe_secret: 5,
-                    mercado_livre_public_key: 5, mercado_livre_access_token: 5,
-                    paypal_client_id: 5, paypal_client_secret: 5, paypal_mode: 5,
                 };
 
                 for (const campo of errosCampos) {
@@ -731,10 +585,6 @@
             setStep(getStep(), false);
         })();
 
-        if (gateway) {
-            gateway.addEventListener('change', syncGatewayFields);
-        }
-
         [corPrimaria, corSecundaria, corTerciaria].forEach((input) => {
             if (input) {
                 input.addEventListener('input', syncThemePreview);
@@ -744,7 +594,6 @@
         bindMask(cnpjInput, formatCnpj);
         bindMask(telefoneInput, formatTelefone);
 
-        syncGatewayFields();
         syncThemePreview();
     })();
 </script>

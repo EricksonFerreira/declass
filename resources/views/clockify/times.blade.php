@@ -142,7 +142,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-side-drawer id="timeDrawer" title="Nova Equipe" formId="time-form" action="{{ route('clockify.times.store') }}">
+    <x-modal id="timeDrawer" icon="fas fa-users" title="Nova Equipe" formId="time-form" action="{{ route('clockify.times.store') }}">
         <input type="hidden" name="id" id="time_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="nome">Nome do Time <span class="text-danger">*</span></label>
@@ -167,7 +167,7 @@
                 @endforeach
             </div>
         </div>
-    </x-side-drawer>
+    </x-modal>
 @stop
 
 @section('js')

@@ -280,7 +280,7 @@
         @endif
     </div>
 
-    <x-side-drawer id="sideDrawer" title="Cadastrar Usuário" formId="drawerForm" action="{{ route('usuario.store') }}">
+    <x-modal id="sideDrawer" icon="fas fa-user-cog" title="Cadastrar Usuário" formId="drawerForm" action="{{ route('usuario.store') }}">
         <input type="hidden" name="id" id="drawer_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="drawer_nome">Nome <span class="text-danger">*</span></label>
@@ -351,7 +351,7 @@
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
-    </x-side-drawer>
+    </x-modal>
 @stop
 
 @section('css')

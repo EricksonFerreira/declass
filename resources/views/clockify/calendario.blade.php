@@ -179,7 +179,9 @@
         ===================================================== */
         .fc { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; }
         .fc-theme-standard td, .fc-theme-standard th { border-color: var(--ck-border); }
-        .fc-timegrid-slots td { height: 36px !important; }
+        .fc-timegrid-slots td { height: 44px !important; }
+        .fc-timeGridThreeDay-view .fc-timegrid-slots td { height: 58px !important; }
+        .fc-timeGridDay-view .fc-timegrid-slots td { height: 64px !important; }
         .fc-daygrid-day-frame { background: #fff; }
 
         .fc-theme-standard .fc-scrollgrid {
@@ -525,7 +527,12 @@
             padding: 16px 18px 12px;
             background: var(--ck-pop-color, #0284c7);
             position: relative;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
         }
+        .ck-popover.ck-dragging .ck-pop-header { cursor: grabbing; }
+        .ck-pop-close { touch-action: manipulation; }
         .ck-pop-header-top {
             display: flex;
             align-items: center;
@@ -688,6 +695,43 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             popoverEl = document.getElementById('clockify-event-popover');
+
+            // Popover arrastável pelo header (mouse + touch)
+            (function initPopoverDrag() {
+                var handle = popoverEl.querySelector('.ck-pop-header');
+                if (!handle) return;
+
+                var dragOffsetX = 0, dragOffsetY = 0, dragging = false;
+
+                handle.addEventListener('pointerdown', function(e) {
+                    if (e.target.closest('.ck-pop-close')) return;
+                    dragging = true;
+                    popoverEl.classList.add('ck-dragging');
+                    var rect = popoverEl.getBoundingClientRect();
+                    dragOffsetX = e.clientX - rect.left;
+                    dragOffsetY = e.clientY - rect.top;
+                    handle.setPointerCapture(e.pointerId);
+                    e.preventDefault();
+                });
+
+                handle.addEventListener('pointermove', function(e) {
+                    if (!dragging) return;
+                    var scrollX = window.scrollX || document.documentElement.scrollLeft;
+                    var scrollY = window.scrollY || document.documentElement.scrollTop;
+                    var popWidth = popoverEl.offsetWidth;
+                    var newLeft = Math.max(8, Math.min(e.clientX + scrollX - dragOffsetX, scrollX + document.documentElement.clientWidth - popWidth - 8));
+                    popoverEl.style.left = newLeft + 'px';
+                    popoverEl.style.top = Math.max(8, e.clientY + scrollY - dragOffsetY) + 'px';
+                });
+
+                function endDrag() {
+                    dragging = false;
+                    popoverEl.classList.remove('ck-dragging');
+                }
+                handle.addEventListener('pointerup', endDrag);
+                handle.addEventListener('pointercancel', endDrag);
+            })();
+
             var calendarEl = document.getElementById('full-calendar');
             var rawEvents = {!! $events !!};
             var currentUserId = {{ Auth::id() }};
@@ -771,10 +815,10 @@
                 initialView: isMobileInit ? 'timeGridDay' : 'timeGridWeek',
                 slotMinTime: '05:00:00',
                 slotMaxTime: '23:00:00',
-                height: isMobileInit ? 540 : 720,
+                height: isMobileInit ? 540 : 860,
                 expandRows: true,
                 scrollTime: '07:00:00',
-                eventMinHeight: 24,
+                eventMinHeight: 42,
                 allDaySlot: true, // Habilitar a linha de Planilha/All-Day no topo
                 allDayText: 'PLANILHA', // Alinha com o texto da imagem do Clockify
                 nowIndicator: true,
@@ -793,7 +837,12 @@
                     timeGridThreeDay: {
                         type: 'timeGrid',
                         duration: { days: 3 },
-                        buttonText: '3 dias'
+                        buttonText: '3 dias',
+                        height: isMobileInit ? 640 : 1100
+                    },
+                    timeGridDay: {
+                        type: 'timeGrid',
+                        height: isMobileInit ? 700 : 1200
                     },
                     dayGridMonth: { fixedWeekCount: false }
                 },

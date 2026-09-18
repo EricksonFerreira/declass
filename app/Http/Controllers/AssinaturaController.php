@@ -326,7 +326,7 @@ class AssinaturaController extends Controller
     public function ajuda(): View
     {
         $titulo = 'Central de Ajuda (FAQ)';
-        $subtitulo = 'Respostas rápidas e orientações sobre planos, faturamento, frota, reservas e o Módulo Fiscal';
+        $subtitulo = 'Respostas rápidas sobre registro de tempo, projetos, relatórios, plano e uso do DECLOCK';
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new \App\DTO\BreadCrumbItem('Home', route('home')),
             new \App\DTO\BreadCrumbItem('Ajuda', null),

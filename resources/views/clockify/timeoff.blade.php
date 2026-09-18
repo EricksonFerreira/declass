@@ -7,20 +7,112 @@
     <x-page-title :title="$titulo" />
 @stop
 
+@push('css')
+    @include('partials.ux-index-styles')
+@endpush
+
 @section('content')
+    @if (!empty($filters))
+        <div class="veiculo-filter-sticky">
+            <x-filter
+                :filters="$filters"
+                :additionalFilters="$additionalFilters"
+                :itensFiltered="$itensFiltered"
+                :nomeFiltro="$nomeFiltro"
+            />
+        </div>
+    @endif
+
     <div class="row">
         <!-- Listagem de Folgas e Férias -->
         <div class="col-md-12">
             <div class="card card-outline card-primary shadow-sm">
                 <div class="card-header">
-                    <h3 class="card-title text-bold text-sm">Histórico de Folgas e Férias</h3>
-                    <div class="card-tools">
+                    <h3 class="card-title text-bold text-sm">Registros <span class="badge badge-primary">{{ $timeoffs->total() }}</span></h3>
+                    <div class="card-tools d-flex align-items-center" style="gap: 10px;">
+                        <form action="{{ route($nomeFiltro . '.setPerPage') }}" method="POST" class="mb-0">
+                            @csrf
+                            <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
+                        </form>
+                        @include('partials.ux-view-toggle', ['viewKey' => 'timeoff_index_view', 'default' => 'table'])
                         <button type="button" class="btn btn-sm btn-primary" id="btn-create-timeoff">
                             <i class="fas fa-plus mr-1"></i> Solicitar Folga ou Férias
                         </button>
                     </div>
                 </div>
-                <div class="card-body table-responsive p-0">
+                <div class="card-body p-0 ux-index-body" data-view="table">
+                    <div class="ux-cards">
+                        @forelse ($timeoffs as $to)
+                            <article class="ux-card">
+                                <div class="ux-card__accent"></div>
+                                <div class="ux-card__head">
+                                    <div class="ux-card__avatar"><i class="fas fa-plane"></i></div>
+                                    <div class="ux-card__head-info">
+                                        <div class="ux-card__title">{{ $to->user->nome }}</div>
+                                        <div class="ux-card__sub">
+                                            @switch($to->tipo)
+                                                @case('ferias') Férias @break
+                                                @case('medico') Médico @break
+                                                @case('pessoal') Pessoal @break
+                                                @default Outro
+                                            @endswitch
+                                        </div>
+                                    </div>
+                                    <div class="ux-card__badges">
+                                        @switch(strtolower($to->status ?? ''))
+                                            @case('aprovado') <span class="ux-card__badge ux-card__badge--green">Aprovado</span> @break
+                                            @case('rejeitado') <span class="ux-card__badge ux-card__badge--red">Rejeitado</span> @break
+                                            @default <span class="ux-card__badge ux-card__badge--amber">Pendente</span>
+                                        @endswitch
+                                    </div>
+                                </div>
+                                <div class="ux-card__meta">
+                                    <div class="ux-card__meta-row">
+                                        <span class="ux-card__meta-label"><i class="far fa-calendar-alt mr-1"></i>Período</span>
+                                        <strong class="ux-card__meta-value">{{ $to->data_inicio->format('d/m/Y') }} → {{ $to->data_fim->format('d/m/Y') }}</strong>
+                                    </div>
+                                    <div class="ux-card__meta-row">
+                                        <span class="ux-card__meta-label"><i class="fas fa-align-left mr-1"></i>Observação</span>
+                                        <strong class="ux-card__meta-value">{{ Str::limit($to->observacao, 40) ?? '—' }}</strong>
+                                    </div>
+                                </div>
+                                <div class="ux-card__foot">
+                                    @if (strtolower($to->status ?? '') === 'pendente' && auth()->user()->can('gerenciar-empresa'))
+                                        <form action="{{ route('clockify.timeoff.approve', $to->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-xs btn-success"><i class="fa fa-check mr-1"></i>Aprovar</button>
+                                        </form>
+                                        <form action="{{ route('clockify.timeoff.reject', $to->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-times mr-1"></i>Rejeitar</button>
+                                        </form>
+                                    @endif
+                                    @if (auth()->user()->can('gerenciar-empresa') || $to->user_id === auth()->id())
+                                        <button type="button" class="btn btn-xs btn-warning btn-edit-timeoff"
+                                            data-id="{{ $to->id }}"
+                                            data-user="{{ $to->user_id }}"
+                                            data-tipo="{{ $to->tipo }}"
+                                            data-inicio="{{ $to->data_inicio->format('Y-m-d') }}"
+                                            data-fim="{{ $to->data_fim->format('Y-m-d') }}"
+                                            data-obs="{{ $to->observacao }}">
+                                            <i class="fas fa-edit mr-1"></i>Editar
+                                        </button>
+                                    @endif
+                                    <form action="{{ route('clockify.timeoff.destroy', $to->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                    </form>
+                                </div>
+                            </article>
+                        @empty
+                            <div class="text-center text-muted py-4 w-100">
+                                <i class="fas fa-calendar-times fa-2x mb-2 d-block"></i>
+                                Nenhuma solicitação de folga ou férias encontrada.
+                            </div>
+                        @endforelse
+                    </div>
+                    <div class="ux-table table-responsive">
                     <table class="table table-hover table-striped table-bordered table-sm text-nowrap mb-0">
                         <thead>
                             <tr>
@@ -48,7 +140,7 @@
                                     <td class="align-middle">{{ $to->data_inicio->format('d/m/Y') }}</td>
                                     <td class="align-middle">{{ $to->data_fim->format('d/m/Y') }}</td>
                                     <td class="align-middle">
-                                        @switch($to->status)
+                                        @switch(strtolower($to->status ?? ''))
                                             @case('aprovado') <span class="badge badge-success"><i class="fas fa-check-circle"></i> Aprovado</span> @break
                                             @case('rejeitado') <span class="badge badge-danger"><i class="fas fa-times-circle"></i> Rejeitado</span> @break
                                             @default <span class="badge badge-warning"><i class="fas fa-clock"></i> Pendente</span>
@@ -56,7 +148,7 @@
                                     </td>
                                     <td class="align-middle">{{ Str::limit($to->observacao, 40) ?? '-' }}</td>
                                     <td class="align-middle text-center">
-                                        @if ($to->status === 'pendente' && auth()->user()->can('gerenciar-empresa'))
+                                        @if (strtolower($to->status ?? '') === 'pendente' && auth()->user()->can('gerenciar-empresa'))
                                             <form action="{{ route('clockify.timeoff.approve', $to->id) }}" method="POST" class="d-inline mr-1">
                                                 @csrf
                                                 <button type="submit" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Aprovar</button>
@@ -94,10 +186,11 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
                 @if($timeoffs->hasPages())
                     <div class="card-footer py-2 d-flex justify-content-end">
-                        {{ $timeoffs->links() }}
+                        {{ $timeoffs->appends(request()->query())->links() }}
                     </div>
                 @endif
             </div>
@@ -105,7 +198,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-side-drawer id="timeoffDrawer" title="Solicitar Folga ou Férias" formId="timeoff-form" action="{{ route('clockify.timeoff.store') }}">
+    <x-modal id="timeoffDrawer" icon="fas fa-plane" title="Solicitar Folga ou Férias" formId="timeoff-form" action="{{ route('clockify.timeoff.store') }}">
         <input type="hidden" name="id" id="timeoff_id" value="{{ old('id') }}">
         @if (auth()->user()->can('gerenciar-empresa'))
             <div class="form-group">
@@ -143,7 +236,7 @@
             <label for="observacao">Observação / Justificativa</label>
             <textarea name="observacao" id="observacao" rows="3" class="form-control form-control-sm" placeholder="Opcional..."></textarea>
         </div>
-    </x-side-drawer>
+    </x-modal>
 @stop
 
 @section('js')

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clockify;
 
 use App\Actions\Clockify\Report\ExportReportAction;
+use App\Actions\Clockify\Report\HorasTrabalhadasAction;
 use App\Actions\Clockify\Report\IndexAction;
 use App\Actions\Clockify\Report\StoreMembroAction;
 use App\Http\Controllers\Controller;
@@ -95,8 +96,10 @@ class ReportController extends Controller
         return redirect()->route('relatorios.membros')->with('success', 'Membro excluído com sucesso.');
     }
 
-    public function horasTrabalhadas()
+    public function horasTrabalhadas(HorasTrabalhadasAction $action)
     {
+        $dados = $action->handle();
+
         $breadcrumb = [
             ['name' => 'Home', 'url' => route('home')],
             ['name' => 'Análise'],
@@ -104,7 +107,12 @@ class ReportController extends Controller
             ['name' => 'Horas Trabalhadas', 'active' => true],
         ];
 
-        return View::make('relatorios.horas-trabalhadas', ['breadcrumb' => $breadcrumb]);
+        return View::make('relatorios.horas-trabalhadas', [
+            'breadcrumb' => $breadcrumb,
+            'linhas' => $dados['linhas'],
+            'totais' => $dados['totais'],
+            'chart' => $dados['chart'],
+        ]);
     }
 
     public function export(Request $request, ExportReportAction $action)

@@ -7,6 +7,13 @@
     <x-page-title :title="'Consumo × Estimado por Projeto'" />
 @stop
 
+@section('css')
+<style>
+.consumo-link-projeto { color: var(--empresa-cor-primaria, #007bff); }
+.consumo-link-projeto:hover { color: var(--empresa-cor-primaria, #007bff); text-decoration: underline; filter: brightness(.8); }
+</style>
+@stop
+
 @section('content')
 @php
     $fmtHora = fn ($v) => $v === null ? '—' : number_format($v, 2, ',', '.');
@@ -75,7 +82,7 @@
                     @endphp
                     <tr class="{{ $rowClass }}">
                         <td class="pl-3">
-                            <a href="{{ route('relatorios.consumo.show', $p->id) }}" class="font-weight-bold text-dark">
+                            <a href="{{ route('relatorios.consumo.show', $p->id) }}" class="font-weight-bold consumo-link-projeto">
                                 {{ $p->nome }}
                             </a>
                         </td>

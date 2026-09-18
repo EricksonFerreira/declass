@@ -7,31 +7,7 @@
     <x-page-title :title="$titulo" :createUrl="route('empresa.create')" />
 @stop
 
-@php
-    $totalBytes = (int) \App\Models\ArquivoRastreado::query()->sum('size_bytes');
-    if ($totalBytes >= 1073741824) {
-        $storageFormatted = number_format($totalBytes / 1073741824, 2, ',', '.') . ' GB';
-    } else {
-        $storageFormatted = number_format($totalBytes / 1048576, 2, ',', '.') . ' MB';
-    }
-@endphp
-
 @section('content')
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <div class="small-box bg-info">
-                <div class="inner">
-                    <h3>{{ $storageFormatted }}</h3>
-                    <p>Armazenamento total</p>
-                </div>
-                <div class="icon"><i class="fas fa-database"></i></div>
-                <a href="#" class="small-box-footer" onclick="event.preventDefault();alert('Armazenamento total de todas as empresas somadas. O detalhamento por empresa aparece na tabela abaixo.');">
-                    <i class="fas fa-chart-simple mr-1"></i> Detalhes por empresa na tabela
-                </a>
-            </div>
-        </div>
-    </div>
-
     @if (!empty($filters))
         <x-filter
             :filters="$filters"

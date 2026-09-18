@@ -76,6 +76,9 @@
                         <a href="{{ route('clockify.projetos.planejar-equipe', $projeto->id) }}" class="btn btn-info font-weight-bold text-white mr-2 mb-2 shadow-sm">
                             <i class="fas fa-users mr-1"></i> Planejar Equipe
                         </a>
+                        <a href="{{ route('relatorios.consumo.show', $projeto->id) }}" class="btn btn-secondary font-weight-bold text-white mr-2 mb-2 shadow-sm">
+                            <i class="fas fa-chart-bar mr-1"></i> Consumo × Estimado
+                        </a>
                         <a href="{{ route('clockify.projetos.cronogramas.novo', $projeto->id) }}" class="btn btn-primary font-weight-bold mb-2 shadow-sm">
                             <i class="fas fa-plus mr-1"></i> Nova Versão/Etapa
                         </a>

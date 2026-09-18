@@ -34,13 +34,13 @@
                             @csrf
                             <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                         </form>
-                        @include('partials.ux-view-toggle', ['viewKey' => 'tags_index_view'])
+                        @include('partials.ux-view-toggle', ['viewKey' => 'tags_index_view', 'default' => 'table'])
                         <button type="button" class="btn btn-sm btn-primary" id="btn-create-tag">
                             <i class="fas fa-plus mr-1"></i> Novo Tag
                         </button>
                     </div>
                 </div>
-                <div class="card-body p-0 ux-index-body" data-view="cards">
+                <div class="card-body p-0 ux-index-body" data-view="table">
                     <div class="ux-cards">
                         @forelse ($tags as $tag)
                             <article class="ux-card">
@@ -128,7 +128,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-side-drawer id="tagDrawer" title="Criar Nova Tag" formId="tag-form" action="{{ route('clockify.tags.store') }}">
+    <x-modal id="tagDrawer" icon="fas fa-tags" title="Criar Nova Tag" formId="tag-form" action="{{ route('clockify.tags.store') }}">
         <input type="hidden" name="id" id="tag_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="nome">Nome da Tag <span class="text-danger">*</span></label>
@@ -144,7 +144,7 @@
                 <option value="0">Inativo</option>
             </select>
         </div>
-    </x-side-drawer>
+    </x-modal>
 @stop
 
 @section('js')

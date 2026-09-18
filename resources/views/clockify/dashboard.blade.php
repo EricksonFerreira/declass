@@ -42,23 +42,6 @@
     .c-indigo { --accent:#4f46e5; --accent-soft:#e0e7ff; }
     .c-violet { --accent:#7c3aed; --accent-soft:#ede9fe; }
 
-    .dash-nav-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .dash-nav-card {
-        display: flex; align-items: center; gap: 16px; padding: 18px 20px;
-        background: #fff; color: #0f172a; border-radius: 12px; border: none;
-        text-decoration: none !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,.03); transition: transform .18s, box-shadow .18s;
-        position: relative; overflow: hidden;
-    }
-    .dash-nav-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.08); color:#0f172a; }
-    .dash-nav-card__icon { width:44px; height:44px; border-radius:10px; background:var(--accent-soft,#e0f5fa); display:flex; align-items:center; justify-content:center; font-size:17px; color:var(--accent,#0891b2); flex-shrink:0; }
-    .dash-nav-card__text h3 { font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; font-weight:700; margin:0 0 2px; color:#0f172a; }
-    .dash-nav-card__text p { margin:0; font-size:12px; color:#94a3b8; }
-    .dash-nav-card__arrow { margin-left:auto; font-size:15px; color:#cbd5e1; transition: color .18s; }
-    .dash-nav-card:hover .dash-nav-card__arrow { color: var(--accent, #0891b2); }
-
-    .dash-section-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#94a3b8; margin:28px 0 14px; display:flex; align-items:center; gap:10px; }
-    .dash-section-title::after { content:''; flex:1; height:1px; background:#e2e5ef; }
 
     .tracker-row { transition: background .15s; }
     .tracker-row:hover { background-color: #f8fafc; }
@@ -128,35 +111,6 @@
             <p class="dash-kpi__value">{{ number_format($hoursInPeriod, 1) }}h</p>
             <p class="dash-kpi__sub">Total selecionado</p>
         </div>
-    </div>
-
-    <!-- Navegação Rápida para Sub-telas -->
-    <p class="dash-section-title">Análises Detalhadas</p>
-    <div class="dash-nav-grid">
-        <a href="{{ route('home.produtividade', request()->query()) }}" class="dash-nav-card c-teal">
-            <div class="dash-nav-card__icon"><i class="fas fa-chart-line"></i></div>
-            <div class="dash-nav-card__text">
-                <h3>Produtividade</h3>
-                <p>Ranking, horas por dia, heatmap semanal</p>
-            </div>
-            <span class="dash-nav-card__arrow"><i class="fas fa-chevron-right"></i></span>
-        </a>
-        <a href="{{ route('home.equipe', request()->query()) }}" class="dash-nav-card c-emerald">
-            <div class="dash-nav-card__icon"><i class="fas fa-users"></i></div>
-            <div class="dash-nav-card__text">
-                <h3>Equipe</h3>
-                <p>Quem está rastreando, status, alertas</p>
-            </div>
-            <span class="dash-nav-card__arrow"><i class="fas fa-chevron-right"></i></span>
-        </a>
-        <a href="{{ route('home.projetos', request()->query()) }}" class="dash-nav-card c-violet">
-            <div class="dash-nav-card__icon"><i class="fas fa-project-diagram"></i></div>
-            <div class="dash-nav-card__text">
-                <h3>Projetos</h3>
-                <p>Saúde, horas por projeto, matrix</p>
-            </div>
-            <span class="dash-nav-card__arrow"><i class="fas fa-chevron-right"></i></span>
-        </a>
     </div>
 
     <div class="row">

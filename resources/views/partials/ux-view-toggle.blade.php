@@ -25,7 +25,7 @@
             setView(btn.dataset.view);
         }));
 
-        setView(localStorage.getItem(store) || 'cards');
+        setView(localStorage.getItem(store) || @json($default ?? 'cards'));
     });
 </script>
 @endpush

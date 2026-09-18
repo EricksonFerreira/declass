@@ -153,7 +153,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-side-drawer id="funcaoDrawer" title="Nova Função" formId="funcao-form" action="{{ route('clockify.funcoes.store') }}">
+    <x-modal id="funcaoDrawer" icon="fas fa-briefcase" title="Nova Função" formId="funcao-form" action="{{ route('clockify.funcoes.store') }}">
         <input type="hidden" name="id" id="funcao_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="nome">Nome da Função <span class="text-danger">*</span></label>
@@ -177,7 +177,7 @@
                 <option value="0">Inativo</option>
             </select>
         </div>
-    </x-side-drawer>
+    </x-modal>
 @stop
 
 @section('js')

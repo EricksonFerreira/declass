@@ -10,6 +10,8 @@ use App\Actions\Clockify\TimeOff\SaveTimeOffAction;
 use App\Actions\Clockify\TimeOff\UpdateTimeOffAction;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\AtualizaFiltrosTrait;
+use App\Traits\FiltroTrait;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,21 +19,103 @@ use Illuminate\View\View;
 
 class ClockifyTimeOffController extends Controller
 {
+    use AtualizaFiltrosTrait;
+    use FiltroTrait;
+
+    private string $nomeFiltro = 'clockify.timeoff';
+
     public function index(Request $request, ListarTimeOffsAction $action): View
     {
-        $timeoffs = $action->handle();
+        $this->configurarSessao();
+
+        $itensFiltered = session("{$this->nomeFiltro}.filtro", []);
+        $perPage = session("{$this->nomeFiltro}.perPage", 15);
+        $timeoffs = $action->handle($itensFiltered, $perPage);
         $usuarios = User::orderBy('nome')->get();
+
+        $filters = $this->obterFiltrosPrincipais($usuarios);
+        $additionalFilters = $this->obterFiltrosSecundarios();
+        $this->atualizarFiltros($itensFiltered, $filters);
+        $this->atualizarFiltros($itensFiltered, $additionalFilters);
 
         return view('clockify.timeoff', [
             'titulo' => 'Folgas e Férias',
             'timeoffs' => $timeoffs,
             'usuarios' => $usuarios,
+            'filters' => $filters,
+            'additionalFilters' => $additionalFilters,
+            'itensFiltered' => $itensFiltered,
+            'nomeFiltro' => $this->nomeFiltro,
+            'perPages' => [10, 15, 25, 50, 100],
+            'perPage' => $perPage,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Gerenciar'],
                 ['name' => 'Folgas e Férias', 'active' => true],
             ],
         ]);
+    }
+
+    public function filtro(Request $request): RedirectResponse
+    {
+        $this->criarFiltros($request, $this->nomeFiltro);
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function removerFiltro(Request $request): RedirectResponse
+    {
+        $this->removeSessao($this->nomeFiltro, $request->input('atributo'));
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function setPerPage(Request $request): RedirectResponse
+    {
+        $request->session()->put("{$this->nomeFiltro}.perPage", $request->input('perPage'));
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    private function configurarSessao(): void
+    {
+        session()->put("{$this->nomeFiltro}.urlPadrao", 'timeoff');
+        session()->put("{$this->nomeFiltro}.rotaRedirect", 'clockify.timeoff.index');
+    }
+
+    private function obterFiltrosPrincipais($usuarios): array
+    {
+        $filters = [
+            ['name' => 'tipo', 'label' => 'Tipo', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
+                ['value' => '', 'label' => 'Todos', 'selected' => false],
+                ['value' => 'ferias', 'label' => 'Férias', 'selected' => false],
+                ['value' => 'medico', 'label' => 'Médico', 'selected' => false],
+                ['value' => 'pessoal', 'label' => 'Pessoal', 'selected' => false],
+                ['value' => 'outro', 'label' => 'Outro', 'selected' => false],
+            ]],
+            ['name' => 'status', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
+                ['value' => '', 'label' => 'Todos', 'selected' => false],
+                ['value' => 'pendente', 'label' => 'Pendente', 'selected' => false],
+                ['value' => 'aprovado', 'label' => 'Aprovado', 'selected' => false],
+                ['value' => 'rejeitado', 'label' => 'Rejeitado', 'selected' => false],
+            ]],
+        ];
+
+        if (Auth::user()->can('gerenciar-empresa')) {
+            $options = [['value' => '', 'label' => 'Todos', 'selected' => false]];
+            foreach ($usuarios as $usuario) {
+                $options[] = ['value' => (string) $usuario->id, 'label' => $usuario->nome, 'selected' => false];
+            }
+
+            array_unshift($filters, ['name' => 'user_id', 'label' => 'Colaborador', 'type' => 'select', 'typeWhere' => 'where', 'options' => $options]);
+        }
+
+        return $filters;
+    }
+
+    private function obterFiltrosSecundarios(): array
+    {
+        return [];
     }
 
     public function store(Request $request, SaveTimeOffAction $action): RedirectResponse

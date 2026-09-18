@@ -16,7 +16,7 @@
     </button>
 </form>
 
-<?php if (! $__env->hasRenderedOnce('835755cd-574a-460a-ad03-317a6029dc70')): $__env->markAsRenderedOnce('835755cd-574a-460a-ad03-317a6029dc70'); ?>
+<?php if (! $__env->hasRenderedOnce('5de47be7-b002-4ecd-933b-38ac0ead5345')): $__env->markAsRenderedOnce('5de47be7-b002-4ecd-933b-38ac0ead5345'); ?>
     <script>
         document.addEventListener('click', function (event) {
             const button = event.target.closest('.delete-button');
