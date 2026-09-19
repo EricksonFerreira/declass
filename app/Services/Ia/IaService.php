@@ -140,7 +140,7 @@ class IaService
         $key = $r['key'];
         if ($key === '') {
             throw new RuntimeException(
-                "{$meta['nome']} não configurado: informe a API Key em Gerenciar → Integração com IA."
+                "{$meta['nome']} não configurado — fale com o suporte para ativar a integração de IA."
             );
         }
 

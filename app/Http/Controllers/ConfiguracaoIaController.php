@@ -2,74 +2,67 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Ia\SalvarConfiguracaoIaRequest;
-use App\Models\EmpresaIaConfig;
 use App\Services\Ia\IaService;
 use App\Support\EmpresaContext;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
- * Integração com IA por empresa: provedor padrão, chaves, modelo,
- * limite de tokens, anonização LGPD e instruções extras.
+ * Painel de uso de IA da empresa (somente leitura): consumo do mês,
+ * cota mensal e série diária. A configuração de provedor/chave é
+ * gerenciada globalmente pelo superadmin.
  */
 class ConfiguracaoIaController extends Controller
 {
-    public function edit(): View
+    public function edit(IaService $ia): View
     {
         $empresaId = $this->empresaId();
 
+        $porDia = DB::table('ia_usos')
+            ->where('empresa_id', $empresaId)
+            ->where('created_at', '>=', now()->subDays(30)->startOfDay())
+            ->groupByRaw('date(created_at)')
+            ->selectRaw('date(created_at) as dia, count(*) as chamadas, sum(tokens_entrada + tokens_saida) as tokens')
+            ->orderBy('dia')
+            ->get();
+
+        $porRecurso = DB::table('ia_usos')
+            ->where('empresa_id', $empresaId)
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->groupBy('recurso')
+            ->selectRaw('recurso, count(*) as chamadas, sum(tokens_entrada + tokens_saida) as tokens, coalesce(sum(custo_estimado),0) as custo')
+            ->orderByDesc('tokens')
+            ->get();
+
+        $totaisMes = DB::table('ia_usos')
+            ->where('empresa_id', $empresaId)
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->selectRaw('
+                count(*) as chamadas,
+                coalesce(sum(tokens_entrada),0) as tokens_in,
+                coalesce(sum(tokens_saida),0) as tokens_out,
+                coalesce(sum(custo_estimado),0) as custo,
+                sum(status = "erro") as erros
+            ')
+            ->first();
+
+        $resolucao = $ia->resolucao($empresaId);
+
         return view('configuracoes.ia', [
-            'titulo' => 'Integração com IA',
-            'config' => app(IaService::class)->configEmpresa($empresaId),
-            'provedores' => IaService::provedores(),
-            'tamanhos' => EmpresaIaConfig::TAMANHOS_RESUMO,
-            'usoMes' => app(IaService::class)->usoMes($empresaId),
+            'titulo' => 'Uso de IA',
+            'usoMes' => $ia->usoMes($empresaId),
+            'totaisMes' => $totaisMes,
+            'porDia' => $porDia,
+            'porRecurso' => $porRecurso,
+            'provedorNome' => IaService::provedores()[$resolucao['provedor']] ?? $resolucao['provedor'],
+            'modeloEmUso' => $resolucao['modelo'],
+            'iaConfigurada' => $resolucao['key'] !== '',
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Gerenciar'],
-                ['name' => 'Integração com IA', 'active' => true],
+                ['name' => 'Uso de IA', 'active' => true],
             ],
         ]);
-    }
-
-    public function update(SalvarConfiguracaoIaRequest $request): RedirectResponse
-    {
-        $empresaId = $this->empresaId();
-        $dados = $request->validated();
-
-        $config = EmpresaIaConfig::withoutGlobalScope('empresa')
-            ->firstOrNew(['empresa_id' => $empresaId]);
-
-        $config->fill([
-            'provedor_padrao' => $dados['provedor_padrao'],
-            'tokens_limite' => (int) $dados['tokens_limite'],
-            'anonimizar' => ! empty($dados['anonimizar']) ? 'S' : 'N',
-            'tamanho_resumo' => $dados['tamanho_resumo'],
-            'instrucoes_extras' => trim((string) ($dados['instrucoes_extras'] ?? '')) ?: null,
-            'deepseek_model' => trim((string) ($dados['deepseek_model'] ?? '')) ?: null,
-            'openai_model' => trim((string) ($dados['openai_model'] ?? '')) ?: null,
-        ]);
-
-        // Chave em branco mantém a atual; checkbox "remover" zera.
-        foreach (['deepseek', 'openai'] as $provedor) {
-            if (! empty($dados["remover_{$provedor}_key"])) {
-                $config->{$provedor.'_key'} = null;
-            } elseif (trim((string) ($dados[$provedor.'_key'] ?? '')) !== '') {
-                $config->{$provedor.'_key'} = trim((string) $dados[$provedor.'_key']);
-            }
-        }
-
-        $config->usualt = $request->user()?->id;
-        if (! $config->exists) {
-            $config->usuinc = $request->user()?->id;
-            $config->datainc = now();
-        }
-        $config->dataalt = now();
-        $config->save();
-
-        return redirect()->route('configuracao-ia.edit')
-            ->with('success', 'Configurações de IA salvas.');
     }
 
     private function empresaId(): int

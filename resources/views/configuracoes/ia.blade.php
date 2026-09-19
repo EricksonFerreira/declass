@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" subtitle="Provedor e comportamento da IA nos recursos inteligentes (ex.: análise de editais de licitação)" />
+    <x-page-title :title="$titulo" subtitle="Consumo e limite mensal de IA da empresa" />
 @stop
 
 @push('css')
@@ -12,187 +12,150 @@
 @endpush
 
 @section('content')
-    @if (session('success'))
-        <div class="alert alert-success shadow-sm">
-            <i class="fas fa-check-circle mr-1"></i> {{ session('success') }}
-        </div>
-    @endif
-
-    @if ($usoMes && ($usoMes['usado'] > 0 || $usoMes['limite'] !== null))
-        <div class="alert alert-light border shadow-sm" style="font-size:.85rem;">
-            <div class="d-flex align-items-center">
-                <i class="fas fa-chart-line mr-2 text-primary"></i>
-                <span>
-                    <strong>Uso no mês:</strong>
-                    {{ number_format($usoMes['usado'], 0, ',', '.') }}
-                    {{ $usoMes['limite'] !== null ? 'de '.number_format($usoMes['limite'], 0, ',', '.') : '' }} tokens
-                    @if ($usoMes['limite'] !== null)
-                        · restam {{ number_format($usoMes['restante'], 0, ',', '.') }}
-                    @endif
-                </span>
+    <div class="row">
+        <div class="col-lg-8">
+            {{-- KPIs do mês --}}
+            <div class="row">
+                <div class="col-md-3 col-6">
+                    <div class="small-box bg-primary shadow-sm">
+                        <div class="inner"><h3>{{ number_format($totaisMes->chamadas ?? 0, 0, ',', '.') }}</h3><p>Chamadas no mês</p></div>
+                        <div class="icon"><i class="fas fa-bolt"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="small-box bg-info shadow-sm">
+                        <div class="inner"><h3>{{ number_format($totaisMes->tokens_in ?? 0, 0, ',', '.') }}</h3><p>Tokens (entrada)</p></div>
+                        <div class="icon"><i class="fas fa-sign-in-alt"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="small-box bg-success shadow-sm">
+                        <div class="inner"><h3>{{ number_format($totaisMes->tokens_out ?? 0, 0, ',', '.') }}</h3><p>Tokens (saída)</p></div>
+                        <div class="icon"><i class="fas fa-sign-out-alt"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="small-box {{ ($totaisMes->erros ?? 0) > 0 ? 'bg-danger' : 'bg-secondary' }} shadow-sm">
+                        <div class="inner"><h3>{{ number_format($totaisMes->erros ?? 0, 0, ',', '.') }}</h3><p>Erros</p></div>
+                        <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    </div>
+                </div>
             </div>
-            @if ($usoMes['limite'] !== null)
-                @php $pct = $usoMes['limite'] > 0 ? min(100, round($usoMes['usado'] / $usoMes['limite'] * 100)) : 0; @endphp
-                <div class="progress mt-2" style="height:8px;">
-                    <div class="progress-bar bg-{{ $pct >= 90 ? 'danger' : ($pct >= 70 ? 'warning' : 'success') }}"
-                         style="width:{{ $pct }}%"></div>
+
+            {{-- Gráfico por dia --}}
+            <div class="card card-outline card-primary shadow-sm">
+                <div class="card-header"><h3 class="card-title text-bold text-sm"><i class="fas fa-chart-line mr-1"></i> Uso por dia (últimos 30 dias)</h3></div>
+                <div class="card-body">
+                    @if ($porDia->isEmpty())
+                        <p class="text-muted text-center py-4 mb-0">Nenhuma chamada de IA registrada no período.</p>
+                    @else
+                        <canvas id="usoChart" style="max-height: 260px;"></canvas>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Por recurso --}}
+            @if ($porRecurso->isNotEmpty())
+                <div class="card card-outline card-secondary shadow-sm">
+                    <div class="card-header"><h3 class="card-title text-bold text-sm"><i class="fas fa-puzzle-piece mr-1"></i> Uso por recurso no mês</h3></div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Recurso</th><th class="text-center">Chamadas</th><th class="text-right">Tokens</th><th class="text-right">Custo est.</th></tr></thead>
+                            <tbody>
+                                @foreach ($porRecurso as $r)
+                                    <tr>
+                                        <td class="small">{{ $r->recurso }}</td>
+                                        <td class="text-center small">{{ number_format($r->chamadas, 0, ',', '.') }}</td>
+                                        <td class="text-right small">{{ number_format($r->tokens, 0, ',', '.') }}</td>
+                                        <td class="text-right small">US$ {{ number_format((float) $r->custo, 4, ',', '.') }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             @endif
         </div>
-    @endif
 
-    <form method="POST" action="{{ route('configuracao-ia.update') }}">
-        @csrf
-        @method('PUT')
-
-        <div class="card card-outline card-primary shadow-sm">
-            <div class="card-header">
-                <h3 class="card-title text-bold text-sm"><i class="fas fa-robot mr-1"></i> Integração com IA</h3>
+        <div class="col-lg-4">
+            {{-- Limite mensal --}}
+            <div class="card card-outline card-warning shadow-sm">
+                <div class="card-header"><h3 class="card-title text-bold text-sm"><i class="fas fa-tachometer-alt mr-1"></i> Limite mensal</h3></div>
+                <div class="card-body">
+                    @if ($usoMes['limite'] !== null)
+                        @php $pct = $usoMes['limite'] > 0 ? min(100, round($usoMes['usado'] / $usoMes['limite'] * 100)) : 0; @endphp
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>{{ number_format($usoMes['usado'], 0, ',', '.') }} usados</span>
+                            <span class="text-muted">{{ number_format($usoMes['limite'], 0, ',', '.') }} tokens</span>
+                        </div>
+                        <div class="progress" style="height:10px;">
+                            <div class="progress-bar bg-{{ $pct >= 90 ? 'danger' : ($pct >= 70 ? 'warning' : 'success') }}" style="width:{{ $pct }}%"></div>
+                        </div>
+                        <div class="text-muted small mt-2">
+                            Restam <strong>{{ number_format($usoMes['restante'], 0, ',', '.') }}</strong> tokens neste mês.
+                            @if ($pct >= 90)<br><span class="text-danger">Cota quase esgotada — fale com o suporte para ampliar.</span>@endif
+                        </div>
+                    @else
+                        <p class="text-muted small mb-0"><i class="fas fa-infinity mr-1"></i> Sem limite configurado — uso livre dentro do plano.</p>
+                    @endif
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 form-group">
-                        <label for="provedor_padrao">Provedor Padrão</label>
-                        <select name="provedor_padrao" id="provedor_padrao" class="form-control form-control-sm @error('provedor_padrao') is-invalid @enderror">
-                            @foreach ($provedores as $slug => $nome)
-                                <option value="{{ $slug }}" @selected(old('provedor_padrao', $config->provedor_padrao ?: 'deepseek') === $slug)>{{ $nome }}{{ $slug === 'deepseek' ? ' (Padrão)' : '' }}</option>
-                            @endforeach
-                        </select>
-                        <small class="text-muted">Define qual provedor de IA será usado por padrão nas análises.</small>
-                        @error('provedor_padrao')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label for="tokens_limite">Limite de Tokens (Resposta)</label>
-                        <input type="number" name="tokens_limite" id="tokens_limite" min="256" max="32000" step="256"
-                               class="form-control form-control-sm @error('tokens_limite') is-invalid @enderror"
-                               value="{{ old('tokens_limite', $config->tokens_limite ?: 4000) }}">
-                        <small class="text-muted">Controla o tamanho máximo da resposta gerada. Ex.: 4000 tokens.</small>
-                        @error('tokens_limite')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                    </div>
-                </div>
 
-                <hr>
-                <h6 class="text-bold"><i class="fas fa-user-shield mr-1"></i> Privacidade e Sigilo (LGPD)</h6>
-                <div class="custom-control custom-switch">
-                    <input type="checkbox" class="custom-control-input" id="anonimizar" name="anonimizar" value="1"
-                           @checked(old('anonimizar', $config->anonimizar === 'S'))>
-                    <label class="custom-control-label" for="anonimizar">Anonimizar dados antes de enviar à IA</label>
-                </div>
-                <small class="text-muted d-block mt-1">
-                    Substitui CNPJ, CPF, e-mails, telefones, CEP e nomes da empresa, clientes e colaboradores por
-                    marcadores ([CNPJ], [E-MAIL], [CLIENTE] etc.) antes de enviar à IA. O conteúdo é mantido —
-                    a IA entende o contexto sem expor pessoas ou dados identificáveis (LGPD).
-                </small>
-
-                <hr>
-                <h6 class="text-bold"><i class="fas fa-sliders-h mr-1"></i> Ajuste do Resumo</h6>
-                <div class="row">
-                    <div class="col-md-6 form-group">
-                        <label for="tamanho_resumo">Tamanho do Resumo</label>
-                        <select name="tamanho_resumo" id="tamanho_resumo" class="form-control form-control-sm @error('tamanho_resumo') is-invalid @enderror">
-                            @foreach ($tamanhos as $slug => $nome)
-                                <option value="{{ $slug }}" @selected(old('tamanho_resumo', $config->tamanho_resumo ?: 'medio') === $slug)>{{ $nome }}</option>
-                            @endforeach
-                        </select>
-                        <small class="text-muted">Controla o quão resumido o texto gerado será.</small>
-                        @error('tamanho_resumo')<span class="invalid-feedback">{{ $message }}</span>@enderror
+            {{-- Status / como funciona --}}
+            <div class="card card-outline card-info shadow-sm">
+                <div class="card-header"><h3 class="card-title text-bold text-sm"><i class="fas fa-robot mr-1"></i> Integração com IA</h3></div>
+                <div class="card-body small">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge badge-{{ $iaConfigurada ? 'success' : 'warning' }} p-2 mr-2">
+                            {{ $iaConfigurada ? 'Configurado' : 'Não configurado' }}
+                        </span>
+                        <div>
+                            <div class="text-bold">{{ $provedorNome }}</div>
+                            <div class="text-muted" style="font-size:.75rem">{{ $modeloEmUso ?: 'modelo padrão' }}</div>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group mb-0">
-                    <label for="instrucoes_extras">Instruções Extras para a IA</label>
-                    <textarea name="instrucoes_extras" id="instrucoes_extras" rows="3" maxlength="4000"
-                              class="form-control form-control-sm @error('instrucoes_extras') is-invalid @enderror"
-                              placeholder="Ex.: Sempre destaque prazos de abertura em primeiro lugar. Use linguagem acessível.">{{ old('instrucoes_extras', $config->instrucoes_extras) }}</textarea>
-                    <small class="text-muted">Texto livre incluído no prompt de todas as análises — ajusta o comportamento da IA ao estilo da empresa.</small>
-                    @error('instrucoes_extras')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                    <p class="text-muted mb-0">
+                        A IA alimenta recursos como a análise de editais de licitação. Provedor, chave e
+                        limites são gerenciados pelo administrador da plataforma — para alterar provedor,
+                        ampliar a cota ou ativar novos recursos, fale com o suporte.
+                    </p>
                 </div>
             </div>
         </div>
-
-        <div class="row">
-            {{-- DeepSeek --}}
-            <div class="col-lg-6">
-                <div class="card card-outline card-info shadow-sm">
-                    <div class="card-header">
-                        <h3 class="card-title text-bold text-sm">DeepSeek</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label for="deepseek_key">API Key</label>
-                            <input type="password" name="deepseek_key" id="deepseek_key" autocomplete="new-password"
-                                   class="form-control form-control-sm @error('deepseek_key') is-invalid @enderror"
-                                   placeholder="{{ $config->deepseek_key ? '•••••••••••••••••••••••••••••••••••' : 'sk-...' }}">
-                            <small class="text-muted">
-                                {{ $config->deepseek_key ? 'Chave da empresa cadastrada — em branco mantém a atual.' : 'Vazio = usa a chave global do servidor (DEEPSEEK_API_KEY).' }}
-                            </small>
-                            @error('deepseek_key')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                            @if ($config->deepseek_key)
-                                <div class="custom-control custom-checkbox mt-1">
-                                    <input type="checkbox" class="custom-control-input" id="remover_deepseek_key" name="remover_deepseek_key" value="1">
-                                    <label class="custom-control-label text-danger" for="remover_deepseek_key" style="font-size:.8rem;">Remover chave da empresa</label>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="form-group mb-0">
-                            <label for="deepseek_model">Modelo</label>
-                            <input type="text" name="deepseek_model" id="deepseek_model" list="modelos-deepseek" maxlength="60"
-                                   class="form-control form-control-sm @error('deepseek_model') is-invalid @enderror"
-                                   value="{{ old('deepseek_model', $config->deepseek_model) }}" placeholder="{{ config('services.deepseek.model', 'deepseek-chat') }}">
-                            <datalist id="modelos-deepseek">
-                                <option value="deepseek-chat">
-                                <option value="deepseek-reasoner">
-                            </datalist>
-                            @error('deepseek_model')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- OpenAI --}}
-            <div class="col-lg-6">
-                <div class="card card-outline card-success shadow-sm">
-                    <div class="card-header">
-                        <h3 class="card-title text-bold text-sm">OpenAI (ChatGPT)</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label for="openai_key">API Key</label>
-                            <input type="password" name="openai_key" id="openai_key" autocomplete="new-password"
-                                   class="form-control form-control-sm @error('openai_key') is-invalid @enderror"
-                                   placeholder="{{ $config->openai_key ? '•••••••••••••••••••••••••••••••••••' : 'sk-...' }}">
-                            <small class="text-muted">
-                                {{ $config->openai_key ? 'Chave da empresa cadastrada — em branco mantém a atual.' : 'Vazio = usa a chave global do servidor (OPENAI_API_KEY).' }}
-                            </small>
-                            @error('openai_key')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                            @if ($config->openai_key)
-                                <div class="custom-control custom-checkbox mt-1">
-                                    <input type="checkbox" class="custom-control-input" id="remover_openai_key" name="remover_openai_key" value="1">
-                                    <label class="custom-control-label text-danger" for="remover_openai_key" style="font-size:.8rem;">Remover chave da empresa</label>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="form-group mb-0">
-                            <label for="openai_model">Modelo</label>
-                            <input type="text" name="openai_model" id="openai_model" list="modelos-openai" maxlength="60"
-                                   class="form-control form-control-sm @error('openai_model') is-invalid @enderror"
-                                   value="{{ old('openai_model', $config->openai_model) }}" placeholder="{{ config('services.openai.model', 'gpt-4o-mini') }}">
-                            <datalist id="modelos-openai">
-                                <option value="gpt-4o-mini">
-                                <option value="gpt-4o">
-                                <option value="gpt-4.1-mini">
-                                <option value="gpt-4.1">
-                            </datalist>
-                            @error('openai_model')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="text-right mb-4">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save mr-1"></i> Salvar Configurações de IA
-            </button>
-        </div>
-    </form>
+    </div>
 @stop
+
+@push('js')
+    @if ($porDia->isNotEmpty())
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const dias = @json($porDia->pluck('dia'));
+            new Chart(document.getElementById('usoChart'), {
+                data: {
+                    labels: dias.map(d => d.split('-').reverse().slice(0, 2).join('/')),
+                    datasets: [
+                        {
+                            type: 'line', label: 'Tokens',
+                            data: @json($porDia->pluck('tokens')),
+                            borderColor: '#0d6efd', backgroundColor: 'rgba(13,110,253,.12)',
+                            fill: true, tension: .3, yAxisID: 'y',
+                        },
+                        {
+                            type: 'bar', label: 'Chamadas',
+                            data: @json($porDia->pluck('chamadas')),
+                            backgroundColor: '#6c757d', yAxisID: 'y1',
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { position: 'left', beginAtZero: true, title: { display: true, text: 'Tokens' } },
+                        y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Chamadas' } },
+                    },
+                    plugins: { legend: { position: 'bottom' } },
+                },
+            });
+        </script>
+    @endif
+@endpush
