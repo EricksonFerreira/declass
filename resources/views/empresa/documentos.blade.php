@@ -7,7 +7,22 @@
     <x-page-title :title="$titulo" />
 @stop
 
+@push('css')
+    @include('partials.ux-index-styles')
+@endpush
+
 @section('content')
+    @if (!empty($filters))
+        <div class="veiculo-filter-sticky">
+            <x-filter
+                :filters="$filters"
+                :additionalFilters="$additionalFilters"
+                :itensFiltered="$itensFiltered"
+                :nomeFiltro="$nomeFiltro"
+            />
+        </div>
+    @endif
+
     <div class="card card-outline card-primary shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title text-bold text-sm"><i class="fas fa-folder-open mr-1"></i> Habilitação e documentos</h3>
