@@ -62,30 +62,38 @@
             <div class="card card-outline card-secondary shadow-sm">
                 <div class="card-header">
                     <h3 class="card-title text-bold text-sm"><i class="fas fa-file-alt mr-1"></i> Edital</h3>
-                    @if ($licitacao->arquivo_path)
-                        <div class="card-tools">
-                            <a href="{{ route('licitacoes.arquivo.download', $licitacao) }}" class="btn btn-xs btn-outline-secondary">
-                                <i class="fas fa-download mr-1"></i>{{ basename($licitacao->arquivo_path) }}
-                            </a>
-                        </div>
-                    @endif
                 </div>
                 <div class="card-body pb-2">
-                    <form method="POST" action="{{ route('licitacoes.arquivo', $licitacao) }}" enctype="multipart/form-data" class="mb-3">
+                    @if ($licitacao->arquivos)
+                        <ul class="list-unstyled small mb-2">
+                            @foreach ($licitacao->arquivos as $i => $arq)
+                                <li class="d-flex align-items-center mb-1">
+                                    <i class="fas fa-paperclip mr-1 text-muted"></i>
+                                    <a href="{{ route('licitacoes.arquivo.download', [$licitacao, $i]) }}" class="mr-2 text-truncate" style="max-width:420px">{{ $arq['nome'] ?? basename($arq['path']) }}</a>
+                                    <form method="POST" action="{{ route('licitacoes.arquivo.excluir', [$licitacao, $i]) }}" onsubmit="return confirm('Remover este arquivo? O texto já extraído permanece — ajuste no campo abaixo se preciso.')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-link btn-xs text-danger p-0" title="Remover"><i class="fas fa-times"></i></button>
+                                    </form>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                    <form method="POST" action="{{ route('licitacoes.arquivo', $licitacao) }}" enctype="multipart/form-data" class="mb-3 js-form-saving" data-label="Anexando…">
                         @csrf
                         <div class="input-group input-group-sm">
                             <div class="custom-file">
-                                <input type="file" name="arquivo" class="custom-file-input" id="arquivo-edital" accept=".pdf,.docx,.txt" required>
-                                <label class="custom-file-label" for="arquivo-edital" data-browse="Procurar">PDF, DOCX ou TXT do edital…</label>
+                                <input type="file" name="arquivos[]" class="custom-file-input" id="arquivo-edital" accept=".pdf,.docx,.txt" multiple required>
+                                <label class="custom-file-label" for="arquivo-edital" data-browse="Procurar">Um ou mais arquivos (PDF, DOCX, TXT)…</label>
                             </div>
                             <div class="input-group-append">
                                 <button type="submit" class="btn btn-outline-primary"><i class="fas fa-upload mr-1"></i>Anexar e extrair texto</button>
                             </div>
                         </div>
-                        @error('arquivo')<span class="text-danger small">{{ $message }}</span>@enderror
+                        @error('arquivos')<span class="text-danger small">{{ $message }}</span>@enderror
+                        @error('arquivos.*')<span class="text-danger small">{{ $message }}</span>@enderror
                         <small class="text-muted d-block mt-1">O texto é extraído automaticamente para o campo abaixo — revise antes de analisar.</small>
                     </form>
-                    <form method="POST" action="{{ route('licitacoes.texto', $licitacao) }}">
+                    <form method="POST" action="{{ route('licitacoes.texto', $licitacao) }}" class="js-form-saving" data-label="Salvando…">
                         @csrf @method('PUT')
                         <textarea name="texto_edital" rows="10" class="form-control form-control-sm" placeholder="Cole aqui o texto do edital — ou anexe o arquivo acima. Ao menos as seções de critérios de julgamento, pontuação e habilitação. Quanto mais completo, melhor a análise.">{{ old('texto_edital', $licitacao->texto_edital) }}</textarea>
                         @error('texto_edital')<span class="text-danger small">{{ $message }}</span>@enderror
@@ -241,6 +249,7 @@
         </div>
     @endif
     <x-modal id="licEditModal" icon="fas fa-pen" title="Editar Licitação" formId="licitacao-edit-form" action="{{ route('licitacoes.update', $licitacao) }}" method="PUT" enctype="multipart/form-data">
+        <input type="hidden" name="_form" value="edit">
         <div class="form-group">
             <label>Órgão licitante <span class="text-danger">*</span></label>
             <input type="text" name="orgao" class="form-control form-control-sm @error('orgao') is-invalid @enderror" value="{{ old('orgao', $licitacao->orgao) }}" required>
@@ -292,13 +301,14 @@
             </div>
         </div>
         <div class="form-group mb-0">
-            <label>Substituir arquivo do edital</label>
+            <label>Anexar arquivos ao edital</label>
             <div class="custom-file">
-                <input type="file" name="arquivo" class="custom-file-input @error('arquivo') is-invalid @enderror" id="arquivo-edital-edit" accept=".pdf,.docx,.txt">
-                <label class="custom-file-label" for="arquivo-edital-edit" data-browse="Procurar">{{ $licitacao->arquivo_path ? basename($licitacao->arquivo_path) : 'PDF, DOCX ou TXT…' }}</label>
+                <input type="file" name="arquivos[]" class="custom-file-input @error('arquivos') is-invalid @enderror" id="arquivo-edital-edit" accept=".pdf,.docx,.txt" multiple>
+                <label class="custom-file-label" for="arquivo-edital-edit" data-browse="Procurar">{{ $licitacao->arquivos ? count($licitacao->arquivos).' arquivo(s) anexado(s)' : 'PDF, DOCX ou TXT…' }}</label>
             </div>
-            @error('arquivo')<span class="text-danger small">{{ $message }}</span>@enderror
-            <small class="text-muted">Em branco mantém o arquivo atual.</small>
+            @error('arquivos')<span class="text-danger small">{{ $message }}</span>@enderror
+            @error('arquivos.*')<span class="text-danger small">{{ $message }}</span>@enderror
+            <small class="text-muted">Os arquivos escolhidos são <strong>adicionados</strong> aos já anexados.</small>
         </div>
     </x-modal>
 @stop
@@ -307,7 +317,17 @@
     <script>
         $(function() {
             $('.custom-file-input').on('change', function() {
-                $(this).next('.custom-file-label').text(this.files[0] ? this.files[0].name : 'PDF, DOCX ou TXT do edital…');
+                var rotulo = this.files.length === 0 ? 'PDF, DOCX ou TXT do edital…'
+                    : (this.files.length === 1 ? this.files[0].name : this.files.length + ' arquivos selecionados');
+                $(this).next('.custom-file-label').text(rotulo);
+            });
+            $('.js-form-saving').on('submit', function() {
+                $(this).find('button[type=submit]').prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin mr-1"></i>' + ($(this).data('label') || 'Salvando…'));
+            });
+            $('#licitacao-edit-form').on('submit', function() {
+                $(this).find('button[type=submit]').prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin mr-1"></i>Salvando…');
             });
             $('#form-analisar').on('submit', function(e) {
                 if (!confirm('Rodar a análise de IA agora?')) {
@@ -323,7 +343,7 @@
                 $('#licEditModalBackdrop').addClass('show');
                 $('#licEditModal').addClass('open');
             });
-            @if ($errors->hasAny(['orgao', 'objeto', 'numero_edital', 'modalidade', 'criterio_julgamento', 'data_abertura', 'valor_estimado', 'url_edital', 'arquivo']))
+            @if (old('_form') === 'edit' && $errors->any())
                 $('#licEditModalBackdrop').addClass('show');
                 $('#licEditModal').addClass('open');
             @endif

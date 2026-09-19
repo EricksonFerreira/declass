@@ -52,14 +52,15 @@ class LicitacaoController extends Controller
             'data_abertura' => 'nullable|date',
             'valor_estimado' => 'nullable|numeric|min:0',
             'url_edital' => 'nullable|url|max:500',
-            'arquivo' => 'nullable|file|mimes:pdf,docx,txt|max:15360',
+            'arquivos' => 'nullable|array|max:10',
+            'arquivos.*' => 'file|mimes:pdf,docx,txt|max:15360',
             'texto_edital' => 'nullable|string|max:400000',
         ]);
 
         $licitacao = $action->handle($data);
 
-        if ($request->hasFile('arquivo')) {
-            $aviso = $this->importarArquivo($request->file('arquivo'), $licitacao, app(EditalArquivoService::class));
+        if ($request->hasFile('arquivos')) {
+            $aviso = $this->importarArquivos($request->file('arquivos'), $licitacao, app(EditalArquivoService::class));
             if ($aviso) {
                 return redirect()->route('licitacoes.show', $licitacao)->with('error', $aviso);
             }
@@ -96,13 +97,14 @@ class LicitacaoController extends Controller
             'data_abertura' => 'nullable|date',
             'valor_estimado' => 'nullable|numeric|min:0',
             'url_edital' => 'nullable|url|max:500',
-            'arquivo' => 'nullable|file|mimes:pdf,docx,txt|max:15360',
+            'arquivos' => 'nullable|array|max:10',
+            'arquivos.*' => 'file|mimes:pdf,docx,txt|max:15360',
         ]);
 
         $licitacao->update($data);
 
-        if ($request->hasFile('arquivo')) {
-            $aviso = $this->importarArquivo($request->file('arquivo'), $licitacao, $servico);
+        if ($request->hasFile('arquivos')) {
+            $aviso = $this->importarArquivos($request->file('arquivos'), $licitacao, $servico);
             if ($aviso) {
                 return back()->with('error', $aviso);
             }
@@ -122,33 +124,48 @@ class LicitacaoController extends Controller
 
     public function uploadArquivo(Request $request, Licitacao $licitacao, EditalArquivoService $servico): RedirectResponse
     {
-        $request->validate(['arquivo' => 'required|file|mimes:pdf,docx,txt|max:15360']);
+        $request->validate([
+            'arquivos' => 'required|array|max:10',
+            'arquivos.*' => 'file|mimes:pdf,docx,txt|max:15360',
+        ]);
 
-        $aviso = $this->importarArquivo($request->file('arquivo'), $licitacao, $servico);
+        $aviso = $this->importarArquivos($request->file('arquivos'), $licitacao, $servico);
         if ($aviso) {
             return redirect()->route('licitacoes.show', $licitacao)->with('error', $aviso);
         }
 
         return redirect()->route('licitacoes.show', $licitacao)
-            ->with('success', 'Arquivo anexado e texto extraído — confira abaixo antes de analisar.');
+            ->with('success', 'Arquivo(s) anexado(s) e texto extraído — confira abaixo antes de analisar.');
     }
 
-    public function downloadArquivo(Licitacao $licitacao): StreamedResponse
+    public function downloadArquivo(Licitacao $licitacao, int $index): StreamedResponse
     {
-        abort_unless($licitacao->arquivo_path && Storage::exists($licitacao->arquivo_path), 404);
+        $arquivo = $licitacao->arquivos[$index] ?? null;
 
-        return Storage::download($licitacao->arquivo_path, 'edital-'.$licitacao->id.'.'.pathinfo($licitacao->arquivo_path, PATHINFO_EXTENSION));
+        abort_unless($arquivo && Storage::exists($arquivo['path']), 404);
+
+        return Storage::download($arquivo['path'], $arquivo['nome'] ?? basename($arquivo['path']));
     }
 
-    private function importarArquivo($arquivo, Licitacao $licitacao, EditalArquivoService $servico): ?string
+    public function excluirArquivo(Licitacao $licitacao, int $index, EditalArquivoService $servico): RedirectResponse
+    {
+        $servico->excluirArquivo($licitacao, $index);
+
+        return back()->with('success', 'Arquivo removido.');
+    }
+
+    /**
+     * @param  array<int, \Illuminate\Http\UploadedFile>  $arquivos
+     */
+    private function importarArquivos(array $arquivos, Licitacao $licitacao, EditalArquivoService $servico): ?string
     {
         try {
-            $chars = $servico->importar($arquivo, $licitacao);
+            $chars = $servico->importar($arquivos, $licitacao);
         } catch (RuntimeException $e) {
             return $e->getMessage();
         }
 
-        return $chars === 0 ? 'Arquivo anexado, mas não extraí texto dele — cole o conteúdo manualmente.' : null;
+        return $chars === 0 ? 'Arquivo(s) anexado(s), mas não extraí texto — cole o conteúdo manualmente.' : null;
     }
 
     public function updateStatus(Request $request, Licitacao $licitacao): RedirectResponse

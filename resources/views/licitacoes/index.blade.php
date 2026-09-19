@@ -184,12 +184,13 @@
             </div>
         </div>
         <div class="form-group">
-            <label>Arquivo do edital</label>
+            <label>Arquivos do edital</label>
             <div class="custom-file">
-                <input type="file" name="arquivo" class="custom-file-input @error('arquivo') is-invalid @enderror" id="arquivo-edital-modal" accept=".pdf,.docx,.txt">
-                <label class="custom-file-label" for="arquivo-edital-modal" data-browse="Procurar">PDF, DOCX ou TXT…</label>
+                <input type="file" name="arquivos[]" class="custom-file-input @error('arquivos') is-invalid @enderror" id="arquivo-edital-modal" accept=".pdf,.docx,.txt" multiple>
+                <label class="custom-file-label" for="arquivo-edital-modal" data-browse="Procurar">Um ou mais arquivos (PDF, DOCX, TXT)…</label>
             </div>
-            @error('arquivo')<span class="text-danger small">{{ $message }}</span>@enderror
+            @error('arquivos')<span class="text-danger small">{{ $message }}</span>@enderror
+            @error('arquivos.*')<span class="text-danger small">{{ $message }}</span>@enderror
             <small class="text-muted">O texto é extraído automaticamente. Pode anexar depois, na página da licitação.</small>
         </div>
         <div class="form-group mb-0">
@@ -211,7 +212,14 @@
             }
 
             $('.custom-file-input').on('change', function() {
-                $(this).next('.custom-file-label').text(this.files[0] ? this.files[0].name : 'PDF, DOCX ou TXT…');
+                var rotulo = this.files.length === 0 ? 'Um ou mais arquivos (PDF, DOCX, TXT)…'
+                    : (this.files.length === 1 ? this.files[0].name : this.files.length + ' arquivos selecionados');
+                $(this).next('.custom-file-label').text(rotulo);
+            });
+
+            $('#licitacao-form').on('submit', function() {
+                $(this).find('button[type=submit]').prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin mr-1"></i>Salvando…');
             });
 
             $('#btn-nova-licitacao').on('click', function() {

@@ -44,6 +44,22 @@ class Licitacao extends Model
         'perdida' => 'Perdida',
     ];
 
+    /**
+     * Lista de arquivos anexados: [['path' => ..., 'nome' => ...], ...]
+     * Aceita o formato legado (string com um único path).
+     */
+    public function getArquivosAttribute(): array
+    {
+        $raw = $this->arquivo_path;
+        if (! $raw) {
+            return [];
+        }
+
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : [['path' => $raw, 'nome' => basename($raw)]];
+    }
+
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class);
