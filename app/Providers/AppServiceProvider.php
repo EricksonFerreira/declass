@@ -11,7 +11,9 @@ use App\Support\EmpresaContext;
 use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
+use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -35,6 +37,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // O SchemaCache é rememberForever: sem isso, tabelas/colunas novas
+        // ficam invisíveis ao tenant scope e ao auto-fill de empresa_id
+        // (bug do insert sem empresa_id após migrate).
+        Event::listen(MigrationsEnded::class, fn () => SchemaCache::clear());
+
         // Superadmin tem acesso irrestrito a tudo, sem excecao.
         Gate::before(function (User $user, mixed $ability) {
             if (! is_string($ability)) {
