@@ -87,12 +87,16 @@
                             label="CNPJ" value="{{ $empresa->cnpj ?? '' }}" />
                     </div>
                 </div>
+
+                <div class="col-12" data-empresa-step="1">
+                    <div class="empresa-section-title" id="sec-modulos"><i class="fas fa-puzzle-piece mr-1"></i> Módulos da Empresa</div>
+                </div>
                 <div class="col-lg-6" data-empresa-step="1">
                     <div class="form-group form-group-empresa">
-                        <x-form-select name="licitacoes_ativo" label="Módulo Licitações" :options="$status"
+                        <x-form-select name="licitacoes_ativo" label="Licitações (análise de editais com IA)" :options="$status"
                             :selected="old('licitacoes_ativo', $empresa->licitacoes_ativo ?? 'N')"
                             class="form-control form-control-sm" />
-                        <small class="text-muted">Análise de editais com pontuação estimada da empresa (IA).</small>
+                        <small class="text-muted">Quando ativo, a empresa vê o menu Licitações e pode analisar editais com IA.</small>
                     </div>
                 </div>
 
@@ -575,7 +579,7 @@
                 if (!Array.isArray(errosCampos) || errosCampos.length === 0) return;
 
                 const mapa = {
-                    nome: 1, ativo: 1, slug: 1, cnpj: 1,
+                    nome: 1, ativo: 1, slug: 1, cnpj: 1, licitacoes_ativo: 1,
                     email: 2, telefone: 2, representante: 2, endereco: 2,
                     dominio: 3,
                     logo: 4, cor_primaria: 4, cor_secundaria: 4, cor_terciaria: 4,
