@@ -184,6 +184,7 @@ class IaService
 
         return [
             'conteudo' => (string) $response->json('choices.0.message.content', ''),
+            'finish_reason' => (string) $response->json('choices.0.finish_reason', ''),
             'tokens_entrada' => $tokensIn,
             'tokens_saida' => $tokensOut,
             'modelo' => $modeloResp,

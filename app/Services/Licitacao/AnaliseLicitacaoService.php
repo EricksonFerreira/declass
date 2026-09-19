@@ -47,9 +47,13 @@ class AnaliseLicitacaoService
             ['recurso' => 'licitacao.analise', 'user_id' => $userId]
         );
 
-        $dados = json_decode($resposta['conteudo'], true);
-        if (! is_array($dados)) {
-            throw new RuntimeException('A IA não retornou um JSON válido. Tente novamente.');
+        $dados = $this->decodificarJson($resposta['conteudo']);
+        if ($dados === null) {
+            throw new RuntimeException(
+                ($resposta['finish_reason'] ?? '') === 'length'
+                    ? 'A resposta da IA foi cortada por falta de tokens — aumente o "Limite de Tokens (Resposta)" em Gerenciar → Integração com IA (ex.: 6000) e tente novamente.'
+                    : 'A IA não retornou um JSON válido. Tente novamente.'
+            );
         }
 
         return DB::transaction(function () use ($licitacao, $dados, $resposta, $userId) {
@@ -188,6 +192,29 @@ PROMPT;
         }
 
         return implode("\n", $linhas);
+    }
+
+    /**
+     * Extrai o JSON da resposta mesmo quando o modelo embrulha em
+     * ```json ...``` ou adiciona texto antes/depois do objeto.
+     */
+    private function decodificarJson(string $conteudo): ?array
+    {
+        $conteudo = trim($conteudo);
+
+        if (preg_match('/```(?:json)?\s*(\{.*\})\s*```/s', $conteudo, $m)) {
+            $conteudo = $m[1];
+        } else {
+            $ini = strpos($conteudo, '{');
+            $fim = strrpos($conteudo, '}');
+            if ($ini !== false && $fim !== false && $fim > $ini) {
+                $conteudo = substr($conteudo, $ini, $fim - $ini + 1);
+            }
+        }
+
+        $dados = json_decode($conteudo, true);
+
+        return is_array($dados) ? $dados : null;
     }
 
     private function viabilidade(array $dados): ?string
