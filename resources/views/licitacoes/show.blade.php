@@ -137,7 +137,7 @@
                         <p class="text-muted small mb-2">Cole o texto do edital ao lado e rode a análise para estimar a nota técnica da empresa contra os critérios de julgamento.</p>
                     @endif
 
-                    <form method="POST" action="{{ route('licitacoes.analisar', $licitacao) }}" onsubmit="return confirm('Rodar a análise de IA agora?')">
+                    <form method="POST" action="{{ route('licitacoes.analisar', $licitacao) }}" id="form-analisar">
                         @csrf
                         <button type="submit" class="btn btn-success btn-block btn-sm" {{ empty($licitacao->texto_edital) ? 'disabled' : '' }}>
                             <i class="fas fa-bolt mr-1"></i>{{ $analise ? 'Reanalisar' : 'Analisar edital' }}
@@ -308,6 +308,16 @@
         $(function() {
             $('.custom-file-input').on('change', function() {
                 $(this).next('.custom-file-label').text(this.files[0] ? this.files[0].name : 'PDF, DOCX ou TXT do edital…');
+            });
+            $('#form-analisar').on('submit', function(e) {
+                if (!confirm('Rodar a análise de IA agora?')) {
+                    e.preventDefault();
+                    return;
+                }
+                $(this).find('button[type=submit]')
+                    .prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin mr-1"></i>Processando…');
+                $(this).append('<small class="text-muted d-block mt-2 text-center">A análise pode levar até 2 minutos — não feche a página.</small>');
             });
             $('#btn-edit-licitacao').on('click', function() {
                 $('#licEditModalBackdrop').addClass('show');
