@@ -4,7 +4,8 @@
     'formId' => 'modalForm',
     'action' => '',
     'method' => 'POST',
-    'icon' => 'fas fa-pen'
+    'icon' => 'fas fa-pen',
+    'enctype' => null,
 ])
 
 {{-- Modal Backdrop --}}
@@ -21,7 +22,7 @@
             </button>
         </div>
 
-        <form id="{{ $formId }}" action="{{ $action }}" method="POST" class="d-flex flex-column flex-grow-1 mb-0" style="min-height:0;">
+        <form id="{{ $formId }}" action="{{ $action }}" method="POST" @if ($enctype) enctype="{{ $enctype }}" @endif class="d-flex flex-column flex-grow-1 mb-0" style="min-height:0;">
             @csrf
             <input type="hidden" name="_method" id="{{ $formId }}Method" value="{{ $method }}">
 

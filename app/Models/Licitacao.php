@@ -21,6 +21,7 @@ class Licitacao extends Model
         'data_abertura',
         'valor_estimado',
         'url_edital',
+        'arquivo_path',
         'texto_edital',
         'status',
         'usuinc',

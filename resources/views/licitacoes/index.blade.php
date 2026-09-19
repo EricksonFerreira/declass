@@ -122,7 +122,7 @@
         @endif
     </div>
 
-    <x-modal id="licitacaoModal" icon="fas fa-gavel" title="Nova Licitação" formId="licitacao-form" action="{{ route('licitacoes.store') }}">
+    <x-modal id="licitacaoModal" icon="fas fa-gavel" title="Nova Licitação" formId="licitacao-form" action="{{ route('licitacoes.store') }}" enctype="multipart/form-data">
         <div class="form-group">
             <label>Órgão licitante <span class="text-danger">*</span></label>
             <input type="text" name="orgao" class="form-control form-control-sm @error('orgao') is-invalid @enderror" value="{{ old('orgao') }}" required placeholder="Ex: Prefeitura Municipal de Fortaleza">
@@ -173,6 +173,15 @@
                 <input type="url" name="url_edital" class="form-control form-control-sm" value="{{ old('url_edital') }}" placeholder="https://...">
             </div>
         </div>
+        <div class="form-group">
+            <label>Arquivo do edital</label>
+            <div class="custom-file">
+                <input type="file" name="arquivo" class="custom-file-input @error('arquivo') is-invalid @enderror" id="arquivo-edital-modal" accept=".pdf,.docx,.txt">
+                <label class="custom-file-label" for="arquivo-edital-modal" data-browse="Procurar">PDF, DOCX ou TXT…</label>
+            </div>
+            @error('arquivo')<span class="text-danger small">{{ $message }}</span>@enderror
+            <small class="text-muted">O texto é extraído automaticamente. Pode anexar depois, na página da licitação.</small>
+        </div>
         <div class="form-group mb-0">
             <label>Texto do edital</label>
             <textarea name="texto_edital" rows="5" class="form-control form-control-sm" placeholder="Cole aqui o texto do edital — ao menos as seções de julgamento, pontuação e habilitação (necessário para a análise de IA)">{{ old('texto_edital') }}</textarea>
@@ -184,6 +193,9 @@
 @section('js')
     <script>
         $(function() {
+            $('.custom-file-input').on('change', function() {
+                $(this).next('.custom-file-label').text(this.files[0] ? this.files[0].name : 'PDF, DOCX ou TXT…');
+            });
             $('#btn-nova-licitacao').on('click', function() {
                 $('#licitacaoModalBackdrop').addClass('show');
                 $('#licitacaoModal').addClass('open');

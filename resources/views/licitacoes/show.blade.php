@@ -58,19 +58,40 @@
 
             <div class="card card-outline card-secondary shadow-sm">
                 <div class="card-header">
-                    <h3 class="card-title text-bold text-sm"><i class="fas fa-file-alt mr-1"></i> Texto do edital</h3>
+                    <h3 class="card-title text-bold text-sm"><i class="fas fa-file-alt mr-1"></i> Edital</h3>
+                    @if ($licitacao->arquivo_path)
+                        <div class="card-tools">
+                            <a href="{{ route('licitacoes.arquivo.download', $licitacao) }}" class="btn btn-xs btn-outline-secondary">
+                                <i class="fas fa-download mr-1"></i>{{ basename($licitacao->arquivo_path) }}
+                            </a>
+                        </div>
+                    @endif
                 </div>
-                <form method="POST" action="{{ route('licitacoes.texto', $licitacao) }}">
-                    @csrf @method('PUT')
-                    <div class="card-body">
-                        <textarea name="texto_edital" rows="10" class="form-control form-control-sm" placeholder="Cole aqui o texto do edital — ao menos as seções de critérios de julgamento, pontuação e habilitação. Quanto mais completo, melhor a análise.">{{ old('texto_edital', $licitacao->texto_edital) }}</textarea>
+                <div class="card-body pb-2">
+                    <form method="POST" action="{{ route('licitacoes.arquivo', $licitacao) }}" enctype="multipart/form-data" class="mb-3">
+                        @csrf
+                        <div class="input-group input-group-sm">
+                            <div class="custom-file">
+                                <input type="file" name="arquivo" class="custom-file-input" id="arquivo-edital" accept=".pdf,.docx,.txt" required>
+                                <label class="custom-file-label" for="arquivo-edital" data-browse="Procurar">PDF, DOCX ou TXT do edital…</label>
+                            </div>
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-outline-primary"><i class="fas fa-upload mr-1"></i>Anexar e extrair texto</button>
+                            </div>
+                        </div>
+                        @error('arquivo')<span class="text-danger small">{{ $message }}</span>@enderror
+                        <small class="text-muted d-block mt-1">O texto é extraído automaticamente para o campo abaixo — revise antes de analisar.</small>
+                    </form>
+                    <form method="POST" action="{{ route('licitacoes.texto', $licitacao) }}">
+                        @csrf @method('PUT')
+                        <textarea name="texto_edital" rows="10" class="form-control form-control-sm" placeholder="Cole aqui o texto do edital — ou anexe o arquivo acima. Ao menos as seções de critérios de julgamento, pontuação e habilitação. Quanto mais completo, melhor a análise.">{{ old('texto_edital', $licitacao->texto_edital) }}</textarea>
                         @error('texto_edital')<span class="text-danger small">{{ $message }}</span>@enderror
-                    </div>
-                    <div class="card-footer d-flex justify-content-between align-items-center">
-                        <small class="text-muted">{{ $licitacao->texto_edital ? number_format(mb_strlen($licitacao->texto_edital), 0, ',', '.').' caracteres' : 'Edital ainda não informado' }}</small>
-                        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save mr-1"></i>Salvar texto</button>
-                    </div>
-                </form>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted">{{ $licitacao->texto_edital ? number_format(mb_strlen($licitacao->texto_edital), 0, ',', '.').' caracteres' : 'Edital ainda não informado' }}</small>
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save mr-1"></i>Salvar texto</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -216,4 +237,14 @@
             </div>
         </div>
     @endif
+@stop
+
+@section('js')
+    <script>
+        $(function() {
+            $('.custom-file-input').on('change', function() {
+                $(this).next('.custom-file-label').text(this.files[0] ? this.files[0].name : 'PDF, DOCX ou TXT do edital…');
+            });
+        });
+    </script>
 @stop
