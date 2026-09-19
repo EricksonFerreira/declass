@@ -78,21 +78,9 @@
                             @endforeach
                         </ul>
                     @endif
-                    <form method="POST" action="{{ route('licitacoes.arquivo', $licitacao) }}" enctype="multipart/form-data" class="mb-3 js-form-saving" data-label="Anexando…">
-                        @csrf
-                        <div class="input-group input-group-sm">
-                            <div class="custom-file">
-                                <input type="file" name="arquivos[]" class="custom-file-input" id="arquivo-edital" accept=".pdf,.docx,.txt" multiple required>
-                                <label class="custom-file-label" for="arquivo-edital" data-browse="Procurar">Um ou mais arquivos (PDF, DOCX, TXT)…</label>
-                            </div>
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-outline-primary"><i class="fas fa-upload mr-1"></i>Anexar e extrair texto</button>
-                            </div>
-                        </div>
-                        @error('arquivos')<span class="text-danger small">{{ $message }}</span>@enderror
-                        @error('arquivos.*')<span class="text-danger small">{{ $message }}</span>@enderror
-                        <small class="text-muted d-block mt-1">O texto é extraído automaticamente para o campo abaixo — revise antes de analisar.</small>
-                    </form>
+                    @if ($licitacao->arquivos)
+                        <small class="text-muted d-block mb-2">Para anexar mais arquivos, use o botão "Editar" acima.</small>
+                    @endif
                     <form method="POST" action="{{ route('licitacoes.texto', $licitacao) }}" class="js-form-saving" data-label="Salvando…">
                         @csrf @method('PUT')
                         <textarea name="texto_edital" rows="10" class="form-control form-control-sm" placeholder="Cole aqui o texto do edital — ou anexe o arquivo acima. Ao menos as seções de critérios de julgamento, pontuação e habilitação. Quanto mais completo, melhor a análise.">{{ old('texto_edital', $licitacao->texto_edital) }}</textarea>
