@@ -108,6 +108,13 @@ class PapeisPermissoesSeeder extends Seeder
         'relatorios.consumo.estimativas.store',
         'relatorios.consumo.estimativas.destroy',
         'relatorios.matriz',
+        'licitacoes.index',
+        'licitacoes.show',
+        'licitacoes.store',
+        'licitacoes.texto',
+        'licitacoes.status',
+        'licitacoes.analisar',
+        'licitacoes.destroy',
     ];
 
     /**

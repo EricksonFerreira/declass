@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Remove todos os dados criados pelo DemoOperacaoSeeder:
@@ -105,6 +106,12 @@ class DemoLimpezaSeeder extends Seeder
             if (! $temProjetos) {
                 DB::table('clockify_clientes')->where('id', $cid)->delete();
             }
+        }
+
+        if (Schema::hasTable('licitacoes')) {
+            $licitacaoIds = DB::table('licitacoes')->where('empresa_id', $empresaId)->pluck('id');
+            DB::table('licitacao_analises')->whereIn('licitacao_id', $licitacaoIds)->delete();
+            DB::table('licitacoes')->whereIn('id', $licitacaoIds)->delete();
         }
 
         $this->command->info("Limpeza demo concluida na empresa {$empresaId}.");

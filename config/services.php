@@ -35,10 +35,10 @@ return [
         ],
     ],
     'stripe' => [
-        'key'            => env('STRIPE_KEY'),
-        'secret'         => env('STRIPE_SECRET'),
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
-        'return_url'     => env('RETURN_URL_PAGAMENTO'),
+        'return_url' => env('RETURN_URL_PAGAMENTO'),
     ],
 
     'payment' => [
@@ -59,5 +59,9 @@ return [
         'auth_url' => env('NUVEMFISCAL_AUTH_URL', 'https://auth.nuvemfiscal.com.br/oauth/token'),
         'base_url' => env('NUVEMFISCAL_BASE_URL', 'https://api.nuvemfiscal.com.br'),
         'sandbox_url' => env('NUVEMFISCAL_SANDBOX_URL', 'https://api.sandbox.nuvemfiscal.com.br'),
+    ],
+    'deepseek' => [
+        'key' => env('DEEPSEEK_API_KEY', ''),
+        'model' => env('DEEPSEEK_MODEL', 'deepseek-chat'),
     ],
 ];

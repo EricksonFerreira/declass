@@ -450,6 +450,14 @@ return [
             ],
         ],
 
+        // LICITAÇÕES — módulo opcional por empresa (flag licitacoes_ativo)
+        [
+            'text' => 'Licitações',
+            'route' => 'licitacoes.index',
+            'icon' => 'fas fa-gavel',
+            'can' => 'licitacoes.acessar',
+        ],
+
         // SISTEMA (somente superadmin — 'can' não funciona em header, por isso é submenu)
         [
             'text' => 'Configurações',

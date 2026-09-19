@@ -75,6 +75,7 @@ class DemoEmpresaSeeder extends Seeder
             'representante' => 'Marcos Vieira',
             'endereco' => 'Av. Paulista, 1500 — Bela Vista, São Paulo/SP',
             'cor_primaria' => '#0d6efd',
+            'licitacoes_ativo' => 'S',
         ]);
         $empresa->save();
 
@@ -225,6 +226,94 @@ class DemoEmpresaSeeder extends Seeder
         $this->atribuirCodigosEResponsaveis($admin, $fernanda);
         $this->seedCronograma();
         $this->seedTrackersExtras($admin, $fernanda, $julia);
+        $this->seedLicitacoes($admin);
+    }
+
+    /**
+     * Licitações de exemplo: uma analisada (análise completa pré-preenchida,
+     * para a demo exibir o resultado sem consumir a API) e uma cadastrada
+     * aguardando o texto do edital.
+     */
+    private function seedLicitacoes(object $admin): void
+    {
+        DB::table('licitacoes')->updateOrInsert(
+            ['empresa_id' => $this->empresaId, 'numero_edital' => 'PE-042/2026'],
+            [
+                'orgao' => 'Prefeitura Municipal de Campinas — Secretaria de Infraestrutura',
+                'objeto' => 'Contratação de empresa de engenharia para elaboração de projeto executivo e fiscalização técnica da reforma de 12 escolas municipais, incluindo adequações de acessibilidade (NBR 9050) e instalações elétricas.',
+                'modalidade' => 'Concorrência',
+                'criterio_julgamento' => 'Técnica e preço',
+                'data_abertura' => now()->addDays(21)->toDateString(),
+                'valor_estimado' => 1850000.00,
+                'url_edital' => 'https://pncp.gov.br/app/editais',
+                'texto_edital' => 'Critérios de julgamento — técnica (peso 40%) e preço (peso 60%). Pontuação técnica: atestado de capacidade técnica em reforma de edificações públicas (30 pts); equipe com engenheiro civil responsável CREA e projetista dedicado (25 pts); metodologia de fiscalização e cronograma físico-financeiro (25 pts); certificação ISO 9001 ou PBQP-H (10 pts); experiência com órgãos públicos (10 pts). Habilitação: certidões federais/estaduais/municipais negativas; FGTS (CRF); CREA da empresa e do responsável técnico; balanço patrimonial do último exercício; atestado de capacidade técnica com valor compatível.',
+                'status' => 'analisada',
+                'usuinc' => $admin->id,
+                'datainc' => now(),
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
+
+        $licitacaoId = DB::table('licitacoes')
+            ->where('empresa_id', $this->empresaId)->where('numero_edital', 'PE-042/2026')
+            ->value('id');
+
+        if ($licitacaoId) {
+            DB::table('licitacao_analises')->updateOrInsert(
+                ['licitacao_id' => $licitacaoId],
+                [
+                    'empresa_id' => $this->empresaId,
+                    'user_id' => $admin->id,
+                    'modelo' => 'deepseek-chat',
+                    'nota_tecnica_estimada' => 78,
+                    'viabilidade' => 'atencao',
+                    'parecer' => 'A empresa é habilitável e competitiva neste certame. O histórico de projetos em edificações públicas (Hospital Regional, Unidade Fabril) sustenta boa pontuação em capacidade técnica, e a equipe cobre engenheiro civil responsável e projetista. Ressalvas: não há evidência cadastrada de certificação ISO 9001/PBQP-H e a experiência com escolas especificamente é indireta — recomenda-se compor atestados de reformas em edificações de uso coletivo e providenciar a documentação de qualidade antes da abertura.',
+                    'criterios' => json_encode([
+                        ['criterio' => 'Atestado de capacidade técnica em reforma de edificações públicas', 'pontos_max' => 30, 'pontos_estimados' => 26, 'observacao' => 'Reforma da Unidade Fabril e Ampliação Hospital Regional são atestados compatíveis; nenhum é especificamente escolar.'],
+                        ['criterio' => 'Equipe técnica (engenheiro civil CREA + projetista)', 'pontos_max' => 25, 'pontos_estimados' => 22, 'observacao' => 'Equipe possui Engenheiro Civil e Projetista CAD/BIM ativos; falta comprovar CREA do responsável no cadastro.'],
+                        ['criterio' => 'Metodologia de fiscalização e cronograma físico-financeiro', 'pontos_max' => 25, 'pontos_estimados' => 20, 'observacao' => 'Histórico de fiscalização de obras é forte; metodologia precisa ser customizada para 12 escolas simultâneas.'],
+                        ['criterio' => 'Certificação ISO 9001 ou PBQP-H', 'pontos_max' => 10, 'pontos_estimados' => 0, 'observacao' => 'Nenhuma certificação registrada — gap de pontuação.'],
+                        ['criterio' => 'Experiência com órgãos públicos', 'pontos_max' => 10, 'pontos_estimados' => 10, 'observacao' => 'Hospital Regional Santa Cruz é cliente público/privado de saúde — atestado válido.'],
+                    ]),
+                    'exigencias' => json_encode([
+                        ['exigencia' => 'Certidões negativas federais/estaduais/municipais', 'atende' => true, 'evidencia' => 'CNPJ ativo 12.345.678/0001-90 — emitir certidões antes da sessão.'],
+                        ['exigencia' => 'CRF — FGTS', 'atende' => true, 'evidencia' => 'Emitir CRF atualizada.'],
+                        ['exigencia' => 'CREA da empresa e do responsável técnico', 'atende' => false, 'evidencia' => 'CREA da empresa não cadastrado; vincular engenheiro responsável com registro ativo.'],
+                        ['exigencia' => 'Balanço patrimonial do último exercício', 'atende' => false, 'evidencia' => 'Documento não cadastrado no sistema — providenciar com contador.'],
+                        ['exigencia' => 'Atestado de capacidade técnica com valor compatível', 'atende' => true, 'evidencia' => 'Ampliação Hospital Regional (concluído) e Reforma Unidade Fabril somam porte compatível com o estimado de R$ 1,85 mi.'],
+                    ]),
+                    'gaps' => json_encode([
+                        'Comprovar CREA da empresa e do engenheiro responsável técnico',
+                        'Anexar balanço patrimonial do último exercício',
+                        'Sem certificação ISO 9001/PBQP-H — perda de até 10 pts; avaliar declaração de implantação se o edital aceitar',
+                        'Atestados específicos de escolas não existem — usar reformas de edificações de uso coletivo',
+                    ]),
+                    'preco_sugerido' => 1640000.00,
+                    'tokens_entrada' => 21480,
+                    'tokens_saida' => 1370,
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+        }
+
+        DB::table('licitacoes')->updateOrInsert(
+            ['empresa_id' => $this->empresaId, 'numero_edital' => 'CC-118/2026'],
+            [
+                'orgao' => 'Governo do Estado — Secretaria de Transporte e Obras',
+                'objeto' => 'Serviços de consultoria para elaboração de estudo de viabilidade técnica e projeto básico de pavimentação de 14 km de rodovia vicinal.',
+                'modalidade' => 'Concorrência',
+                'criterio_julgamento' => 'Melhor técnica',
+                'data_abertura' => now()->addDays(34)->toDateString(),
+                'valor_estimado' => 920000.00,
+                'status' => 'cadastrada',
+                'usuinc' => $admin->id,
+                'datainc' => now(),
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
     }
 
     private function seedUsuarioExtra(int $roleId, array $attrs, string $login): object
@@ -421,6 +510,13 @@ class DemoEmpresaSeeder extends Seeder
             'Atualização de planilhas de controle', 'Reunião de acompanhamento',
         ];
 
+        // Âncora fixa: o último lançamento da operação base. Usar today()
+        // deslizaria a janela a cada execução e duplicaria os extras.
+        $ref = Carbon::parse(
+            DB::table('clockify_time_trackers')->where('empresa_id', $this->empresaId)->max('inicio')
+                ?? now()
+        );
+
         if ($julia) {
             // Ordem determinística — a escolha rotativa mantém a reexecução
             // idempotente (o dedup abaixo usa user+projeto+início).
@@ -429,7 +525,7 @@ class DemoEmpresaSeeder extends Seeder
                 ->where('status', 'em_andamento')->orderBy('id')->pluck('id')->values();
 
             for ($i = 56; $i >= 1; $i--) {
-                $dia = Carbon::today()->subDays($i);
+                $dia = $ref->copy()->subDays($i);
                 if ($dia->isWeekend() || $projetoIds->isEmpty()) {
                     continue;
                 }
@@ -444,7 +540,7 @@ class DemoEmpresaSeeder extends Seeder
         if (isset($this->projetos['privado'])) {
             foreach (array_filter([$admin, $fernanda]) as $u) {
                 for ($i = 28; $i >= 2; $i -= 3) {
-                    $dia = Carbon::today()->subDays($i);
+                    $dia = $ref->copy()->subDays($i);
                     if ($dia->isWeekend()) {
                         continue;
                     }
@@ -462,7 +558,7 @@ class DemoEmpresaSeeder extends Seeder
                 ->where('email', 'like', '%'.self::EMAIL_DOMINIO)
                 ->orderBy('id')->pluck('id')->values();
             for ($i = 0; $i < 12; $i++) {
-                $dia = Carbon::today()->subMonths(4)->addDays($i * 2);
+                $dia = $ref->copy()->subMonths(4)->addDays($i * 2);
                 if ($dia->isWeekend() || $equipe->isEmpty()) {
                     continue;
                 }
@@ -516,6 +612,7 @@ class DemoEmpresaSeeder extends Seeder
         $this->command?->info("Projetos    : {$c('clockify_projetos')}");
         $this->command?->info("Lançamentos : {$c('clockify_time_trackers')}");
         $this->command?->info("Folgas      : {$c('clockify_time_offs')}");
+        $this->command?->info("Licitações  : {$c('licitacoes')}");
         $this->command?->info('-----------------------------------------------------------');
     }
 }

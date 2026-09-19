@@ -3,9 +3,8 @@
 namespace App\Http\Requests\Empresa;
 
 use App\Support\DomainNormalizer;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Schema;
 use App\Support\SchemaCache;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreEmpresaRequest extends FormRequest
@@ -50,6 +49,7 @@ class StoreEmpresaRequest extends FormRequest
             'nome' => ['required', 'string', 'max:255'],
             'slug' => $slugRules,
             'ativo' => ['nullable', 'in:S,N'],
+            'licitacoes_ativo' => ['nullable', 'in:S,N'],
             'cnpj' => ['nullable', 'digits:14'],
             'email' => ['nullable', 'email:rfc', 'max:255'],
             'telefone' => ['nullable', 'digits_between:10,11'],
@@ -162,8 +162,8 @@ class StoreEmpresaRequest extends FormRequest
 
         $color = strtoupper(trim($value));
 
-        if (!str_starts_with($color, '#')) {
-            $color = '#' . $color;
+        if (! str_starts_with($color, '#')) {
+            $color = '#'.$color;
         }
 
         return $color;

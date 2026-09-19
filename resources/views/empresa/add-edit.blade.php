@@ -87,6 +87,14 @@
                             label="CNPJ" value="{{ $empresa->cnpj ?? '' }}" />
                     </div>
                 </div>
+                <div class="col-lg-6" data-empresa-step="1">
+                    <div class="form-group form-group-empresa">
+                        <x-form-select name="licitacoes_ativo" label="Módulo Licitações" :options="$status"
+                            :selected="old('licitacoes_ativo', $empresa->licitacoes_ativo ?? 'N')"
+                            class="form-control form-control-sm" />
+                        <small class="text-muted">Análise de editais com pontuação estimada da empresa (IA).</small>
+                    </div>
+                </div>
 
                 <div class="col-12 mt-2" data-empresa-step="2">
                     <div class="empresa-section-title" id="sec-contato">Contato</div>

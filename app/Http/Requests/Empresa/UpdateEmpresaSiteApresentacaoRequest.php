@@ -3,9 +3,8 @@
 namespace App\Http\Requests\Empresa;
 
 use App\Support\DomainNormalizer;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Schema;
 use App\Support\SchemaCache;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
@@ -72,7 +71,7 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
                 continue;
             }
 
-            if (!$file->isValid() || ($file->getPathname() === '') || $file->getSize() === 0) {
+            if (! $file->isValid() || ($file->getPathname() === '') || $file->getSize() === 0) {
                 $this->files->remove($field);
             }
         }
@@ -377,8 +376,8 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
 
         $color = strtoupper(trim($value));
 
-        if (!str_starts_with($color, '#')) {
-            $color = '#' . $color;
+        if (! str_starts_with($color, '#')) {
+            $color = '#'.$color;
         }
 
         return $color;

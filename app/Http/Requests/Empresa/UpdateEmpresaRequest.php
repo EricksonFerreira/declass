@@ -2,9 +2,8 @@
 
 namespace App\Http\Requests\Empresa;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Schema;
 use App\Support\SchemaCache;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateEmpresaRequest extends FormRequest
@@ -47,6 +46,7 @@ class UpdateEmpresaRequest extends FormRequest
             'nome' => ['required', 'string', 'max:255'],
             'slug' => $slugRules,
             'ativo' => ['nullable', 'in:S,N'],
+            'licitacoes_ativo' => ['nullable', 'in:S,N'],
             'reserva_selecionar_modelo' => ['nullable', 'in:S,N'],
             'site_apresentacao_ativo' => ['nullable', 'in:S,N'],
             'aluguel_app_ativo' => ['nullable', 'in:S,N'],
@@ -127,6 +127,7 @@ class UpdateEmpresaRequest extends FormRequest
             'calcao_grupos.*.valor_maximo' => ['nullable', 'numeric', 'min:0'],
         ];
     }
+
     public function messages(): array
     {
         return [
@@ -187,8 +188,8 @@ class UpdateEmpresaRequest extends FormRequest
 
         $color = strtoupper(trim($value));
 
-        if (!str_starts_with($color, '#')) {
-            $color = '#' . $color;
+        if (! str_starts_with($color, '#')) {
+            $color = '#'.$color;
         }
 
         return $color;

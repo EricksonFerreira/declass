@@ -77,6 +77,17 @@ class AppServiceProvider extends ServiceProvider
             return ! empty($user->role_id);
         });
 
+        // Módulo Licitações: opcional por empresa (licitacoes_ativo=S)
+        // + permissão de leitura da tela.
+        Gate::define('licitacoes.acessar', function (User $user) {
+            $empresaId = app(EmpresaContext::class)->empresaId() ?? $user->empresa_id;
+            $empresa = $empresaId ? \App\Models\Empresa::find($empresaId) : null;
+
+            return $empresa
+                && $empresa->licitacoes_ativo === 'S'
+                && $user->hasPermissao('licitacoes.index');
+        });
+
         $this->bootEmpresaScope();
 
         Cashier::useCustomerModel(User::class);

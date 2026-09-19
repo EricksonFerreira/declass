@@ -83,6 +83,7 @@ class Empresa extends Model
         'adicionar_novas_marcas_automaticamente',
         'adicionar_novos_modelos_automaticamente',
         'empresa_id',
+        'licitacoes_ativo',
         'regime_emissao',
         'certificado_path',
         'certificado_senha',
