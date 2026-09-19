@@ -85,6 +85,32 @@ class LicitacaoController extends Controller
         ]);
     }
 
+    public function update(Request $request, Licitacao $licitacao, EditalArquivoService $servico): RedirectResponse
+    {
+        $data = $request->validate([
+            'orgao' => 'required|string|max:255',
+            'objeto' => 'required|string|max:2000',
+            'numero_edital' => 'nullable|string|max:100',
+            'modalidade' => 'nullable|string|max:100',
+            'criterio_julgamento' => 'nullable|string|max:100',
+            'data_abertura' => 'nullable|date',
+            'valor_estimado' => 'nullable|numeric|min:0',
+            'url_edital' => 'nullable|url|max:500',
+            'arquivo' => 'nullable|file|mimes:pdf,docx,txt|max:15360',
+        ]);
+
+        $licitacao->update($data);
+
+        if ($request->hasFile('arquivo')) {
+            $aviso = $this->importarArquivo($request->file('arquivo'), $licitacao, $servico);
+            if ($aviso) {
+                return back()->with('error', $aviso);
+            }
+        }
+
+        return back()->with('success', 'Licitação atualizada.');
+    }
+
     public function updateTexto(Request $request, Licitacao $licitacao): RedirectResponse
     {
         $data = $request->validate(['texto_edital' => 'required|string|max:400000']);

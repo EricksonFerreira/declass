@@ -29,6 +29,9 @@
                 <div class="card-header">
                     <h3 class="card-title text-bold text-sm"><i class="fas fa-gavel mr-1"></i> Dados da licitação</h3>
                     <div class="card-tools">
+                        <button type="button" id="btn-edit-licitacao" class="btn btn-xs btn-outline-primary mr-1">
+                            <i class="fas fa-pen mr-1"></i>Editar
+                        </button>
                         <form method="POST" action="{{ route('licitacoes.status', $licitacao) }}" class="d-inline">
                             @csrf @method('PATCH')
                             <select name="status" class="form-control form-control-sm d-inline-block" style="width:auto" onchange="this.form.submit()">
@@ -237,6 +240,67 @@
             </div>
         </div>
     @endif
+    <x-modal id="licEditModal" icon="fas fa-pen" title="Editar Licitação" formId="licitacao-edit-form" action="{{ route('licitacoes.update', $licitacao) }}" method="PUT" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>Órgão licitante <span class="text-danger">*</span></label>
+            <input type="text" name="orgao" class="form-control form-control-sm @error('orgao') is-invalid @enderror" value="{{ old('orgao', $licitacao->orgao) }}" required>
+            @error('orgao')<span class="invalid-feedback">{{ $message }}</span>@enderror
+        </div>
+        <div class="form-group">
+            <label>Objeto <span class="text-danger">*</span></label>
+            <textarea name="objeto" rows="3" class="form-control form-control-sm @error('objeto') is-invalid @enderror" required>{{ old('objeto', $licitacao->objeto) }}</textarea>
+            @error('objeto')<span class="invalid-feedback">{{ $message }}</span>@enderror
+        </div>
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <label>Nº do edital</label>
+                <input type="text" name="numero_edital" class="form-control form-control-sm" value="{{ old('numero_edital', $licitacao->numero_edital) }}">
+            </div>
+            <div class="col-md-6 form-group">
+                <label>Modalidade</label>
+                <select name="modalidade" class="form-control form-control-sm">
+                    <option value="">—</option>
+                    @foreach (['Pregão Eletrônico', 'Pregão Presencial', 'Concorrência', 'Concurso', 'Diálogo Competitivo', 'Dispensa', 'Inexigibilidade', 'Leilão'] as $m)
+                        <option value="{{ $m }}" {{ old('modalidade', $licitacao->modalidade) === $m ? 'selected' : '' }}>{{ $m }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <label>Critério de julgamento</label>
+                <select name="criterio_julgamento" class="form-control form-control-sm">
+                    <option value="">—</option>
+                    @foreach (['Menor preço', 'Maior desconto', 'Melhor técnica', 'Técnica e preço', 'Maior lance', 'Maior retorno econômico'] as $c)
+                        <option value="{{ $c }}" {{ old('criterio_julgamento', $licitacao->criterio_julgamento) === $c ? 'selected' : '' }}>{{ $c }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6 form-group">
+                <label>Data de abertura</label>
+                <input type="date" name="data_abertura" class="form-control form-control-sm" value="{{ old('data_abertura', $licitacao->data_abertura?->format('Y-m-d')) }}">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <label>Valor estimado (R$)</label>
+                <input type="number" step="0.01" min="0" name="valor_estimado" class="form-control form-control-sm" value="{{ old('valor_estimado', $licitacao->valor_estimado) }}">
+            </div>
+            <div class="col-md-6 form-group">
+                <label>Link do edital/portal</label>
+                <input type="url" name="url_edital" class="form-control form-control-sm" value="{{ old('url_edital', $licitacao->url_edital) }}" placeholder="https://...">
+            </div>
+        </div>
+        <div class="form-group mb-0">
+            <label>Substituir arquivo do edital</label>
+            <div class="custom-file">
+                <input type="file" name="arquivo" class="custom-file-input @error('arquivo') is-invalid @enderror" id="arquivo-edital-edit" accept=".pdf,.docx,.txt">
+                <label class="custom-file-label" for="arquivo-edital-edit" data-browse="Procurar">{{ $licitacao->arquivo_path ? basename($licitacao->arquivo_path) : 'PDF, DOCX ou TXT…' }}</label>
+            </div>
+            @error('arquivo')<span class="text-danger small">{{ $message }}</span>@enderror
+            <small class="text-muted">Em branco mantém o arquivo atual.</small>
+        </div>
+    </x-modal>
 @stop
 
 @section('js')
@@ -245,6 +309,14 @@
             $('.custom-file-input').on('change', function() {
                 $(this).next('.custom-file-label').text(this.files[0] ? this.files[0].name : 'PDF, DOCX ou TXT do edital…');
             });
+            $('#btn-edit-licitacao').on('click', function() {
+                $('#licEditModalBackdrop').addClass('show');
+                $('#licEditModal').addClass('open');
+            });
+            @if ($errors->hasAny(['orgao', 'objeto', 'numero_edital', 'modalidade', 'criterio_julgamento', 'data_abertura', 'valor_estimado', 'url_edital', 'arquivo']))
+                $('#licEditModalBackdrop').addClass('show');
+                $('#licEditModal').addClass('open');
+            @endif
         });
     </script>
 @stop

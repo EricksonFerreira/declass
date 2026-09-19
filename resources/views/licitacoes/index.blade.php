@@ -98,6 +98,15 @@
                                 </td>
                                 <td class="align-middle text-center">
                                     <a href="{{ route('licitacoes.show', $l) }}" class="btn btn-xs btn-info"><i class="fas fa-eye"></i></a>
+                                    <button type="button" class="btn btn-xs btn-warning btn-edit-licitacao"
+                                        data-update-url="{{ route('licitacoes.update', $l) }}"
+                                        data-orgao="{{ $l->orgao }}" data-objeto="{{ $l->objeto }}"
+                                        data-numero_edital="{{ $l->numero_edital }}" data-modalidade="{{ $l->modalidade }}"
+                                        data-criterio_julgamento="{{ $l->criterio_julgamento }}"
+                                        data-data_abertura="{{ $l->data_abertura?->format('Y-m-d') }}"
+                                        data-valor_estimado="{{ $l->valor_estimado }}" data-url_edital="{{ $l->url_edital }}">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
                                     <form action="{{ route('licitacoes.destroy', $l) }}" method="POST" class="d-inline" onsubmit="return confirm('Excluir esta licitação e suas análises?')">
                                         @csrf
                                         @method('DELETE')
@@ -123,6 +132,7 @@
     </div>
 
     <x-modal id="licitacaoModal" icon="fas fa-gavel" title="Nova Licitação" formId="licitacao-form" action="{{ route('licitacoes.store') }}" enctype="multipart/form-data">
+        <input type="hidden" name="_edit_url" id="lic-edit-url" value="{{ old('_edit_url') }}">
         <div class="form-group">
             <label>Órgão licitante <span class="text-danger">*</span></label>
             <input type="text" name="orgao" class="form-control form-control-sm @error('orgao') is-invalid @enderror" value="{{ old('orgao') }}" required placeholder="Ex: Prefeitura Municipal de Fortaleza">
@@ -193,16 +203,47 @@
 @section('js')
     <script>
         $(function() {
+            var storeUrl = '{{ route('licitacoes.store') }}';
+
+            function abrirModal() {
+                $('#licitacaoModalBackdrop').addClass('show');
+                $('#licitacaoModal').addClass('open');
+            }
+
             $('.custom-file-input').on('change', function() {
                 $(this).next('.custom-file-label').text(this.files[0] ? this.files[0].name : 'PDF, DOCX ou TXT…');
             });
+
             $('#btn-nova-licitacao').on('click', function() {
-                $('#licitacaoModalBackdrop').addClass('show');
-                $('#licitacaoModal').addClass('open');
+                var $form = $('#licitacao-form');
+                $form.attr('action', storeUrl);
+                $('#licitacao-formMethod').val('POST');
+                $('#licitacaoModalTitle').text('Nova Licitação');
+                $('#lic-edit-url').val('');
+                $form[0].reset();
+                abrirModal();
+            });
+
+            $('.btn-edit-licitacao').on('click', function() {
+                var d = $(this).data();
+                var $form = $('#licitacao-form');
+                $form.attr('action', d.updateUrl);
+                $('#licitacao-formMethod').val('PUT');
+                $('#licitacaoModalTitle').text('Editar Licitação');
+                $('#lic-edit-url').val(d.updateUrl);
+                $form[0].reset();
+                ['orgao', 'objeto', 'numero_edital', 'modalidade', 'criterio_julgamento', 'data_abertura', 'valor_estimado', 'url_edital'].forEach(function(campo) {
+                    $form.find('[name="' + campo + '"]').val(d[campo] || '');
+                });
+                abrirModal();
             });
             @if ($errors->any())
-                $('#licitacaoModalBackdrop').addClass('show');
-                $('#licitacaoModal').addClass('open');
+                @if (old('_edit_url'))
+                    $('#licitacao-form').attr('action', @json(old('_edit_url')));
+                    $('#licitacao-formMethod').val('PUT');
+                    $('#licitacaoModalTitle').text('Editar Licitação');
+                @endif
+                abrirModal();
             @endif
         });
     </script>

@@ -8,6 +8,7 @@ Route::prefix('licitacoes')->name('licitacoes.')->middleware(ExigirModuloLicitac
     Route::get('/', [LicitacaoController::class, 'index'])->name('index');
     Route::post('/', [LicitacaoController::class, 'store'])->name('store');
     Route::get('/{licitacao}', [LicitacaoController::class, 'show'])->name('show');
+    Route::put('/{licitacao}', [LicitacaoController::class, 'update'])->name('update');
     Route::put('/{licitacao}/texto', [LicitacaoController::class, 'updateTexto'])->name('texto');
     Route::post('/{licitacao}/arquivo', [LicitacaoController::class, 'uploadArquivo'])->name('arquivo');
     Route::get('/{licitacao}/arquivo', [LicitacaoController::class, 'downloadArquivo'])->name('arquivo.download');
