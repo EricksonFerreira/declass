@@ -9,14 +9,27 @@
 
 @push('css')
     <style>
-        .lic-hero { display:flex; flex-wrap:wrap; gap:24px; align-items:center; }
-        .lic-score-big { font-size:2.6rem; font-weight:800; line-height:1; }
+        .lic-hero { display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
+        .lic-score-big { font-size:2.1rem; font-weight:800; line-height:1; }
         .lic-score-big--alto { color:#16a34a; } .lic-score-big--medio { color:#d97706; } .lic-score-big--baixo { color:#dc2626; }
         .lic-viab { font-size:.95rem; font-weight:600; }
-        .lic-crit-barra { height:8px; border-radius:4px; background:#e9ecef; overflow:hidden; min-width:120px; }
+        .lic-crit-barra { height:8px; border-radius:4px; background:#e9ecef; overflow:hidden; min-width:90px; }
         .lic-crit-barra > span { display:block; height:100%; background:#0d6efd; }
         .exig-ok { color:#16a34a; } .exig-nok { color:#dc2626; }
         .lic-gap { border-left:3px solid #f59e0b; padding:6px 10px; background:#fffbeb; border-radius:0 6px 6px 0; margin-bottom:8px; }
+        .lic-dl dt { font-size:.75rem; text-transform:uppercase; letter-spacing:.02em; color:#6c757d; font-weight:600; }
+        .lic-dl dd { margin-bottom:.5rem; }
+        .lic-arq-nome { max-width:60vw; }
+        @media (min-width: 768px) {
+            .lic-score-big { font-size:2.6rem; }
+            .lic-hero { gap:24px; }
+            .lic-arq-nome { max-width:420px; }
+        }
+        @media (max-width: 575.98px) {
+            .card-header { padding:.6rem .75rem; }
+            .card-body { padding:.75rem; }
+            .table { font-size:.82rem; }
+        }
     </style>
 @endpush
 
@@ -37,77 +50,8 @@
     @endif
 
     <div class="row">
-        <div class="col-lg-8">
-            <div class="card card-outline card-primary shadow-sm">
-                <div class="card-header">
-                    <h3 class="card-title text-bold text-sm"><i class="fas fa-gavel mr-1"></i> Dados da licitação</h3>
-                    <div class="card-tools">
-                        <button type="button" id="btn-edit-licitacao" class="btn btn-xs btn-outline-primary mr-1">
-                            <i class="fas fa-pen mr-1"></i>Editar
-                        </button>
-                        <form method="POST" action="{{ route('licitacoes.status', $licitacao) }}" class="d-inline">
-                            @csrf @method('PATCH')
-                            <select name="status" class="form-control form-control-sm d-inline-block" style="width:auto" onchange="this.form.submit()">
-                                @foreach ($statusOpcoes as $v => $label)
-                                    <option value="{{ $v }}" {{ $licitacao->status === $v ? 'selected' : '' }}>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </form>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-3">Órgão</dt><dd class="col-sm-9">{{ $licitacao->orgao }}</dd>
-                        <dt class="col-sm-3">Objeto</dt><dd class="col-sm-9">{{ $licitacao->objeto }}</dd>
-                        <dt class="col-sm-3">Edital nº</dt><dd class="col-sm-9">{{ $licitacao->numero_edital ?: '—' }}</dd>
-                        <dt class="col-sm-3">Modalidade</dt><dd class="col-sm-9">{{ $licitacao->modalidade ?: '—' }}</dd>
-                        <dt class="col-sm-3">Julgamento</dt><dd class="col-sm-9">{{ $licitacao->criterio_julgamento ?: '—' }}</dd>
-                        <dt class="col-sm-3">Abertura</dt><dd class="col-sm-9">{{ $licitacao->data_abertura?->format('d/m/Y') ?: '—' }}</dd>
-                        <dt class="col-sm-3">Valor estimado</dt><dd class="col-sm-9">{{ $licitacao->valor_estimado ? 'R$ '.number_format((float) $licitacao->valor_estimado, 2, ',', '.') : '—' }}</dd>
-                        @if ($licitacao->url_edital)
-                            <dt class="col-sm-3">Edital</dt>
-                            <dd class="col-sm-9"><a href="{{ $licitacao->url_edital }}" target="_blank" rel="noopener">{{ $licitacao->url_edital }}</a></dd>
-                        @endif
-                    </dl>
-                </div>
-            </div>
-
-            <div class="card card-outline card-secondary shadow-sm">
-                <div class="card-header">
-                    <h3 class="card-title text-bold text-sm"><i class="fas fa-file-alt mr-1"></i> Edital</h3>
-                </div>
-                <div class="card-body pb-2">
-                    @if ($licitacao->arquivos)
-                        <ul class="list-unstyled small mb-2">
-                            @foreach ($licitacao->arquivos as $i => $arq)
-                                <li class="d-flex align-items-center mb-1">
-                                    <i class="fas fa-paperclip mr-1 text-muted"></i>
-                                    <a href="{{ route('licitacoes.arquivo.download', [$licitacao, $i]) }}" class="mr-2 text-truncate" style="max-width:420px">{{ $arq['nome'] ?? basename($arq['path']) }}</a>
-                                    <form method="POST" action="{{ route('licitacoes.arquivo.excluir', [$licitacao, $i]) }}" onsubmit="return confirm('Remover este arquivo? O texto já extraído permanece — ajuste no campo abaixo se preciso.')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-link btn-xs text-danger p-0" title="Remover"><i class="fas fa-times"></i></button>
-                                    </form>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endif
-                    @if ($licitacao->arquivos)
-                        <small class="text-muted d-block mb-2">Para anexar mais arquivos, use o botão "Editar" acima.</small>
-                    @endif
-                    <form method="POST" action="{{ route('licitacoes.texto', $licitacao) }}" class="js-form-saving" data-label="Salvando…">
-                        @csrf @method('PUT')
-                        <textarea name="texto_edital" rows="10" class="form-control form-control-sm" placeholder="Cole aqui o texto do edital — ou anexe o arquivo acima. Ao menos as seções de critérios de julgamento, pontuação e habilitação. Quanto mais completo, melhor a análise.">{{ old('texto_edital', $licitacao->texto_edital) }}</textarea>
-                        @error('texto_edital')<span class="text-danger small">{{ $message }}</span>@enderror
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <small class="text-muted">{{ $licitacao->texto_edital ? number_format(mb_strlen($licitacao->texto_edital), 0, ',', '.').' caracteres' : 'Edital ainda não informado' }}</small>
-                            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save mr-1"></i>Salvar texto</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
+        {{-- Análise primeiro no mobile, à direita no desktop --}}
+        <div class="col-lg-4 order-1 order-lg-2">
             <div class="card card-outline card-success shadow-sm">
                 <div class="card-header">
                     <h3 class="card-title text-bold text-sm"><i class="fas fa-robot mr-1"></i> Análise de pontuação</h3>
@@ -158,7 +102,7 @@
                             · {{ $analise->modelo }}
                         </div>
                     @else
-                        <p class="text-muted small mb-2">Cole o texto do edital ao lado e rode a análise para estimar a nota técnica da empresa contra os critérios de julgamento.</p>
+                        <p class="text-muted small mb-2">Cole o texto do edital em "Edital" e rode a análise para estimar a aderência da empresa aos critérios de julgamento.</p>
                     @endif
 
                     <form method="POST" action="{{ route('licitacoes.analisar', $licitacao) }}" id="form-analisar">
@@ -175,11 +119,16 @@
 
             @if ($analise && $analise->criterios)
                 @php $temPontos = collect($analise->criterios)->contains(fn ($c) => ($c['pontos_max'] ?? null) !== null); @endphp
-                <div class="card card-outline card-info shadow-sm">
-                    <div class="card-header"><h3 class="card-title text-bold text-sm">Critérios de julgamento</h3></div>
-                    <div class="card-body p-0">
+                <div class="card card-outline card-info shadow-sm" data-collapse-mobile>
+                    <div class="card-header">
+                        <h3 class="card-title text-bold text-sm">Critérios de julgamento</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0 table-responsive">
                         <table class="table table-sm mb-0">
-                            <thead><tr><th>Critério</th><th class="text-center" style="width:120px">{{ $temPontos ? 'Pts' : 'Avaliação' }}</th>@if ($temPontos)<th style="width:110px"></th>@endif</tr></thead>
+                            <thead><tr><th>Critério</th><th class="text-center" style="width:110px">{{ $temPontos ? 'Pts' : 'Avaliação' }}</th>@if ($temPontos)<th style="width:100px"></th>@endif</tr></thead>
                             <tbody>
                                 @foreach ($analise->criterios as $c)
                                     <tr>
@@ -211,36 +160,120 @@
                 </div>
             @endif
         </div>
+
+        {{-- Dados e edital: depois da análise no mobile, à esquerda no desktop --}}
+        <div class="col-lg-8 order-2 order-lg-1">
+            <div class="card card-outline card-primary shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap" style="gap:6px">
+                    <h3 class="card-title text-bold text-sm mb-0"><i class="fas fa-gavel mr-1"></i> Dados da licitação</h3>
+                    <div class="d-flex align-items-center flex-wrap" style="gap:6px">
+                        <button type="button" id="btn-edit-licitacao" class="btn btn-xs btn-outline-primary">
+                            <i class="fas fa-pen mr-1"></i>Editar
+                        </button>
+                        <form method="POST" action="{{ route('licitacoes.status', $licitacao) }}">
+                            @csrf @method('PATCH')
+                            <select name="status" class="form-control form-control-sm" onchange="this.form.submit()">
+                                @foreach ($statusOpcoes as $v => $label)
+                                    <option value="{{ $v }}" {{ $licitacao->status === $v ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0 lic-dl">
+                        <dt class="col-4 col-sm-3">Órgão</dt><dd class="col-8 col-sm-9">{{ $licitacao->orgao }}</dd>
+                        <dt class="col-4 col-sm-3">Objeto</dt><dd class="col-8 col-sm-9">{{ $licitacao->objeto }}</dd>
+                        <dt class="col-4 col-sm-3">Edital nº</dt><dd class="col-8 col-sm-9">{{ $licitacao->numero_edital ?: '—' }}</dd>
+                        <dt class="col-4 col-sm-3">Modalidade</dt><dd class="col-8 col-sm-9">{{ $licitacao->modalidade ?: '—' }}</dd>
+                        <dt class="col-4 col-sm-3">Julgamento</dt><dd class="col-8 col-sm-9">{{ $licitacao->criterio_julgamento ?: '—' }}</dd>
+                        <dt class="col-4 col-sm-3">Abertura</dt><dd class="col-8 col-sm-9">{{ $licitacao->data_abertura?->format('d/m/Y') ?: '—' }}</dd>
+                        <dt class="col-4 col-sm-3">Valor estimado</dt><dd class="col-8 col-sm-9">{{ $licitacao->valor_estimado ? 'R$ '.number_format((float) $licitacao->valor_estimado, 2, ',', '.') : '—' }}</dd>
+                        @if ($licitacao->url_edital)
+                            <dt class="col-4 col-sm-3">Edital</dt>
+                            <dd class="col-8 col-sm-9"><a href="{{ $licitacao->url_edital }}" target="_blank" rel="noopener" class="text-break">{{ $licitacao->url_edital }}</a></dd>
+                        @endif
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card card-outline card-secondary shadow-sm" data-collapse-mobile>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title text-bold text-sm mb-0"><i class="fas fa-file-alt mr-1"></i> Edital</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                    </div>
+                </div>
+                <div class="card-body pb-2">
+                    @if ($licitacao->arquivos)
+                        <ul class="list-unstyled small mb-2">
+                            @foreach ($licitacao->arquivos as $i => $arq)
+                                <li class="d-flex align-items-center mb-1">
+                                    <i class="fas fa-paperclip mr-1 text-muted"></i>
+                                    <a href="{{ route('licitacoes.arquivo.download', [$licitacao, $i]) }}" class="mr-2 text-truncate lic-arq-nome">{{ $arq['nome'] ?? basename($arq['path']) }}</a>
+                                    <form method="POST" action="{{ route('licitacoes.arquivo.excluir', [$licitacao, $i]) }}" onsubmit="return confirm('Remover este arquivo? O texto já extraído permanece — ajuste no campo abaixo se preciso.')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-link btn-xs text-danger p-0" title="Remover"><i class="fas fa-times"></i></button>
+                                    </form>
+                                </li>
+                            @endforeach
+                        </ul>
+                        <small class="text-muted d-block mb-2">Para anexar mais arquivos, use o botão "Editar" acima.</small>
+                    @endif
+                    <form method="POST" action="{{ route('licitacoes.texto', $licitacao) }}" class="js-form-saving" data-label="Salvando…">
+                        @csrf @method('PUT')
+                        <textarea name="texto_edital" rows="8" class="form-control form-control-sm" placeholder="Cole aqui o texto do edital — ou anexe o arquivo pelo botão Editar. Ao menos as seções de critérios de julgamento, pontuação e habilitação. Quanto mais completo, melhor a análise.">{{ old('texto_edital', $licitacao->texto_edital) }}</textarea>
+                        @error('texto_edital')<span class="text-danger small">{{ $message }}</span>@enderror
+                        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap" style="gap:6px">
+                            <small class="text-muted">{{ $licitacao->texto_edital ? number_format(mb_strlen($licitacao->texto_edital), 0, ',', '.').' caracteres' : 'Edital ainda não informado' }}</small>
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save mr-1"></i>Salvar texto</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if ($analise && ($analise->exigencias || $analise->gaps))
         <div class="row">
             @if ($analise->exigencias)
                 <div class="col-lg-7">
-                    <div class="card card-outline card-warning shadow-sm">
-                        <div class="card-header"><h3 class="card-title text-bold text-sm"><i class="fas fa-clipboard-check mr-1"></i> Habilitação — exigências do edital</h3></div>
+                    <div class="card card-outline card-warning shadow-sm" data-collapse-mobile>
+                        <div class="card-header">
+                            <h3 class="card-title text-bold text-sm"><i class="fas fa-clipboard-check mr-1"></i> Habilitação — exigências do edital</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                            </div>
+                        </div>
                         <div class="card-body p-0">
-                            <table class="table table-sm mb-0">
-                                <thead><tr><th style="width:30px"></th><th>Exigência</th><th style="width:135px">Situação</th><th>Evidência</th></tr></thead>
-                                <tbody>
-                                    @foreach ($analise->exigencias as $e)
-                                        @php
-                                            $sit = $e['situacao'] ?? (($e['atende'] ?? false) ? 'comprovado' : 'nao_comprovado');
-                                            $sitMeta = [
-                                                'comprovado' => ['fa-check-circle exig-ok', 'success', 'Comprovado'],
-                                                'nao_comprovado' => ['fa-question-circle text-warning', 'warning', 'Não comprovado'],
-                                                'nao_atende' => ['fa-times-circle exig-nok', 'danger', 'Não atende'],
-                                            ][$sit] ?? ['fa-question-circle text-warning', 'warning', 'Não comprovado'];
-                                        @endphp
-                                        <tr>
-                                            <td class="text-center align-middle"><i class="fas {{ $sitMeta[0] }}"></i></td>
-                                            <td class="small">{{ $e['exigencia'] ?? '—' }}</td>
-                                            <td class="align-middle"><span class="badge badge-{{ $sitMeta[1] }}">{{ $sitMeta[2] }}</span></td>
-                                            <td class="small text-muted">{{ $e['evidencia'] ?? '' }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead><tr><th style="width:30px"></th><th>Exigência</th><th style="width:120px">Situação</th><th class="d-none d-md-table-cell">Evidência</th></tr></thead>
+                                    <tbody>
+                                        @foreach ($analise->exigencias as $e)
+                                            @php
+                                                $sit = $e['situacao'] ?? (($e['atende'] ?? false) ? 'comprovado' : 'nao_comprovado');
+                                                $sitMeta = [
+                                                    'comprovado' => ['fa-check-circle exig-ok', 'success', 'Comprovado'],
+                                                    'nao_comprovado' => ['fa-question-circle text-warning', 'warning', 'Não comprovado'],
+                                                    'nao_atende' => ['fa-times-circle exig-nok', 'danger', 'Não atende'],
+                                                ][$sit] ?? ['fa-question-circle text-warning', 'warning', 'Não comprovado'];
+                                            @endphp
+                                            <tr>
+                                                <td class="text-center align-middle"><i class="fas {{ $sitMeta[0] }}"></i></td>
+                                                <td class="small">
+                                                    {{ $e['exigencia'] ?? '—' }}
+                                                    @if (!empty($e['evidencia']))
+                                                        <div class="text-muted d-md-none" style="font-size:.72rem">{{ $e['evidencia'] }}</div>
+                                                    @endif
+                                                </td>
+                                                <td class="align-middle"><span class="badge badge-{{ $sitMeta[1] }}">{{ $sitMeta[2] }}</span></td>
+                                                <td class="small text-muted d-none d-md-table-cell">{{ $e['evidencia'] ?? '' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                             <div class="px-3 py-2 border-top text-muted" style="font-size:.72rem">
                                 <i class="fas fa-question-circle text-warning"></i> <strong>Não comprovado</strong> = o sistema não encontrou evidência cadastrada — não significa que a empresa não possua o documento.
                             </div>
@@ -250,8 +283,13 @@
             @endif
             @if ($analise->gaps)
                 <div class="col-lg-5">
-                    <div class="card card-outline card-danger shadow-sm">
-                        <div class="card-header"><h3 class="card-title text-bold text-sm"><i class="fas fa-exclamation-triangle mr-1"></i> Pendências e gaps</h3></div>
+                    <div class="card card-outline card-danger shadow-sm" data-collapse-mobile>
+                        <div class="card-header">
+                            <h3 class="card-title text-bold text-sm"><i class="fas fa-exclamation-triangle mr-1"></i> Pendências e gaps</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                            </div>
+                        </div>
                         <div class="card-body">
                             @foreach ($analise->gaps as $gap)
                                 <div class="lic-gap small">{{ $gap }}</div>
@@ -264,9 +302,14 @@
     @endif
 
     @if ($licitacao->analises->count() > 1)
-        <div class="card card-outline card-secondary shadow-sm">
-            <div class="card-header"><h3 class="card-title text-bold text-sm">Histórico de análises</h3></div>
-            <div class="card-body p-0">
+        <div class="card card-outline card-secondary shadow-sm collapsed-card">
+            <div class="card-header">
+                <h3 class="card-title text-bold text-sm">Histórico de análises</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+            <div class="card-body p-0 table-responsive">
                 <table class="table table-sm mb-0">
                     <thead><tr><th>Data</th><th>Nota</th><th>Viabilidade</th><th>Modelo</th><th>Analista</th></tr></thead>
                     <tbody>
@@ -284,6 +327,7 @@
             </div>
         </div>
     @endif
+
     <x-modal id="licEditModal" icon="fas fa-pen" title="Editar Licitação" formId="licitacao-edit-form" action="{{ route('licitacoes.update', $licitacao) }}" method="PUT" enctype="multipart/form-data">
         <input type="hidden" name="_form" value="edit">
         <div class="form-group">
@@ -352,6 +396,16 @@
 @section('js')
     <script>
         $(function() {
+            // No mobile, cards secundários já nascem recolhidos
+            if (window.matchMedia('(max-width: 767.98px)').matches) {
+                $('[data-collapse-mobile]').each(function() {
+                    var $card = $(this);
+                    if (!$card.hasClass('collapsed-card')) {
+                        $card.find('> .card-header [data-card-widget="collapse"]').first().trigger('click');
+                    }
+                });
+            }
+
             $('.custom-file-input').on('change', function() {
                 var rotulo = this.files.length === 0 ? 'PDF, DOCX ou TXT do edital…'
                     : (this.files.length === 1 ? this.files[0].name : this.files.length + ' arquivos selecionados');
