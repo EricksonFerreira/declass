@@ -22,11 +22,13 @@ class IaService
             'nome' => 'DeepSeek',
             'endpoint' => 'https://api.deepseek.com/chat/completions',
             'modelo_padrao' => 'deepseek-chat',
+            'max_output' => 8192,
         ],
         'openai' => [
             'nome' => 'OpenAI',
             'endpoint' => 'https://api.openai.com/v1/chat/completions',
             'modelo_padrao' => 'gpt-4o-mini',
+            'max_output' => 16384,
         ],
     ];
 
@@ -145,51 +147,61 @@ class IaService
         $this->verificarLimite($empresaId);
 
         $modelo = $r['modelo'];
-        $maxTokens = max(256, min(32000, (int) ($cfg->tokens_limite ?: 4000)));
+        $maxSaida = $meta['max_output'] ?? 8192;
+        $maxTokens = max(256, min($maxSaida, (int) ($cfg->tokens_limite ?: 4000)));
 
-        $inicio = microtime(true);
+        // Se a resposta vier cortada (finish_reason=length) e ainda houver
+        // margem até o teto do modelo, repete UMA vez com o máximo.
+        for ($tentativa = 0; $tentativa < 2; $tentativa++) {
+            $inicio = microtime(true);
 
-        try {
-            $response = Http::withToken($key)
-                ->timeout(180)
-                ->post($meta['endpoint'], [
-                    'model' => $modelo,
-                    'messages' => [
-                        ['role' => 'system', 'content' => $system],
-                        ['role' => 'user', 'content' => $user],
-                    ],
-                    'response_format' => ['type' => 'json_object'],
-                    'max_tokens' => $maxTokens,
-                    'temperature' => 0.2,
-                    'stream' => false,
-                ]);
-        } catch (\Throwable $e) {
-            $this->registrar($empresaId, $userId, $provedor, $modelo, $recurso, 0, 0, $inicio, 'erro', $e->getMessage());
-            throw new RuntimeException("{$meta['nome']} falhou na conexão: ".$e->getMessage(), previous: $e);
+            try {
+                $response = Http::withToken($key)
+                    ->timeout(180)
+                    ->post($meta['endpoint'], [
+                        'model' => $modelo,
+                        'messages' => [
+                            ['role' => 'system', 'content' => $system],
+                            ['role' => 'user', 'content' => $user],
+                        ],
+                        'response_format' => ['type' => 'json_object'],
+                        'max_tokens' => $maxTokens,
+                        'temperature' => 0.2,
+                        'stream' => false,
+                    ]);
+            } catch (\Throwable $e) {
+                $this->registrar($empresaId, $userId, $provedor, $modelo, $recurso, 0, 0, $inicio, 'erro', $e->getMessage());
+                throw new RuntimeException("{$meta['nome']} falhou na conexão: ".$e->getMessage(), previous: $e);
+            }
+
+            if (! $response->successful()) {
+                $msg = "{$meta['nome']} retornou erro ".$response->status().': '.$response->json('error.message', $response->body());
+                $this->registrar($empresaId, $userId, $provedor, $modelo, $recurso, 0, 0, $inicio, 'erro', $msg);
+                throw new RuntimeException($msg);
+            }
+
+            $tokensIn = (int) ($response->json('usage.prompt_tokens') ?? 0);
+            $tokensOut = (int) ($response->json('usage.completion_tokens') ?? 0);
+            $modeloResp = (string) $response->json('model', $modelo);
+            $finishReason = (string) $response->json('choices.0.finish_reason', '');
+
+            $this->registrar($empresaId, $userId, $provedor, $modeloResp, $recurso, $tokensIn, $tokensOut, $inicio, 'ok');
+
+            if ($finishReason === 'length' && $maxTokens < $maxSaida) {
+                $maxTokens = $maxSaida;
+
+                continue;
+            }
+
+            return [
+                'conteudo' => (string) $response->json('choices.0.message.content', ''),
+                'finish_reason' => $finishReason,
+                'tokens_entrada' => $tokensIn,
+                'tokens_saida' => $tokensOut,
+                'modelo' => $modeloResp,
+                'provedor' => $provedor,
+            ];
         }
-
-        $duracao = $inicio;
-
-        if (! $response->successful()) {
-            $msg = "{$meta['nome']} retornou erro ".$response->status().': '.$response->json('error.message', $response->body());
-            $this->registrar($empresaId, $userId, $provedor, $modelo, $recurso, 0, 0, $duracao, 'erro', $msg);
-            throw new RuntimeException($msg);
-        }
-
-        $tokensIn = (int) ($response->json('usage.prompt_tokens') ?? 0);
-        $tokensOut = (int) ($response->json('usage.completion_tokens') ?? 0);
-        $modeloResp = (string) $response->json('model', $modelo);
-
-        $this->registrar($empresaId, $userId, $provedor, $modeloResp, $recurso, $tokensIn, $tokensOut, $duracao, 'ok');
-
-        return [
-            'conteudo' => (string) $response->json('choices.0.message.content', ''),
-            'finish_reason' => (string) $response->json('choices.0.finish_reason', ''),
-            'tokens_entrada' => $tokensIn,
-            'tokens_saida' => $tokensOut,
-            'modelo' => $modeloResp,
-            'provedor' => $provedor,
-        ];
     }
 
     /**

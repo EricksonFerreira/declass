@@ -51,7 +51,7 @@ class AnaliseLicitacaoService
         if ($dados === null) {
             throw new RuntimeException(
                 ($resposta['finish_reason'] ?? '') === 'length'
-                    ? 'A resposta da IA foi cortada por falta de tokens — aumente o "Limite de Tokens (Resposta)" em Gerenciar → Integração com IA (ex.: 6000) e tente novamente.'
+                    ? 'A análise excedeu o tamanho máximo de resposta do modelo — reduza o texto colado (apenas as seções de julgamento e habilitação) ou peça resumo "Curto e objetivo" em Gerenciar → Integração com IA.'
                     : 'A IA não retornou um JSON válido. Tente novamente.'
             );
         }
