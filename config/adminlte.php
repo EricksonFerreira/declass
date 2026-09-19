@@ -447,6 +447,12 @@ return [
                     'route' => 'usuario.index',
                     'icon' => 'fas fa-user-cog',
                 ],
+                [
+                    'text' => 'Importar CSV',
+                    'route' => 'importacao.index',
+                    'icon' => 'fas fa-file-import',
+                    'can' => 'importacao.index',
+                ],
             ],
         ],
 

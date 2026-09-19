@@ -153,6 +153,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'clockify',
         'assinatura',
         'licitacao',
+        'importacao',
     ];
 
     foreach ($authGroupFiles as $groupFile) {

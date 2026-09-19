@@ -53,6 +53,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'funcao_id',
         'custo_hora',
         'jornada_diaria',
+        'fator_esforco',
         'ativo',
     ];
 
@@ -78,6 +79,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'forcar_troca_senha' => 'boolean',
         'saldo_atual' => 'decimal:2',
         'custo_hora' => 'decimal:2',
+        'jornada_diaria' => 'decimal:2',
+        'fator_esforco' => 'decimal:2',
     ];
 
     public function sendEmailVerificationNotification()

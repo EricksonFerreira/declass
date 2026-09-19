@@ -219,7 +219,7 @@ class DemoEmpresaSeeder extends Seeder
         ], 'paulo.diretor');
 
         $julia = $this->seedUsuarioExtra($roles['colaborador'], [
-            'nome' => 'Julia Costa', 'cargo' => 'Estagiária de Engenharia', 'jornada_diaria' => 4,
+            'nome' => 'Julia Costa', 'cargo' => 'Estagiária de Engenharia', 'jornada_diaria' => 4, 'fator_esforco' => 0.5,
         ], 'julia.costa');
 
         $this->seedProjetosExtras($admin, $fernanda);
@@ -342,7 +342,7 @@ class DemoEmpresaSeeder extends Seeder
             ['empresa_id' => $this->empresaId, 'nome' => 'Due Diligence — Terreno Distrito Sul'],
             [
                 'clockify_cliente_id' => $clienteId,
-                'codigo' => '2025-060-200.01',
+                'codigo' => '200.01', 'ano' => 2025, 'numero' => 60,
                 'descricao' => 'Análise técnica e documental para aquisição de terreno. Acesso restrito à diretoria.',
                 'status' => 'em_andamento',
                 'publico' => false,
@@ -360,7 +360,7 @@ class DemoEmpresaSeeder extends Seeder
             ['empresa_id' => $this->empresaId, 'nome' => 'Terraplenagem — Loteamento Alto Serra'],
             [
                 'clockify_cliente_id' => $clienteId,
-                'codigo' => '2023-015-088.02',
+                'codigo' => '088.02', 'ano' => 2023, 'numero' => 15,
                 'descricao' => 'Obra suspensa pelo cliente durante a fase de terraplenagem.',
                 'status' => 'cancelado',
                 'publico' => true,
@@ -399,22 +399,25 @@ class DemoEmpresaSeeder extends Seeder
     {
         $liderId = $fernanda?->id ?? $admin->id;
 
-        // nome => [codigo CC, responsavel, horas_orcadas]
+        // nome => [ano, numero, codigo CC, responsavel, horas_orcadas]
         // O orçado é calibrado contra o consumo semeado (~530-680h/projeto)
         // para a demo mostrar percentuais variados no Consumo x Estimado:
         // ~80% confortável, ~90% no limite e >100% estourado.
         $mapa = [
-            'Projeto Executivo de Instalações — Ala Norte' => ['2024-087-101.01', $admin->id, 850],
-            'Reforma da Unidade Fabril — Planta Norte' => ['2025-012-118.02', $admin->id, 700],
-            'Loteamento Residencial Vista Alegre — Lote 2' => ['2025-033-142.05', $liderId, 620],
-            'Edifício Comercial Parque Central' => ['2025-041-158.01', $admin->id, 560],
-            'Ampliação da Ala Sul — Hospital Regional' => ['2024-156-099.03', $liderId, 480],
+            'Projeto Executivo de Instalações — Ala Norte' => [2024, 87, '101.01', $admin->id, 850],
+            'Reforma da Unidade Fabril — Planta Norte' => [2025, 12, '118.02', $admin->id, 700],
+            'Loteamento Residencial Vista Alegre — Lote 2' => [2025, 33, '142.05', $liderId, 620],
+            'Edifício Comercial Parque Central' => [2025, 41, '158.01', $admin->id, 560],
+            'Ampliação da Ala Sul — Hospital Regional' => [2024, 156, '099.03', $liderId, 480],
         ];
 
-        foreach ($mapa as $nome => [$codigo, $responsavelId, $orcado]) {
+        foreach ($mapa as $nome => [$ano, $numero, $codigo, $responsavelId, $orcado]) {
             DB::table('clockify_projetos')
                 ->where('empresa_id', $this->empresaId)->where('nome', $nome)
-                ->update(['codigo' => $codigo, 'responsavel_id' => $responsavelId, 'horas_orcadas' => $orcado]);
+                ->update([
+                    'ano' => $ano, 'numero' => $numero, 'codigo' => $codigo,
+                    'responsavel_id' => $responsavelId, 'horas_orcadas' => $orcado,
+                ]);
         }
 
         // Estimativas por função coerentes com o orçado total do projeto.

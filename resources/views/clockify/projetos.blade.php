@@ -51,8 +51,8 @@
                                     <div class="ux-card__head-info">
                                         <div class="ux-card__title">
                                             {{ $projeto->nome }}
-                                            @if ($projeto->codigo)
-                                                <span class="badge badge-secondary ml-1" style="font-weight:600;">{{ $projeto->codigo }}</span>
+                                            @if ($projeto->ano || $projeto->codigo)
+                                                <span class="badge badge-secondary ml-1" style="font-weight:600;" title="{{ $projeto->identificacao_completa }}">{{ $projeto->ano ? $projeto->ano.'.'.str_pad((string) $projeto->numero, 3, '0', STR_PAD_LEFT) : '' }}{{ $projeto->ano && $projeto->codigo ? '-' : '' }}{{ $projeto->codigo }}</span>
                                             @endif
                                         </div>
                                         <div class="ux-card__sub">{{ $projeto->cliente->nome ?? 'Sem cliente' }}</div>
@@ -139,8 +139,8 @@
                                             @if (! $projeto->publico)
                                                 <span class="badge badge-secondary ml-1" title="Projeto privado: visível apenas para administradores, o responsável e os membros"><i class="fas fa-lock mr-1"></i>Privado</span>
                                             @endif
-                                            @if ($projeto->codigo)
-                                                <small class="text-muted d-block">CC: {{ $projeto->codigo }}</small>
+                                            @if ($projeto->ano || $projeto->codigo)
+                                                <small class="text-muted d-block" title="{{ $projeto->identificacao_completa }}">{{ $projeto->ano ? $projeto->ano.'.'.str_pad((string) $projeto->numero, 3, '0', STR_PAD_LEFT).' - ' : '' }}{{ $projeto->codigo ? 'CC '.$projeto->codigo : '' }}</small>
                                             @endif
                                         </div>
                                         @if($projeto->descricao)
@@ -224,16 +224,33 @@
     <x-modal id="projetoDrawer" icon="fas fa-project-diagram" title="Novo Projeto" formId="projeto-form" action="{{ route('clockify.projetos.store') }}">
         <input type="hidden" name="id" id="projeto_id" value="{{ old('id') }}">
         <div class="form-row">
-            <div class="col-8 form-group">
+            <div class="col-12 form-group">
                 <label for="nome">Nome <span class="text-danger">*</span></label>
                 <input type="text" name="nome" id="nome" class="form-control form-control-sm @error('nome') is-invalid @enderror" value="{{ old('nome') }}" required placeholder="Ex: Novo Site XPAND">
                 @error('nome')
                     <span class="invalid-feedback">{{ $message }}</span>
                 @enderror
             </div>
+        </div>
+        <div class="form-row">
+            <div class="col-4 form-group">
+                <label for="ano">Ano</label>
+                <input type="number" name="ano" id="ano" class="form-control form-control-sm @error('ano') is-invalid @enderror" value="{{ old('ano') }}" placeholder="2025" min="2000" max="2100">
+                @error('ano')
+                    <span class="invalid-feedback">{{ $message }}</span>
+                @enderror
+            </div>
+            <div class="col-4 form-group">
+                <label for="numero">Número</label>
+                <input type="number" name="numero" id="numero" class="form-control form-control-sm @error('numero') is-invalid @enderror" value="{{ old('numero') }}" placeholder="33" min="1">
+                <small class="text-muted">Vazio = próximo do ano</small>
+                @error('numero')
+                    <span class="invalid-feedback">{{ $message }}</span>
+                @enderror
+            </div>
             <div class="col-4 form-group">
                 <label for="codigo">Código (CC)</label>
-                <input type="text" name="codigo" id="codigo" class="form-control form-control-sm @error('codigo') is-invalid @enderror" value="{{ old('codigo') }}" placeholder="Ex: 440-158.01" maxlength="50">
+                <input type="text" name="codigo" id="codigo" class="form-control form-control-sm @error('codigo') is-invalid @enderror" value="{{ old('codigo') }}" placeholder="105.01" maxlength="50">
                 @error('codigo')
                     <span class="invalid-feedback">{{ $message }}</span>
                 @enderror
@@ -301,11 +318,23 @@
             <small class="text-muted">Membros sempre veem o projeto e podem apontar horas — obrigatório quando a visibilidade é Privado.</small>
         </div>
         <div class="form-group" id="status-group" style="display: none;">
-            <label for="ativo">Status</label>
-            <select name="ativo" id="ativo" class="form-control form-control-sm">
-                <option value="1">Ativo</option>
-                <option value="0">Inativo</option>
-            </select>
+            <div class="form-row">
+                <div class="col-6">
+                    <label for="ativo">Registro</label>
+                    <select name="ativo" id="ativo" class="form-control form-control-sm">
+                        <option value="1">Ativo</option>
+                        <option value="0">Inativo</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label for="status">Status do projeto</label>
+                    <select name="status" id="status" class="form-control form-control-sm">
+                        @foreach (\App\Models\ClockifyProjeto::STATUS_LABELS as $valor => $label)
+                            <option value="{{ $valor }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
         </div>
     </x-modal>
 @stop
@@ -370,6 +399,9 @@
             $('#projeto_id').val(projeto.id);
             $('#projeto-form #nome').val(projeto.nome);
             $('#projeto-form #codigo').val(projeto.codigo || '');
+            $('#projeto-form #ano').val(projeto.ano || '');
+            $('#projeto-form #numero').val(projeto.numero || '');
+            $('#projeto-form #status').val(projeto.status || 'em_andamento');
             $('#projeto-form #clockify_cliente_id').val(projeto.clockify_cliente_id).trigger('change');
             $('#projeto-form #responsavel_id').val(projeto.responsavel_id || '');
             $('#projeto-form #descricao').val(projeto.descricao);

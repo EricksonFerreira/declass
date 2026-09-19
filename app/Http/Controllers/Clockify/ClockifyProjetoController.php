@@ -112,6 +112,7 @@ class ClockifyProjetoController extends Controller
                 ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
                 ['value' => 'em_andamento', 'label' => 'Em andamento', 'selected' => false],
                 ['value' => 'concluido', 'label' => 'Concluído', 'selected' => false],
+                ['value' => 'congelado', 'label' => 'Congelado', 'selected' => false],
                 ['value' => 'cancelado', 'label' => 'Cancelado', 'selected' => false],
             ]],
         ];
@@ -133,6 +134,8 @@ class ClockifyProjetoController extends Controller
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'codigo' => 'nullable|string|max:50',
+            'ano' => 'nullable|integer|min:2000|max:2100',
+            'numero' => 'nullable|integer|min:1',
             'clockify_cliente_id' => 'nullable|exists:clockify_clientes,id',
             'responsavel_id' => 'nullable|exists:users,id',
             'descricao' => 'nullable|string',
@@ -173,6 +176,9 @@ class ClockifyProjetoController extends Controller
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'codigo' => 'nullable|string|max:50',
+            'ano' => 'nullable|integer|min:2000|max:2100',
+            'numero' => 'nullable|integer|min:1',
+            'status' => 'nullable|in:'.implode(',', array_keys(\App\Models\ClockifyProjeto::STATUS_LABELS)),
             'clockify_cliente_id' => 'nullable|exists:clockify_clientes,id',
             'responsavel_id' => 'nullable|exists:users,id',
             'descricao' => 'nullable|string',

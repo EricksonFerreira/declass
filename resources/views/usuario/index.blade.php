@@ -111,7 +111,8 @@
                                    data-role-id="{{ $usuario->role_id }}"
                                    data-funcao-id="{{ $usuario->funcao_id }}"
                                    data-custo-hora="{{ $usuario->custo_hora }}"
-                                   data-jornada-diaria="{{ $usuario->jornada_diaria }}">
+                                   data-jornada-diaria="{{ $usuario->jornada_diaria }}"
+                                   data-fator-esforco="{{ $usuario->fator_esforco ?? 1 }}">
                                     <i class="fas fa-edit mr-1"></i>Editar
                                 </a>
                             @endif
@@ -231,7 +232,8 @@
                                                     data-role-id="{{ $usuario->role_id }}"
                                                     data-funcao-id="{{ $usuario->funcao_id }}"
                                                     data-custo-hora="{{ $usuario->custo_hora }}"
-                                                    data-jornada-diaria="{{ $usuario->jornada_diaria }}">
+                                                    data-jornada-diaria="{{ $usuario->jornada_diaria }}"
+                                                    data-fator-esforco="{{ $usuario->fator_esforco ?? 1 }}">
                                                     <i class="fas fa-edit mr-1"></i> Editar
                                                 </a>
                                             @endif
@@ -370,6 +372,15 @@
             <input type="number" step="0.5" min="0" max="24" class="form-control form-control-sm @error('jornada_diaria') is-invalid @enderror" id="drawer_jornada_diaria" name="jornada_diaria" value="{{ old('jornada_diaria', 8) }}" placeholder="8">
             <small class="text-muted">Usada para verificar se o dia foi apontado por completo (lembrete de horas). Padrão: 8h. Ex: 4 para meio período.</small>
             @error('jornada_diaria')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label for="drawer_fator_esforco">Fator de esforço</label>
+            <input type="number" step="0.1" min="0" max="9.99" class="form-control form-control-sm @error('fator_esforco') is-invalid @enderror" id="drawer_fator_esforco" name="fator_esforco" value="{{ old('fator_esforco', 1) }}" placeholder="1.0">
+            <small class="text-muted">Peso das horas no relatório Consumo × Estimado e na Matriz de Horas. Efetivo: 1,0 · Estagiário: 0,5.</small>
+            @error('fator_esforco')
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
@@ -715,6 +726,7 @@
                     $('#drawer_funcao_id').val(data.funcao_id || '');
                     $('#drawer_custo_hora').val(data.custo_hora || '');
                     $('#drawer_jornada_diaria').val(data.jornada_diaria || 8);
+                    $('#drawer_fator_esforco').val(data.fator_esforco ?? 1);
                 } else {
                     $form[0].reset();
                     $('#drawer_id').val('');
@@ -750,7 +762,8 @@
                     role_id: $btn.data('role-id'),
                     funcao_id: $btn.data('funcao-id'),
                     custo_hora: $btn.data('custo-hora'),
-                    jornada_diaria: $btn.data('jornada-diaria')
+                    jornada_diaria: $btn.data('jornada-diaria'),
+                    fator_esforco: $btn.data('fator-esforco')
                 });
             });
 

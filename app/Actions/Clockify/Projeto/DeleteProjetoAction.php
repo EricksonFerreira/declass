@@ -9,6 +9,7 @@ class DeleteProjetoAction
     public function handle(int $id): bool
     {
         $projeto = ClockifyProjeto::findOrFail($id);
+
         return $projeto->delete();
     }
 }

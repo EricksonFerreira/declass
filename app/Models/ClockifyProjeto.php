@@ -16,11 +16,14 @@ class ClockifyProjeto extends Model
 
     public const STATUS_CONCLUIDO = 'concluido';
 
+    public const STATUS_CONGELADO = 'congelado';
+
     public const STATUS_CANCELADO = 'cancelado';
 
     public const STATUS_LABELS = [
         self::STATUS_EM_ANDAMENTO => 'Em andamento',
         self::STATUS_CONCLUIDO => 'Concluído',
+        self::STATUS_CONGELADO => 'Congelado',
         self::STATUS_CANCELADO => 'Cancelado',
     ];
 
@@ -31,6 +34,8 @@ class ClockifyProjeto extends Model
         'clockify_cliente_id',
         'responsavel_id',
         'codigo',
+        'ano',
+        'numero',
         'nome',
         'descricao',
         'cor',
@@ -108,9 +113,32 @@ class ClockifyProjeto extends Model
     {
         return match ($this->status) {
             self::STATUS_CONCLUIDO => 'success',
+            self::STATUS_CONGELADO => 'info',
             self::STATUS_CANCELADO => 'secondary',
             default => 'warning',
         };
+    }
+
+    /**
+     * Identificação completa no formato do cliente:
+     * [ano].[numero]-[CC]-[NOME] [(status)]  —  ex: 2025.033-105.01-ARCO LOTE 2 (Em andamento)
+     */
+    public function getIdentificacaoCompletaAttribute(): string
+    {
+        $partes = [];
+
+        if ($this->ano) {
+            $seq = $this->numero ? str_pad((string) $this->numero, 3, '0', STR_PAD_LEFT) : '---';
+            $partes[] = "{$this->ano}.{$seq}";
+        }
+
+        if ($this->codigo) {
+            $partes[] = $this->codigo;
+        }
+
+        $partes[] = $this->nome;
+
+        return implode(' - ', $partes)." ({$this->status_label})";
     }
 
     public function getCronogramaAtivoAttribute(): ?ClockifyProjetoCronograma

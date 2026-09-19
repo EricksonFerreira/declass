@@ -85,8 +85,8 @@
                         <div>
                             <h2 class="font-weight-bold text-dark mb-1" style="letter-spacing: -0.02em;">
                                 {{ $projeto->nome }}
-                                @if ($projeto->codigo)
-                                    <span class="badge badge-secondary align-middle" style="font-size:.7em;">{{ $projeto->codigo }}</span>
+                                @if ($projeto->ano || $projeto->codigo)
+                                    <span class="badge badge-secondary align-middle" style="font-size:.7em;" title="{{ $projeto->identificacao_completa }}">{{ $projeto->ano ? $projeto->ano.'.'.str_pad((string) $projeto->numero, 3, '0', STR_PAD_LEFT).'-' : '' }}{{ $projeto->codigo }}</span>
                                 @endif
                             </h2>
                             <p class="text-muted mb-0">
@@ -491,7 +491,17 @@
                         </div>
                         <div class="col-4 form-group">
                             <label class="text-sm">Código (CC)</label>
-                            <input type="text" name="codigo" class="form-control form-control-sm" maxlength="50" placeholder="Ex: 440-158.01" value="{{ $projeto->codigo }}">
+                            <input type="text" name="codigo" class="form-control form-control-sm" maxlength="50" placeholder="105.01" value="{{ $projeto->codigo }}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-6 form-group">
+                            <label class="text-sm">Ano</label>
+                            <input type="number" name="ano" class="form-control form-control-sm" min="2000" max="2100" placeholder="2025" value="{{ $projeto->ano }}">
+                        </div>
+                        <div class="col-6 form-group">
+                            <label class="text-sm">Número sequencial</label>
+                            <input type="number" name="numero" class="form-control form-control-sm" min="1" placeholder="33" value="{{ $projeto->numero }}">
                         </div>
                     </div>
                     <div class="form-group">
@@ -523,12 +533,22 @@
                             <option value="0" @selected(!$projeto->publico)>Privado</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label class="text-sm">Status</label>
-                        <select name="ativo" class="form-control form-control-sm">
-                            <option value="1" @selected($projeto->ativo)>Ativo</option>
-                            <option value="0" @selected(!$projeto->ativo)>Inativo</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="col-6 form-group">
+                            <label class="text-sm">Registro</label>
+                            <select name="ativo" class="form-control form-control-sm">
+                                <option value="1" @selected($projeto->ativo)>Ativo</option>
+                                <option value="0" @selected(!$projeto->ativo)>Inativo</option>
+                            </select>
+                        </div>
+                        <div class="col-6 form-group">
+                            <label class="text-sm">Status do projeto</label>
+                            <select name="status" class="form-control form-control-sm">
+                                @foreach (\App\Models\ClockifyProjeto::STATUS_LABELS as $valor => $label)
+                                    <option value="{{ $valor }}" @selected($projeto->status === $valor)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">

@@ -19,7 +19,8 @@ class ListarProjetosAction
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nome', 'like', "%{$search}%")
-                        ->orWhere('codigo', 'like', "%{$search}%");
+                        ->orWhere('codigo', 'like', "%{$search}%")
+                        ->when(is_numeric($search), fn ($n) => $n->orWhere('numero', (int) $search)->orWhere('ano', (int) $search));
                 });
             });
 

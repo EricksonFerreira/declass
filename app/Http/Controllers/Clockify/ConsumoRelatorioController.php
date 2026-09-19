@@ -25,7 +25,12 @@ class ConsumoRelatorioController extends Controller
             ->when($request->filled('busca'), fn ($q) => $q->where('nome', 'like', '%'.trim((string) $request->busca).'%'))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('cliente_id'), fn ($q) => $q->where('clockify_cliente_id', (int) $request->cliente_id))
-            ->when($request->filled('ano'), fn ($q) => $q->whereYear('created_at', (int) $request->ano))
+            ->when($request->filled('ano'), function ($q) use ($request) {
+                $ano = (int) $request->ano;
+                // Ano oficial do projeto (campo) com fallback para o cadastro.
+                $q->where('ano', $ano)
+                    ->orWhere(fn ($sub) => $sub->whereNull('ano')->whereYear('created_at', $ano));
+            })
             ->orderBy('nome')
             ->get();
 
@@ -39,7 +44,9 @@ class ConsumoRelatorioController extends Controller
         ]);
 
         $clientes = ClockifyCliente::orderBy('nome')->pluck('nome', 'id');
-        $anos = ClockifyProjeto::query()->selectRaw('YEAR(created_at) as ano')->distinct()->orderByDesc('ano')->pluck('ano');
+        $anos = ClockifyProjeto::query()
+            ->selectRaw('COALESCE(ano, YEAR(created_at)) as ano')
+            ->distinct()->orderByDesc('ano')->pluck('ano');
 
         return view('relatorios.consumo', [
             'titulo' => 'Consumo × Estimado',
@@ -150,15 +157,20 @@ class ConsumoRelatorioController extends Controller
         $linhasFuncao = $service->linhasPorFuncao($projeto);
         $membros = $service->consumoPorMembro($projeto)->map(function ($m) {
             $horas = ((float) $m->segundos) / 3600;
+            $horasReais = ((float) ($m->segundos_reais ?? $m->segundos)) / 3600;
 
             return (object) [
                 'user_id' => (int) $m->user_id,
                 'nome' => $m->nome,
                 'email' => $m->email,
                 'funcao_nome' => $m->funcao_nome ?? 'Sem função',
+                'fator_esforco' => (float) ($m->fator_esforco ?? 1),
                 'horas' => round($horas, 2),
+                'horas_reais' => round($horasReais, 2),
                 'custo_hora' => (float) $m->custo_hora,
-                'custo' => round($horas * (float) $m->custo_hora, 2),
+                // Custo é pelas horas reais trabalhadas — o fator só pesa
+                // a comparação com a estimativa.
+                'custo' => round($horasReais * (float) $m->custo_hora, 2),
             ];
         });
 

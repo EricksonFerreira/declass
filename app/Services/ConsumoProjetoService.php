@@ -32,14 +32,14 @@ class ConsumoProjetoService
             ->when($projetoId, fn ($q) => $q->where('t.clockify_projeto_id', $projetoId))
             ->whereNotNull('t.inicio')
             ->groupBy('t.clockify_projeto_id', 'u.funcao_id', 'f.nome')
-            ->selectRaw('t.clockify_projeto_id, u.funcao_id, f.nome as funcao_nome, SUM(GREATEST(TIMESTAMPDIFF(SECOND, t.inicio, COALESCE(t.fim, NOW())), 0)) as segundos')
+            ->selectRaw('t.clockify_projeto_id, u.funcao_id, f.nome as funcao_nome, SUM(GREATEST(TIMESTAMPDIFF(SECOND, t.inicio, COALESCE(t.fim, NOW())), 0) * COALESCE(u.fator_esforco, 1)) as segundos')
             ->get();
     }
 
     /**
      * Consumo em segundos agrupado por membro dentro de um projeto.
      *
-     * @return Collection<int, object{user_id:int, nome:string, email:string|null, funcao_id:int|null, funcao_nome:string|null, custo_hora:float, segundos:float}>
+     * @return Collection<int, object{user_id:int, nome:string, email:string|null, funcao_id:int|null, funcao_nome:string|null, custo_hora:float, fator_esforco:float, segundos:float}>
      */
     public function consumoPorMembro(ClockifyProjeto $projeto): Collection
     {
@@ -48,8 +48,8 @@ class ConsumoProjetoService
             ->leftJoin('funcoes as f', 'f.id', '=', 'u.funcao_id')
             ->where('t.clockify_projeto_id', $projeto->id)
             ->whereNotNull('t.inicio')
-            ->groupBy('t.user_id', 'u.nome', 'u.email', 'u.funcao_id', 'f.nome', 'u.custo_hora', 'f.custo_hora')
-            ->selectRaw('t.user_id, u.nome, u.email, u.funcao_id, f.nome as funcao_nome, COALESCE(u.custo_hora, f.custo_hora, 0) as custo_hora, SUM(GREATEST(TIMESTAMPDIFF(SECOND, t.inicio, COALESCE(t.fim, NOW())), 0)) as segundos')
+            ->groupBy('t.user_id', 'u.nome', 'u.email', 'u.funcao_id', 'f.nome', 'u.custo_hora', 'f.custo_hora', 'u.fator_esforco')
+            ->selectRaw('t.user_id, u.nome, u.email, u.funcao_id, f.nome as funcao_nome, COALESCE(u.custo_hora, f.custo_hora, 0) as custo_hora, COALESCE(u.fator_esforco, 1) as fator_esforco, SUM(GREATEST(TIMESTAMPDIFF(SECOND, t.inicio, COALESCE(t.fim, NOW())), 0) * COALESCE(u.fator_esforco, 1)) as segundos, SUM(GREATEST(TIMESTAMPDIFF(SECOND, t.inicio, COALESCE(t.fim, NOW())), 0)) as segundos_reais')
             ->orderBy('u.nome')
             ->get();
     }
@@ -201,7 +201,7 @@ class ConsumoProjetoService
             ->when($fim, fn ($q) => $q->whereDate('t.inicio', '<=', $fim))
             ->whereNotNull('t.inicio')
             ->groupBy('t.user_id', 'u.nome', 'u.email', 'f.nome', 't.clockify_projeto_id')
-            ->selectRaw('t.user_id, u.nome, u.email, f.nome as funcao_nome, t.clockify_projeto_id, SUM(GREATEST(TIMESTAMPDIFF(SECOND, t.inicio, COALESCE(t.fim, NOW())), 0)) as segundos')
+            ->selectRaw('t.user_id, u.nome, u.email, f.nome as funcao_nome, t.clockify_projeto_id, SUM(GREATEST(TIMESTAMPDIFF(SECOND, t.inicio, COALESCE(t.fim, NOW())), 0) * COALESCE(u.fator_esforco, 1)) as segundos')
             ->orderBy('u.nome')
             ->get();
     }

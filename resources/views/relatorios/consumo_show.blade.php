@@ -30,8 +30,8 @@
         <div>
             <h4 class="mb-1 font-weight-bold">
                 {{ $projeto->nome }}
-                @if ($projeto->codigo)
-                    <span class="badge badge-secondary align-middle" style="font-size:.65em;">{{ $projeto->codigo }}</span>
+                @if ($projeto->ano || $projeto->codigo)
+                    <span class="badge badge-secondary align-middle" style="font-size:.65em;" title="{{ $projeto->identificacao_completa }}">{{ $projeto->ano ? $projeto->ano.'.'.str_pad((string) $projeto->numero, 3, '0', STR_PAD_LEFT).'-' : '' }}{{ $projeto->codigo }}</span>
                 @endif
             </h4>
             <div class="text-muted" style="font-size:.85rem;">
@@ -245,7 +245,8 @@
                         <tr>
                             <th class="pl-3">Colaborador</th>
                             <th>Função</th>
-                            <th class="text-right">HH</th>
+                            <th class="text-center" title="Peso das horas no consolidado (efetivo 1,0 · estagiário 0,5)">Fator</th>
+                            <th class="text-right" title="Horas consumidas ponderadas pelo fator de esforço">HH</th>
                             <th class="text-right">Custo/h</th>
                             <th class="text-right pr-3">Custo</th>
                         </tr>
@@ -258,12 +259,20 @@
                                     <small class="text-muted">{{ $m->email }}</small>
                                 </td>
                                 <td>{{ $m->funcao_nome }}</td>
-                                <td class="text-right">{{ $fmtHora($m->horas) }}</td>
+                                <td class="text-center">
+                                    <span class="badge badge-{{ ($m->fator_esforco ?? 1) < 1 ? 'warning' : 'light' }}">{{ number_format((float) ($m->fator_esforco ?? 1), 1, ',', '.') }}</span>
+                                </td>
+                                <td class="text-right">
+                                    {{ $fmtHora($m->horas) }}
+                                    @if (($m->fator_esforco ?? 1) < 1)
+                                        <small class="text-muted d-block" title="Horas reais lançadas (antes do fator)">({{ $fmtHora($m->horas_reais) }} reais)</small>
+                                    @endif
+                                </td>
                                 <td class="text-right">{{ $m->custo_hora > 0 ? $fmtMoney($m->custo_hora) : '—' }}</td>
                                 <td class="text-right pr-3">{{ $m->custo > 0 ? $fmtMoney($m->custo) : '—' }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="text-center text-muted py-3">Nenhum lançamento de horas neste projeto.</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted py-3">Nenhum lançamento de horas neste projeto.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

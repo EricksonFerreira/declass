@@ -16,6 +16,15 @@ class SaveProjetoAction
             }
         }
 
+        // Numero sequencial por empresa+ano: preenche sozinho quando o
+        // usuario informa o ano e deixa o numero em branco.
+        if (! empty($data['ano']) && empty($data['numero'])) {
+            $data['numero'] = (int) ClockifyProjeto::withoutGlobalScope('empresa')
+                ->where('empresa_id', app(\App\Support\EmpresaContext::class)->empresaId() ?? auth()->user()?->empresa_id)
+                ->where('ano', (int) $data['ano'])
+                ->max('numero') + 1;
+        }
+
         return ClockifyProjeto::create(array_merge($data, [
             'ativo' => true,
         ]));

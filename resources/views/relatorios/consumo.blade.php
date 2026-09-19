@@ -85,8 +85,8 @@
                             <a href="{{ route('relatorios.consumo.show', $p->id) }}" class="font-weight-bold consumo-link-projeto">
                                 {{ $p->nome }}
                             </a>
-                            @if ($p->codigo)
-                                <small class="text-muted d-block">CC: {{ $p->codigo }}</small>
+                            @if ($p->ano || $p->codigo)
+                                <small class="text-muted d-block" title="{{ $p->identificacao_completa }}">{{ $p->ano ? $p->ano.'.'.str_pad((string) $p->numero, 3, '0', STR_PAD_LEFT).' - ' : '' }}{{ $p->codigo ? 'CC '.$p->codigo : '' }}</small>
                             @endif
                         </td>
                         <td>{{ $p->cliente?->nome ?? '—' }}</td>
