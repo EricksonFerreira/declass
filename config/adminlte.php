@@ -487,6 +487,11 @@ return [
                     'icon' => 'fas fa-terminal',
                 ],
                 [
+                    'text' => 'Integração com IA',
+                    'route' => 'ia-global.edit',
+                    'icon' => 'fas fa-robot',
+                ],
+                [
                     'text' => 'Uso de IA',
                     'route' => 'ia-uso.index',
                     'icon' => 'fas fa-chart-line',

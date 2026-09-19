@@ -139,6 +139,8 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
     Route::middleware(['auth', 'can:acessar-superadmin'])->group(function () {
         Route::get('comandos', [\App\Http\Controllers\ComandoSistemaController::class, 'index'])->name('comandos.index');
         Route::post('comandos/executar', [\App\Http\Controllers\ComandoSistemaController::class, 'run'])->name('comandos.executar');
+        Route::get('ia/config', [\App\Http\Controllers\IaGlobalController::class, 'edit'])->name('ia-global.edit');
+        Route::put('ia/config', [\App\Http\Controllers\IaGlobalController::class, 'update'])->name('ia-global.update');
         Route::get('ia/uso', [\App\Http\Controllers\IaUsoController::class, 'index'])->name('ia-uso.index');
     });
 

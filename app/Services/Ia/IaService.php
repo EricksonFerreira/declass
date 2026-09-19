@@ -3,6 +3,7 @@
 namespace App\Services\Ia;
 
 use App\Models\EmpresaIaConfig;
+use App\Models\IaConfigGlobal;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -52,11 +53,73 @@ class IaService
             ->firstOrNew(['empresa_id' => $empresaId]);
     }
 
-    public function configurado(int $empresaId): bool
+    /**
+     * Cadeia de resolução: config da empresa → config global → .env.
+     *
+     * @return array{provedor:string, key:string, modelo:string, cfg:EmpresaIaConfig}
+     */
+    public function resolucao(int $empresaId): array
     {
         $cfg = $this->configEmpresa($empresaId);
+        $global = IaConfigGlobal::atual();
 
-        return $cfg->chaveDo($cfg->provedor_padrao ?: 'deepseek') !== '';
+        $provedor = $cfg->provedor_padrao ?: ($global->provedor ?: 'deepseek');
+
+        $key = (string) ($cfg->{$provedor.'_key'} ?? '');
+        // Chave global só vale quando o provedor efetivo é o global.
+        if ($key === '' && $global->provedor === $provedor) {
+            $key = (string) ($global->api_key ?? '');
+        }
+        if ($key === '') {
+            $key = (string) config("services.{$provedor}.key", '');
+        }
+
+        $modelo = (string) ($cfg->{$provedor.'_model'} ?? '');
+        if ($modelo === '' && $global->provedor === $provedor) {
+            $modelo = (string) ($global->modelo ?? '');
+        }
+        if ($modelo === '') {
+            $modelo = (string) config("services.{$provedor}.model", '');
+        }
+
+        return [
+            'provedor' => $provedor,
+            'key' => $key,
+            'modelo' => $modelo ?: (self::PROVEDORES[$provedor]['modelo_padrao'] ?? ''),
+            'cfg' => $cfg,
+        ];
+    }
+
+    public function configurado(int $empresaId): bool
+    {
+        return $this->resolucao($empresaId)['key'] !== '';
+    }
+
+    /**
+     * Provedor de transcrição de áudio (Whisper): usa o dedicado se
+     * configurado, senão o provedor principal global.
+     *
+     * @return array{provedor:string, key:string, modelo:string}
+     */
+    public function transcricao(): array
+    {
+        $global = IaConfigGlobal::atual();
+        $provedor = $global->transcricao_provedor ?: ($global->provedor ?: 'deepseek');
+        $key = (string) ($global->transcricao_key ?? '');
+        if ($key === '' && $provedor === $global->provedor) {
+            $key = (string) ($global->api_key ?? '');
+        }
+        if ($key === '') {
+            $key = (string) config("services.{$provedor}.key", '');
+        }
+
+        $modelos = ['openai' => 'whisper-1', 'groq' => 'whisper-large-v3-turbo'];
+
+        return [
+            'provedor' => $provedor,
+            'key' => $key,
+            'modelo' => (string) ($global->transcricao_modelo ?? '') ?: ($modelos[$provedor] ?? ''),
+        ];
     }
 
     /**
@@ -65,20 +128,21 @@ class IaService
      */
     public function chatJson(int $empresaId, string $system, string $user, array $contexto = []): array
     {
-        $cfg = $this->configEmpresa($empresaId);
-        $provedor = $cfg->provedor_padrao ?: 'deepseek';
+        $r = $this->resolucao($empresaId);
+        $provedor = $r['provedor'];
         $meta = self::PROVEDORES[$provedor] ?? self::PROVEDORES['deepseek'];
+        $cfg = $r['cfg'];
         $recurso = (string) ($contexto['recurso'] ?? 'generico');
         $userId = $contexto['user_id'] ?? null;
 
-        $key = $cfg->chaveDo($provedor);
+        $key = $r['key'];
         if ($key === '') {
             throw new RuntimeException(
                 "{$meta['nome']} não configurado: informe a API Key em Gerenciar → Integração com IA."
             );
         }
 
-        $modelo = $cfg->modeloDo($provedor) ?: $meta['modelo_padrao'];
+        $modelo = $r['modelo'];
         $maxTokens = max(256, min(32000, (int) ($cfg->tokens_limite ?: 4000)));
 
         $inicio = microtime(true);
