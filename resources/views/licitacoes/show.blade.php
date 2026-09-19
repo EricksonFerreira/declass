@@ -23,6 +23,19 @@
 @section('content')
     @php $analise = $licitacao->analises->first(); @endphp
 
+    @if ($analise && ($analise->divergencia['detectada'] ?? false))
+        <div class="alert alert-danger shadow-sm">
+            <h5 class="mb-2"><i class="fas fa-exclamation-triangle mr-1"></i> Divergência crítica identificada</h5>
+            <div class="small">
+                Os dados cadastrados não correspondem ao documento anexado.<br>
+                <strong>Cadastro:</strong> {{ $analise->divergencia['cadastro'] ?? '—' }}<br>
+                <strong>Documento:</strong> {{ $analise->divergencia['documento'] ?? '—' }}<br>
+                @if (!empty($analise->divergencia['resumo'])){{ $analise->divergencia['resumo'] }}<br>@endif
+                <strong>Confirme o documento correto antes de considerar os resultados abaixo.</strong>
+            </div>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-lg-8">
             <div class="card card-outline card-primary shadow-sm">
@@ -103,19 +116,34 @@
                     @if ($analise)
                         <div class="lic-hero mb-3">
                             <div>
-                                @php $cls = $analise->nota_tecnica_estimada >= 70 ? 'alto' : ($analise->nota_tecnica_estimada >= 40 ? 'medio' : 'baixo'); @endphp
-                                <div class="lic-score-big lic-score-big--{{ $cls }}">{{ $analise->nota_tecnica_estimada !== null ? number_format((float) $analise->nota_tecnica_estimada, 0) : '—' }}<small class="text-muted" style="font-size:1rem">/100</small></div>
-                                <div class="text-muted small">nota técnica estimada</div>
+                                @php $cls = $analise->indice_aderencia >= 70 ? 'alto' : ($analise->indice_aderencia >= 40 ? 'medio' : 'baixo'); @endphp
+                                <div class="lic-score-big lic-score-big--{{ $cls }}">{{ $analise->indice_aderencia !== null ? number_format($analise->indice_aderencia, 0) : '—' }}<small class="text-muted" style="font-size:1rem">/100</small></div>
+                                <div class="text-muted small">índice de aderência</div>
+                                <div class="text-muted" style="font-size:.68rem;max-width:150px">Índice interno do sistema — não é pontuação prevista no edital</div>
                             </div>
                             <div>
                                 <div class="lic-viab">
                                     @if ($analise->viabilidade === 'viavel') <span class="badge badge-success p-2">Viável</span>
-                                    @elseif ($analise->viabilidade === 'atencao') <span class="badge badge-warning p-2">Viável com ressalvas</span>
+                                    @elseif ($analise->viabilidade === 'atencao') <span class="badge badge-warning p-2" title="Existem pendências documentais — o sistema não encontrou evidências suficientes">Habilitação não confirmada</span>
                                     @elseif ($analise->viabilidade === 'inviavel') <span class="badge badge-danger p-2">Inviável</span>
                                     @endif
                                 </div>
-                                @if ($analise->preco_sugerido)
-                                    <div class="mt-2 small text-muted">Preço sugerido<br><strong class="text-dark">R$ {{ number_format((float) $analise->preco_sugerido, 2, ',', '.') }}</strong></div>
+                                @if ($analise->preco_max_edital || $analise->preco_sugerido || $analise->preco_motivo)
+                                    <div class="mt-2 small">
+                                        @if ($analise->preco_max_edital)
+                                            <div class="text-muted">Teto do edital<br><strong class="text-dark">R$ {{ number_format((float) $analise->preco_max_edital, 2, ',', '.') }}</strong></div>
+                                        @endif
+                                        <div class="text-muted mt-1">Preço recomendado<br>
+                                            @if ($analise->preco_sugerido)
+                                                <strong class="text-dark">R$ {{ number_format((float) $analise->preco_sugerido, 2, ',', '.') }}</strong>
+                                            @else
+                                                <strong class="text-dark">Não calculável com segurança</strong>
+                                            @endif
+                                        </div>
+                                        @if ($analise->preco_motivo)
+                                            <div class="text-muted" style="font-size:.7rem">{{ $analise->preco_motivo }}</div>
+                                        @endif
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -146,11 +174,12 @@
             </div>
 
             @if ($analise && $analise->criterios)
+                @php $temPontos = collect($analise->criterios)->contains(fn ($c) => ($c['pontos_max'] ?? null) !== null); @endphp
                 <div class="card card-outline card-info shadow-sm">
-                    <div class="card-header"><h3 class="card-title text-bold text-sm">Critérios de pontuação</h3></div>
+                    <div class="card-header"><h3 class="card-title text-bold text-sm">Critérios de julgamento</h3></div>
                     <div class="card-body p-0">
                         <table class="table table-sm mb-0">
-                            <thead><tr><th>Critério</th><th class="text-center">Pts</th><th style="width:110px"></th></tr></thead>
+                            <thead><tr><th>Critério</th><th class="text-center" style="width:120px">{{ $temPontos ? 'Pts' : 'Avaliação' }}</th>@if ($temPontos)<th style="width:110px"></th>@endif</tr></thead>
                             <tbody>
                                 @foreach ($analise->criterios as $c)
                                     <tr>
@@ -159,12 +188,21 @@
                                             @if (!empty($c['observacao']))<div class="text-muted" style="font-size:.75rem">{{ $c['observacao'] }}</div>@endif
                                         </td>
                                         <td class="text-center align-middle small">
-                                            {{ $c['pontos_estimados'] ?? '—' }}<span class="text-muted">/{{ $c['pontos_max'] ?? '?' }}</span>
+                                            @if (($c['pontos_max'] ?? null) !== null)
+                                                {{ $c['pontos_estimados'] ?? '—' }}<span class="text-muted">/{{ $c['pontos_max'] }}</span>
+                                            @else
+                                                @php $av = $c['avaliacao'] ?? 'indeterminada'; @endphp
+                                                <span class="badge badge-{{ ['favoravel' => 'success', 'moderada' => 'warning', 'desfavoravel' => 'danger', 'indeterminada' => 'secondary'][$av] ?? 'secondary' }}">
+                                                    {{ ['favoravel' => 'Favorável', 'moderada' => 'Moderada', 'desfavoravel' => 'Desfavorável', 'indeterminada' => 'Indeterminada'][$av] ?? $av }}
+                                                </span>
+                                            @endif
                                         </td>
-                                        <td class="align-middle">
-                                            @php $pm = (float)($c['pontos_max'] ?? 0); $pe = (float)($c['pontos_estimados'] ?? 0); $pct = $pm > 0 ? min(100, round($pe / $pm * 100)) : 0; @endphp
-                                            <div class="lic-crit-barra"><span style="width:{{ $pct }}%"></span></div>
-                                        </td>
+                                        @if ($temPontos)
+                                            <td class="align-middle">
+                                                @php $pm = (float)($c['pontos_max'] ?? 0); $pe = (float)($c['pontos_estimados'] ?? 0); $pct = $pm > 0 ? min(100, round($pe / $pm * 100)) : 0; @endphp
+                                                <div class="lic-crit-barra"><span style="width:{{ $pct }}%"></span></div>
+                                            </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -183,19 +221,29 @@
                         <div class="card-header"><h3 class="card-title text-bold text-sm"><i class="fas fa-clipboard-check mr-1"></i> Habilitação — exigências do edital</h3></div>
                         <div class="card-body p-0">
                             <table class="table table-sm mb-0">
-                                <thead><tr><th style="width:30px"></th><th>Exigência</th><th>Evidência</th></tr></thead>
+                                <thead><tr><th style="width:30px"></th><th>Exigência</th><th style="width:135px">Situação</th><th>Evidência</th></tr></thead>
                                 <tbody>
                                     @foreach ($analise->exigencias as $e)
+                                        @php
+                                            $sit = $e['situacao'] ?? (($e['atende'] ?? false) ? 'comprovado' : 'nao_comprovado');
+                                            $sitMeta = [
+                                                'comprovado' => ['fa-check-circle exig-ok', 'success', 'Comprovado'],
+                                                'nao_comprovado' => ['fa-question-circle text-warning', 'warning', 'Não comprovado'],
+                                                'nao_atende' => ['fa-times-circle exig-nok', 'danger', 'Não atende'],
+                                            ][$sit] ?? ['fa-question-circle text-warning', 'warning', 'Não comprovado'];
+                                        @endphp
                                         <tr>
-                                            <td class="text-center align-middle">
-                                                <i class="fas {{ ($e['atende'] ?? false) ? 'fa-check-circle exig-ok' : 'fa-times-circle exig-nok' }}"></i>
-                                            </td>
+                                            <td class="text-center align-middle"><i class="fas {{ $sitMeta[0] }}"></i></td>
                                             <td class="small">{{ $e['exigencia'] ?? '—' }}</td>
+                                            <td class="align-middle"><span class="badge badge-{{ $sitMeta[1] }}">{{ $sitMeta[2] }}</span></td>
                                             <td class="small text-muted">{{ $e['evidencia'] ?? '' }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
+                            <div class="px-3 py-2 border-top text-muted" style="font-size:.72rem">
+                                <i class="fas fa-question-circle text-warning"></i> <strong>Não comprovado</strong> = o sistema não encontrou evidência cadastrada — não significa que a empresa não possua o documento.
+                            </div>
                         </div>
                     </div>
                 </div>

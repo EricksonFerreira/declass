@@ -62,7 +62,7 @@
                             <th>Modalidade</th>
                             <th>Abertura</th>
                             <th class="text-right">Valor estimado</th>
-                            <th class="text-center">Nota estimada</th>
+                            <th class="text-center">Aderência</th>
                             <th>Status</th>
                             <th class="text-center" style="width:120px">Ações</th>
                         </tr>
@@ -84,7 +84,7 @@
                                 <td data-label="Valor estimado" class="align-middle text-right">
                                     {{ $l->valor_estimado ? 'R$ '.number_format((float) $l->valor_estimado, 2, ',', '.') : '—' }}
                                 </td>
-                                <td data-label="Nota estimada" class="align-middle text-center">
+                                <td data-label="Aderência" class="align-middle text-center">
                                     @if ($nota !== null)
                                         <span class="lic-score {{ $scoreClass }}">{{ number_format((float) $nota, 0) }}</span><span class="text-muted small">/100</span>
                                     @else

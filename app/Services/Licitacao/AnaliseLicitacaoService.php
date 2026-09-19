@@ -68,7 +68,10 @@ class AnaliseLicitacaoService
                 'criterios' => $dados['criterios'] ?? null,
                 'exigencias' => $dados['exigencias'] ?? null,
                 'gaps' => $dados['gaps'] ?? null,
+                'divergencia' => ($dados['divergencia']['detectada'] ?? false) ? $dados['divergencia'] : null,
                 'preco_sugerido' => is_numeric($dados['preco_sugerido'] ?? null) ? $dados['preco_sugerido'] : null,
+                'preco_max_edital' => is_numeric($dados['preco_max_edital'] ?? null) ? $dados['preco_max_edital'] : null,
+                'preco_motivo' => isset($dados['preco_motivo']) ? mb_substr((string) $dados['preco_motivo'], 0, 500) : null,
                 'tokens_entrada' => $resposta['tokens_entrada'],
                 'tokens_saida' => $resposta['tokens_saida'],
             ]);
@@ -82,31 +85,58 @@ class AnaliseLicitacaoService
     private function promptSistema(\App\Models\EmpresaIaConfig $cfg): string
     {
         $prompt = <<<'PROMPT'
-Você é um consultor especialista em licitações públicas brasileiras sob a Lei 14.133/2021,
-com foco em obras e serviços de engenharia. Analise o edital contra o PERFIL REAL da empresa
-fornecido e responda SOMENTE com um JSON válido neste schema:
+Você é um consultor especialista em licitações públicas brasileiras (Lei 14.133/2021 e Lei
+13.303/2016 para estatais), com foco em obras e serviços de engenharia. Analise o edital
+contra o PERFIL REAL da empresa fornecido e responda SOMENTE com um JSON válido neste schema:
 
 {
+  "divergencia": {
+    "detectada": true|false,
+    "cadastro": "resumo dos dados cadastrados (órgão, modalidade, nº, valor)",
+    "documento": "resumo do que o documento efetivamente diz",
+    "resumo": "explicação da divergência em 1-2 frases"
+  },
   "viabilidade": "viavel" | "atencao" | "inviavel",
-  "nota_tecnica_estimada": number (0 a 100, nota técnica estimada da proposta),
+  "indice_aderencia": number (0 a 100 — índice INTERNO de aderência da empresa ao edital),
   "parecer": "texto corrido com o resumo executivo da análise (3-6 frases)",
   "criterios": [
-    {"criterio": "nome do critério de pontuação do edital", "pontos_max": number,
-     "pontos_estimados": number, "observacao": "por que essa nota, citando dados da empresa"}
+    {"criterio": "critério de julgamento do edital",
+     "avaliacao": "favoravel" | "moderada" | "desfavoravel" | "indeterminada",
+     "pontos_max": number|null, "pontos_estimados": number|null,
+     "observacao": "justificativa citando dados da empresa"}
   ],
   "exigencias": [
-    {"exigencia": "exigência de habilitação do edital", "atende": true|false,
-     "evidencia": "dado da empresa que atende, ou o que falta"}
+    {"exigencia": "exigência de habilitação do edital",
+     "situacao": "comprovado" | "nao_comprovado" | "nao_atende",
+     "evidencia": "dado da empresa que comprova, ou o que falta comprovar"}
   ],
-  "gaps": ["lista de pendências/impedimentos concretos"],
-  "preco_sugerido": number|null (sugestão de preço da proposta, se estimável a partir dos custos da empresa)
+  "gaps": ["pendências documentais ou técnicas concretas"],
+  "preco_max_edital": number|null (teto/valor estimado declarado no edital),
+  "preco_sugerido": number|null,
+  "preco_motivo": "por que o preço é ou não calculável com segurança"
 }
 
 Regras:
-- Pontue cada critério de julgamento do edital usando SOMENTE dados do perfil da empresa.
-  Quando faltar dado, pontue conservadoramente e marque a lacuna em "gaps".
-- "viavel" = habilitável e competitiva; "atencao" = habilitável com ressalvas;
-  "inviavel" = há impedimento de habilitação.
+- DIVERGÊNCIA: compare órgão, modalidade, número do edital e valor do CADASTRO com o que o
+  documento diz. Se houver discrepância material (certame diferente), marque detectada=true
+  e descreva os dois lados. Sem divergência material, use detectada=false.
+- "indice_aderencia" é um índice INTERNO do sistema (0-100) — NÃO é pontuação prevista no
+  edital. Nunca afirme no parecer que o edital atribui essa pontuação à empresa.
+- PONTOS só existem quando o edital prevê pontuação técnica explícita. Em julgamento por
+  menor preço/melhor técnica sem pontuação, use pontos_max/pontos_estimados = null e
+  avalie qualitativamente em "avaliacao" — preço dos concorrentes é indeterminado por
+  definição, nunca pontue competitividade de preço numericamente.
+- "situacao" das exigências tem TRÊS estados distintos:
+  * "comprovado" = há evidência no perfil da empresa que comprova o atendimento;
+  * "nao_comprovado" = o sistema não encontrou evidência (NÃO significa que a empresa
+    não possua o documento — diga isso na evidência);
+  * "nao_atende" = há evidência suficiente de que o requisito NÃO é atendido.
+- "viabilidade": "viavel" só quando as exigências-chave estão comprovadas; "atencao" quando
+  há pendências documentais relevantes que impedem confirmar a habilitação; "inviavel" só
+  quando há impedimento comprovado.
+- PREÇO: "preco_sugerido" só quando o perfil tiver custos/BDI/planilha suficientes para
+  fundamentar. Sem base confiável, use null e explique em "preco_motivo" (ex.: planilha
+  orçamentária e BDI não disponíveis). Nunca sugira preço só porque o edital tem teto.
 - Não invente atestados, certificações ou dados que não estejam no perfil.
 PROMPT;
 
@@ -226,7 +256,7 @@ PROMPT;
 
     private function nota(array $dados): ?float
     {
-        $nota = $dados['nota_tecnica_estimada'] ?? null;
+        $nota = $dados['indice_aderencia'] ?? $dados['nota_tecnica_estimada'] ?? null;
         if (! is_numeric($nota)) {
             return null;
         }

@@ -20,7 +20,10 @@ class LicitacaoAnalise extends Model
         'criterios',
         'exigencias',
         'gaps',
+        'divergencia',
         'preco_sugerido',
+        'preco_max_edital',
+        'preco_motivo',
         'tokens_entrada',
         'tokens_saida',
     ];
@@ -28,16 +31,24 @@ class LicitacaoAnalise extends Model
     protected $casts = [
         'nota_tecnica_estimada' => 'decimal:2',
         'preco_sugerido' => 'decimal:2',
+        'preco_max_edital' => 'decimal:2',
         'criterios' => 'array',
         'exigencias' => 'array',
         'gaps' => 'array',
+        'divergencia' => 'array',
     ];
 
     public const VIABILIDADES = [
         'viavel' => 'Viável',
-        'atencao' => 'Viável com ressalvas',
+        'atencao' => 'Habilitação não confirmada',
         'inviavel' => 'Inviável',
     ];
+
+    /** Índice interno de aderência (0-100) — não é pontuação do edital. */
+    public function getIndiceAderenciaAttribute(): ?float
+    {
+        return $this->nota_tecnica_estimada !== null ? (float) $this->nota_tecnica_estimada : null;
+    }
 
     public function licitacao(): BelongsTo
     {
