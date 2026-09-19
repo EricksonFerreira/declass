@@ -142,6 +142,8 @@ class IaService
             );
         }
 
+        $this->verificarLimite($empresaId);
+
         $modelo = $r['modelo'];
         $maxTokens = max(256, min(32000, (int) ($cfg->tokens_limite ?: 4000)));
 
@@ -186,6 +188,55 @@ class IaService
             'tokens_saida' => $tokensOut,
             'modelo' => $modeloResp,
             'provedor' => $provedor,
+        ];
+    }
+
+    /**
+     * Cota mensal de tokens da empresa (empresas.ia_limite_tokens).
+     * NULL = ilimitado. Estourou → bloqueia antes de gastar na API.
+     */
+    private function verificarLimite(int $empresaId): void
+    {
+        $limite = DB::table('empresas')->where('id', $empresaId)->value('ia_limite_tokens');
+        if ($limite === null) {
+            return;
+        }
+
+        $usado = (int) DB::table('ia_usos')
+            ->where('empresa_id', $empresaId)
+            ->where('status', 'ok')
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->sum(DB::raw('tokens_entrada + tokens_saida'));
+
+        if ($usado >= (int) $limite) {
+            throw new RuntimeException(
+                'Limite mensal de IA atingido ('.number_format($usado, 0, ',', '.')
+                .' de '.number_format((int) $limite, 0, ',', '.')
+                .' tokens). Fale com o suporte para ampliar a cota.'
+            );
+        }
+    }
+
+    /**
+     * Uso de tokens no mês corrente — usado nas telas de config e monitor.
+     *
+     * @return array{usado:int, limite:int|null, restante:int|null}
+     */
+    public function usoMes(int $empresaId): array
+    {
+        $usado = (int) DB::table('ia_usos')
+            ->where('empresa_id', $empresaId)
+            ->where('status', 'ok')
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->sum(DB::raw('tokens_entrada + tokens_saida'));
+
+        $limite = DB::table('empresas')->where('id', $empresaId)->value('ia_limite_tokens');
+        $limite = $limite !== null ? (int) $limite : null;
+
+        return [
+            'usado' => $usado,
+            'limite' => $limite,
+            'restante' => $limite !== null ? max(0, $limite - $usado) : null,
         ];
     }
 

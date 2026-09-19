@@ -50,6 +50,7 @@ class StoreEmpresaRequest extends FormRequest
             'slug' => $slugRules,
             'ativo' => ['nullable', 'in:S,N'],
             'licitacoes_ativo' => ['nullable', 'in:S,N'],
+            'ia_limite_tokens' => ['nullable', 'integer', 'min:0'],
             'cnpj' => ['nullable', 'digits:14'],
             'email' => ['nullable', 'email:rfc', 'max:255'],
             'telefone' => ['nullable', 'digits_between:10,11'],

@@ -142,6 +142,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         Route::get('ia/config', [\App\Http\Controllers\IaGlobalController::class, 'edit'])->name('ia-global.edit');
         Route::put('ia/config', [\App\Http\Controllers\IaGlobalController::class, 'update'])->name('ia-global.update');
         Route::get('ia/uso', [\App\Http\Controllers\IaUsoController::class, 'index'])->name('ia-uso.index');
+        Route::post('ia/uso/limite', [\App\Http\Controllers\IaUsoController::class, 'salvarLimite'])->name('ia-uso.limite');
     });
 
     require __DIR__.'/auth.php';

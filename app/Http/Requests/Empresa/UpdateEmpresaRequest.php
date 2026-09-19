@@ -47,6 +47,7 @@ class UpdateEmpresaRequest extends FormRequest
             'slug' => $slugRules,
             'ativo' => ['nullable', 'in:S,N'],
             'licitacoes_ativo' => ['nullable', 'in:S,N'],
+            'ia_limite_tokens' => ['nullable', 'integer', 'min:0'],
             'reserva_selecionar_modelo' => ['nullable', 'in:S,N'],
             'site_apresentacao_ativo' => ['nullable', 'in:S,N'],
             'aluguel_app_ativo' => ['nullable', 'in:S,N'],

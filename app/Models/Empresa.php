@@ -84,6 +84,7 @@ class Empresa extends Model
         'adicionar_novos_modelos_automaticamente',
         'empresa_id',
         'licitacoes_ativo',
+        'ia_limite_tokens',
         'regime_emissao',
         'certificado_path',
         'certificado_senha',

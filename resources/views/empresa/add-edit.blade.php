@@ -99,6 +99,13 @@
                         <small class="text-muted">Quando ativo, a empresa vê o menu Licitações e pode analisar editais com IA.</small>
                     </div>
                 </div>
+                <div class="col-lg-6" data-empresa-step="1">
+                    <div class="form-group form-group-empresa">
+                        <x-form-input type="number" class="form-control form-control-sm" id="ia_limite_tokens" name="ia_limite_tokens"
+                            label="Limite mensal de IA (tokens)" value="{{ old('ia_limite_tokens', $empresa->ia_limite_tokens ?? '') }}" min="0" />
+                        <small class="text-muted">Cota de tokens de IA por mês (entrada + saída). Vazio = ilimitado.</small>
+                    </div>
+                </div>
 
                 <div class="col-12 mt-2" data-empresa-step="2">
                     <div class="empresa-section-title" id="sec-contato">Contato</div>
@@ -579,7 +586,7 @@
                 if (!Array.isArray(errosCampos) || errosCampos.length === 0) return;
 
                 const mapa = {
-                    nome: 1, ativo: 1, slug: 1, cnpj: 1, licitacoes_ativo: 1,
+                    nome: 1, ativo: 1, slug: 1, cnpj: 1, licitacoes_ativo: 1, ia_limite_tokens: 1,
                     email: 2, telefone: 2, representante: 2, endereco: 2,
                     dominio: 3,
                     logo: 4, cor_primaria: 4, cor_secundaria: 4, cor_terciaria: 4,

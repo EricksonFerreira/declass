@@ -18,15 +18,26 @@
         </div>
     @endif
 
-    @if ($usoMes && $usoMes->chamadas > 0)
-        <div class="alert alert-light border shadow-sm d-flex align-items-center" style="font-size:.85rem;">
-            <i class="fas fa-chart-line mr-2 text-primary"></i>
-            <span>
-                <strong>Uso no mês:</strong>
-                {{ number_format($usoMes->chamadas, 0, ',', '.') }} chamada(s) ·
-                {{ number_format($usoMes->tokens, 0, ',', '.') }} tokens ·
-                custo estimado US$ {{ number_format($usoMes->custo, 4, ',', '.') }}
-            </span>
+    @if ($usoMes && ($usoMes['usado'] > 0 || $usoMes['limite'] !== null))
+        <div class="alert alert-light border shadow-sm" style="font-size:.85rem;">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-chart-line mr-2 text-primary"></i>
+                <span>
+                    <strong>Uso no mês:</strong>
+                    {{ number_format($usoMes['usado'], 0, ',', '.') }}
+                    {{ $usoMes['limite'] !== null ? 'de '.number_format($usoMes['limite'], 0, ',', '.') : '' }} tokens
+                    @if ($usoMes['limite'] !== null)
+                        · restam {{ number_format($usoMes['restante'], 0, ',', '.') }}
+                    @endif
+                </span>
+            </div>
+            @if ($usoMes['limite'] !== null)
+                @php $pct = $usoMes['limite'] > 0 ? min(100, round($usoMes['usado'] / $usoMes['limite'] * 100)) : 0; @endphp
+                <div class="progress mt-2" style="height:8px;">
+                    <div class="progress-bar bg-{{ $pct >= 90 ? 'danger' : ($pct >= 70 ? 'warning' : 'success') }}"
+                         style="width:{{ $pct }}%"></div>
+                </div>
+            @endif
         </div>
     @endif
 

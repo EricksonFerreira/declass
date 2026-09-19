@@ -12,6 +12,12 @@
 @endpush
 
 @section('content')
+    @if (session('success'))
+        <div class="alert alert-success shadow-sm">
+            <i class="fas fa-check-circle mr-1"></i> {{ session('success') }}
+        </div>
+    @endif
+
     {{-- Filtros --}}
     <div class="card card-outline card-secondary shadow-sm">
         <div class="card-body py-2">
@@ -88,6 +94,7 @@
                                 <th class="text-right">Tokens entrada</th>
                                 <th class="text-right">Tokens saída</th>
                                 <th class="text-right">Custo est.</th>
+                                <th class="text-right">Limite/mês</th>
                                 <th class="text-right">Erros</th>
                                 <th>Último uso</th>
                             </tr>
@@ -100,6 +107,19 @@
                                     <td class="text-right">{{ number_format($e->tokens_in, 0, ',', '.') }}</td>
                                     <td class="text-right">{{ number_format($e->tokens_out, 0, ',', '.') }}</td>
                                     <td class="text-right">US$ {{ number_format($e->custo, 4, ',', '.') }}</td>
+                                    <td class="text-right" style="min-width:150px;">
+                                        <form method="POST" action="{{ route('ia-uso.limite') }}" class="d-inline-flex align-items-center" style="gap:.25rem;">
+                                            @csrf
+                                            <input type="hidden" name="empresa_id" value="{{ $e->empresa_id }}">
+                                            <input type="hidden" name="inicio" value="{{ $filtros['inicio'] }}">
+                                            <input type="hidden" name="fim" value="{{ $filtros['fim'] }}">
+                                            <input type="hidden" name="provedor" value="{{ $filtros['provedor'] }}">
+                                            <input type="number" name="ia_limite_tokens" min="0" placeholder="∞"
+                                                   class="form-control form-control-sm text-right" style="width:100px;"
+                                                   value="{{ $e->ia_limite_tokens }}" title="Tokens/mês — vazio = ilimitado">
+                                            <button type="submit" class="btn btn-xs btn-outline-primary" title="Salvar limite"><i class="fas fa-check"></i></button>
+                                        </form>
+                                    </td>
                                     <td class="text-right">
                                         @if ($e->erros)
                                             <span class="badge badge-danger">{{ $e->erros }}</span>

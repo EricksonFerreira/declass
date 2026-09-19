@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\Ia\IaService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -14,6 +15,23 @@ use Illuminate\View\View;
  */
 class IaUsoController extends Controller
 {
+    /**
+     * Define a cota mensal de tokens de uma empresa (vazio = ilimitado).
+     */
+    public function salvarLimite(Request $request): RedirectResponse
+    {
+        $dados = $request->validate([
+            'empresa_id' => 'required|exists:empresas,id',
+            'ia_limite_tokens' => 'nullable|integer|min:0',
+        ]);
+
+        DB::table('empresas')->where('id', (int) $dados['empresa_id'])
+            ->update(['ia_limite_tokens' => $dados['ia_limite_tokens'] !== null && $dados['ia_limite_tokens'] !== '' ? (int) $dados['ia_limite_tokens'] : null]);
+
+        return redirect()->route('ia-uso.index', $request->only(['inicio', 'fim', 'empresa_id', 'provedor']))
+            ->with('success', 'Limite de IA atualizado.');
+    }
+
     public function index(Request $request): View
     {
         $inicio = $request->filled('inicio')
@@ -39,9 +57,9 @@ class IaUsoController extends Controller
 
         $porEmpresa = $base()
             ->join('empresas', 'empresas.id', '=', 'ia_usos.empresa_id')
-            ->groupBy('ia_usos.empresa_id', 'empresas.nome')
+            ->groupBy('ia_usos.empresa_id', 'empresas.nome', 'empresas.ia_limite_tokens')
             ->selectRaw('
-                empresas.nome as empresa, ia_usos.empresa_id,
+                empresas.nome as empresa, ia_usos.empresa_id, empresas.ia_limite_tokens,
                 count(*) as chamadas,
                 sum(tokens_entrada) as tokens_in,
                 sum(tokens_saida) as tokens_out,
