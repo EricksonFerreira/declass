@@ -5,6 +5,8 @@ namespace App\Services\Licitacao;
 use App\Models\Empresa;
 use App\Models\Licitacao;
 use App\Models\LicitacaoAnalise;
+use App\Services\Ia\AnonimizadorIaService;
+use App\Services\Ia\IaService;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -12,12 +14,17 @@ use RuntimeException;
  * Análise de licitação: monta o perfil real da empresa (projetos,
  * equipe, custo-hora) e pede à IA a nota técnica estimada contra
  * os critérios de julgamento do edital (Lei 14.133, art. 36/37).
+ * Provedor, chave, modelo, tokens e anonização vêm de Gerenciar →
+ * Integração com IA (config por empresa, fallback .env).
  */
 class AnaliseLicitacaoService
 {
     private const MAX_CHARS_EDITAL = 300_000;
 
-    public function __construct(private readonly DeepSeekService $deepseek) {}
+    public function __construct(
+        private readonly IaService $ia,
+        private readonly AnonimizadorIaService $anonimizador,
+    ) {}
 
     public function analisar(Licitacao $licitacao, int $userId): LicitacaoAnalise
     {
@@ -26,10 +33,17 @@ class AnaliseLicitacaoService
         }
 
         $empresa = Empresa::findOrFail($licitacao->empresa_id);
+        $cfg = $this->ia->configEmpresa($licitacao->empresa_id);
 
-        $resposta = $this->deepseek->chatJson(
-            $this->promptSistema(),
-            $this->promptUsuario($licitacao, $empresa)
+        $promptUsuario = $this->promptUsuario($licitacao, $empresa);
+        if ($cfg->anonimizar === 'S') {
+            $promptUsuario = $this->anonimizador->anonimizar($promptUsuario, $licitacao->empresa_id);
+        }
+
+        $resposta = $this->ia->chatJson(
+            $licitacao->empresa_id,
+            $this->promptSistema($cfg),
+            $promptUsuario
         );
 
         $dados = json_decode($resposta['conteudo'], true);
@@ -60,9 +74,9 @@ class AnaliseLicitacaoService
         });
     }
 
-    private function promptSistema(): string
+    private function promptSistema(\App\Models\EmpresaIaConfig $cfg): string
     {
-        return <<<'PROMPT'
+        $prompt = <<<'PROMPT'
 Você é um consultor especialista em licitações públicas brasileiras sob a Lei 14.133/2021,
 com foco em obras e serviços de engenharia. Analise o edital contra o PERFIL REAL da empresa
 fornecido e responda SOMENTE com um JSON válido neste schema:
@@ -90,6 +104,20 @@ Regras:
   "inviavel" = há impedimento de habilitação.
 - Não invente atestados, certificações ou dados que não estejam no perfil.
 PROMPT;
+
+        $tamanho = [
+            'curto' => 'Seja conciso: parecer de até 3 frases e observações de 1 linha.',
+            'detalhado' => 'Seja detalhado: parecer completo e observações com evidências e números.',
+        ][$cfg->tamanho_resumo] ?? null;
+        if ($tamanho) {
+            $prompt .= "\n\n".$tamanho;
+        }
+
+        if (trim((string) $cfg->instrucoes_extras) !== '') {
+            $prompt .= "\n\nInstruções adicionais da empresa:\n".trim((string) $cfg->instrucoes_extras);
+        }
+
+        return $prompt;
     }
 
     private function promptUsuario(Licitacao $l, Empresa $empresa): string

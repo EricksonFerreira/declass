@@ -453,6 +453,12 @@ return [
                     'icon' => 'fas fa-file-import',
                     'can' => 'importacao.index',
                 ],
+                [
+                    'text' => 'Integração com IA',
+                    'route' => 'configuracao-ia.edit',
+                    'icon' => 'fas fa-robot',
+                    'can' => 'configuracao-ia.edit',
+                ],
             ],
         ],
 
