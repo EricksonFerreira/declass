@@ -12,23 +12,47 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 <style>
-    .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
     .prod-kpi {
-        background: #fff; border-radius: 14px; padding: 20px 18px;
+        background: #fff; border-radius: 14px; padding: 14px;
         box-shadow: 0 1px 4px rgba(0,0,0,.06); border: 1px solid #eef1f6;
         position: relative; overflow: hidden;
     }
     .prod-kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--accent, #0891b2); }
-    .prod-kpi__label { font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#64748b; margin:0 0 6px; }
-    .prod-kpi__value { font-family:'Plus Jakarta Sans',sans-serif; font-size:26px; font-weight:800; color:#0f172a; line-height:1.1; margin:0; }
-    .prod-kpi__sub { font-size:12px; color:#94a3b8; margin:4px 0 0; }
-    
-    .heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 14px; }
-    .heatmap-day { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center; }
-    .heatmap-day__name { font-weight: 700; color: #475569; font-size: 13px; margin-bottom: 4px; }
-    .heatmap-day__value { font-weight: 800; color: #0f172a; font-size: 16px; }
+    .prod-kpi__label { font-family:'Plus Jakarta Sans',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#64748b; margin:0 0 4px; }
+    .prod-kpi__value { font-family:'Plus Jakarta Sans',sans-serif; font-size:20px; font-weight:800; color:#0f172a; line-height:1.1; margin:0; }
+    .prod-kpi__sub { font-size:11px; color:#94a3b8; margin:3px 0 0; }
+
+    .chart-wrap { position: relative; height: 180px; }
+
+    .heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
+    .heatmap-day { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 2px; text-align: center; }
+    .heatmap-day__name { font-weight: 700; color: #475569; font-size: 11px; margin-bottom: 2px; }
+    .heatmap-day__value { font-weight: 800; color: #0f172a; font-size: 12px; }
     .heatmap-day.intensity-high { background: #e0f2fe; border-color: #bae6fd; }
     .heatmap-day.intensity-very-high { background: #bae6fd; border-color: #7dd3fc; }
+
+    /* Filtros empilhados no mobile */
+    @media (max-width: 767.98px) {
+        .prod-filtros .form-group { display: block; width: 100%; margin-right: 0 !important; }
+        .prod-filtros .form-group > label { display: block; margin-bottom: 2px; }
+        .prod-filtros .form-control,
+        .prod-filtros .select2-container { width: 100% !important; max-width: 100%; }
+        .prod-filtros .btn { width: 100%; margin-left: 0 !important; }
+    }
+
+    @media (min-width: 768px) {
+        .prod-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .prod-kpi { padding: 20px 18px; }
+        .prod-kpi__label { font-size: 11px; letter-spacing:.08em; margin-bottom: 6px; }
+        .prod-kpi__value { font-size: 26px; }
+        .prod-kpi__sub { font-size: 12px; margin-top: 4px; }
+        .chart-wrap { height: 230px; }
+        .heatmap-grid { gap: 10px; margin-top: 14px; }
+        .heatmap-day { border-radius: 10px; padding: 12px; }
+        .heatmap-day__name { font-size: 13px; margin-bottom: 4px; }
+        .heatmap-day__value { font-size: 16px; }
+    }
 
     .c-teal { --accent:#0891b2; }
     .c-emerald { --accent:#059669; }
@@ -47,7 +71,7 @@
     <!-- Filtros -->
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
-            <form action="{{ route('home.produtividade') }}" method="GET" class="form-inline">
+            <form action="{{ route('home.produtividade') }}" method="GET" class="form-inline prod-filtros">
                 <div class="form-group mr-3 mb-2">
                     <label for="data_inicio" class="mr-2 text-sm text-bold text-muted">Período de:</label>
                     <input type="date" name="data_inicio" id="data_inicio" class="form-control form-control-sm" value="{{ $selectedStartDate }}">
@@ -112,7 +136,9 @@
                     <h3 class="card-title text-sm text-bold"><i class="fas fa-chart-bar mr-1"></i> Horas Diárias no Período</h3>
                 </div>
                 <div class="card-body">
-                    <canvas id="dailyHoursChart" height="230"></canvas>
+                    <div class="chart-wrap">
+                        <canvas id="dailyHoursChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
