@@ -117,48 +117,6 @@
                 </div>
             </div>
 
-            @if ($analise && $analise->criterios)
-                @php $temPontos = collect($analise->criterios)->contains(fn ($c) => ($c['pontos_max'] ?? null) !== null); @endphp
-                <div class="card card-outline card-info shadow-sm" data-collapse-mobile>
-                    <div class="card-header">
-                        <h3 class="card-title text-bold text-sm">Critérios de julgamento</h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
-                        </div>
-                    </div>
-                    <div class="card-body p-0 table-responsive">
-                        <table class="table table-sm mb-0">
-                            <thead><tr><th>Critério</th><th class="text-center" style="width:110px">{{ $temPontos ? 'Pts' : 'Avaliação' }}</th>@if ($temPontos)<th style="width:100px"></th>@endif</tr></thead>
-                            <tbody>
-                                @foreach ($analise->criterios as $c)
-                                    <tr>
-                                        <td>
-                                            <div class="small font-weight-bold">{{ $c['criterio'] ?? '—' }}</div>
-                                            @if (!empty($c['observacao']))<div class="text-muted" style="font-size:.75rem">{{ $c['observacao'] }}</div>@endif
-                                        </td>
-                                        <td class="text-center align-middle small">
-                                            @if (($c['pontos_max'] ?? null) !== null)
-                                                {{ $c['pontos_estimados'] ?? '—' }}<span class="text-muted">/{{ $c['pontos_max'] }}</span>
-                                            @else
-                                                @php $av = $c['avaliacao'] ?? 'indeterminada'; @endphp
-                                                <span class="badge badge-{{ ['favoravel' => 'success', 'moderada' => 'warning', 'desfavoravel' => 'danger', 'indeterminada' => 'secondary'][$av] ?? 'secondary' }}">
-                                                    {{ ['favoravel' => 'Favorável', 'moderada' => 'Moderada', 'desfavoravel' => 'Desfavorável', 'indeterminada' => 'Indeterminada'][$av] ?? $av }}
-                                                </span>
-                                            @endif
-                                        </td>
-                                        @if ($temPontos)
-                                            <td class="align-middle">
-                                                @php $pm = (float)($c['pontos_max'] ?? 0); $pe = (float)($c['pontos_estimados'] ?? 0); $pct = $pm > 0 ? min(100, round($pe / $pm * 100)) : 0; @endphp
-                                                <div class="lic-crit-barra"><span style="width:{{ $pct }}%"></span></div>
-                                            </td>
-                                        @endif
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            @endif
         </div>
 
         {{-- Dados e edital: depois da análise no mobile, à esquerda no desktop --}}
@@ -234,99 +192,146 @@
         </div>
     </div>
 
-    @if ($analise && ($analise->exigencias || $analise->gaps))
-        <div class="row">
-            @if ($analise->exigencias)
-                <div class="col-lg-7">
-                    <div class="card card-outline card-warning shadow-sm" data-collapse-mobile>
-                        <div class="card-header">
-                            <h3 class="card-title text-bold text-sm"><i class="fas fa-clipboard-check mr-1"></i> Habilitação — exigências do edital</h3>
-                            <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
-                            </div>
+    {{-- Grid 2×2: exigências, gaps, critérios e histórico com a mesma largura --}}
+    <div class="row">
+        @if ($analise && $analise->exigencias)
+            <div class="col-md-6">
+                <div class="card card-outline card-warning shadow-sm" data-collapse-mobile>
+                    <div class="card-header">
+                        <h3 class="card-title text-bold text-sm"><i class="fas fa-clipboard-check mr-1"></i> Habilitação — exigências do edital</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                         </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-sm mb-0">
-                                    <thead><tr><th style="width:30px"></th><th>Exigência</th><th style="width:120px">Situação</th><th class="d-none d-md-table-cell">Evidência</th></tr></thead>
-                                    <tbody>
-                                        @foreach ($analise->exigencias as $e)
-                                            @php
-                                                $sit = $e['situacao'] ?? (($e['atende'] ?? false) ? 'comprovado' : 'nao_comprovado');
-                                                $sitMeta = [
-                                                    'comprovado' => ['fa-check-circle exig-ok', 'success', 'Comprovado'],
-                                                    'nao_comprovado' => ['fa-question-circle text-warning', 'warning', 'Não comprovado'],
-                                                    'nao_atende' => ['fa-times-circle exig-nok', 'danger', 'Não atende'],
-                                                ][$sit] ?? ['fa-question-circle text-warning', 'warning', 'Não comprovado'];
-                                            @endphp
-                                            <tr>
-                                                <td class="text-center align-middle"><i class="fas {{ $sitMeta[0] }}"></i></td>
-                                                <td class="small">
-                                                    {{ $e['exigencia'] ?? '—' }}
-                                                    @if (!empty($e['evidencia']))
-                                                        <div class="text-muted d-md-none" style="font-size:.72rem">{{ $e['evidencia'] }}</div>
-                                                    @endif
-                                                </td>
-                                                <td class="align-middle"><span class="badge badge-{{ $sitMeta[1] }}">{{ $sitMeta[2] }}</span></td>
-                                                <td class="small text-muted d-none d-md-table-cell">{{ $e['evidencia'] ?? '' }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="px-3 py-2 border-top text-muted" style="font-size:.72rem">
-                                <i class="fas fa-question-circle text-warning"></i> <strong>Não comprovado</strong> = o sistema não encontrou evidência cadastrada — não significa que a empresa não possua o documento.
-                            </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead><tr><th style="width:30px"></th><th>Exigência</th><th style="width:120px">Situação</th><th class="d-none d-md-table-cell">Evidência</th></tr></thead>
+                                <tbody>
+                                    @foreach ($analise->exigencias as $e)
+                                        @php
+                                            $sit = $e['situacao'] ?? (($e['atende'] ?? false) ? 'comprovado' : 'nao_comprovado');
+                                            $sitMeta = [
+                                                'comprovado' => ['fa-check-circle exig-ok', 'success', 'Comprovado'],
+                                                'nao_comprovado' => ['fa-question-circle text-warning', 'warning', 'Não comprovado'],
+                                                'nao_atende' => ['fa-times-circle exig-nok', 'danger', 'Não atende'],
+                                            ][$sit] ?? ['fa-question-circle text-warning', 'warning', 'Não comprovado'];
+                                        @endphp
+                                        <tr>
+                                            <td class="text-center align-middle"><i class="fas {{ $sitMeta[0] }}"></i></td>
+                                            <td class="small">
+                                                {{ $e['exigencia'] ?? '—' }}
+                                                @if (!empty($e['evidencia']))
+                                                    <div class="text-muted d-md-none" style="font-size:.72rem">{{ $e['evidencia'] }}</div>
+                                                @endif
+                                            </td>
+                                            <td class="align-middle"><span class="badge badge-{{ $sitMeta[1] }}">{{ $sitMeta[2] }}</span></td>
+                                            <td class="small text-muted d-none d-md-table-cell">{{ $e['evidencia'] ?? '' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="px-3 py-2 border-top text-muted" style="font-size:.72rem">
+                            <i class="fas fa-question-circle text-warning"></i> <strong>Não comprovado</strong> = o sistema não encontrou evidência cadastrada — não significa que a empresa não possua o documento.
                         </div>
                     </div>
                 </div>
-            @endif
-            @if ($analise->gaps)
-                <div class="col-lg-5">
-                    <div class="card card-outline card-danger shadow-sm" data-collapse-mobile>
-                        <div class="card-header">
-                            <h3 class="card-title text-bold text-sm"><i class="fas fa-exclamation-triangle mr-1"></i> Pendências e gaps</h3>
-                            <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            @foreach ($analise->gaps as $gap)
-                                <div class="lic-gap small">{{ $gap }}</div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            @endif
-        </div>
-    @endif
+            </div>
+        @endif
 
-    @if ($licitacao->analises->count() > 1)
-        <div class="card card-outline card-secondary shadow-sm collapsed-card">
-            <div class="card-header">
-                <h3 class="card-title text-bold text-sm">Histórico de análises</h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i></button>
+        @if ($analise && $analise->gaps)
+            <div class="col-md-6">
+                <div class="card card-outline card-danger shadow-sm" data-collapse-mobile>
+                    <div class="card-header">
+                        <h3 class="card-title text-bold text-sm"><i class="fas fa-exclamation-triangle mr-1"></i> Pendências e gaps</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @foreach ($analise->gaps as $gap)
+                            <div class="lic-gap small">{{ $gap }}</div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
-            <div class="card-body p-0 table-responsive">
-                <table class="table table-sm mb-0">
-                    <thead><tr><th>Data</th><th>Nota</th><th>Viabilidade</th><th>Modelo</th><th>Analista</th></tr></thead>
-                    <tbody>
-                        @foreach ($licitacao->analises->skip(1) as $a)
-                            <tr>
-                                <td>{{ $a->created_at->format('d/m/Y H:i') }}</td>
-                                <td>{{ $a->nota_tecnica_estimada !== null ? number_format((float) $a->nota_tecnica_estimada, 0) : '—' }}</td>
-                                <td>{{ \App\Models\LicitacaoAnalise::VIABILIDADES[$a->viabilidade] ?? '—' }}</td>
-                                <td class="small text-muted">{{ $a->modelo }}</td>
-                                <td class="small">{{ $a->usuario?->nome ?? '—' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+        @endif
+
+        @if ($analise && $analise->criterios)
+            @php $temPontos = collect($analise->criterios)->contains(fn ($c) => ($c['pontos_max'] ?? null) !== null); @endphp
+            <div class="col-md-6">
+                <div class="card card-outline card-info shadow-sm" data-collapse-mobile>
+                    <div class="card-header">
+                        <h3 class="card-title text-bold text-sm"><i class="fas fa-list-ol mr-1"></i> Critérios de julgamento</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0 table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Critério</th><th class="text-center" style="width:110px">{{ $temPontos ? 'Pts' : 'Avaliação' }}</th>@if ($temPontos)<th style="width:100px"></th>@endif</tr></thead>
+                            <tbody>
+                                @foreach ($analise->criterios as $c)
+                                    <tr>
+                                        <td>
+                                            <div class="small font-weight-bold">{{ $c['criterio'] ?? '—' }}</div>
+                                            @if (!empty($c['observacao']))<div class="text-muted" style="font-size:.75rem">{{ $c['observacao'] }}</div>@endif
+                                        </td>
+                                        <td class="text-center align-middle small">
+                                            @if (($c['pontos_max'] ?? null) !== null)
+                                                {{ $c['pontos_estimados'] ?? '—' }}<span class="text-muted">/{{ $c['pontos_max'] }}</span>
+                                            @else
+                                                @php $av = $c['avaliacao'] ?? 'indeterminada'; @endphp
+                                                <span class="badge badge-{{ ['favoravel' => 'success', 'moderada' => 'warning', 'desfavoravel' => 'danger', 'indeterminada' => 'secondary'][$av] ?? 'secondary' }}">
+                                                    {{ ['favoravel' => 'Favorável', 'moderada' => 'Moderada', 'desfavoravel' => 'Desfavorável', 'indeterminada' => 'Indeterminada'][$av] ?? $av }}
+                                                </span>
+                                            @endif
+                                        </td>
+                                        @if ($temPontos)
+                                            <td class="align-middle">
+                                                @php $pm = (float)($c['pontos_max'] ?? 0); $pe = (float)($c['pontos_estimados'] ?? 0); $pct = $pm > 0 ? min(100, round($pe / $pm * 100)) : 0; @endphp
+                                                <div class="lic-crit-barra"><span style="width:{{ $pct }}%"></span></div>
+                                            </td>
+                                        @endif
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
-    @endif
+        @endif
+
+        @if ($licitacao->analises->count() > 1)
+            <div class="col-md-6">
+                <div class="card card-outline card-secondary shadow-sm collapsed-card">
+                    <div class="card-header">
+                        <h3 class="card-title text-bold text-sm"><i class="fas fa-history mr-1"></i> Histórico de análises</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0 table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Data</th><th>Nota</th><th>Viabilidade</th><th>Modelo</th><th>Analista</th></tr></thead>
+                            <tbody>
+                                @foreach ($licitacao->analises->skip(1) as $a)
+                                    <tr>
+                                        <td>{{ $a->created_at->format('d/m/Y H:i') }}</td>
+                                        <td>{{ $a->nota_tecnica_estimada !== null ? number_format((float) $a->nota_tecnica_estimada, 0) : '—' }}</td>
+                                        <td>{{ \App\Models\LicitacaoAnalise::VIABILIDADES[$a->viabilidade] ?? '—' }}</td>
+                                        <td class="small text-muted">{{ $a->modelo }}</td>
+                                        <td class="small">{{ $a->usuario?->nome ?? '—' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @endif
+    </div>
 
     <x-modal id="licEditModal" icon="fas fa-pen" title="Editar Licitação" formId="licitacao-edit-form" action="{{ route('licitacoes.update', $licitacao) }}" method="PUT" enctype="multipart/form-data">
         <input type="hidden" name="_form" value="edit">
