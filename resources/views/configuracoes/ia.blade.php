@@ -18,6 +18,18 @@
         </div>
     @endif
 
+    @if ($usoMes && $usoMes->chamadas > 0)
+        <div class="alert alert-light border shadow-sm d-flex align-items-center" style="font-size:.85rem;">
+            <i class="fas fa-chart-line mr-2 text-primary"></i>
+            <span>
+                <strong>Uso no mês:</strong>
+                {{ number_format($usoMes->chamadas, 0, ',', '.') }} chamada(s) ·
+                {{ number_format($usoMes->tokens, 0, ',', '.') }} tokens ·
+                custo estimado US$ {{ number_format($usoMes->custo, 4, ',', '.') }}
+            </span>
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('configuracao-ia.update') }}">
         @csrf
         @method('PUT')

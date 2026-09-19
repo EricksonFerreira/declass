@@ -43,7 +43,8 @@ class AnaliseLicitacaoService
         $resposta = $this->ia->chatJson(
             $licitacao->empresa_id,
             $this->promptSistema($cfg),
-            $promptUsuario
+            $promptUsuario,
+            ['recurso' => 'licitacao.analise', 'user_id' => $userId]
         );
 
         $dados = json_decode($resposta['conteudo'], true);

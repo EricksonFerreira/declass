@@ -486,6 +486,11 @@ return [
                     'route' => 'comandos.index',
                     'icon' => 'fas fa-terminal',
                 ],
+                [
+                    'text' => 'Uso de IA',
+                    'route' => 'ia-uso.index',
+                    'icon' => 'fas fa-chart-line',
+                ],
             ],
         ],
 

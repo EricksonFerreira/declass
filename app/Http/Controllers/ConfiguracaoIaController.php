@@ -7,6 +7,7 @@ use App\Models\EmpresaIaConfig;
 use App\Services\Ia\IaService;
 use App\Support\EmpresaContext;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -24,6 +25,11 @@ class ConfiguracaoIaController extends Controller
             'config' => app(IaService::class)->configEmpresa($empresaId),
             'provedores' => IaService::provedores(),
             'tamanhos' => EmpresaIaConfig::TAMANHOS_RESUMO,
+            'usoMes' => DB::table('ia_usos')
+                ->where('empresa_id', $empresaId)
+                ->where('created_at', '>=', now()->startOfMonth())
+                ->selectRaw('count(*) as chamadas, coalesce(sum(tokens_entrada + tokens_saida),0) as tokens, coalesce(sum(custo_estimado),0) as custo')
+                ->first(),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Gerenciar'],
