@@ -454,6 +454,12 @@ return [
                     'can' => 'importacao.index',
                 ],
                 [
+                    'text' => 'Documentos da Empresa',
+                    'route' => 'documentos.index',
+                    'icon' => 'fas fa-folder-open',
+                    'can' => 'documentos.index',
+                ],
+                [
                     'text' => 'Integração com IA',
                     'route' => 'configuracao-ia.edit',
                     'icon' => 'fas fa-robot',

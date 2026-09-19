@@ -137,6 +137,9 @@ Regras:
 - PREÇO: "preco_sugerido" só quando o perfil tiver custos/BDI/planilha suficientes para
   fundamentar. Sem base confiável, use null e explique em "preco_motivo" (ex.: planilha
   orçamentária e BDI não disponíveis). Nunca sugira preço só porque o edital tem teto.
+- Documentos de habilitação listados no perfil são evidência de "comprovado" quando tipo e
+  escopo cobrem a exigência; documento marcado VENCIDO conta como "nao_comprovado" e deve
+  aparecer também em "gaps" como pendência de renovação.
 - Não invente atestados, certificações ou dados que não estejam no perfil.
 PROMPT;
 
@@ -218,6 +221,35 @@ PROMPT;
             foreach ($equipe as $e) {
                 $custo = $e->custo_medio ? ' — custo-hora médio R$ '.number_format((float) $e->custo_medio, 2, ',', '.') : '';
                 $linhas[] = "- {$e->total}x ".($e->funcao ?: 'Sem função').$custo;
+            }
+        }
+
+        $documentos = \App\Models\EmpresaDocumento::where('empresa_id', $empresa->id)
+            ->orderBy('tipo')
+            ->get();
+
+        if ($documentos->isNotEmpty()) {
+            $linhas[] = "\nDocumentos de habilitação cadastrados:";
+            foreach ($documentos as $d) {
+                $item = "- {$d->tipo_label}";
+                if ($d->numero) {
+                    $item .= " nº {$d->numero}";
+                }
+                if ($d->orgao_emissor) {
+                    $item .= " ({$d->orgao_emissor})";
+                }
+                if ($d->data_validade) {
+                    $item .= $d->data_validade->isPast()
+                        ? ' — VENCIDO em '.$d->data_validade->format('d/m/Y')
+                        : ' — válido até '.$d->data_validade->format('d/m/Y');
+                }
+                if ($d->valor) {
+                    $item .= ' — valor R$ '.number_format((float) $d->valor, 0, ',', '.');
+                }
+                if ($d->descricao) {
+                    $item .= ': '.mb_substr($d->descricao, 0, 140);
+                }
+                $linhas[] = $item;
             }
         }
 
