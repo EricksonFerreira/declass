@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Popula uma EMPRESA DEMO COMPLETA — tudo que um cliente precisa ver
@@ -20,10 +21,14 @@ use Illuminate\Support\Facades\Hash;
  * equipes, meses de lançamentos de horas, tags, folgas/férias,
  * alocações de calendário e um cronograma de planejamento.
  *
- * Idempotente: identifica a empresa pelo slug "demo" e só insere o
- * volume de lançamentos quando a empresa ainda não tem nenhum.
+ * Reset completo: a cada execução apaga TODOS os dados ligados à
+ * empresa demo (inclusive o que foi criado manualmente em testes)
+ * e a recria do zero com as informações padrão — ideal para
+ * gravar vídeos e repetir demonstrações sempre do mesmo ponto.
  *
  * Credenciais de demonstração: admin@demo.declock.app / password
+ *
+ * Uso: php artisan db:seed --class=DemoEmpresaSeeder
  */
 class DemoEmpresaSeeder extends Seeder
 {
@@ -39,6 +44,8 @@ class DemoEmpresaSeeder extends Seeder
 
     public function run(): void
     {
+        $this->resetarEmpresaDemo();
+
         $empresa = $this->seedEmpresa();
         $this->empresaId = $empresa->id;
 
@@ -48,19 +55,79 @@ class DemoEmpresaSeeder extends Seeder
         $this->seedAssinatura($empresa, $admin);
         $this->seedOnboarding();
         $this->seedTags();
-
-        $jaPopulada = DB::table('clockify_time_trackers')
-            ->where('empresa_id', $this->empresaId)
-            ->exists();
-
-        if (! $jaPopulada) {
-            $this->seedOperacao();
-        } else {
-            $this->command?->info('Empresa demo já possui lançamentos — operação base mantida.');
-        }
-
+        $this->seedOperacao();
         $this->posProcessamento($roles, $admin);
         $this->resumo($empresa);
+    }
+
+    /**
+     * Apaga TODOS os registros ligados à empresa demo: apontamentos,
+     * projetos, clientes, usuários, assinatura, licitações e qualquer
+     * outra tabela com empresa_id — inclusive dados criados à mão
+     * durante testes/vídeos. A linha da empresa é preservada (e
+     * restaurada, se estiver arquivada) para manter o mesmo id.
+     */
+    private function resetarEmpresaDemo(): void
+    {
+        $empresa = Empresa::withTrashed()->where('slug', self::SLUG)->first();
+
+        if (! $empresa) {
+            return;
+        }
+
+        $id = $empresa->id;
+        $apagados = 0;
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
+        try {
+            $userIds = DB::table('users')->where('empresa_id', $id)->pluck('id');
+            $projetoIds = DB::table('clockify_projetos')->where('empresa_id', $id)->pluck('id');
+            $trackerIds = DB::table('clockify_time_trackers')->where('empresa_id', $id)->pluck('id');
+            $cronogramaIds = Schema::hasTable('clockify_projeto_cronogramas')
+                ? DB::table('clockify_projeto_cronogramas')->whereIn('clockify_projeto_id', $projetoIds)->pluck('id')
+                : collect();
+
+            // Tabelas sem empresa_id — excluídas via relacionamento.
+            $porRelacao = [
+                'clockify_tracker_tag' => ['clockify_time_tracker_id', $trackerIds],
+                'clockify_projeto_planejamentos' => ['clockify_projeto_cronograma_id', $cronogramaIds],
+                'clockify_projeto_user' => ['user_id', $userIds],
+                'clockify_time_user' => ['user_id', $userIds],
+                'tour_realizacoes' => ['user_id', $userIds],
+            ];
+
+            foreach ($porRelacao as $tabela => [$coluna, $ids]) {
+                if ($ids->isNotEmpty() && Schema::hasTable($tabela)) {
+                    $apagados += DB::table($tabela)->whereIn($coluna, $ids)->delete();
+                }
+            }
+
+            if ($projetoIds->isNotEmpty()) {
+                $apagados += DB::table('clockify_projeto_user')->whereIn('clockify_projeto_id', $projetoIds)->delete();
+            }
+
+            // Todas as demais tabelas com coluna empresa_id.
+            $tabelas = collect(DB::select(
+                'SELECT TABLE_NAME FROM information_schema.COLUMNS WHERE COLUMN_NAME = ? AND TABLE_SCHEMA = ?',
+                ['empresa_id', DB::getDatabaseName()]
+            ))->pluck('TABLE_NAME');
+
+            foreach ($tabelas as $tabela) {
+                if ($tabela === 'empresas') {
+                    continue;
+                }
+                $apagados += DB::table($tabela)->where('empresa_id', $id)->delete();
+            }
+
+            if ($empresa->trashed()) {
+                $empresa->restore();
+            }
+        } finally {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
+
+        $this->command?->info("Empresa demo zerada: {$apagados} registros removidos.");
     }
 
     private function seedEmpresa(): Empresa
