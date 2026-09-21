@@ -1,12 +1,12 @@
 @extends('adminlte::page')
 
-@section('title', 'Assinatura - ' . $assinatura->empresa->nome)
+@section('title', 'Assinatura - ' . ($assinatura->empresa?->nome ?? 'Empresa excluída'))
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="[
         new \App\DTO\BreadCrumbItem('Home', route('home')),
         new \App\DTO\BreadCrumbItem('Assinaturas', route('assinatura.index')),
-        new \App\DTO\BreadCrumbItem($assinatura->empresa->nome),
+        new \App\DTO\BreadCrumbItem($assinatura->empresa?->nome ?? 'Empresa excluída'),
     ]" />
 @stop
 
@@ -20,10 +20,10 @@
                     </div>
                     <div>
                         <div class="module-header-eyebrow">Assinatura &bull; Detalhes</div>
-                        <h1 class="module-header-title">{{ $assinatura->empresa->nome }}</h1>
+                        <h1 class="module-header-title">{{ $assinatura->empresa?->nome ?? 'Empresa excluída' }}</h1>
                         <p class="module-header-sub">
                             <span class="badge {{ $assinatura->status_badge['class'] }} mr-1">{{ $assinatura->status_badge['label'] }}</span>
-                            Plano <strong>{{ $assinatura->plano->nome }}</strong> &bull; {{ $assinatura->periodicidade_texto }}
+                            Plano <strong>{{ $assinatura->plano?->nome ?? 'Sem plano' }}</strong> &bull; {{ $assinatura->periodicidade_texto }}
                         </p>
                     </div>
                 </div>
@@ -59,7 +59,7 @@
                                 <div class="h2 mb-0 font-weight-bold">{{ number_format($qtdUsuarios ?? 0, 0, ',', '.') }}</div>
                                 <small class="text-muted">na equipe</small>
                                 <div class="small text-success font-weight-bold mt-1">
-                                    Plano permite: {{ $assinatura->plano->limite_usuarios_texto }}
+                                    Plano permite: {{ $assinatura->plano?->limite_usuarios_texto ?? '—' }}
                                 </div>
                             </div>
                             <i class="fas fa-users text-success" style="font-size:2rem; opacity:.2;"></i>
@@ -95,17 +95,17 @@
                     </div>
                     <div class="card-body p-0">
                         <table class="table table-sm table-borderless mb-0">
-                            <tr><td class="text-muted pl-3">Plano</td><td class="pr-3 font-weight-bold">{{ $assinatura->plano->nome }}</td></tr>
+                            <tr><td class="text-muted pl-3">Plano</td><td class="pr-3 font-weight-bold">{{ $assinatura->plano?->nome ?? 'Sem plano' }}</td></tr>
                             <tr><td class="text-muted pl-3">Periodicidade</td><td class="pr-3">{{ $assinatura->periodicidade_texto }}</td></tr>
                             <tr><td class="text-muted pl-3">Valor</td><td class="pr-3 font-weight-bold">R$ {{ number_format($assinatura->valor_cobrado, 2, ',', '.') }}</td></tr>
                             @php
-                                $storageMb = $assinatura->plano->limite_armazenamento_mb ?? 0;
+                                $storageMb = $assinatura->plano?->limite_armazenamento_mb ?? 0;
                                 $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
                             @endphp
                             <tr><td class="text-muted pl-3">Armazenamento</td><td class="pr-3">{{ $storageTxt }}</td></tr>
                             <tr><td class="text-muted pl-3">Método</td><td class="pr-3 text-capitalize">{{ str_replace('_', ' ', $assinatura->metodo_cobranca) }}</td></tr>
-                            <tr><td class="text-muted pl-3">Início</td><td class="pr-3">{{ $assinatura->data_inicio->format('d/m/Y') }}</td></tr>
-                            <tr><td class="text-muted pl-3">Vencimento</td><td class="pr-3">{{ $assinatura->data_vencimento->format('d/m/Y') }}</td></tr>
+                            <tr><td class="text-muted pl-3">Início</td><td class="pr-3">{{ $assinatura->data_inicio?->format('d/m/Y') ?? '—' }}</td></tr>
+                            <tr><td class="text-muted pl-3">Vencimento</td><td class="pr-3">{{ $assinatura->data_vencimento?->format('d/m/Y') ?? '—' }}</td></tr>
                             <tr><td class="text-muted pl-3">Criado por</td><td class="pr-3">{{ $assinatura->criadoPor?->nome ?? '—' }}</td></tr>
                         </table>
                     </div>
