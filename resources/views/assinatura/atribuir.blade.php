@@ -59,15 +59,16 @@
                                 <div class="form-row">
                                     <div class="col-md-12 mb-3">
                                         <label class="mb-1">Empresa <span class="text-danger">*</span></label>
-                                        <input type="hidden" name="empresa_id" id="empresa_id" value="{{ $empresaSelecionadaId }}">
-                                        <input
-                                            type="text"
-                                            class="form-control form-control-sm"
-                                            value="{{ $empresaSelecionadaNome ?? 'Empresa não informada' }}"
-                                            readonly
-                                        >
+                                        <select name="empresa_id" id="empresa_id" class="form-control form-control-sm" required>
+                                            <option value="">Selecione a empresa...</option>
+                                            @foreach ($empresas as $e)
+                                                <option value="{{ $e->id }}" {{ (int) $empresaSelecionadaId === (int) $e->id ? 'selected' : '' }}>
+                                                    {{ $e->nome }}{{ $e->planoAtivo?->plano ? ' — atual: ' . $e->planoAtivo->plano->nome : ' — sem plano' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
                                         <small class="veiculo-lookup-help">
-                                            A empresa foi definida pela URL e não pode ser alterada nesta tela.
+                                            Ao vir do detalhe da empresa, ela já vem selecionada — mas pode ser trocada aqui.
                                         </small>
                                     </div>
 
@@ -279,6 +280,15 @@
     <script src="/js/select2.min.js"></script>
     <script>
         (function() {
+            if (window.jQuery && jQuery.fn.select2) {
+                jQuery('#empresa_id, #plano_id').select2({
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    placeholder: 'Selecione...',
+                    allowClear: false,
+                });
+            }
+
             const form = document.getElementById('formAtribuir');
             const btnSubmit = document.getElementById('btnSubmit');
             const btnText = document.getElementById('btnText');
