@@ -515,13 +515,14 @@ return [
             ],
         ],
 
-        // ASSINATURA — visivel para admin mesmo sem plano (rota ignorada pelo
-        // middleware): e o caminho de pagamento quando o trial expira.
+        // ASSINATURA — gestao de planos/assinaturas, somente superadmin.
+        // O usuario comum acessa o proprio plano por "meu-plano" quando
+        // redirecionado pelo middleware de trial/plano.
         [
             'text' => 'Assinatura',
             'route' => 'assinatura.index',
             'icon' => 'fas fa-credit-card',
-            'can' => 'gerenciar-empresa',
+            'can' => 'acessar-superadmin',
         ],
 
         // AJUDA
