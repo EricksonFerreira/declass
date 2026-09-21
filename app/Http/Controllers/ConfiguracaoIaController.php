@@ -46,17 +46,12 @@ class ConfiguracaoIaController extends Controller
             ')
             ->first();
 
-        $resolucao = $ia->resolucao($empresaId);
-
         return view('configuracoes.ia', [
             'titulo' => 'Uso de IA',
             'usoMes' => $ia->usoMes($empresaId),
             'totaisMes' => $totaisMes,
             'porDia' => $porDia,
             'porRecurso' => $porRecurso,
-            'provedorNome' => IaService::provedores()[$resolucao['provedor']] ?? $resolucao['provedor'],
-            'modeloEmUso' => $resolucao['modelo'],
-            'iaConfigurada' => $resolucao['key'] !== '',
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Gerenciar'],

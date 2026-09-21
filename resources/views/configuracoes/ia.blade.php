@@ -101,26 +101,6 @@
                 </div>
             </div>
 
-            {{-- Status / como funciona --}}
-            <div class="card card-outline card-info shadow-sm">
-                <div class="card-header"><h3 class="card-title text-bold text-sm"><i class="fas fa-robot mr-1"></i> Integração com IA</h3></div>
-                <div class="card-body small">
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="badge badge-{{ $iaConfigurada ? 'success' : 'warning' }} p-2 mr-2">
-                            {{ $iaConfigurada ? 'Configurado' : 'Não configurado' }}
-                        </span>
-                        <div>
-                            <div class="text-bold">{{ $provedorNome }}</div>
-                            <div class="text-muted" style="font-size:.75rem">{{ $modeloEmUso ?: 'modelo padrão' }}</div>
-                        </div>
-                    </div>
-                    <p class="text-muted mb-0">
-                        A IA alimenta recursos como a análise de editais de licitação. Provedor, chave e
-                        limites são gerenciados pelo administrador da plataforma — para alterar provedor,
-                        ampliar a cota ou ativar novos recursos, fale com o suporte.
-                    </p>
-                </div>
-            </div>
         </div>
     </div>
 @stop
