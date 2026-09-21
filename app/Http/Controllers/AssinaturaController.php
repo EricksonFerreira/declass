@@ -32,6 +32,29 @@ class AssinaturaController extends Controller
 
     // ── Gestão global (superadmin / gerenciar-planos) ───────────────────────
 
+    public function hub(): View
+    {
+        $titulo = 'Central de Planos';
+        $subtitulo = 'Assinaturas, pagamentos e catálogo de planos';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Planos', null),
+            new \App\DTO\BreadCrumbItem('Central', null),
+        ]);
+
+        $stats = EmpresaPlano::selectRaw("
+            count(*) as total,
+            coalesce(sum(status = 'ativo'),0) as ativas,
+            coalesce(sum(status = 'trial'),0) as trial,
+            coalesce(sum(status = 'inadimplente'),0) as inadimplentes,
+            coalesce(sum(status = 'aguardando_pagamento'),0) as aguardando
+        ")->first();
+
+        $planos = Plano::withCount('assinaturas')->orderBy('ordem')->orderBy('valor_mensal')->get();
+
+        return view('assinatura.hub', compact('titulo', 'subtitulo', 'breadcrumb', 'stats', 'planos'));
+    }
+
     public function index(Request $request): View
     {
         $titulo = 'Assinaturas';

@@ -3,6 +3,8 @@
 use App\Http\Controllers\AssinaturaController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('planos', [AssinaturaController::class, 'hub'])->name('planos.hub');
+
 Route::prefix('assinatura')->name('assinatura.')->group(function () {
     Route::get('/', [AssinaturaController::class, 'index'])->name('index');
     Route::get('/ajuda', [AssinaturaController::class, 'ajuda'])->name('ajuda');
