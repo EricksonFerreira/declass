@@ -197,9 +197,6 @@
                         <i class="fas fa-globe mr-1"></i> Site
                     </a>
                 @endif
-                <a href="{{ route('empresa.atribuir-assinatura', $empresa->id) }}" class="rs-btn rs-btn--sm bg-primary text-white">
-                    <i class="fas fa-link mr-1"></i> Atribuir assinatura
-                </a>
             </li>
 
         </ul>
@@ -387,10 +384,7 @@
                         <h2>Sem plano ativo</h2>
                     </div>
                     <div class="p-3">
-                        <p class="text-muted">Esta empresa nao possui um plano ativo no momento.</p>
-                        <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn rs-btn--primary">
-                            <i class="fas fa-layer-group mr-1"></i> Ver planos
-                        </a>
+                        <p class="text-muted mb-0">Esta empresa nao possui um plano ativo no momento.</p>
                     </div>
                 </div>
                 @endif
