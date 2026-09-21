@@ -189,7 +189,7 @@
                 </a>
             </li>
             <li class="nav-item ml-auto" style="display:flex;gap:10px;align-items:center;">
-                <a href="{{ route('empresa.editar') }}" class="rs-btn rs-btn--primary rs-btn--sm">
+                <a href="{{ route('empresa.edit', $empresa->id) }}" class="rs-btn rs-btn--primary rs-btn--sm">
                     <i class="fas fa-pen mr-1"></i> Editar
                 </a>
                 @if($empresa->site_apresentacao_ativo && $plano?->site_vendas)
