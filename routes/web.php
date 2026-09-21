@@ -160,6 +160,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'importacao',
         'ia',
         'documentos',
+        'tutoriais',
     ];
 
     foreach ($authGroupFiles as $groupFile) {

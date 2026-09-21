@@ -75,6 +75,7 @@ class PlanoPermissaoService
         'reserva.historico',
         'reserva.salvarAssinarContratoCheckIn',
         'reserva.salvarAssinaturaContratoCheckout',
+        'tutoriais.index',
     ];
 
     public function planoAtivoDaEmpresa(?Empresa $empresa): ?Plano

@@ -507,6 +507,11 @@ return [
                     'route' => 'log-viewer.index',
                     'icon' => 'fas fa-file-alt',
                 ],
+                [
+                    'text' => 'Tutoriais',
+                    'route' => 'tutoriais.gerenciar',
+                    'icon' => 'fas fa-video',
+                ],
             ],
         ],
 
@@ -520,6 +525,11 @@ return [
         ],
 
         // AJUDA
+        [
+            'text' => 'Tutoriais',
+            'route' => 'tutoriais.index',
+            'icon' => 'fas fa-play-circle',
+        ],
         [
             'text' => 'Central de Ajuda (FAQ)',
             'route' => 'assinatura.ajuda',
