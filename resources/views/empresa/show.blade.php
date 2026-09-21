@@ -199,7 +199,7 @@
                     :action="route('empresa.destroy', $empresa->id)"
                     btn-class="btn-danger"
                     titulo="Excluir"
-                    mensagem="Excluir a empresa não pode ser desfeito!"
+                    mensagem="A empresa será excluída e marcada como inativa. Os dados vinculados serão preservados."
                     texto-confirmacao="Sim, excluir empresa"
                 />
                 @if($empresa->site_apresentacao_ativo && $plano?->site_vendas)

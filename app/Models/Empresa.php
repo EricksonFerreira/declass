@@ -9,14 +9,33 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
 
 class Empresa extends Model
 {
-    use HasAuditColumns, HasFactory;
+    use HasAuditColumns, HasFactory, SoftDeletes;
 
     public const DEFAULT_TEMPLATE_SLUG = 'empresa-padrao';
+
+    /**
+     * Exclusao logica: desativa a empresa e libera o slug (unique) para
+     * recadastro. Os dados vinculados sao preservados — 39 FKs apontam
+     * para empresas e varias bloqueiam delete fisico.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (Empresa $empresa): void {
+            if ($empresa->isForceDeleting()) {
+                return;
+            }
+
+            $empresa->ativo = 'N';
+            $empresa->slug = mb_substr($empresa->slug.'-excluida-'.$empresa->id, 0, 250);
+            $empresa->saveQuietly();
+        });
+    }
 
     protected $table = 'empresas';
 

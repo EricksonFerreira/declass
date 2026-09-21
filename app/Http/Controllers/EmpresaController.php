@@ -9,21 +9,16 @@ use App\Http\Requests\Empresa\UpdateEmpresaRequest;
 use App\Http\Requests\Empresa\UpdateEmpresaSiteApresentacaoRequest;
 use App\Models\ArquivoRastreado;
 use App\Models\Empresa;
-use App\Support\ArquivoAnexoHelper;
 use App\Services\BreadcrumbService;
 use App\Services\EmpresaService;
+use App\Support\ArquivoAnexoHelper;
+use App\Support\SchemaCache;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Response;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class EmpresaController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -262,12 +257,12 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     public function editarEmpresa()
     {
         $user = auth()->user();
-        if (!$user || !$user->empresa_id) {
+        if (! $user || ! $user->empresa_id) {
             return redirect()->route('home')->with('error', 'Voce nao esta vinculado a uma empresa.');
         }
 
         $empresa = $this->empresaService->getById($user->empresa_id);
-        if (!$empresa) {
+        if (! $empresa) {
             return redirect()->route('home')->with('error', 'Empresa nao encontrada.');
         }
 
@@ -279,23 +274,23 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     public function atualizarEmpresa(Request $request)
     {
         $user = auth()->user();
-        if (!$user || !$user->empresa_id) {
+        if (! $user || ! $user->empresa_id) {
             return redirect()->route('home')->with('error', 'Voce nao esta vinculado a uma empresa.');
         }
 
         $empresa = $this->empresaService->getById($user->empresa_id);
-        if (!$empresa) {
+        if (! $empresa) {
             return redirect()->route('home')->with('error', 'Empresa nao encontrada.');
         }
 
         $data = $request->validate([
-            'nome'       => 'required|string|max:200',
-            'email'      => 'nullable|email|max:200',
-            'telefone'   => 'nullable|string|max:30',
-            'cnpj'       => 'nullable|string|max:20',
-            'cor_primaria'   => 'nullable|string|max:20',
+            'nome' => 'required|string|max:200',
+            'email' => 'nullable|email|max:200',
+            'telefone' => 'nullable|string|max:30',
+            'cnpj' => 'nullable|string|max:20',
+            'cor_primaria' => 'nullable|string|max:20',
             'cor_secundaria' => 'nullable|string|max:20',
-            'logo'       => 'nullable|image|mimes:png,jpeg,jpg,webp|max:2048',
+            'logo' => 'nullable|image|mimes:png,jpeg,jpg,webp|max:2048',
         ]);
 
         if ($request->hasFile('logo')) {
@@ -317,12 +312,12 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     public function minhaEmpresa()
     {
         $user = auth()->user();
-        if (!$user || !$user->empresa_id) {
+        if (! $user || ! $user->empresa_id) {
             return redirect()->route('home')->with('error', 'Voce nao esta vinculado a uma empresa.');
         }
 
         $empresa = $this->empresaService->getById($user->empresa_id);
-        if (!$empresa) {
+        if (! $empresa) {
             return redirect()->route('home')->with('error', 'Empresa nao encontrada.');
         }
 
@@ -334,7 +329,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     public function show($id)
     {
         $empresa = $this->empresaService->getById($id);
-        if (!$empresa) {
+        if (! $empresa) {
             return redirect()->route('empresa.index')->with('error', 'Empresa nao encontrada.');
         }
 
@@ -350,7 +345,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             return redirect()->route('empresa.index')->with('error', 'Empresa nao encontrada.');
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome . ' · Armazenamento', 'Configurações');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome.' · Armazenamento', 'Configurações');
 
         $query = ArquivoRastreado::query()
             ->where('empresa_id', $empresa->id)
@@ -619,7 +614,9 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             unset($data[$imageField]);
         }
         foreach (array_keys($request->all()) as $rk) {
-            if (str_starts_with($rk, 'mostrar_')) unset($data[$rk]);
+            if (str_starts_with($rk, 'mostrar_')) {
+                unset($data[$rk]);
+            }
         }
 
         $updated = $this->empresaService->update($id, $data);
@@ -633,7 +630,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     public function previewSiteEditor($id)
     {
         $empresa = $this->empresaService->getById($id);
-        if (!$empresa) {
+        if (! $empresa) {
             abort(404);
         }
 
@@ -642,13 +639,16 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $cores = is_array($empresa->site_apresentacao_cores) ? $empresa->site_apresentacao_cores : [];
         $imagensConfig = is_array($empresa->site_apresentacao_imagens_config) ? $empresa->site_apresentacao_imagens_config : [];
 
-        $tv = fn(array $t, string $k, string $d = ''): string => trim($t[$k] ?? '') === '' ? $d : trim($t[$k]);
-        $cv = fn(array $c, string $k, string $d): string => preg_match('/^#[A-Fa-f0-9]{6}$/', trim($c[$k] ?? '')) ? strtoupper(trim($c[$k])) : $d;
-        $iv = fn(array $i, string $k, array $ic, string $key): ?string => ($ic[$key] ?? true) && !empty($i[$k]) ? Storage::url($i[$k]) : null;
-        $contrast = function(string $hex): string {
+        $tv = fn (array $t, string $k, string $d = ''): string => trim($t[$k] ?? '') === '' ? $d : trim($t[$k]);
+        $cv = fn (array $c, string $k, string $d): string => preg_match('/^#[A-Fa-f0-9]{6}$/', trim($c[$k] ?? '')) ? strtoupper(trim($c[$k])) : $d;
+        $iv = fn (array $i, string $k, array $ic, string $key): ?string => ($ic[$key] ?? true) && ! empty($i[$k]) ? Storage::url($i[$k]) : null;
+        $contrast = function (string $hex): string {
             $h = ltrim($hex, '#');
-            if (!preg_match('/^[A-Fa-f0-9]{6}$/', $h)) return '#FFFFFF';
-            $b = (hexdec(substr($h,0,2))*299 + hexdec(substr($h,2,2))*587 + hexdec(substr($h,4,2))*114)/1000;
+            if (! preg_match('/^[A-Fa-f0-9]{6}$/', $h)) {
+                return '#FFFFFF';
+            }
+            $b = (hexdec(substr($h, 0, 2)) * 299 + hexdec(substr($h, 2, 2)) * 587 + hexdec(substr($h, 4, 2)) * 114) / 1000;
+
             return $b >= 155 ? '#0F172A' : '#FFFFFF';
         };
 
@@ -664,7 +664,9 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         ];
         for ($fi = 1; $fi <= 10; $fi++) {
             $ft = $tv($textos, "frota_card_{$fi}_titulo", $frotaDefaults[$fi][0] ?? '');
-            if ($ft === '') continue;
+            if ($ft === '') {
+                continue;
+            }
             $frotaDestaques[] = [
                 'titulo' => $ft,
                 'descricao' => $tv($textos, "frota_card_{$fi}_descricao", $frotaDefaults[$fi][1] ?? ''),
@@ -676,7 +678,9 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $beneficiosDefaults = ['Retirada ágil com pré-cadastro online', 'Proteções e adicionais sob medida', 'Atendimento para pessoa física e empresas', 'Frota revisada e higienizada regularmente'];
         for ($bi = 1; $bi <= 10; $bi++) {
             $bv = $tv($textos, "beneficio_{$bi}", $beneficiosDefaults[$bi - 1] ?? '');
-            if ($bv !== '') $beneficios[] = $bv;
+            if ($bv !== '') {
+                $beneficios[] = $bv;
+            }
         }
 
         $etapasReserva = [
@@ -696,15 +700,15 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         $heroTrustChips = [];
 
-        if (!empty($empresa->telefone)) {
+        if (! empty($empresa->telefone)) {
             $heroTrustChips[] = $empresa->telefone;
         }
 
-        if (!empty($empresa->email)) {
+        if (! empty($empresa->email)) {
             $heroTrustChips[] = $empresa->email;
         }
 
-        if (!empty($empresa->cnpj)) {
+        if (! empty($empresa->cnpj)) {
             $heroTrustChips[] = $empresa->cnpj;
         }
 
@@ -715,7 +719,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             $heroTrustChips[] = 'Aluguel para motorista de app';
         }
 
-        return view('site-apresentacao.templates.' . $modeloPref, [
+        return view('site-apresentacao.templates.'.$modeloPref, [
             'empresa' => $empresa,
             'aluguelAppAtivo' => ($empresa->aluguel_app_ativo ?? 'N') === 'S',
             'heroTag' => $tv($textos, 'hero_tag', ''),
@@ -778,7 +782,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             'frotaLabelSuperior' => $tv($textos, 'frota_label_superior', 'Frota em destaque'),
             'frotaDescricao' => $tv($textos, 'frota_descricao', 'Selecione o grupo ideal e reserve.'),
             'frotaDestaques' => $frotaDestaques,
-            'vantagensTitulo' => $tv($textos, 'vantagens_titulo', 'Por que escolher ' . $empresa->nome),
+            'vantagensTitulo' => $tv($textos, 'vantagens_titulo', 'Por que escolher '.$empresa->nome),
             'vantagensLabelSuperior' => $tv($textos, 'vantagens_label_superior', 'Diferenciais'),
             'vantagensDescricao' => $tv($textos, 'vantagens_descricao', 'Fluxo inspirado nas melhores locadoras do mercado.'),
             'beneficios' => $beneficios,
@@ -820,7 +824,8 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             abort(403, 'Sem acesso para excluir esta empresa.');
         }
 
-        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+        return $this->redirecionaRotaRedirect($this->nomeFiltro)
+            ->with('success', 'Empresa excluída. Os dados foram preservados e a empresa marcada como inativa.');
     }
 
     public function filtro(Request $request)
@@ -1008,7 +1013,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             try {
                 $path = ArquivoAnexoHelper::armazenar(
                     $request->file($inputName),
-                    'empresas/site_apresentacao/' . $empresaAtual->id . '/' . $imageKey,
+                    'empresas/site_apresentacao/'.$empresaAtual->id.'/'.$imageKey,
                     $imagens[$imageKey] ?? null
                 );
 
@@ -1061,5 +1066,4 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             ],
         ];
     }
-
 }
