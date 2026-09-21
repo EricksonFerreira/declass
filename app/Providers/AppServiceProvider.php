@@ -76,6 +76,11 @@ class AppServiceProvider extends ServiceProvider
             return $user->isSuperAdmin();
         });
 
+        // LogViewer (opcodesio/log-viewer): somente superadmin.
+        Gate::define('viewLogViewer', function (User $user) {
+            return $user->isSuperAdmin();
+        });
+
         Gate::define('acessar-perfil', function (User $user) {
             return $user->id !== null;
         });

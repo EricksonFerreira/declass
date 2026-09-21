@@ -502,6 +502,11 @@ return [
                     'route' => 'ia-uso.index',
                     'icon' => 'fas fa-chart-line',
                 ],
+                [
+                    'text' => 'Logs',
+                    'route' => 'log-viewer.index',
+                    'icon' => 'fas fa-file-alt',
+                ],
             ],
         ],
 
