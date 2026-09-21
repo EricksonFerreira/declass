@@ -65,7 +65,8 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
         $nomeFiltro = $this->nomeFiltro;
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
-        $funcoes = \App\Models\Funcao::where('ativo', true)->orderBy('nome')->pluck('nome', 'id');
+        $funcoes = \App\Models\Funcao::where('empresa_id', app(\App\Support\EmpresaContext::class)->empresaId() ?? auth()->user()->empresa_id)
+            ->where('ativo', true)->orderBy('nome')->pluck('nome', 'id');
 
         return view('usuario.index', compact(
             'usuarios',
@@ -104,7 +105,8 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Usuários', 'usuario.index', 'Criar', 'Gerenciar');
 
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
-        $funcoes = \App\Models\Funcao::where('ativo', true)->orderBy('nome')->pluck('nome', 'id');
+        $funcoes = \App\Models\Funcao::where('empresa_id', app(\App\Support\EmpresaContext::class)->empresaId() ?? auth()->user()->empresa_id)
+            ->where('ativo', true)->orderBy('nome')->pluck('nome', 'id');
         [$metodo, $rota] = $this->getFormMethodAndRoute();
 
         return view('usuario.add-edit', compact('breadcrumb', 'sexo', 'metodo', 'tiposUsuario', 'funcoes', 'rota'))->with('titulo', $this->titulo);
@@ -309,7 +311,8 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         ];
 
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
-        $funcoes = \App\Models\Funcao::where('ativo', true)->orderBy('nome')->pluck('nome', 'id');
+        $funcoes = \App\Models\Funcao::where('empresa_id', app(\App\Support\EmpresaContext::class)->empresaId() ?? auth()->user()->empresa_id)
+            ->where('ativo', true)->orderBy('nome')->pluck('nome', 'id');
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuários', 'usuario.index', "Editar: $usuario->nome", 'Gerenciar');
         [$metodo, $rota] = $this->getFormMethodAndRoute($usuario);

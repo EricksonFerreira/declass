@@ -275,6 +275,7 @@ class ConsumoProjetoService
      */
     public function funcoesParaSelect(): array
     {
-        return Funcao::where('ativo', true)->orderBy('nome')->pluck('nome', 'id')->all();
+        return Funcao::where('empresa_id', $this->empresaId())
+            ->where('ativo', true)->orderBy('nome')->pluck('nome', 'id')->all();
     }
 }
