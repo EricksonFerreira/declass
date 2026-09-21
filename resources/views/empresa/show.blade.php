@@ -197,9 +197,6 @@
                         <i class="fas fa-globe mr-1"></i> Site
                     </a>
                 @endif
-                <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn rs-btn--sm">
-                    <i class="fas fa-credit-card mr-1"></i> Assinatura
-                </a>
                 <a href="{{ route('empresa.atribuir-assinatura', $empresa->id) }}" class="rs-btn rs-btn--sm bg-primary text-white">
                     <i class="fas fa-link mr-1"></i> Atribuir assinatura
                 </a>
