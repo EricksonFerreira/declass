@@ -195,6 +195,13 @@
                 <a href="{{ route('empresa.edit', $empresa->id) }}" class="rs-btn rs-btn--primary rs-btn--sm">
                     <i class="fas fa-pen mr-1"></i> Editar
                 </a>
+                <x-delete-button
+                    :action="route('empresa.destroy', $empresa->id)"
+                    btn-class="btn-danger"
+                    titulo="Excluir"
+                    mensagem="Excluir a empresa não pode ser desfeito!"
+                    texto-confirmacao="Sim, excluir empresa"
+                />
                 @if($empresa->site_apresentacao_ativo && $plano?->site_vendas)
                     <a href="{{ route('empresa.site-editor.edit', $empresa->id) }}" class="rs-btn bg-info rs-btn--sm">
                         <i class="fas fa-globe mr-1"></i> Site
