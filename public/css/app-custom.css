@@ -40,3 +40,38 @@
     vertical-align: baseline;
     letter-spacing: .01em;
 }
+
+/* Marca do sidebar — badge branco mantém o azul da logo legível em qualquer tema */
+.main-sidebar .brand-link {
+    background: #fff;
+    border-radius: .6rem;
+    border-bottom: none;
+    margin: .5rem .6rem;
+    padding: .45rem .75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .55rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+}
+
+.main-sidebar .brand-link .brand-image {
+    opacity: 1;
+    max-height: 30px;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.main-sidebar .brand-link .brand-text {
+    color: #1565c0;
+    font-weight: 600;
+    margin-left: 0;
+}
+
+.main-sidebar .brand-link:hover {
+    background: #f4f7fb;
+}
+
+.main-sidebar .brand-link:hover .brand-text {
+    color: #1565c0;
+}
