@@ -704,7 +704,7 @@
 
             // Load masks if available
             if (typeof $.fn.mask !== 'undefined') {
-                $('#drawer_celular').mask('(00) 00000-0000');
+                $('#drawer_celular').mask('(00) 0000-00009');
             }
 
             function abrirDrawer(titulo, action, method, data = null) {

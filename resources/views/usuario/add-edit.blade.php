@@ -136,7 +136,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 <script>
     $(document).ready(function() {
-        $('#celular').mask('(00) 00000-0000');
+        $('#celular').mask('(00) 0000-00009');
     });
 </script>
 @stop
