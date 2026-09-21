@@ -99,7 +99,6 @@
                         <div class="text-muted small mb-2">
                             Analisado em {{ $analise->created_at->format('d/m/Y H:i') }}
                             por {{ $analise->usuario?->nome ?? 'sistema' }}
-                            · {{ $analise->modelo }}
                         </div>
                     @else
                         <p class="text-muted small mb-2">Cole o texto do edital em "Edital" e rode a análise para estimar a aderência da empresa aos critérios de julgamento.</p>
@@ -314,14 +313,13 @@
                     </div>
                     <div class="card-body p-0 table-responsive">
                         <table class="table table-sm mb-0">
-                            <thead><tr><th>Data</th><th>Nota</th><th>Viabilidade</th><th>Modelo</th><th>Analista</th></tr></thead>
+                            <thead><tr><th>Data</th><th>Nota</th><th>Viabilidade</th><th>Analista</th></tr></thead>
                             <tbody>
                                 @foreach ($licitacao->analises->skip(1) as $a)
                                     <tr>
                                         <td>{{ $a->created_at->format('d/m/Y H:i') }}</td>
                                         <td>{{ $a->nota_tecnica_estimada !== null ? number_format((float) $a->nota_tecnica_estimada, 0) : '—' }}</td>
                                         <td>{{ \App\Models\LicitacaoAnalise::VIABILIDADES[$a->viabilidade] ?? '—' }}</td>
-                                        <td class="small text-muted">{{ $a->modelo }}</td>
                                         <td class="small">{{ $a->usuario?->nome ?? '—' }}</td>
                                     </tr>
                                 @endforeach
