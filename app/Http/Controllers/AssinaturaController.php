@@ -73,8 +73,14 @@ class AssinaturaController extends Controller
         $statusFiltro = trim((string) $request->input('status', ''));
         $planoFiltro = trim((string) $request->input('plano_id', ''));
 
-        if ($statusFiltro !== '') {
+        if ($statusFiltro === 'arquivada') {
+            // Empresa excluida (soft delete) ou desvinculada
+            $query->whereDoesntHave('empresa');
+        } elseif ($statusFiltro !== '') {
             $query->where('status', $statusFiltro);
+        }
+        if ($empresaFiltro !== '') {
+            $query->whereHas('empresa', fn ($q) => $q->where('nome', 'like', "%{$empresaFiltro}%"));
         }
         if ($planoFiltro !== '') {
             $query->where('plano_id', $planoFiltro);

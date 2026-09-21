@@ -105,8 +105,21 @@ class EmpresaPlano extends Model
         return (int) now()->startOfDay()->diffInDays($this->data_vencimento, false);
     }
 
+    /**
+     * Assinatura arquivada: a empresa vinculada nao existe mais
+     * (excluida/desvinculada). O status real permanece no banco.
+     */
+    public function getArquivadaAttribute(): bool
+    {
+        return $this->empresa === null;
+    }
+
     public function getStatusBadgeAttribute(): array
     {
+        if ($this->arquivada) {
+            return ['label' => 'Arquivada', 'class' => 'badge-dark'];
+        }
+
         return match ($this->status) {
             'ativo' => ['label' => 'Ativo',               'class' => 'badge-success'],
             'trial' => ['label' => 'Trial',               'class' => 'badge-info'],

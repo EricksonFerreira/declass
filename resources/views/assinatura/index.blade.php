@@ -34,7 +34,7 @@
                         <label class="mb-1">Status</label>
                         <select name="status" class="form-control form-control-sm">
                             <option value="">Todos</option>
-                            @foreach (['ativo', 'trial', 'inadimplente', 'aguardando_pagamento', 'expirado', 'cancelado'] as $s)
+                            @foreach (['ativo', 'trial', 'inadimplente', 'aguardando_pagamento', 'expirado', 'cancelado', 'arquivada'] as $s)
                                 <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
                                     {{ ucfirst(str_replace('_', ' ', $s)) }}
                                 </option>
@@ -97,7 +97,7 @@
                             ? number_format($storageMb / 1024, 1, ',', '.') . ' GB'
                             : $storageMb . ' MB';
 
-                        $nomeEmpresa = (string) ($ass->empresa->nome ?? 'Empresa');
+                        $nomeEmpresa = (string) ($ass->empresa->nome ?? 'Empresa excluída');
                         $iniciais = collect(preg_split('/\s+/', trim($nomeEmpresa)) ?: [])
                             ->filter()
                             ->take(2)
