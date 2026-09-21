@@ -21,7 +21,7 @@ class LoadProjectsOverviewAction
         // 1. If a single project is selected, load detailed "Project Status" view data
         if ($filterProjectId) {
             $project = ClockifyProjeto::with(['cliente', 'users', 'cronogramas.planejamentos'])->find($filterProjectId);
-            
+
             if ($project) {
                 // Get trackers for this project
                 $trackers = ClockifyTimeTracker::with('user')
@@ -40,7 +40,7 @@ class LoadProjectsOverviewAction
                 // Budget & Financial stats (real values from DB if set, else simulated)
                 $budgetHours = (float) ($project->horas_orcadas ?: 150.0);
                 $hourlyRate = (float) ($project->valor_hora ?: 150.0);
-                
+
                 $progressPercent = $budgetHours > 0 ? round(($totalHours / $budgetHours) * 100, 2) : 0;
 
                 $budgetAmount = $budgetHours * $hourlyRate;
@@ -58,13 +58,13 @@ class LoadProjectsOverviewAction
                         'despesas' => $trackerHours * 15.0,
                         'valor' => $tracker->faturavel ? ($trackerHours * $hourlyRate) : 0.0,
                         'horas' => $trackerHours,
-                        'periodo' => $tracker->inicio->format('d/m/Y H:i') . ' - ' . ($tracker->fim ? $tracker->fim->format('H:i') : 'Ativo'),
+                        'periodo' => $tracker->inicio->format('d/m/Y H:i').' - '.($tracker->fim ? $tracker->fim->format('H:i') : 'Ativo'),
                         'timestamp' => $tracker->inicio->timestamp,
                     ];
                 }
 
                 // Sort by latest entry
-                usort($tasks, fn($a, $b) => $b['timestamp'] <=> $a['timestamp']);
+                usort($tasks, fn ($a, $b) => $b['timestamp'] <=> $a['timestamp']);
 
                 return [
                     'startDate' => $startDate,
@@ -90,12 +90,12 @@ class LoadProjectsOverviewAction
 
         // 2. Default: Load general macro view of all projects
         $projectStats = ClockifyTimeTracker::select(
-                'clockify_projeto_id',
-                DB::raw('SUM(TIMESTAMPDIFF(SECOND, inicio, fim)) as total_seconds'),
-                DB::raw('COUNT(*) as entries_count'),
-                DB::raw('COUNT(DISTINCT user_id) as members_count'),
-                DB::raw('MAX(inicio) as last_activity')
-            )
+            'clockify_projeto_id',
+            DB::raw('SUM(TIMESTAMPDIFF(SECOND, inicio, fim)) as total_seconds'),
+            DB::raw('COUNT(*) as entries_count'),
+            DB::raw('COUNT(DISTINCT user_id) as members_count'),
+            DB::raw('MAX(inicio) as last_activity')
+        )
             ->whereNotNull('fim')
             ->whereBetween('inicio', [$startDate, $endDate])
             ->groupBy('clockify_projeto_id')
@@ -135,19 +135,19 @@ class LoadProjectsOverviewAction
             }
         }
 
-        usort($projectCards, fn($a, $b) => $b['hours'] <=> $a['hours']);
+        usort($projectCards, fn ($a, $b) => $b['hours'] <=> $a['hours']);
 
         // Project × Member matrix
         $topProjectIds = collect($projectCards)->where('hours', '>', 0)->take(10)->pluck('id')->toArray();
         $matrix = [];
         $matrixMembers = collect();
 
-        if (!empty($topProjectIds)) {
+        if (! empty($topProjectIds)) {
             $matrixData = ClockifyTimeTracker::select(
-                    'clockify_projeto_id',
-                    'user_id',
-                    DB::raw('SUM(TIMESTAMPDIFF(SECOND, inicio, fim)) as total_seconds')
-                )
+                'clockify_projeto_id',
+                'user_id',
+                DB::raw('SUM(TIMESTAMPDIFF(SECOND, inicio, fim)) as total_seconds')
+            )
                 ->whereNotNull('fim')
                 ->whereBetween('inicio', [$startDate, $endDate])
                 ->whereIn('clockify_projeto_id', $topProjectIds)
@@ -157,9 +157,11 @@ class LoadProjectsOverviewAction
             $memberIds = $matrixData->pluck('user_id')->unique()->toArray();
             $matrixMembers = User::whereIn('id', $memberIds)->orderBy('nome')->get();
 
+            $matrixTotals = ['members' => [], 'total' => 0];
+
             foreach ($topProjectIds as $projectId) {
                 $project = $projects->find($projectId);
-                if (!$project) {
+                if (! $project) {
                     continue;
                 }
 
@@ -170,12 +172,20 @@ class LoadProjectsOverviewAction
                 ];
 
                 foreach ($matrixMembers as $member) {
-                    $entry = $matrixData->first(fn($d) => $d->clockify_projeto_id === $projectId && $d->user_id === $member->id);
+                    $entry = $matrixData->first(fn ($d) => $d->clockify_projeto_id === $projectId && $d->user_id === $member->id);
                     $row['members'][$member->id] = $entry ? round($entry->total_seconds / 3600, 1) : 0;
                 }
 
+                $row['total'] = round(array_sum($row['members']), 1);
+                foreach ($row['members'] as $memberId => $hours) {
+                    $matrixTotals['members'][$memberId] = round(($matrixTotals['members'][$memberId] ?? 0) + $hours, 1);
+                }
+                $matrixTotals['total'] = round($matrixTotals['total'] + $row['total'], 1);
+
                 $matrix[] = $row;
             }
+        } else {
+            $matrixTotals = ['members' => [], 'total' => 0];
         }
 
         return [
@@ -189,6 +199,7 @@ class LoadProjectsOverviewAction
             'inactiveProjects' => $inactiveProjects,
             'matrix' => $matrix,
             'matrixMembers' => $matrixMembers,
+            'matrixTotals' => $matrixTotals,
             'totalProjects' => $projects->count(),
             'activeProjects' => count($chartLabels),
         ];

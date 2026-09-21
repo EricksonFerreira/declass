@@ -62,6 +62,8 @@
     .matrix-table th, .matrix-table td { text-align: center; vertical-align: middle !important; }
     .matrix-table td.project-col { text-align: left; font-weight: bold; }
     .matrix-badge { min-width: 45px; }
+    .matrix-total-row { background: #eef3fb; }
+    .matrix-total-row td { border-bottom: 2px solid #b6c7e4 !important; }
 
     /* Legend Row style */
     .chart-legend-wrap { display: flex; justify-content: center; gap: 18px; margin-top: 18px; font-size: 12px; font-weight: 700; color: #64748b; }
@@ -412,9 +414,28 @@
                                     @foreach($matrixMembers as $member)
                                         <th>{{ $member->nome }}</th>
                                     @endforeach
+                                    <th class="text-bold">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <tr class="matrix-total-row">
+                                    <td class="project-col pl-4 text-left font-weight-bold">
+                                        <i class="fas fa-equals mr-2 text-primary"></i>TOTAL
+                                    </td>
+                                    @foreach($matrixMembers as $member)
+                                        @php $mt = $matrixTotals['members'][$member->id] ?? 0; @endphp
+                                        <td>
+                                            @if($mt > 0)
+                                                <span class="badge badge-primary matrix-badge px-2 py-1 font-weight-bold">{{ number_format($mt, 1) }}h</span>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                    <td>
+                                        <span class="badge badge-primary matrix-badge px-2 py-1 font-weight-bold">{{ number_format($matrixTotals['total'] ?? 0, 1) }}h</span>
+                                    </td>
+                                </tr>
                                 @foreach($matrix as $row)
                                     <tr>
                                         <td class="project-col pl-4 text-left">
@@ -433,6 +454,13 @@
                                                 @endif
                                             </td>
                                         @endforeach
+                                        <td>
+                                            @if(($row['total'] ?? 0) > 0)
+                                                <span class="badge badge-secondary matrix-badge px-2 py-1 font-weight-bold">{{ number_format($row['total'], 1) }}h</span>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
