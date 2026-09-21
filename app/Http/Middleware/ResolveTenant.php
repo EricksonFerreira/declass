@@ -4,12 +4,11 @@ namespace App\Http\Middleware;
 
 use App\Models\Empresa;
 use App\Support\EmpresaContext;
+use App\Support\SchemaCache;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class ResolveTenant
 {
@@ -18,13 +17,13 @@ class ResolveTenant
         $empresaContext = app(EmpresaContext::class);
         $empresaContext->setEmpresaId(null);
 
-        if (!SchemaCache::hasTable('empresas')) {
+        if (! SchemaCache::hasTable('empresas')) {
             return $next($request);
         }
 
         if (auth()->check()) {
             $user = auth()->user();
-            if (!SchemaCache::hasColumn($user->getTable(), 'empresa_id')) {
+            if (! SchemaCache::hasColumn($user->getTable(), 'empresa_id')) {
                 return $next($request);
             }
 
@@ -36,20 +35,22 @@ class ResolveTenant
 
                 if ((int) $empresaId === 0) {
                     $empresaContext->setEmpresaId(null);
+
                     return $next($request);
                 }
 
                 $empresaContext->setEmpresaId((int) $empresaId);
+
                 return $next($request);
             }
 
             $empresaId = $user->empresa_id;
 
-            if (!$empresaId) {
+            if (! $empresaId) {
                 throw new AccessDeniedHttpException('Usuario sem empresa vinculada.');
             }
 
-            if (!Empresa::query()->whereKey($empresaId)->exists()) {
+            if (! $this->empresaExiste($empresaId)) {
                 throw new AccessDeniedHttpException('Empresa vinculada nao encontrada.');
             }
 
@@ -67,22 +68,45 @@ class ResolveTenant
                 return 0;
             }
 
-            if ($sessionEmpresaId > 0 && Empresa::query()->whereKey($sessionEmpresaId)->exists()) {
+            if ($sessionEmpresaId > 0 && $this->empresaExiste($sessionEmpresaId)) {
                 return $sessionEmpresaId;
             }
         }
 
-        if ($fallbackEmpresaId && Empresa::query()->whereKey($fallbackEmpresaId)->exists()) {
+        if ($fallbackEmpresaId && $this->empresaExiste($fallbackEmpresaId)) {
             $request->session()->put('empresa_context_id', (int) $fallbackEmpresaId);
+
             return (int) $fallbackEmpresaId;
         }
 
-        $firstEmpresaId = Empresa::query()->orderBy('id')->value('id');
+        $firstEmpresaId = $this->empresaQuery()->orderBy('id')->value('id');
         if ($firstEmpresaId) {
             $request->session()->put('empresa_context_id', (int) $firstEmpresaId);
+
             return (int) $firstEmpresaId;
         }
 
         return null;
+    }
+
+    /**
+     * Verifica existencia da empresa respeitando soft delete apenas quando a
+     * coluna deleted_at ja existe — evita quebrar toda request autenticada no
+     * intervalo entre o deploy do codigo e a execucao da migration.
+     */
+    private function empresaExiste($empresaId): bool
+    {
+        return $this->empresaQuery()->whereKey($empresaId)->exists();
+    }
+
+    private function empresaQuery()
+    {
+        $query = Empresa::query();
+
+        if (! SchemaCache::hasColumn('empresas', 'deleted_at')) {
+            $query->withoutGlobalScope(\Illuminate\Database\Eloquent\SoftDeletingScope::class);
+        }
+
+        return $query;
     }
 }
