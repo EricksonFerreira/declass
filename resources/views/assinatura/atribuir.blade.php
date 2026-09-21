@@ -30,11 +30,7 @@
                         Vincule um plano a uma empresa e mantenha o histórico de assinaturas organizado por período.
                     </p>
                 </div>
-                <div class="d-flex flex-wrap" style="gap:8px;">
-                        <a href="{{ route('assinatura.index') }}" class="btn-xp btn-xp--outline btn-xp--sm">
-                            <i class="fas fa-arrow-left mr-1"></i> Voltar
-                        </a>
-                </div>
+                <div class="d-flex flex-wrap" style="gap:8px;"></div>
             </div>
         </div>
 
@@ -140,7 +136,6 @@
                                     <button type="submit" id="btnSubmit" class="btn-xp btn-xp--sm">
                                         <i class="fas fa-check mr-1"></i> <span id="btnText">Lançar assinatura</span>
                                     </button>
-                                    <a href="{{ route('assinatura.index') }}" class="btn-xp btn-xp--outline btn-xp--sm">Cancelar</a>
                                 </div>
                             </div>
                         </div>
