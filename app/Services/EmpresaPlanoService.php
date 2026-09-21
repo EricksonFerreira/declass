@@ -207,7 +207,9 @@ class EmpresaPlanoService
             EmpresaPlanoPagamento::create([
                 'empresa_plano_id' => $assinatura->id,
                 'empresa_id' => $empresa->id,
-                'valor' => $valor,
+                // Trial/gratuito não gera cobrança: registra R$ 0 para não
+                // sugerir um pagamento que nunca existiu.
+                'valor' => $gratuito ? 0 : $valor,
                 'periodicidade' => $periodicidade,
                 'metodo' => $metodoCobranca,
                 'status' => $gratuito ? 'pago' : 'pendente',
