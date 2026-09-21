@@ -189,6 +189,9 @@
                 </a>
             </li>
             <li class="nav-item ml-auto" style="display:flex;gap:10px;align-items:center;">
+                <a href="{{ route('assinatura.atribuir', ['empresa_id' => $empresa->id]) }}" class="rs-btn rs-btn--sm bg-primary text-white">
+                    <i class="fas fa-link mr-1"></i> {{ $planoAtivo ? 'Alterar assinatura' : 'Adicionar assinatura' }}
+                </a>
                 <a href="{{ route('empresa.edit', $empresa->id) }}" class="rs-btn rs-btn--primary rs-btn--sm">
                     <i class="fas fa-pen mr-1"></i> Editar
                 </a>
