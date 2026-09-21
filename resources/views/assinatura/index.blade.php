@@ -34,7 +34,7 @@
                         <label class="mb-1">Status</label>
                         <select name="status" class="form-control form-control-sm">
                             <option value="">Todos</option>
-                            @foreach (['ativo', 'trial', 'inadimplente', 'aguardando_pagamento', 'cancelado'] as $s)
+                            @foreach (['ativo', 'trial', 'inadimplente', 'aguardando_pagamento', 'expirado', 'cancelado'] as $s)
                                 <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
                                     {{ ucfirst(str_replace('_', ' ', $s)) }}
                                 </option>

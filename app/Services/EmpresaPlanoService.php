@@ -152,13 +152,14 @@ class EmpresaPlanoService
         array $veiculosDesativar = [],
         bool $renovacaoAutomatica = false,
         bool $permitirTrial = true,
+        bool $trial = false,
     ): EmpresaPlano {
         return DB::transaction(function () use (
             $empresa, $plano, $periodicidade, $metodoPagamento,
-            $diaVencimento, $criadoPorUserId, $renovacaoAutomatica, $permitirTrial
+            $diaVencimento, $criadoPorUserId, $renovacaoAutomatica, $permitirTrial, $trial
         ) {
-            $primeiraAssinatura = $permitirTrial
-                && ! EmpresaPlano::where('empresa_id', $empresa->id)->exists();
+            $emTrial = $trial
+                || ($permitirTrial && ! EmpresaPlano::where('empresa_id', $empresa->id)->exists());
 
             // Cancela assinaturas anteriores ativas.
             EmpresaPlano::where('empresa_id', $empresa->id)
@@ -170,7 +171,7 @@ class EmpresaPlanoService
             $valor = $this->valorTotalPlano($plano, $periodicidade);
 
             $dataInicio = now()->toDateString();
-            $dataVencimento = $primeiraAssinatura
+            $dataVencimento = $emTrial
                 ? now()->addDays(self::TRIAL_DIAS)->toDateString()
                 : ($periodicidade === 'anual'
                     ? now()->addYear()->toDateString()
@@ -185,7 +186,7 @@ class EmpresaPlanoService
                 'empresa_id' => $empresa->id,
                 'plano_id' => $plano->id,
                 'periodicidade' => $periodicidade,
-                'status' => $primeiraAssinatura ? 'trial' : 'aguardando_pagamento',
+                'status' => $emTrial ? 'trial' : 'aguardando_pagamento',
                 'metodo_cobranca' => $metodoCobranca,
                 'data_inicio' => $dataInicio,
                 'data_vencimento' => $dataVencimento,
@@ -201,7 +202,7 @@ class EmpresaPlanoService
                 ? now()->setDay(min($diaVencimento, now()->daysInMonth))->addDays(3)->toDateString()
                 : now()->addDays(self::TRIAL_DIAS)->toDateString();
 
-            $gratuito = $valor <= 0;
+            $gratuito = $emTrial || $valor <= 0;
 
             EmpresaPlanoPagamento::create([
                 'empresa_plano_id' => $assinatura->id,

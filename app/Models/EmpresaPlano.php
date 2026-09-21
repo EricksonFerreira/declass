@@ -110,6 +110,7 @@ class EmpresaPlano extends Model
         return match ($this->status) {
             'ativo' => ['label' => 'Ativo',               'class' => 'badge-success'],
             'trial' => ['label' => 'Trial',               'class' => 'badge-info'],
+            'expirado' => ['label' => 'Expirado',            'class' => 'badge-dark'],
             'inadimplente' => ['label' => 'Inadimplente',        'class' => 'badge-danger'],
             'cancelado' => ['label' => 'Cancelado',           'class' => 'badge-secondary'],
             'aguardando_pagamento' => ['label' => 'Aguardando Pagamento', 'class' => 'badge-warning'],

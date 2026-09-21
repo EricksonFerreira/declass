@@ -66,7 +66,7 @@ class AssinaturaController extends Controller
         ]);
 
         $query = EmpresaPlano::with(['plano', 'empresa'])
-            ->orderByRaw("FIELD(status, 'inadimplente', 'aguardando_pagamento', 'ativo', 'trial', 'cancelado')")
+            ->orderByRaw("FIELD(status, 'inadimplente', 'aguardando_pagamento', 'ativo', 'trial', 'expirado', 'cancelado')")
             ->orderBy('data_vencimento');
 
         $empresaFiltro = trim((string) $request->input('empresa', ''));
@@ -424,14 +424,6 @@ class AssinaturaController extends Controller
             ->orderBy('nome')
             ->get();
 
-        $empresas->transform(function (Empresa $empresa) {
-            $empresa->setAttribute('qtd_veiculos_ativos', $empresa->users()->count());
-            $empresa->setAttribute('qtd_estacoes', \App\Models\Estacao::where('empresa_id', $empresa->id)->count());
-            $empresa->setAttribute('armazenamento_usado_mb', (float) round(($empresa->storage_used_bytes ?? 0) / 1048576, 2));
-
-            return $empresa;
-        });
-
         $planos = Plano::ativos()->get();
         $stripePublicKey = config('services.stripe.key');
         $empresaSelecionadaId = $empresa?->id ?? $request->integer('empresa_id') ?: null;
@@ -456,17 +448,17 @@ class AssinaturaController extends Controller
         $data = $request->validate([
             'empresa_id' => 'required|exists:empresas,id',
             'plano_id' => 'required|exists:planos,id',
-            'periodicidade' => 'required|in:mensal,anual',
+            'periodicidade' => 'nullable|in:mensal,anual',
+            'trial' => 'nullable|boolean',
             'data_inicio' => 'required|date',
             'data_vencimento' => 'nullable|date|after_or_equal:data_inicio',
             'dia_vencimento' => 'nullable|integer|min:1|max:28',
             'valor' => 'nullable|numeric|min:0',
-            'armazenamento_mb' => 'nullable|numeric|min:0',
-            'veiculos_adicionais' => 'nullable|integer|min:0',
-            'filiais_adicionais' => 'nullable|integer|min:0',
-            'armazenamento_adicional_qtd' => 'nullable|integer|min:0',
             'observacao' => 'nullable|string|max:500',
         ]);
+
+        $isTrial = $request->boolean('trial');
+        $periodicidade = $isTrial ? 'mensal' : ($data['periodicidade'] ?? 'mensal');
 
         $empresa = Empresa::findOrFail($data['empresa_id']);
         $plano = Plano::findOrFail($data['plano_id']);
@@ -483,26 +475,25 @@ class AssinaturaController extends Controller
         $empresaPlano = $this->planoService->contratar(
             empresa: $empresa,
             plano: $plano,
-            periodicidade: $data['periodicidade'],
+            periodicidade: $periodicidade,
             metodoPagamento: 'manual',
-            diaVencimento: $data['dia_vencimento'] ?? null,
+            diaVencimento: $isTrial ? null : ($data['dia_vencimento'] ?? null),
             criadoPorUserId: Auth::id(),
             permitirTrial: false,
+            trial: $isTrial,
         );
 
         $metadados = (array) ($empresaPlano->metadados ?? []);
         $metadados['ajustes_atribuir'] = [
             'valor' => isset($data['valor']) ? (float) $data['valor'] : null,
-            'armazenamento_mb' => isset($data['armazenamento_mb']) ? (float) $data['armazenamento_mb'] : null,
-            'veiculos_adicionais' => isset($data['veiculos_adicionais']) ? (int) $data['veiculos_adicionais'] : null,
-            'filiais_adicionais' => isset($data['filiais_adicionais']) ? (int) $data['filiais_adicionais'] : null,
-            'armazenamento_adicional_qtd' => isset($data['armazenamento_adicional_qtd']) ? (int) $data['armazenamento_adicional_qtd'] : null,
             'observacao' => $data['observacao'] ?? null,
         ];
         $empresaPlano->update(['metadados' => $metadados]);
 
         return redirect()->route('assinatura.index')
-            ->with('success', 'Assinatura lançada com sucesso. O pagamento pode ser registrado depois.');
+            ->with('success', $isTrial
+                ? 'Trial de 7 dias liberado — a empresa perde o acesso sozinha ao fim do período.'
+                : 'Assinatura lançada com sucesso. O pagamento pode ser registrado depois.');
     }
 
     public function alterarStatus(Request $request, EmpresaPlano $assinatura): RedirectResponse
