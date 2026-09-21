@@ -7,6 +7,7 @@ use App\Actions\Clockify\Funcao\ListarFuncoesAction;
 use App\Actions\Clockify\Funcao\SaveFuncaoAction;
 use App\Actions\Clockify\Funcao\UpdateFuncaoAction;
 use App\Http\Controllers\Controller;
+use App\Support\EmpresaContext;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\RedirectResponse;
@@ -97,7 +98,7 @@ class FuncaoController extends Controller
 
     public function store(Request $request, SaveFuncaoAction $action): RedirectResponse
     {
-        $empresaId = $request->user()->empresa_id;
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? $request->user()->empresa_id;
 
         $validated = $request->validate([
             'nome' => [
@@ -117,7 +118,7 @@ class FuncaoController extends Controller
 
     public function update(Request $request, $id, UpdateFuncaoAction $action): RedirectResponse
     {
-        $empresaId = $request->user()->empresa_id;
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? $request->user()->empresa_id;
 
         $validated = $request->validate([
             'nome' => [
