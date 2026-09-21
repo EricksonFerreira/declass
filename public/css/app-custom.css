@@ -63,7 +63,7 @@
 }
 
 .main-sidebar .brand-link .brand-text {
-    color: #1565c0;
+    color: #0b3d91;
     font-weight: 600;
     margin-left: 0;
 }
@@ -73,5 +73,5 @@
 }
 
 .main-sidebar .brand-link:hover .brand-text {
-    color: #1565c0;
+    color: #0b3d91;
 }
