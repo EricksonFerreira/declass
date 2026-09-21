@@ -354,15 +354,22 @@
                     </div>
                 </div>
 
-                @if($plano->itens->count())
+                @php
+                    // Trial não exibe o chip de limite de usuários ("Até N usuários").
+                    $emTrial = ($planoAtivo->status ?? null) === 'trial';
+                    $itensVisiveis = $plano->itens->filter(
+                        fn ($item) => !($emTrial && preg_match('/usu[áa]rios?/iu', (string) $item->descricao))
+                    );
+                @endphp
+                @if($itensVisiveis->count())
                 <div class="rs-card">
                     <div class="rs-card__header">
                         <i class="fas fa-list rs-card__icon"></i>
                         <h2>Recursos Inclusos</h2>
-                        <span class="rs-badge-count">{{ $plano->itens->count() }}</span>
+                        <span class="rs-badge-count">{{ $itensVisiveis->count() }}</span>
                     </div>
                     <div class="rs-items-grid">
-                        @foreach($plano->itens as $item)
+                        @foreach($itensVisiveis as $item)
                             <div class="rs-item {{ $item->incluso ? '' : 'rs-item--disabled' }}">
                                 <div class="rs-item-icon {{ $item->incluso ? 'rs-item-icon--yes' : 'rs-item-icon--no' }}">
                                     <i class="fas fa-{{ $item->incluso ? 'check' : 'times' }}"></i>

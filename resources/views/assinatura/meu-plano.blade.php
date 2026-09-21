@@ -208,7 +208,13 @@
                             </div>
                             <div class="card-body py-2">
                                 <ul class="list-unstyled mb-0">
-                                    @foreach ($assinatura->plano->itens as $item)
+                                    @php
+                                        // Trial não exibe o item de limite de usuários ("Até N usuários").
+                                        $itensVisiveis = $assinatura->plano->itens->filter(
+                                            fn ($item) => !($assinatura->status === 'trial' && preg_match('/usu[áa]rios?/iu', (string) $item->descricao))
+                                        );
+                                    @endphp
+                                    @foreach ($itensVisiveis as $item)
                                         <li class="mb-1 d-flex align-items-start" style="font-size:.82rem;">
                                             <i class="fas fa-{{ $item->incluso ? 'check text-success' : 'times text-muted' }} mr-2 mt-1 flex-shrink-0" style="font-size:.7rem;"></i>
                                             {{ $item->descricao }}
