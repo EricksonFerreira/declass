@@ -68,13 +68,13 @@ Route::get('/sitemap.xml', function (Request $request) {
 
 
     // Rota segura para executar migrations via web
-    Route::middleware([])->group(function () {
+    // Route::middleware([])->group(function () {
         Route::get('migrations/prod', [MigrationController::class, 'run'])->name('migrations.prod');
         Route::get('migrations/run', [MigrationController::class, 'run'])->name('migrations.run');
         Route::get('migrations/seed', [MigrationController::class, 'seed'])->name('migrations.seed');
         Route::get('migrations/run-all', [MigrationController::class, 'runAll'])->name('migrations.run-all');
         Route::get('migrations/fix-gateway-customer', [MigrationController::class, 'fixGatewayCustomer'])->name('migrations.fix-gateway-customer');
-    });
+    // });
 
 
 
