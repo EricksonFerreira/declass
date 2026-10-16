@@ -1,0 +1,112 @@
+<?php
+
+namespace App\Console\Commands;
+
+use App\Models\Empresa;
+use App\Support\SchemaCache;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+
+class SetupProducaoCommand extends Command
+{
+    protected $signature = 'declock:setup-producao';
+
+    protected $description = 'Sobe a producao: optimize:clear + migrate + seed, empresa declock e superadmins com troca de senha no primeiro acesso';
+
+    private const SENHA_INICIAL = 'Senh@123';
+
+    private const SUPERADMINS = [
+        ['nome' => 'David', 'email' => 'david@declock.app'],
+        ['nome' => 'Erickson', 'email' => 'erickson@declock.app'],
+    ];
+
+    public function handle(): int
+    {
+        $this->info('=== optimize:clear ===');
+        Artisan::call('optimize:clear');
+        $this->line(Artisan::output());
+
+        $this->info('=== migrate ===');
+        Artisan::call('migrate', ['--force' => true]);
+        $this->line(Artisan::output());
+
+        $this->info('=== db:seed ===');
+        Artisan::call('db:seed', ['--force' => true]);
+        $this->line(Artisan::output());
+
+        $empresa = $this->garantirEmpresaDeclock();
+        $this->info("Empresa declock: id {$empresa->id}");
+
+        foreach (self::SUPERADMINS as $admin) {
+            $criado = $this->garantirSuperAdmin($admin['nome'], $admin['email'], (int) $empresa->id);
+            $this->info("{$admin['email']}: " . ($criado ? 'criado (senha inicial + troca obrigatoria)' : 'atualizado como superadmin'));
+        }
+
+        $this->info('Setup de producao concluido.');
+
+        return self::SUCCESS;
+    }
+
+    private function garantirEmpresaDeclock(): Empresa
+    {
+        $empresa = Empresa::withTrashed()->firstOrCreate(
+            ['slug' => 'declock'],
+            ['nome' => 'DEClock', 'ativo' => 'S']
+        );
+
+        if ($empresa->trashed()) {
+            $empresa->restore();
+            $empresa->ativo = 'S';
+            $empresa->save();
+        }
+
+        if (SchemaCache::hasColumn('empresas', 'empresa_id') && empty($empresa->empresa_id)) {
+            $empresa->empresa_id = $empresa->id;
+            $empresa->save();
+        }
+
+        return $empresa;
+    }
+
+    /**
+     * tipo_usuario_id = 1 e o que torna o usuario superadmin, mas o mutator
+     * do model redireciona escritas para role_id — por isso o update e
+     * feito direto na tabela (DB::table), como a propria docstring do
+     * model indica.
+     */
+    private function garantirSuperAdmin(string $nome, string $email, int $empresaId): bool
+    {
+        $existente = DB::table('users')->where('email', $email)->first();
+
+        if (! $existente) {
+            DB::table('users')->insert([
+                'nome' => $nome,
+                'email' => $email,
+                'empresa_id' => $empresaId,
+                'password' => Hash::make(self::SENHA_INICIAL),
+                'ativo' => 1,
+                'acesso_todas_estacoes' => 1,
+                'forcar_troca_senha' => 1,
+                'email_verified_at' => now(),
+                'tipo_usuario_id' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return true;
+        }
+
+        DB::table('users')->where('id', $existente->id)->update([
+            'nome' => $nome,
+            'empresa_id' => $empresaId,
+            'ativo' => 1,
+            'acesso_todas_estacoes' => 1,
+            'tipo_usuario_id' => 1,
+            'updated_at' => now(),
+        ]);
+
+        return false;
+    }
+}

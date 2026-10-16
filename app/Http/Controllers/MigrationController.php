@@ -90,6 +90,20 @@ class MigrationController extends Controller
         return response('<h2>Migrations + Seeders</h2><pre style="white-space:pre-wrap;max-height:80vh;overflow:auto;border:1px solid #ddd;padding:8px">'.e($output).'</pre>');
     }
 
+    public function setupProducao(Request $request)
+    {
+        $this->checkToken($request);
+
+        try {
+            Artisan::call('declock:setup-producao');
+            $output = Artisan::output();
+
+            return response('<h2>Setup de producao</h2><pre style="white-space:pre-wrap;max-height:80vh;overflow:auto;border:1px solid #ddd;padding:8px">'.e($output).'</pre>');
+        } catch (\Throwable $e) {
+            return response('<h2>Erro no setup de producao</h2><pre>'.e($e->getMessage()).'</pre>', 500);
+        }
+    }
+
     public function fixGatewayCustomer(Request $request)
     {
         $this->checkToken($request);
