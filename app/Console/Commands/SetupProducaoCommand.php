@@ -18,8 +18,8 @@ class SetupProducaoCommand extends Command
     private const SENHA_INICIAL = 'Senh@123';
 
     private const SUPERADMINS = [
-        ['nome' => 'David', 'email' => 'david@declock.app'],
-        ['nome' => 'Erickson', 'email' => 'erickson@declock.app'],
+        ['nome' => 'David', 'email' => 'david@declock.app', 'usuario' => 'david'],
+        ['nome' => 'Erickson', 'email' => 'erickson@declock.app', 'usuario' => 'erickson'],
     ];
 
     public function handle(): int
@@ -40,8 +40,8 @@ class SetupProducaoCommand extends Command
         $this->info("Empresa declock: id {$empresa->id}");
 
         foreach (self::SUPERADMINS as $admin) {
-            $criado = $this->garantirSuperAdmin($admin['nome'], $admin['email'], (int) $empresa->id);
-            $this->info("{$admin['email']}: " . ($criado ? 'criado (senha inicial + troca obrigatoria)' : 'atualizado como superadmin'));
+            $criado = $this->garantirSuperAdmin($admin['nome'], $admin['email'], (int) $empresa->id, $admin['usuario']);
+            $this->info("{$admin['email']} (usuario: {$admin['usuario']}): " . ($criado ? 'criado (senha inicial + troca obrigatoria)' : 'atualizado como superadmin'));
         }
 
         $this->info('Setup de producao concluido.');
@@ -76,14 +76,16 @@ class SetupProducaoCommand extends Command
      * feito direto na tabela (DB::table), como a propria docstring do
      * model indica.
      */
-    private function garantirSuperAdmin(string $nome, string $email, int $empresaId): bool
+    private function garantirSuperAdmin(string $nome, string $email, int $empresaId, string $usuario): bool
     {
         $existente = DB::table('users')->where('email', $email)->first();
+        $temColunaUsuario = SchemaCache::hasColumn('users', 'usuario');
 
         if (! $existente) {
-            DB::table('users')->insert([
+            DB::table('users')->insert(array_filter([
                 'nome' => $nome,
                 'email' => $email,
+                'usuario' => $temColunaUsuario ? $usuario : null,
                 'empresa_id' => $empresaId,
                 'password' => Hash::make(self::SENHA_INICIAL),
                 'ativo' => 1,
@@ -93,19 +95,20 @@ class SetupProducaoCommand extends Command
                 'tipo_usuario_id' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]);
+            ], fn ($v) => $v !== null));
 
             return true;
         }
 
-        DB::table('users')->where('id', $existente->id)->update([
+        DB::table('users')->where('id', $existente->id)->update(array_filter([
             'nome' => $nome,
+            'usuario' => $temColunaUsuario ? $usuario : null,
             'empresa_id' => $empresaId,
             'ativo' => 1,
             'acesso_todas_estacoes' => 1,
             'tipo_usuario_id' => 1,
             'updated_at' => now(),
-        ]);
+        ], fn ($v) => $v !== null));
 
         return false;
     }

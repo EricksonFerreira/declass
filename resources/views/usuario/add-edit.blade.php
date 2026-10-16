@@ -22,7 +22,7 @@
                 
                 <div class="card-body">
                     <div class="form-row">
-                        <div class="col-md-6 form-group">
+                        <div class="col-md-4 form-group">
                             <label for="nome">Nome <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('nome') is-invalid @enderror" id="nome" name="nome" value="{{ old('nome', $usuario->nome ?? '') }}" required>
                             @error('nome')
@@ -30,10 +30,19 @@
                             @enderror
                         </div>
 
-                        <div class="col-md-6 form-group">
+                        <div class="col-md-4 form-group">
                             <label for="email">E-mail <span class="text-danger">*</span></label>
                             <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', $usuario->email ?? '') }}" required>
                             @error('email')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4 form-group">
+                            <label for="usuario">Usuário de acesso</label>
+                            <input type="text" class="form-control @error('usuario') is-invalid @enderror" id="usuario" name="usuario" value="{{ old('usuario', $usuario->usuario ?? '') }}" placeholder="ex.: joao.silva">
+                            <small class="form-text text-muted">Opcional. Permite entrar na tela de login sem usar o e-mail.</small>
+                            @error('usuario')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>

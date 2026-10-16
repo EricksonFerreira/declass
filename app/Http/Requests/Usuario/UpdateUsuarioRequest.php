@@ -5,6 +5,7 @@ namespace App\Http\Requests\Usuario;
 use App\Support\EmpresaContext;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class UpdateUsuarioRequest extends FormRequest
@@ -19,6 +20,7 @@ class UpdateUsuarioRequest extends FormRequest
 
         $this->merge([
             'acesso_todas_estacoes' => $this->boolean('acesso_todas_estacoes'),
+            'usuario' => Str::lower(trim((string) $this->input('usuario', ''))) ?: null,
         ]);
 
         if (! $this->filled('role_id')) {
@@ -54,6 +56,13 @@ class UpdateUsuarioRequest extends FormRequest
                 'string',
                 'max:150',
                 Rule::unique('users', 'email')->ignore($this->route('usuario'))->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
+            'usuario' => [
+                'nullable',
+                'string',
+                'max:60',
+                'regex:/^[a-z0-9._-]+$/',
+                Rule::unique('users', 'usuario')->ignore($this->route('usuario'))->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
             'sexo' => 'nullable|string|max:1',
             'data_nascimento' => 'nullable|date',
@@ -106,6 +115,8 @@ class UpdateUsuarioRequest extends FormRequest
             'array' => 'O campo :attribute deve ser uma lista.',
             'boolean' => 'O campo :attribute deve ser verdadeiro ou falso.',
             'email.unique' => 'O email informado ja esta em uso.',
+            'usuario.unique' => 'O usuario informado ja esta em uso.',
+            'usuario.regex' => 'O usuario pode conter apenas letras minusculas, numeros, ponto, hifen e sublinhado.',
             'numero_identificacao.unique' => 'O numero de identificacao informado ja esta em uso.',
             'celular.regex' => 'O celular deve estar no formato (XX) XXXX-XXXX ou (XX) XXXXX-XXXX.',
             'estacoes.array' => 'As estacoes permitidas devem ser informadas em lista.',
@@ -119,6 +130,7 @@ class UpdateUsuarioRequest extends FormRequest
         return [
             'nome' => 'nome',
             'email' => 'e-mail',
+            'usuario' => 'usuario',
             'sexo' => 'sexo',
             'data_nascimento' => 'data de nascimento',
             'local_nascimento' => 'local de nascimento',

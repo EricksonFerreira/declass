@@ -5,6 +5,7 @@ namespace App\Http\Requests\Usuario;
 use App\Support\EmpresaContext;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class StoreUsuarioRequest extends FormRequest
@@ -20,6 +21,7 @@ class StoreUsuarioRequest extends FormRequest
         $this->merge([
             'acesso_todas_estacoes' => $this->boolean('acesso_todas_estacoes'),
             'cadastro_reserva' => $this->boolean('cadastro_reserva'),
+            'usuario' => Str::lower(trim((string) $this->input('usuario', ''))) ?: null,
         ]);
 
         if (! $this->filled('role_id')) {
@@ -49,6 +51,13 @@ class StoreUsuarioRequest extends FormRequest
                 'string',
                 'max:150',
                 Rule::unique('users', 'email')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
+            'usuario' => [
+                'nullable',
+                'string',
+                'max:60',
+                'regex:/^[a-z0-9._-]+$/',
+                Rule::unique('users', 'usuario')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
             'sexo' => 'nullable|string|max:1',
             'data_nascimento' => 'nullable|date',
@@ -100,6 +109,8 @@ class StoreUsuarioRequest extends FormRequest
             'boolean' => 'O campo :attribute deve ser verdadeiro ou falso.',
             'same' => 'O campo :attribute deve ser igual a :other.',
             'email.unique' => 'O email informado ja esta em uso.',
+            'usuario.unique' => 'O usuario informado ja esta em uso.',
+            'usuario.regex' => 'O usuario pode conter apenas letras minusculas, numeros, ponto, hifen e sublinhado.',
             'celular.regex' => 'O celular deve estar no formato (XX) XXXX-XXXX ou (XX) XXXXX-XXXX.',
             'estacoes.array' => 'As estacoes permitidas devem ser informadas em lista.',
             'estacoes.*.integer' => 'Cada estacao permitida deve ser numerica.',
@@ -113,6 +124,7 @@ class StoreUsuarioRequest extends FormRequest
         return [
             'nome' => 'nome',
             'email' => 'e-mail',
+            'usuario' => 'usuario',
             'sexo' => 'sexo',
             'data_nascimento' => 'data de nascimento',
             'local_nascimento' => 'local de nascimento',

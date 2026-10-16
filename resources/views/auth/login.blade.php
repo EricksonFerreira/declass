@@ -425,9 +425,9 @@
                     <h1 class="fhead__title">Bem-vindo de volta</h1>
                     <p class="fhead__sub">
                         @if($loginEmpresa)
-                            Entre com seu e-mail e senha para acessar {{ $loginTitle }}
+                            Entre com seu e-mail ou usuário e senha para acessar {{ $loginTitle }}
                         @else
-                            Informe o slug da empresa, seu e-mail e sua senha para acessar o sistema
+                            Informe o slug da empresa, seu e-mail ou usuário e sua senha para acessar o sistema
                         @endif
                     </p>
                 </div>
@@ -465,7 +465,7 @@
 
                     {{-- E-mail --}}
                     <div class="field {{ $errors->has('email') ? 'field--error' : '' }}">
-                        <label class="field__label" for="email">E-mail</label>
+                        <label class="field__label" for="email">E-mail ou usuário</label>
                         <div class="input-wrap">
                             <span class="input-wrap__icon">
                                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -476,10 +476,10 @@
                             <input
                                 id="email"
                                 class="input"
-                                type="email"
+                                type="text"
                                 name="email"
                                 value="{{ old('email') }}"
-                                placeholder="seu@email.com"
+                                placeholder="seu@email.com ou usuario"
                                 required {{ $loginEmpresa ? 'autofocus' : '' }} autocomplete="username"
                             >
                         </div>

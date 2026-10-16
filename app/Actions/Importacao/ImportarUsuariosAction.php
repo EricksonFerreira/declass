@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Importa colaboradores de CSV. Cabecalhos aceitos (qualquer ordem):
- * nome*; email*; funcao; cargo; papel; fator_esforco; jornada_diaria; custo_hora
+ * nome*; email*; usuario; funcao; cargo; papel; fator_esforco; jornada_diaria; custo_hora
  *
  * Dedup por (empresa_id, email): existente atualiza, novo cria com a
  * senha inicial informada e troca de senha obrigatoria no 1o acesso.
@@ -17,6 +17,7 @@ class ImportarUsuariosAction
     public const MAPEAMENTO = [
         'nome' => ['nome_completo', 'colaborador', 'name'],
         'email' => ['e_mail', 'mail'],
+        'usuario' => ['username', 'login', 'user'],
         'funcao' => ['funcao', 'funcao_nome', 'funcao_nome_'],
         'cargo' => ['cargo_nome'],
         'papel' => ['perfil', 'role'],
@@ -47,13 +48,36 @@ class ImportarUsuariosAction
     {
         ['header' => $header, 'rows' => $rows] = $this->reader->ler($caminho);
 
+        // usuario -> e-mail do dono, para detectar conflito de unicidade por empresa
+        $donoPorUsuario = DB::table('users')
+            ->where('empresa_id', $empresaId)
+            ->whereNotNull('usuario')
+            ->pluck('email', 'usuario')
+            ->mapWithKeys(fn ($email, $usuario) => [mb_strtolower((string) $usuario) => mb_strtolower((string) $email)])
+            ->all();
+
         $resultado = [];
         foreach ($rows as $numLinha => $celulas) {
             $dados = CsvReader::mapear($header, $celulas, self::MAPEAMENTO);
+            $erro = $this->validar($dados);
+
+            if ($erro === null) {
+                $usuario = mb_strtolower(trim($dados['usuario'] ?? ''));
+                if ($usuario !== '') {
+                    $dono = $donoPorUsuario[$usuario] ?? null;
+                    $emailLinha = mb_strtolower(trim($dados['email'] ?? ''));
+                    if ($dono !== null && $dono !== $emailLinha) {
+                        $erro = "usuario ja em uso: {$usuario}";
+                    } else {
+                        $donoPorUsuario[$usuario] = $emailLinha;
+                    }
+                }
+            }
+
             $resultado[] = [
                 'linha' => $numLinha,
                 'dados' => $dados,
-                'erro' => $this->validar($dados),
+                'erro' => $erro,
             ];
         }
 
@@ -86,6 +110,7 @@ class ImportarUsuariosAction
 
             $attrs = [
                 'nome' => trim($d['nome']),
+                'usuario' => mb_strtolower(trim($d['usuario'] ?? '')) ?: null,
                 'cargo' => trim($d['cargo'] ?? '') ?: null,
                 'celular' => trim($d['celular'] ?? '') ?: null,
                 'funcao_id' => $funcaoId,

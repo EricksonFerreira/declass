@@ -36,7 +36,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'slug' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ];
     }
@@ -177,13 +177,17 @@ class LoginRequest extends FormRequest
 
     private function resolveUserForEmpresa(int $empresaId): ?User
     {
-        $email = Str::lower(trim((string) $this->input('email', '')));
-        if ($email === '') {
+        // Aceita e-mail ou nome de usuario (coluna users.usuario).
+        $login = Str::lower(trim((string) $this->input('email', '')));
+        if ($login === '') {
             return null;
         }
 
         return User::query()
-            ->where('email', $email)
+            ->where(function ($query) use ($login) {
+                $query->where('email', $login)
+                    ->orWhere('usuario', $login);
+            })
             ->where(function ($query) use ($empresaId) {
                 $query->where('empresa_id', $empresaId);
             })

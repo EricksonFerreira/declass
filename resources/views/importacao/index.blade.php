@@ -54,7 +54,7 @@
                     <div class="card-body">
                         <div class="imp-formato mb-3">
                             <div class="font-weight-bold mb-1">Colunas esperadas (cabeçalho na 1ª linha, <code>;</code> ou <code>,</code>):</div>
-                            <code>nome;email;funcao;cargo;papel;fator_esforco;jornada_diaria;custo_hora</code>
+                            <code>nome;email;usuario;funcao;cargo;papel;fator_esforco;jornada_diaria;custo_hora</code>
                             <div class="text-muted mt-1">
                                 Obrigatórias: <strong>nome</strong> e <strong>email</strong>.<br>
                                 <strong>papel</strong>: administrador · lider · colaborador (padrão) · visualizador.<br>
