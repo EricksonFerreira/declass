@@ -11,6 +11,10 @@ return new class extends Migration
         // Adiciona empresa_id na tabela correta (o model usa horarios_diarios)
         $table = Schema::hasTable('horarios_diarios') ? 'horarios_diarios' : 'horario_diarios';
 
+        if (Schema::hasColumn($table, 'empresa_id')) {
+            return;
+        }
+
         Schema::table($table, function (Blueprint $table) {
             $table->unsignedBigInteger('empresa_id')->nullable()->after('id');
             $table->foreign('empresa_id')->references('id')->on('empresas')->onDelete('cascade');
