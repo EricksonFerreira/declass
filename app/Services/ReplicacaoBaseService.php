@@ -173,6 +173,8 @@ class ReplicacaoBaseService
                         $resultadoModulo['inseridos'] += (int) $bundleResultado['inseridos'];
                         $resultadoModulo['ignorados'] += (int) $bundleResultado['ignorados'];
                     }
+                } elseif ($modulo === 'permissoes') {
+                    $resultadoModulo = $this->replicarPermissoes($empresaOrigemId, $destinos);
                 } elseif ($modulo === 'grupos_frota') {
                     $resultadoModulo = $this->replicarGruposFrota($empresaOrigemId, $destinos);
                 } else {
@@ -247,6 +249,21 @@ class ReplicacaoBaseService
         }
 
         return ['inseridos' => $inseridos, 'ignorados' => $ignorados];
+    }
+
+    /**
+     * Permissoes sao globais: o indice unico (name, guard_name) nao inclui
+     * empresa_id e a checagem de acesso resolve pelo nome — copiar por empresa
+     * e impossivel e desnecessario. Conta as linhas da origem como ignoradas.
+     *
+     * @param array<int, int> $destinos
+     * @return array{inseridos:int, ignorados:int}
+     */
+    private function replicarPermissoes(int $origem, array $destinos): array
+    {
+        $linhasOrigem = (int) DB::table('permissions')->where('empresa_id', $origem)->count();
+
+        return ['inseridos' => 0, 'ignorados' => $linhasOrigem * count($destinos)];
     }
 
     /**
@@ -743,7 +760,6 @@ class ReplicacaoBaseService
             ->join('roles as r', 'r.id', '=', 'rp.role_id')
             ->join('permissions as p', 'p.id', '=', 'rp.permission_id')
             ->where('r.empresa_id', $origem)
-            ->where('p.empresa_id', $origem)
             ->select([
                 'r.name as role_name',
                 'r.guard_name as role_guard',
@@ -767,8 +783,9 @@ class ReplicacaoBaseService
                 ->get()
                 ->keyBy(fn ($role) => $role->name . '|' . $role->guard_name);
 
+            // Permissoes sao globais (unique em name+guard_name): resolve pelo nome,
+            // independente do empresa_id gravado na linha.
             $permissoesDestino = DB::table('permissions')
-                ->where('empresa_id', $empresaDestinoId)
                 ->select(['id', 'name', 'guard_name'])
                 ->get()
                 ->keyBy(fn ($permissao) => $permissao->name . '|' . $permissao->guard_name);
