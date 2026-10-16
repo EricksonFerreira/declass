@@ -70,9 +70,13 @@ class PlanosDeclockSeeder extends Seeder
                 'atributos' => [
                     'nome' => 'Starter',
                     'descricao' => 'Essencial para começar: rastreador de tempo, timesheet, projetos e relatórios para até 3 usuários.',
+                    'valor_mensal' => 149.00,
+                    'valor_anual' => 119.00,
                     'limite_usuarios' => 3,
                     'limite_veiculos' => null,
                     'limite_armazenamento_mb' => null,
+                    'ativo' => true,
+                    'ordem' => 1,
                 ],
                 'itens' => [
                     'Rastreador de tempo em um clique',
@@ -87,10 +91,14 @@ class PlanosDeclockSeeder extends Seeder
                 'atributos' => [
                     'nome' => 'Professional',
                     'descricao' => 'Gestão completa do tempo da equipe, com usuários ilimitados, relatórios avançados e API de integração.',
+                    'valor_mensal' => 249.00,
+                    'valor_anual' => 199.00,
                     'limite_usuarios' => null,
                     'limite_veiculos' => null,
                     'limite_armazenamento_mb' => null,
                     'api_integracao' => true,
+                    'ativo' => true,
+                    'ordem' => 2,
                 ],
                 'itens' => [
                     'Rastreador de tempo em um clique',
