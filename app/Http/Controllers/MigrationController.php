@@ -8,19 +8,20 @@ use Illuminate\Support\Facades\DB;
 
 class MigrationController extends Controller
 {
+    /**
+     * Senha de acesso publico ao setup de producao: exige
+     * APP_MIGRATION_ROUTE_TOKEN configurado no .env e ?token= igual.
+     */
     private function checkToken(Request $request): void
     {
-        $allowedToken = config('app.migration_route_token');
-        $token = $request->query('token');
-        if ($allowedToken && $allowedToken !== '' && $token !== $allowedToken) {
-            abort(403, 'Token inválido.');
-        }
+        $allowedToken = (string) config('app.migration_route_token', '');
+        $token = (string) $request->query('token', '');
+
+        abort_unless($allowedToken !== '' && hash_equals($allowedToken, $token), 403, 'Token inválido.');
     }
 
     public function run(Request $request)
     {
-        $this->checkToken($request);
-
         $path = $request->query('path');
         $params = ['--force' => true];
         if ($path) {
@@ -39,8 +40,6 @@ class MigrationController extends Controller
 
     public function seed(Request $request)
     {
-        $this->checkToken($request);
-
         $class = $request->query('class');
         $params = ['--force' => true];
         if ($class) {
@@ -59,8 +58,6 @@ class MigrationController extends Controller
 
     public function runAll(Request $request)
     {
-        $this->checkToken($request);
-
         // rode o comando de migrate status
 
         $output = '';
@@ -106,8 +103,6 @@ class MigrationController extends Controller
 
     public function fixGatewayCustomer(Request $request)
     {
-        $this->checkToken($request);
-
         $affected = DB::table('empresas')->whereNotNull('gateway_customer_id')->count();
         DB::table('empresas')->update(['gateway_customer_id' => null]);
 

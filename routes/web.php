@@ -67,15 +67,17 @@ Route::get('/sitemap.xml', function (Request $request) {
 })->name('sitemap.xml');
 
 
-    // Rota segura para executar migrations via web
-    // Route::middleware([])->group(function () {
+    // Setup de producao — publico, protegido pela senha APP_MIGRATION_ROUTE_TOKEN do .env
+    Route::get('migrations/setup-producao', [MigrationController::class, 'setupProducao'])->name('migrations.setup-producao');
+
+    // Migrations/seed via web — somente superadmin
+    Route::middleware(['auth', 'can:acessar-superadmin'])->group(function () {
         Route::get('migrations/prod', [MigrationController::class, 'run'])->name('migrations.prod');
         Route::get('migrations/run', [MigrationController::class, 'run'])->name('migrations.run');
         Route::get('migrations/seed', [MigrationController::class, 'seed'])->name('migrations.seed');
         Route::get('migrations/run-all', [MigrationController::class, 'runAll'])->name('migrations.run-all');
-        Route::get('migrations/setup-producao', [MigrationController::class, 'setupProducao'])->name('migrations.setup-producao');
         Route::get('migrations/fix-gateway-customer', [MigrationController::class, 'fixGatewayCustomer'])->name('migrations.fix-gateway-customer');
-    // });
+    });
 
 
 
@@ -139,13 +141,15 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         Route::patch('/notificacoes/lidas', [NotificacaoController::class, 'marcarTodasComoLidas'])->name('notificacoes.marcarTodasComoLidas');
     });
 
-    // Rota segura para executar migrations via web
-    Route::middleware([])->group(function () {
+    // Setup de producao — publico, protegido pela senha APP_MIGRATION_ROUTE_TOKEN do .env
+    Route::get('migrations/setup-producao', [MigrationController::class, 'setupProducao'])->name('migrations.setup-producao');
+
+    // Migrations/seed via web — somente superadmin
+    Route::middleware(['auth', 'can:acessar-superadmin'])->group(function () {
         Route::get('migrations/prod', [MigrationController::class, 'run'])->name('migrations.prod');
         Route::get('migrations/run', [MigrationController::class, 'run'])->name('migrations.run');
         Route::get('migrations/seed', [MigrationController::class, 'seed'])->name('migrations.seed');
         Route::get('migrations/run-all', [MigrationController::class, 'runAll'])->name('migrations.run-all');
-        Route::get('migrations/setup-producao', [MigrationController::class, 'setupProducao'])->name('migrations.setup-producao');
         Route::get('migrations/fix-gateway-customer', [MigrationController::class, 'fixGatewayCustomer'])->name('migrations.fix-gateway-customer');
     });
 
