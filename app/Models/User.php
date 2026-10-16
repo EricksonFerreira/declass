@@ -50,11 +50,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'forcar_troca_senha',
         'foto_perfil',
         'saldo_atual',
-        'cargo',
         'funcao_id',
-        'custo_hora',
         'jornada_diaria',
-        'fator_esforco',
         'ativo',
     ];
 
@@ -79,9 +76,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'acesso_todas_estacoes' => 'boolean',
         'forcar_troca_senha' => 'boolean',
         'saldo_atual' => 'decimal:2',
-        'custo_hora' => 'decimal:2',
         'jornada_diaria' => 'decimal:2',
-        'fator_esforco' => 'decimal:2',
     ];
 
     public function sendEmailVerificationNotification()
@@ -218,11 +213,11 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Custo/hora efetivo do colaborador: override do usuário ou default da função.
+     * Custo/hora efetivo do colaborador: sempre o valor definido na função.
      */
     public function getCustoHoraEfetivoAttribute(): float
     {
-        return (float) ($this->custo_hora ?? $this->funcao?->custo_hora ?? 0);
+        return (float) ($this->funcao?->custo_hora ?? 0);
     }
 
     public function estacoesPermitidas()

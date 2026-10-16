@@ -87,10 +87,6 @@
                                 <strong class="ux-card__meta-value">{{ $perfilLabel }}</strong>
                             </div>
                             <div class="ux-card__meta-row">
-                                <span class="ux-card__meta-label"><i class="fas fa-user-tag mr-1"></i>Cargo</span>
-                                <strong class="ux-card__meta-value">{{ $usuario->cargo ?: 'Sem cargo' }}</strong>
-                            </div>
-                            <div class="ux-card__meta-row">
                                 <span class="ux-card__meta-label"><i class="fas fa-briefcase mr-1"></i>Função</span>
                                 <strong class="ux-card__meta-value">{{ $usuario->funcao?->nome ?: 'Sem função' }}</strong>
                             </div>
@@ -106,13 +102,11 @@
                                    data-id="{{ $usuario->id }}"
                                    data-nome="{{ $usuario->nome }}"
                                    data-email="{{ $usuario->email }}"
+                                   data-usuario="{{ $usuario->usuario }}"
                                    data-celular="{{ $usuario->celular }}"
-                                   data-cargo="{{ $usuario->cargo }}"
                                    data-role-id="{{ $usuario->role_id }}"
                                    data-funcao-id="{{ $usuario->funcao_id }}"
-                                   data-custo-hora="{{ $usuario->custo_hora }}"
-                                   data-jornada-diaria="{{ $usuario->jornada_diaria }}"
-                                   data-fator-esforco="{{ $usuario->fator_esforco ?? 1 }}">
+                                   data-jornada-diaria="{{ $usuario->jornada_diaria }}">
                                     <i class="fas fa-edit mr-1"></i>Editar
                                 </a>
                             @endif
@@ -169,7 +163,6 @@
                             <th class="pl-3" style="min-width: 220px;">Usuário</th>
                             <th style="min-width: 220px;">Contato</th>
                             <th style="width: 140px;">Perfil de acesso</th>
-                            <th>Cargo</th>
                             <th class="text-center" style="min-width: 300px;">Ações</th>
                         </tr>
                     </thead>
@@ -213,11 +206,6 @@
                                     @endif
                                 </td>
 
-                                <td class="align-middle">
-                                    {{ $usuario->cargo ?: 'Sem cargo' }}
-                                </td>
-
-
                                 <td class="align-middle text-center">
                                     @if ($temAlgumaAcao)
                                         <div class="acoes-usuario">
@@ -229,12 +217,9 @@
                                                     data-email="{{ $usuario->email }}"
                                                     data-usuario="{{ $usuario->usuario }}"
                                                     data-celular="{{ $usuario->celular }}"
-                                                    data-cargo="{{ $usuario->cargo }}"
                                                     data-role-id="{{ $usuario->role_id }}"
                                                     data-funcao-id="{{ $usuario->funcao_id }}"
-                                                    data-custo-hora="{{ $usuario->custo_hora }}"
-                                                    data-jornada-diaria="{{ $usuario->jornada_diaria }}"
-                                                    data-fator-esforco="{{ $usuario->fator_esforco ?? 1 }}">
+                                                    data-jornada-diaria="{{ $usuario->jornada_diaria }}">
                                                     <i class="fas fa-edit mr-1"></i> Editar
                                                 </a>
                                             @endif
@@ -278,7 +263,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
+                                <td colspan="4" class="text-center text-muted py-4">
                                     <i class="fas fa-users fa-2x mb-2 d-block"></i>
                                     Nenhum usuário encontrado.
                                 </td>
@@ -331,14 +316,6 @@
         </div>
 
         <div class="form-group">
-            <label for="drawer_cargo">Cargo <span class="text-danger">*</span></label>
-            <input type="text" class="form-control form-control-sm @error('cargo') is-invalid @enderror" id="drawer_cargo" name="cargo" value="{{ old('cargo') }}" required>
-            @error('cargo')
-                <span class="invalid-feedback">{{ $message }}</span>
-            @enderror
-        </div>
-
-        <div class="form-group">
             <label for="drawer_role_id">Perfil de acesso <span class="text-danger">*</span></label>
             <select class="form-control form-control-sm @error('role_id') is-invalid @enderror" id="drawer_role_id" name="role_id" required>
                 <option value="">Selecione o perfil</option>
@@ -369,27 +346,10 @@
         </div>
 
         <div class="form-group">
-            <label for="drawer_custo_hora">Custo por hora (R$)</label>
-            <input type="number" step="0.01" min="0" class="form-control form-control-sm @error('custo_hora') is-invalid @enderror" id="drawer_custo_hora" name="custo_hora" value="{{ old('custo_hora') }}" placeholder="0,00">
-            @error('custo_hora')
-                <span class="invalid-feedback">{{ $message }}</span>
-            @enderror
-        </div>
-
-        <div class="form-group">
             <label for="drawer_jornada_diaria">Jornada diária (horas)</label>
             <input type="number" step="0.5" min="0" max="24" class="form-control form-control-sm @error('jornada_diaria') is-invalid @enderror" id="drawer_jornada_diaria" name="jornada_diaria" value="{{ old('jornada_diaria', 8) }}" placeholder="8">
             <small class="text-muted">Usada para verificar se o dia foi apontado por completo (lembrete de horas). Padrão: 8h. Ex: 4 para meio período.</small>
             @error('jornada_diaria')
-                <span class="invalid-feedback">{{ $message }}</span>
-            @enderror
-        </div>
-
-        <div class="form-group">
-            <label for="drawer_fator_esforco">Fator de esforço</label>
-            <input type="number" step="0.1" min="0" max="9.99" class="form-control form-control-sm @error('fator_esforco') is-invalid @enderror" id="drawer_fator_esforco" name="fator_esforco" value="{{ old('fator_esforco', 1) }}" placeholder="1.0">
-            <small class="text-muted">Peso das horas no relatório Consumo × Estimado e na Matriz de Horas. Efetivo: 1,0 · Estagiário: 0,5.</small>
-            @error('fator_esforco')
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
@@ -744,12 +704,9 @@
                     $('#drawer_email').val(data.email);
                     $('#drawer_usuario').val(data.usuario || '');
                     $('#drawer_celular').val(data.celular);
-                    $('#drawer_cargo').val(data.cargo);
                     $('#drawer_role_id').val(data.role_id || '');
                     $('#drawer_funcao_id').val(data.funcao_id || '');
-                    $('#drawer_custo_hora').val(data.custo_hora || '');
                     $('#drawer_jornada_diaria').val(data.jornada_diaria || 8);
-                    $('#drawer_fator_esforco').val(data.fator_esforco ?? 1);
                 } else {
                     $form[0].reset();
                     $('#drawer_id').val('');
@@ -782,12 +739,9 @@
                     email: $btn.data('email'),
                     usuario: $btn.data('usuario'),
                     celular: $btn.data('celular'),
-                    cargo: $btn.data('cargo'),
                     role_id: $btn.data('role-id'),
                     funcao_id: $btn.data('funcao-id'),
-                    custo_hora: $btn.data('custo-hora'),
-                    jornada_diaria: $btn.data('jornada-diaria'),
-                    fator_esforco: $btn.data('fator-esforco')
+                    jornada_diaria: $btn.data('jornada-diaria')
                 });
             });
 
@@ -805,10 +759,8 @@
                         email: "{{ old('email') }}",
                         usuario: "{{ old('usuario') }}",
                         celular: "{{ old('celular') }}",
-                        cargo: "{{ old('cargo') }}",
                         role_id: "{{ old('role_id') }}",
-                        funcao_id: "{{ old('funcao_id') }}",
-                        custo_hora: "{{ old('custo_hora') }}"
+                        funcao_id: "{{ old('funcao_id') }}"
                     } : null
                 );
             @endif
@@ -949,10 +901,10 @@
 
     const steps = [
 { element: '.page-title', popover: { title: 'Lista de Usuários', description: 'Aqui você gerencia todos os usuários do sistema: clientes, colaboradores, gerentes e administradores. Cada usuário tem uma regra de acesso que define o que ele pode ver e fazer.' } },
-        { element: '.btn-create-resource, a[href*="usuario/create"]', popover: { title: 'Adicionar usuário', description: 'Clique aqui para cadastrar um novo colaborador: nome, e-mail, celular, cargo, perfil de acesso e, se quiser, função e custo por hora para os relatórios.', side: 'bottom' } },
+        { element: '.btn-create-resource, a[href*="usuario/create"]', popover: { title: 'Adicionar usuário', description: 'Clique aqui para cadastrar um novo colaborador: nome, e-mail, celular, perfil de acesso e, se quiser, a função (que define o custo/hora nos relatórios).', side: 'bottom' } },
         { element: '.ux-view-toggle', popover: { title: 'Cards ou Tabela', description: 'Alterne entre a visualização em cards (ideal no celular) e a tabela completa no desktop.', side: 'bottom' } },
         { element: '.ux-cards article:first-child .ux-card__badges', popover: { title: 'Perfil de acesso', description: 'O badge indica o perfil do usuário (Colaborador, Gerente, Administrador). O perfil controla quais módulos e ações cada usuário pode acessar.', side: 'right' } },
-        { element: '.ux-cards article:first-child .ux-card__foot', popover: { title: 'Ações disponíveis', description: 'Para cada usuário: <b>Editar</b> (alterar dados, função e custo/hora), <b>Resetar senha</b> (voltar para a senha padrão) e <b>Excluir</b>.', side: 'left' } },
+        { element: '.ux-cards article:first-child .ux-card__foot', popover: { title: 'Ações disponíveis', description: 'Para cada usuário: <b>Editar</b> (alterar dados e função), <b>Resetar senha</b> (voltar para a senha padrão) e <b>Excluir</b>.', side: 'left' } },
     ];
 
     function marcarFeito() {

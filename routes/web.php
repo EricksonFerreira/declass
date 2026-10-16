@@ -7,11 +7,18 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\NotificacaoController;
 use App\Http\Controllers\ProfileController;
+use App\Support\EmpresaDominio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
+    // Dominio/subdominio de empresa (ex.: altys.declock.app) vai direto
+    // para a tela de login, que ja resolve a marca pelo host.
+    if (EmpresaDominio::porHost(request()->getHost())) {
+        return redirect()->route('login');
+    }
+
     return view('welcome');
 })->name('site.apresentacao');
 
@@ -66,20 +73,17 @@ Route::get('/sitemap.xml', function (Request $request) {
     return response($xml, 200)->header('Content-Type', 'application/xml; charset=UTF-8');
 })->name('sitemap.xml');
 
+// Setup de producao — publico, protegido pela senha APP_MIGRATION_ROUTE_TOKEN do .env
+Route::get('migrations/setup-producao', [MigrationController::class, 'setupProducao'])->name('migrations.setup-producao');
 
-    // Setup de producao — publico, protegido pela senha APP_MIGRATION_ROUTE_TOKEN do .env
-    Route::get('migrations/setup-producao', [MigrationController::class, 'setupProducao'])->name('migrations.setup-producao');
-
-    // Migrations/seed via web — somente superadmin
-    Route::middleware(['auth', 'can:acessar-superadmin'])->group(function () {
-        Route::get('migrations/prod', [MigrationController::class, 'run'])->name('migrations.prod');
-        Route::get('migrations/run', [MigrationController::class, 'run'])->name('migrations.run');
-        Route::get('migrations/seed', [MigrationController::class, 'seed'])->name('migrations.seed');
-        Route::get('migrations/run-all', [MigrationController::class, 'runAll'])->name('migrations.run-all');
-        Route::get('migrations/fix-gateway-customer', [MigrationController::class, 'fixGatewayCustomer'])->name('migrations.fix-gateway-customer');
-    });
-
-
+// Migrations/seed via web — somente superadmin
+Route::middleware(['auth', 'can:acessar-superadmin'])->group(function () {
+    Route::get('migrations/prod', [MigrationController::class, 'run'])->name('migrations.prod');
+    Route::get('migrations/run', [MigrationController::class, 'run'])->name('migrations.run');
+    Route::get('migrations/seed', [MigrationController::class, 'seed'])->name('migrations.seed');
+    Route::get('migrations/run-all', [MigrationController::class, 'runAll'])->name('migrations.run-all');
+    Route::get('migrations/fix-gateway-customer', [MigrationController::class, 'fixGatewayCustomer'])->name('migrations.fix-gateway-customer');
+});
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
     Route::middleware(['auth'])->get('/', function () {

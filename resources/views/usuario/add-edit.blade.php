@@ -58,16 +58,6 @@
                         </div>
 
                         <div class="col-md-6 form-group">
-                            <label for="cargo">Cargo <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('cargo') is-invalid @enderror" id="cargo" name="cargo" value="{{ old('cargo', $usuario->cargo ?? '') }}" required>
-                            @error('cargo')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="col-md-6 form-group">
                             <label for="role_id">Perfil de acesso <span class="text-danger">*</span></label>
                             <select class="form-control @error('role_id') is-invalid @enderror" id="role_id" name="role_id" required>
                                 <option value="">Selecione o perfil</option>
@@ -94,17 +84,8 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <small class="form-text text-muted">Usada no relatório "Consumo × Estimado" por projeto.</small>
+                            <small class="form-text text-muted">Usada no relatório "Consumo × Estimado" por projeto. O custo/hora é definido na função.</small>
                             @error('funcao_id')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-6 form-group">
-                            <label for="custo_hora">Custo por hora (R$)</label>
-                            <input type="number" step="0.01" min="0" class="form-control @error('custo_hora') is-invalid @enderror" id="custo_hora" name="custo_hora" value="{{ old('custo_hora', $usuario->custo_hora ?? '') }}" placeholder="0,00">
-                            <small class="form-text text-muted">Opcional. Base para o cálculo de custo e efetividade do contrato.</small>
-                            @error('custo_hora')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>

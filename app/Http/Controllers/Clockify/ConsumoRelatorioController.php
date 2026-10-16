@@ -157,20 +157,15 @@ class ConsumoRelatorioController extends Controller
         $linhasFuncao = $service->linhasPorFuncao($projeto);
         $membros = $service->consumoPorMembro($projeto)->map(function ($m) {
             $horas = ((float) $m->segundos) / 3600;
-            $horasReais = ((float) ($m->segundos_reais ?? $m->segundos)) / 3600;
 
             return (object) [
                 'user_id' => (int) $m->user_id,
                 'nome' => $m->nome,
                 'email' => $m->email,
                 'funcao_nome' => $m->funcao_nome ?? 'Sem função',
-                'fator_esforco' => (float) ($m->fator_esforco ?? 1),
                 'horas' => round($horas, 2),
-                'horas_reais' => round($horasReais, 2),
                 'custo_hora' => (float) $m->custo_hora,
-                // Custo é pelas horas reais trabalhadas — o fator só pesa
-                // a comparação com a estimativa.
-                'custo' => round($horasReais * (float) $m->custo_hora, 2),
+                'custo' => round($horas * (float) $m->custo_hora, 2),
             ];
         });
 

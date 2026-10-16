@@ -49,7 +49,6 @@ class ReportController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'cargo' => 'required|string|max:255',
         ]);
         $validated['password'] = 'Senh@123';
         $action->handle($validated);
@@ -64,13 +63,11 @@ class ReportController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,'.$user->id,
-            'cargo' => 'required|string|max:255',
         ]);
 
         $user->update([
             'nome' => $validated['name'],
             'email' => $validated['email'],
-            'cargo' => $validated['cargo'],
         ]);
 
         return redirect()->route('relatorios.membros')->with('success', 'Membro atualizado com sucesso.');

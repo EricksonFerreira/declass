@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Importa colaboradores de CSV. Cabecalhos aceitos (qualquer ordem):
- * nome*; email*; usuario; funcao; cargo; papel; fator_esforco; jornada_diaria; custo_hora
+ * nome*; email*; usuario; funcao; papel; jornada_diaria; celular
  *
  * Dedup por (empresa_id, email): existente atualiza, novo cria com a
  * senha inicial informada e troca de senha obrigatoria no 1o acesso.
@@ -19,11 +19,8 @@ class ImportarUsuariosAction
         'email' => ['e_mail', 'mail'],
         'usuario' => ['username', 'login', 'user'],
         'funcao' => ['funcao', 'funcao_nome', 'funcao_nome_'],
-        'cargo' => ['cargo_nome'],
         'papel' => ['perfil', 'role'],
-        'fator_esforco' => ['fator', 'fator_esforco_'],
         'jornada_diaria' => ['jornada', 'horas_dia'],
-        'custo_hora' => ['custo', 'valor_hora'],
         'celular' => ['telefone', 'fone'],
     ];
 
@@ -111,13 +108,10 @@ class ImportarUsuariosAction
             $attrs = [
                 'nome' => trim($d['nome']),
                 'usuario' => mb_strtolower(trim($d['usuario'] ?? '')) ?: null,
-                'cargo' => trim($d['cargo'] ?? '') ?: null,
                 'celular' => trim($d['celular'] ?? '') ?: null,
                 'funcao_id' => $funcaoId,
                 'role_id' => $roleId,
-                'fator_esforco' => CsvReader::numero($d['fator_esforco'] ?? '') ?? 1.0,
                 'jornada_diaria' => CsvReader::numero($d['jornada_diaria'] ?? '') ?? 8.0,
-                'custo_hora' => CsvReader::numero($d['custo_hora'] ?? '') ?? 0,
                 'ativo' => true,
                 'updated_at' => now(),
             ];

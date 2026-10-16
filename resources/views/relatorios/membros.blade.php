@@ -33,7 +33,6 @@
                     <tr>
                         <th class="pl-3">Nome</th>
                         <th>Email</th>
-                        <th>Cargo</th>
                         <th class="pr-3">Ações</th>
                     </tr>
                 </thead>
@@ -42,13 +41,11 @@
                         <tr>
                             <td class="pl-3 font-weight-bold">{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
-                            <td>{{ $user->cargo ?? 'Sem Cargo' }}</td>
                             <td class="pr-3">
                                 <button type="button" class="btn btn-xs btn-warning btn-editar-membro"
                                         data-id="{{ $user->id }}"
                                         data-name="{{ $user->name }}"
-                                        data-email="{{ $user->email }}"
-                                        data-cargo="{{ $user->cargo }}">
+                                        data-email="{{ $user->email }}">
                                     <i class="fa fa-edit"></i> Editar
                                 </button>
                                 <form action="{{ route('relatorios.membros.reset-password', $user->id) }}" method="POST" class="d-inline">
@@ -66,7 +63,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center text-muted py-4">
+                            <td colspan="3" class="text-center text-muted py-4">
                                 <i class="fas fa-user-clock fa-2x mb-2 d-block"></i>
                                 Nenhum membro encontrado.
                             </td>
@@ -93,13 +90,6 @@
             <label for="membro_email">Email <span class="text-danger">*</span></label>
             <input type="email" name="email" id="membro_email" class="form-control form-control-sm @error('email') is-invalid @enderror" required placeholder="email@exemplo.com" value="{{ old('email') }}">
             @error('email')
-                <span class="invalid-feedback">{{ $message }}</span>
-            @enderror
-        </div>
-        <div class="form-group mb-0">
-            <label for="membro_cargo">Cargo <span class="text-danger">*</span></label>
-            <input type="text" name="cargo" id="membro_cargo" class="form-control form-control-sm @error('cargo') is-invalid @enderror" required placeholder="Ex: Desenvolvedor, Designer" value="{{ old('cargo') }}">
-            @error('cargo')
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
@@ -152,7 +142,6 @@
                 $('#membro_id').val(data.id || '');
                 $('#membro_name').val(data.name);
                 $('#membro_email').val(data.email);
-                $('#membro_cargo').val(data.cargo);
             } else {
                 $form[0].reset();
                 $('#membro_id').val('');
@@ -178,8 +167,7 @@
             abrirModal('Editar Membro', "{{ url('admin/relatorios/membros') }}/" + id, 'PUT', {
                 id: id,
                 name: $btn.data('name'),
-                email: $btn.data('email'),
-                cargo: $btn.data('cargo')
+                email: $btn.data('email')
             });
         });
 
@@ -193,8 +181,7 @@
                 {
                     id: "{{ old('id') }}",
                     name: "{{ old('name') }}",
-                    email: "{{ old('email') }}",
-                    cargo: "{{ old('cargo') }}"
+                    email: "{{ old('email') }}"
                 }
             );
         @endif

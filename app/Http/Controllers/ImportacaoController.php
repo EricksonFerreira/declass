@@ -30,6 +30,39 @@ class ImportacaoController extends Controller
         ]);
     }
 
+    /**
+     * Download do CSV modelo com cabecalho e uma linha de exemplo.
+     */
+    public function modelo(string $tipo)
+    {
+        abort_unless(in_array($tipo, self::TIPOS, true), 404);
+
+        [$cabecalho, $exemplo] = match ($tipo) {
+            'usuarios' => [
+                ['nome', 'email', 'usuario', 'funcao', 'papel', 'jornada_diaria', 'celular'],
+                ['Maria Silva', 'maria.silva@empresa.com', 'maria.silva', 'Engenheiro Civil', 'colaborador', '8', '(11) 99999-0000'],
+            ],
+            'projetos' => [
+                ['nome', 'codigo_cc', 'numero', 'ano', 'status', 'cliente', 'descricao', 'horas_orcadas', 'valor_faturado', 'estimativas'],
+                ['Edificio Horizonte', 'CC-102', '', '2026', 'Andamento', 'Construtora Alfa', 'Construcao de edificio residencial', '1200', '850000,00', 'Engenheiro Civil:530|Projetista:130'],
+            ],
+        };
+
+        // BOM UTF-8 para o Excel abrir com acentos corretos.
+        $csv = "\xEF\xBB\xBF";
+        foreach ([$cabecalho, $exemplo] as $linha) {
+            $csv .= implode(';', array_map(
+                fn ($c) => str_contains((string) $c, ';') ? '"'.str_replace('"', '""', (string) $c).'"' : $c,
+                $linha
+            ))."\r\n";
+        }
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="modelo-'.$tipo.'.csv"',
+        ]);
+    }
+
     public function preview(Request $request, string $tipo)
     {
         abort_unless(in_array($tipo, self::TIPOS, true), 404);

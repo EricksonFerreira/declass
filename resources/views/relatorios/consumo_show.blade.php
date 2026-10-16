@@ -245,8 +245,7 @@
                         <tr>
                             <th class="pl-3">Colaborador</th>
                             <th>Função</th>
-                            <th class="text-center" title="Peso das horas no consolidado (efetivo 1,0 · estagiário 0,5)">Fator</th>
-                            <th class="text-right" title="Horas consumidas ponderadas pelo fator de esforço">HH</th>
+                            <th class="text-right">HH</th>
                             <th class="text-right">Custo/h</th>
                             <th class="text-right pr-3">Custo</th>
                         </tr>
@@ -259,20 +258,12 @@
                                     <small class="text-muted">{{ $m->email }}</small>
                                 </td>
                                 <td>{{ $m->funcao_nome }}</td>
-                                <td class="text-center">
-                                    <span class="badge badge-{{ ($m->fator_esforco ?? 1) < 1 ? 'warning' : 'light' }}">{{ number_format((float) ($m->fator_esforco ?? 1), 1, ',', '.') }}</span>
-                                </td>
-                                <td class="text-right">
-                                    {{ $fmtHora($m->horas) }}
-                                    @if (($m->fator_esforco ?? 1) < 1)
-                                        <small class="text-muted d-block" title="Horas reais lançadas (antes do fator)">({{ $fmtHora($m->horas_reais) }} reais)</small>
-                                    @endif
-                                </td>
+                                <td class="text-right">{{ $fmtHora($m->horas) }}</td>
                                 <td class="text-right">{{ $m->custo_hora > 0 ? $fmtMoney($m->custo_hora) : '—' }}</td>
                                 <td class="text-right pr-3">{{ $m->custo > 0 ? $fmtMoney($m->custo) : '—' }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="text-center text-muted py-3">Nenhum lançamento de horas neste projeto.</td></tr>
+                            <tr><td colspan="5" class="text-center text-muted py-3">Nenhum lançamento de horas neste projeto.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -280,7 +271,7 @@
             @if ($membros->isNotEmpty() && $membros->sum('custo') <= 0)
                 <div class="card-footer text-muted" style="font-size:.78rem;">
                     <i class="fas fa-info-circle mr-1"></i>
-                    Defina o custo/hora de cada colaborador no cadastro de usuários para medir a efetividade do contrato.
+                    Defina o custo/hora de cada função para medir a efetividade do contrato.
                 </div>
             @endif
         </div>

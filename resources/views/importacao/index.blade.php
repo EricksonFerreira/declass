@@ -54,12 +54,15 @@
                     <div class="card-body">
                         <div class="imp-formato mb-3">
                             <div class="font-weight-bold mb-1">Colunas esperadas (cabeçalho na 1ª linha, <code>;</code> ou <code>,</code>):</div>
-                            <code>nome;email;usuario;funcao;cargo;papel;fator_esforco;jornada_diaria;custo_hora</code>
+                            <code>nome;email;usuario;funcao;papel;jornada_diaria;celular</code>
                             <div class="text-muted mt-1">
                                 Obrigatórias: <strong>nome</strong> e <strong>email</strong>.<br>
                                 <strong>papel</strong>: administrador · lider · colaborador (padrão) · visualizador.<br>
-                                <strong>fator_esforco</strong>: 1,0 efetivo · 0,5 estagiário. E-mail já cadastrado → atualiza os dados.
+                                <strong>funcao</strong>: cria a função se não existir (o custo/hora vem dela). E-mail já cadastrado → atualiza os dados.
                             </div>
+                            <a href="{{ route('importacao.modelo', 'usuarios') }}" class="btn btn-xs btn-outline-primary mt-2">
+                                <i class="fas fa-download mr-1"></i>Baixar modelo CSV
+                            </a>
                         </div>
                         <div class="form-group">
                             <label>Arquivo CSV <span class="text-danger">*</span></label>
@@ -97,6 +100,9 @@
                                 <strong>estimativas</strong>: <code>Engenheiro Civil:530|Projetista:130</code> cria as estimativas por função.<br>
                                 Projeto já cadastrado (mesmo nome) → atualiza os dados.
                             </div>
+                            <a href="{{ route('importacao.modelo', 'projetos') }}" class="btn btn-xs btn-outline-success mt-2">
+                                <i class="fas fa-download mr-1"></i>Baixar modelo CSV
+                            </a>
                         </div>
                         <div class="form-group mb-0">
                             <label>Arquivo CSV <span class="text-danger">*</span></label>

@@ -141,7 +141,7 @@
                 </div>
 
                 <div class="row" data-empresa-step="3">
-                    <div class="form-group form-group-empresa col-6">
+                    <div class="form-group form-group-empresa col-12">
                         <x-form-input type="text" class="form-control form-control-sm" id="dominio" name="dominio"
                             label="Domínio" value="{{ $empresa->dominio ?? '' }}" />
                     </div>

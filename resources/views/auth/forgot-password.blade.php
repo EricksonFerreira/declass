@@ -10,23 +10,7 @@
         $loginBrandColor = '#1e4fd8';
         $loginFaviconUrl = asset('favicons/favicon.ico');
 
-        try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('empresas')) {
-                $host = \App\Support\DomainNormalizer::normalize(request()->getHost());
-                if ($host) {
-                    $loginEmpresa = \App\Models\Empresa::query()
-                        ->withoutGlobalScopes()
-                        ->where('ativo', 'S')
-                        ->whereNotNull('dominio')
-                        ->get()
-                        ->first(function (\App\Models\Empresa $empresa) use ($host) {
-                            return \App\Support\DomainNormalizer::normalize($empresa->dominio) === $host;
-                        });
-                }
-            }
-        } catch (\Throwable $e) {
-            $loginEmpresa = null;
-        }
+        $loginEmpresa = \App\Support\EmpresaDominio::porHost(request()->getHost());
 
         if ($loginEmpresa) {
             $loginTitle = (string) ($loginEmpresa->nome ?: $loginTitle);

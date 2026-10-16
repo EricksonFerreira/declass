@@ -4,14 +4,13 @@ namespace App\Http\Requests\Auth;
 
 use App\Models\Empresa;
 use App\Models\User;
-use App\Support\DomainNormalizer;
+use App\Support\EmpresaDominio;
+use App\Support\SchemaCache;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -138,7 +137,7 @@ class LoginRequest extends FormRequest
 
     private function resolveEmpresaBySlug(): ?Empresa
     {
-        if (!SchemaCache::hasTable('empresas')) {
+        if (! SchemaCache::hasTable('empresas')) {
             return null;
         }
 
@@ -156,23 +155,7 @@ class LoginRequest extends FormRequest
 
     private function resolveEmpresaByDomain(): ?Empresa
     {
-        if (!SchemaCache::hasTable('empresas')) {
-            return null;
-        }
-
-        $host = DomainNormalizer::normalize($this->getHost());
-        if (!$host) {
-            return null;
-        }
-
-        return Empresa::query()
-            ->withoutGlobalScopes()
-            ->where('ativo', 'S')
-            ->whereNotNull('dominio')
-            ->get(['id', 'slug', 'dominio'])
-            ->first(function (Empresa $empresa) use ($host) {
-                return DomainNormalizer::normalize($empresa->dominio) === $host;
-            });
+        return EmpresaDominio::porHost($this->getHost());
     }
 
     private function resolveUserForEmpresa(int $empresaId): ?User

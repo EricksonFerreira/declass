@@ -1,6 +1,6 @@
 @section('content_top_nav_left')
     <li class="nav-item navbar-breadcrumb d-none d-sm-flex align-items-center">
-        <ol class="breadcrumb bg-transparent mb-0 p-0 flex-nowrap">
+        <ol class="breadcrumb mb-0 flex-nowrap navbar-breadcrumb-badge">
             @foreach ($breadcrumbs as $breadcrumb)
                 @php
                     $name = is_array($breadcrumb)
@@ -20,4 +20,15 @@
             @endforeach
         </ol>
     </li>
+    <style>
+        .navbar-breadcrumb-badge {
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 999px;
+            padding: .3rem .95rem;
+        }
+        .navbar-breadcrumb-badge .breadcrumb-item a { color: #2563eb; }
+        .navbar-breadcrumb-badge .breadcrumb-item.active { color: #1e3a8a; }
+        .navbar-breadcrumb-badge .breadcrumb-item + .breadcrumb-item::before { color: #93c5fd; }
+    </style>
 @endsection

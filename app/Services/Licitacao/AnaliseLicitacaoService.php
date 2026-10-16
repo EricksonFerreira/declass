@@ -212,7 +212,7 @@ PROMPT;
             ->leftJoin('funcoes', 'funcoes.id', '=', 'users.funcao_id')
             ->where('users.empresa_id', $empresa->id)
             ->where('users.ativo', 1)
-            ->select('funcoes.nome as funcao', DB::raw('count(*) as total'), DB::raw('avg(users.custo_hora) as custo_medio'))
+            ->select('funcoes.nome as funcao', DB::raw('count(*) as total'), DB::raw('avg(funcoes.custo_hora) as custo_medio'))
             ->groupBy('funcoes.nome')
             ->get();
 
