@@ -227,6 +227,7 @@
                                                     data-id="{{ $usuario->id }}"
                                                     data-nome="{{ $usuario->nome }}"
                                                     data-email="{{ $usuario->email }}"
+                                                    data-usuario="{{ $usuario->usuario }}"
                                                     data-celular="{{ $usuario->celular }}"
                                                     data-cargo="{{ $usuario->cargo }}"
                                                     data-role-id="{{ $usuario->role_id }}"
@@ -314,6 +315,14 @@
         </div>
 
         <div class="form-group">
+            <label for="drawer_usuario">Usuário de acesso</label>
+            <input type="text" class="form-control form-control-sm @error('usuario') is-invalid @enderror" id="drawer_usuario" name="usuario" value="{{ old('usuario') }}" placeholder="ex.: joao.silva">
+            @error('usuario')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="form-group">
             <label for="drawer_celular">Celular <span class="text-danger">*</span></label>
             <input type="text" class="form-control form-control-sm @error('celular') is-invalid @enderror" id="drawer_celular" name="celular" value="{{ old('celular') }}" placeholder="(99) 99999-9999" required>
             @error('celular')
@@ -389,6 +398,19 @@
 
 @section('css')
     <style>
+        /* Modal de usuário: 2 colunas no desktop, sem scroll */
+        @media (min-width: 576px) {
+            #sideDrawer { width: min(760px, calc(100vw - 32px)); }
+            #sideDrawer .ux-modal-body {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                column-gap: 16px;
+                align-items: start;
+            }
+            #sideDrawer .ux-modal-body .form-group { margin-bottom: .6rem; }
+            #sideDrawer .ux-modal-body .form-group > small.text-muted { display: block; line-height: 1.25; }
+        }
+
         .veiculo-filter-sticky {
             position: sticky;
             top: 10px;
@@ -720,6 +742,7 @@
                     $('#drawer_id').val(data.id || '');
                     $('#drawer_nome').val(data.nome);
                     $('#drawer_email').val(data.email);
+                    $('#drawer_usuario').val(data.usuario || '');
                     $('#drawer_celular').val(data.celular);
                     $('#drawer_cargo').val(data.cargo);
                     $('#drawer_role_id').val(data.role_id || '');
@@ -757,6 +780,7 @@
                     id: id,
                     nome: $btn.data('nome'),
                     email: $btn.data('email'),
+                    usuario: $btn.data('usuario'),
                     celular: $btn.data('celular'),
                     cargo: $btn.data('cargo'),
                     role_id: $btn.data('role-id'),
@@ -779,6 +803,7 @@
                     "{{ old('_method', 'POST') === 'PUT' }}" ? {
                         nome: "{{ old('nome') }}",
                         email: "{{ old('email') }}",
+                        usuario: "{{ old('usuario') }}",
                         celular: "{{ old('celular') }}",
                         cargo: "{{ old('cargo') }}",
                         role_id: "{{ old('role_id') }}",
