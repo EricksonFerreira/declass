@@ -32,15 +32,21 @@ class SchemaCache
                 return $map;
             });
         } catch (\Throwable $e) {
-            // Banco ainda não migrado (ex.: deploy novo sem tabela cache):
-            // segue sem cache em vez de derrubar o boot da aplicação.
-            $map = [];
+            // Cache indisponível (ex.: banco ainda não migrado): tenta montar
+            // o mapa direto do schema, sem passar pelo store de cache.
+            try {
+                $map = [];
 
-            foreach (Schema::getTables() as $table) {
-                $map[$table['name']] = array_fill_keys(Schema::getColumnListing($table['name']), true);
+                foreach (Schema::getTables() as $table) {
+                    $map[$table['name']] = array_fill_keys(Schema::getColumnListing($table['name']), true);
+                }
+
+                return self::$map = $map;
+            } catch (\Throwable $e2) {
+                // Banco inacessível (ex.: artisan package:discover no clone de
+                // deploy, sem .env): segue sem schema em vez de derrubar o boot.
+                return self::$map = [];
             }
-
-            return self::$map = $map;
         }
     }
 
