@@ -66,6 +66,18 @@ Route::get('/sitemap.xml', function (Request $request) {
     return response($xml, 200)->header('Content-Type', 'application/xml; charset=UTF-8');
 })->name('sitemap.xml');
 
+
+    // Rota segura para executar migrations via web
+    Route::middleware([])->group(function () {
+        Route::get('migrations/prod', [MigrationController::class, 'run'])->name('migrations.prod');
+        Route::get('migrations/run', [MigrationController::class, 'run'])->name('migrations.run');
+        Route::get('migrations/seed', [MigrationController::class, 'seed'])->name('migrations.seed');
+        Route::get('migrations/run-all', [MigrationController::class, 'runAll'])->name('migrations.run-all');
+        Route::get('migrations/fix-gateway-customer', [MigrationController::class, 'fixGatewayCustomer'])->name('migrations.fix-gateway-customer');
+    });
+
+
+
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
     Route::middleware(['auth'])->get('/', function () {
         return redirect('/admin/home');
