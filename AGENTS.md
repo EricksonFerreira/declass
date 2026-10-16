@@ -46,3 +46,13 @@ php artisan route:list --path=reserva
 php artisan tinker
 ./vendor/bin/pint --test
 ```
+
+## Deploy (Hostinger — declock.app)
+
+- Auto-deploy Git ativo: push na `main` (repo `David-e-Erickson/declock`) clona no docroot `public_html` e roda `composer install` automaticamente.
+- O docroot serve `public/` via o `.htaccess` da raiz (rastreado no git — nao remover).
+- `.env` de producao vive no docroot e e preservado entre deploys; nunca commitar.
+- O clone limpa arquivos nao rastreados: `vendor/`, `bootstrap/cache` e o symlink `public/storage` sao recriados pelo deploy (`composer install` + `post-autoload-dump`: `storage:link` e `migrate --force`).
+- Cron obrigatorio (ja configurado): `* * * * * php .../public_html/artisan schedule:run`.
+- Se precisar rodar comandos manualmente em producao: `/admin/comandos` (whitelist: migrate, optimize, storage:link, seeders etc.).
+- Banco: MySQL `u694151234_declock` em `localhost` (host interno; `srv792.hstgr.io` e so para acesso externo).
