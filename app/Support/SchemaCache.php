@@ -21,15 +21,27 @@ class SchemaCache
             return self::$map;
         }
 
-        return self::$map = Cache::rememberForever(self::MAP_KEY, function () {
+        try {
+            return self::$map = Cache::rememberForever(self::MAP_KEY, function () {
+                $map = [];
+
+                foreach (Schema::getTables() as $table) {
+                    $map[$table['name']] = array_fill_keys(Schema::getColumnListing($table['name']), true);
+                }
+
+                return $map;
+            });
+        } catch (\Throwable $e) {
+            // Banco ainda não migrado (ex.: deploy novo sem tabela cache):
+            // segue sem cache em vez de derrubar o boot da aplicação.
             $map = [];
 
             foreach (Schema::getTables() as $table) {
                 $map[$table['name']] = array_fill_keys(Schema::getColumnListing($table['name']), true);
             }
 
-            return $map;
-        });
+            return self::$map = $map;
+        }
     }
 
     public static function hasTable(string $table): bool
