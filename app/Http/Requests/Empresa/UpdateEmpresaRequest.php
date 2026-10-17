@@ -48,6 +48,7 @@ class UpdateEmpresaRequest extends FormRequest
             'ativo' => ['nullable', 'in:S,N'],
             'licitacoes_ativo' => ['nullable', 'in:S,N'],
             'ia_limite_tokens' => ['nullable', 'integer', 'min:0'],
+            'tags_por_projeto' => ['nullable', 'boolean'],
             'reserva_selecionar_modelo' => ['nullable', 'in:S,N'],
             'site_apresentacao_ativo' => ['nullable', 'in:S,N'],
             'aluguel_app_ativo' => ['nullable', 'in:S,N'],

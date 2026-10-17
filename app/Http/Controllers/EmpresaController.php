@@ -246,6 +246,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         }
 
         $data = $request->validated();
+        $data['tags_por_projeto'] = $request->boolean('tags_por_projeto');
         $data = $this->handleLogoUpload($request, $data);
 
         $empresa = $this->empresaService->createWithDefaultTemplate($data);
@@ -426,6 +427,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         }
 
         $data = $request->validated();
+        $data['tags_por_projeto'] = $request->boolean('tags_por_projeto');
 
         $empresaAtual = $this->empresaService->getById($id);
         if (! $empresaAtual) {

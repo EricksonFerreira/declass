@@ -51,6 +51,7 @@ class StoreEmpresaRequest extends FormRequest
             'ativo' => ['nullable', 'in:S,N'],
             'licitacoes_ativo' => ['nullable', 'in:S,N'],
             'ia_limite_tokens' => ['nullable', 'integer', 'min:0'],
+            'tags_por_projeto' => ['nullable', 'boolean'],
             'cnpj' => ['nullable', 'digits:14'],
             'email' => ['nullable', 'email:rfc', 'max:255'],
             'telefone' => ['nullable', 'digits_between:10,11'],

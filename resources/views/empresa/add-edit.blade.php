@@ -106,6 +106,16 @@
                         <small class="text-muted">Cota de tokens de IA por mês (entrada + saída). Vazio = ilimitado.</small>
                     </div>
                 </div>
+                <div class="col-lg-6" data-empresa-step="1">
+                    <div class="form-group form-group-empresa">
+                        <label class="font-weight-bold" style="font-size:.82rem;">Escopo das tags</label>
+                        <select name="tags_por_projeto" class="form-control form-control-sm">
+                            <option value="0" @selected(! old('tags_por_projeto', $empresa->tags_por_projeto ?? false))>Tags globais — todas as tags disponíveis em qualquer projeto</option>
+                            <option value="1" @selected(old('tags_por_projeto', $empresa->tags_por_projeto ?? false))>Tags por projeto — cada projeto tem suas próprias tags</option>
+                        </select>
+                        <small class="text-muted">No modo por projeto, o Rastreador exibe apenas as tags do projeto selecionado (além das globais).</small>
+                    </div>
+                </div>
 
                 <div class="col-12 mt-2" data-empresa-step="2">
                     <div class="empresa-section-title" id="sec-contato">Contato</div>
