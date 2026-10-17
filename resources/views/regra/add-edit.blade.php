@@ -428,10 +428,17 @@
 .re-sub__body   { padding: .55rem .3rem .2rem 1.1rem; border-left: 2px solid #edf1f8; margin-left: .45rem; }
 
 .re-perm-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
 }
+
+/* ── Permission item compacto (badge + nome no hover) ── */
+.re-perm-item--compact {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 8px; width: fit-content;
+}
+.re-perm-item--compact .re-perm-item__badge { font-size: .65rem; text-transform: lowercase; }
 
 /* ── Permission item ── */
 .re-perm-item {
@@ -458,8 +465,7 @@
 .re-perm-item.re-hidden { display: none; }
 
 /* ── Responsive ── */
-@media (max-width: 1199px) { .re-perm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 767px)  { .re-perm-grid { grid-template-columns: 1fr; } .re-perm-toolbar { flex-direction: column; align-items: stretch; } .re-perm-toolbar__right { justify-content: flex-end; } }
+@media (max-width: 767px)  { .re-perm-toolbar { flex-direction: column; align-items: stretch; } .re-perm-toolbar__right { justify-content: flex-end; } }
 </style>
 @stop
 

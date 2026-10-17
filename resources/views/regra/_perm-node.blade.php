@@ -55,8 +55,9 @@
                 $acao = str_contains($permissao->name, '.') ? substr($permissao->name, strrpos($permissao->name, '.') + 1) : $permissao->name;
                 $badgeCls = $acaoClasses[$acao] ?? 'badge-secondary';
             @endphp
-            <label class="re-perm-item {{ $checked ? 're-perm-item--checked' : '' }}"
+            <label class="re-perm-item re-perm-item--compact {{ $checked ? 're-perm-item--checked' : '' }}"
                    for="perm-{{ $permissao->id }}"
+                   title="{{ $permissao->name }}{{ $permissao->descricao ? ' — ' . $permissao->descricao : '' }}"
                    data-name="{{ strtolower($permissao->name) }}"
                    data-desc="{{ strtolower($permissao->descricao ?? '') }}">
                 <input class="re-perm-item__chk" type="checkbox"
@@ -64,13 +65,7 @@
                     value="{{ $permissao->id }}"
                     id="perm-{{ $permissao->id }}"
                     {{ $checked ? 'checked' : '' }}>
-                <span class="re-perm-item__body">
-                    <span class="badge {{ $badgeCls }} badge-sm re-perm-item__badge">{{ $acao }}</span>
-                    <code class="re-perm-item__name">{{ $permissao->name }}</code>
-                    @if($permissao->descricao)
-                        <span class="re-perm-item__desc">{{ $permissao->descricao }}</span>
-                    @endif
-                </span>
+                <span class="badge {{ $badgeCls }} badge-sm re-perm-item__badge">{{ $acao }}</span>
             </label>
         @endforeach
     </div>
