@@ -26,7 +26,7 @@
             <span class="re-sub__label">{{ $labelSub }}</span>
             <span class="re-sub__count">{{ $child['count'] }}</span>
             <span class="re-sub__checked" id="subbadge-{{ $subId }}" style="{{ $childChecked > 0 ? '' : 'display:none' }}">{{ $childChecked }}</span>
-            <span class="re-sub__actions" onclick="event.stopPropagation()">
+            <span class="re-sub__actions">
                 <button type="button" class="re-btn-group-all" data-sub="{{ $subId }}" title="Selecionar todas de {{ $labelSub }}"><i class="fas fa-check-double"></i></button>
                 <button type="button" class="re-btn-group-none" data-sub="{{ $subId }}" title="Desmarcar todas de {{ $labelSub }}"><i class="fas fa-times"></i></button>
             </span>

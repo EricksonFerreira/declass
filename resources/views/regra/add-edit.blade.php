@@ -268,14 +268,12 @@
                                     <div class="re-group__actions">
                                         <button type="button" class="re-btn-group-all"
                                                 data-group="{{ $accordionId }}"
-                                                title="Selecionar todas do grupo"
-                                                onclick="event.stopPropagation()">
+                                                title="Selecionar todas do grupo">
                                             <i class="fas fa-check-double"></i>
                                         </button>
                                         <button type="button" class="re-btn-group-none"
                                                 data-group="{{ $accordionId }}"
-                                                title="Desmarcar todas do grupo"
-                                                onclick="event.stopPropagation()">
+                                                title="Desmarcar todas do grupo">
                                             <i class="fas fa-times"></i>
                                         </button>
                                         <i class="fas fa-chevron-down re-group__chevron"></i>
@@ -550,7 +548,10 @@ $(function () {
     });
 
     // ── Selecionar / desmarcar por grupo ou subnível ──────────────────────
-    $(document).on('click', '.re-btn-group-all', function () {
+    // Binding direto + stopPropagation: delegado em document nao dispara
+    // porque precisamos impedir o collapse do header pai.
+    $('.re-btn-group-all').on('click', function (e) {
+        e.stopPropagation();
         const gid = $(this).data('group');
         const sub = $(this).data('sub');
         const $scope = gid ? $(`[data-grid="${gid}"]`) : $(`#${sub}`);
@@ -568,7 +569,8 @@ $(function () {
         if (!$body.hasClass('show')) $body.collapse('show');
     });
 
-    $(document).on('click', '.re-btn-group-none', function () {
+    $('.re-btn-group-none').on('click', function (e) {
+        e.stopPropagation();
         const gid = $(this).data('group');
         const sub = $(this).data('sub');
         const $scope = gid ? $(`[data-grid="${gid}"]`) : $(`#${sub}`);
