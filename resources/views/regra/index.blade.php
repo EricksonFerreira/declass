@@ -20,7 +20,21 @@
             font-size: .7rem; font-weight: 700; padding: .1rem .4rem;
             border-radius: 10px; margin-left: auto; background: #4b80ff20; color: #4b80ff;
         }
-        .rg-perm-group__items { display: flex; flex-direction: column; gap: .2rem; }
+        .rg-perm-group__items { display: flex; flex-direction: column; gap: .3rem; }
+        .rg-perm-sub {
+            display: flex; align-items: center; gap: .4rem; width: 100%;
+            border: 1px solid #e8eef7; border-radius: 8px; background: #fff;
+            padding: .3rem .55rem; font-size: .78rem; font-weight: 600; color: #374151;
+            text-align: left; cursor: pointer; transition: background .15s;
+        }
+        .rg-perm-sub:hover { background: #f4f7fd; }
+        .rg-perm-sub .fa-chevron-down { transition: transform .2s; font-size: .65rem; color: #8ca0b8; }
+        .rg-perm-sub[aria-expanded="true"] .fa-chevron-down { transform: rotate(180deg); }
+        .rg-perm-sub__count {
+            font-size: .68rem; font-weight: 700; padding: .05rem .4rem;
+            border-radius: 10px; margin-left: auto; background: #eef2f9; color: #4b80ff;
+        }
+        .rg-perm-sub__items { display: flex; flex-direction: column; gap: .2rem; padding: .35rem 0 .15rem .4rem; }
         .rg-perm-item {
             display: flex; align-items: center; gap: .4rem;
             font-size: .78rem; padding: .2rem .35rem; border-radius: 6px; background: #f8faff;
@@ -43,7 +57,7 @@
 
 @php
     $grupoMeta = [
-        'clockify'    => ['label' => 'Clockify',          'icon' => 'fas fa-clock'],
+        'clockify'    => ['label' => 'Declock',           'icon' => 'fas fa-clock'],
         'usuario'     => ['label' => 'Usuários',          'icon' => 'fas fa-users'],
         'regra'       => ['label' => 'Perfis de Acesso',  'icon' => 'fas fa-user-shield'],
         'permissao'   => ['label' => 'Permissões',        'icon' => 'fas fa-key'],
@@ -58,15 +72,45 @@
         '_outros'     => ['label' => 'Outros',            'icon' => 'fas fa-ellipsis-h'],
     ];
 
+    $featureLabel = [
+        'calendario' => 'Calendário',
+        'clientes'   => 'Clientes',
+        'projetos'   => 'Projetos',
+        'tags'       => 'Tags',
+        'times'      => 'Equipes',
+        'timeoff'    => 'Folgas e Férias',
+        'timesheet'  => 'Planilha de Horas',
+        'tracker'    => 'Rastreador',
+        'funcoes'    => 'Funções',
+        'relatorios' => 'Relatórios',
+        'horas'      => 'Horas',
+        'consumo'    => 'Consumo',
+        'matriz'     => 'Matriz',
+        'equipe'     => 'Equipe',
+        'produtividade' => 'Produtividade',
+    ];
+
     $acaoLabel = [
-        'index'   => 'Listar',
-        'show'    => 'Ver',
-        'create'  => 'Criar',
-        'store'   => 'Salvar',
-        'edit'    => 'Editar',
-        'update'  => 'Atualizar',
-        'destroy' => 'Excluir',
-        'delete'  => 'Excluir',
+        'index'         => 'Listar',
+        'show'          => 'Ver',
+        'create'        => 'Criar',
+        'store'         => 'Salvar',
+        'edit'          => 'Editar',
+        'update'        => 'Atualizar',
+        'destroy'       => 'Excluir',
+        'delete'        => 'Excluir',
+        'filtro'        => 'Filtrar',
+        'removerFiltro' => 'Limpar filtro',
+        'setPerPage'    => 'Itens por página',
+        'start'         => 'Iniciar',
+        'stop'          => 'Parar',
+        'manual'        => 'Apontamento manual',
+        'save'          => 'Salvar',
+        'mover'         => 'Mover',
+        'approve'       => 'Aprovar',
+        'reject'        => 'Rejeitar',
+        'export'        => 'Exportar',
+        'exportar'      => 'Exportar',
     ];
 @endphp
 
@@ -156,13 +200,30 @@
                                                         <span class="rg-perm-group__count">{{ $perms->count() }}</span>
                                                     </div>
                                                     <div class="rg-perm-group__items">
-                                                        @foreach ($perms as $p)
+                                                        @foreach ($perms->groupBy(fn ($p) => count(explode('.', $p->name)) >= 3 ? explode('.', $p->name)[1] : '_geral') as $feature => $featurePerms)
                                                             @php
-                                                                $acao = str_contains($p->name, '.') ? explode('.', $p->name)[1] : $p->name;
+                                                                $subId = $cardId . '-' . $loop->parent->index . '-' . $loop->index;
+                                                                $featureNome = $featureLabel[$feature] ?? ($feature === '_geral' ? 'Geral' : ucfirst(str_replace(['_', '-'], ' ', $feature)));
                                                             @endphp
-                                                            <div class="rg-perm-item" title="{{ $p->name }}">
-                                                                <span class="rg-perm-item__badge">{{ $acaoLabel[$acao] ?? $acao }}</span>
-                                                                <span class="rg-perm-item__desc">{{ $p->descricao ?: $acao }}</span>
+                                                            <button type="button" class="rg-perm-sub"
+                                                                data-toggle="collapse" data-target="#{{ $subId }}" aria-expanded="false">
+                                                                <i class="fas fa-chevron-down"></i>
+                                                                <span>{{ $featureNome }}</span>
+                                                                <span class="rg-perm-sub__count">{{ $featurePerms->count() }}</span>
+                                                            </button>
+                                                            <div id="{{ $subId }}" class="collapse">
+                                                                <div class="rg-perm-sub__items">
+                                                                    @foreach ($featurePerms as $p)
+                                                                        @php
+                                                                            $partesNome = explode('.', $p->name);
+                                                                            $acao = count($partesNome) >= 3 ? $partesNome[2] : end($partesNome);
+                                                                        @endphp
+                                                                        <div class="rg-perm-item" title="{{ $p->name }}">
+                                                                            <span class="rg-perm-item__badge">{{ $acaoLabel[$acao] ?? $acao }}</span>
+                                                                            <span class="rg-perm-item__desc">{{ $p->descricao ?: $p->name }}</span>
+                                                                        </div>
+                                                                    @endforeach
+                                                                </div>
                                                             </div>
                                                         @endforeach
                                                     </div>
