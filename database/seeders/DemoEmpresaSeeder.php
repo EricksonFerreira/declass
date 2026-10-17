@@ -154,7 +154,7 @@ class DemoEmpresaSeeder extends Seeder
     private function seedRegras(): array
     {
         $roles = [];
-        foreach (['administrador', 'lider', 'colaborador', 'visualizador'] as $nome) {
+        foreach (['administrador', 'usuario'] as $nome) {
             $roles[$nome] = Regra::firstOrCreate(
                 ['name' => $nome, 'guard_name' => 'web']
             )->id;
@@ -273,19 +273,19 @@ class DemoEmpresaSeeder extends Seeder
             ->where('empresa_id', $this->empresaId)
             ->where('email', 'like', 'fernanda.lima%')->first();
         if ($fernanda) {
-            DB::table('users')->where('id', $fernanda->id)->update(['role_id' => $roles['lider']]);
+            DB::table('users')->where('id', $fernanda->id)->update(['role_id' => $roles['administrador']]);
         }
 
         DB::table('users')->where('empresa_id', $this->empresaId)
             ->where('email', 'like', '%'.self::EMAIL_DOMINIO)
             ->whereNotIn('id', array_filter([$admin->id, $fernanda?->id]))
-            ->update(['role_id' => $roles['colaborador']]);
+            ->update(['role_id' => $roles['usuario']]);
 
-        $paulo = $this->seedUsuarioExtra($roles['visualizador'], [
+        $paulo = $this->seedUsuarioExtra($roles['usuario'], [
             'nome' => 'Paulo Diretor', 'cargo' => 'Diretor Comercial',
         ], 'paulo.diretor');
 
-        $julia = $this->seedUsuarioExtra($roles['colaborador'], [
+        $julia = $this->seedUsuarioExtra($roles['usuario'], [
             'nome' => 'Julia Costa', 'cargo' => 'Estagiária de Engenharia', 'jornada_diaria' => 4, 'fator_esforco' => 0.5,
         ], 'julia.costa');
 

@@ -40,7 +40,7 @@ class ImportacaoController extends Controller
         [$cabecalho, $exemplo] = match ($tipo) {
             'usuarios' => [
                 ['nome', 'email', 'usuario', 'funcao', 'papel', 'jornada_diaria', 'celular'],
-                ['Maria Silva', 'maria.silva@empresa.com', 'maria.silva', 'Engenheiro Civil', 'colaborador', '8', '(11) 99999-0000'],
+                ['Maria Silva', 'maria.silva@empresa.com', 'maria.silva', 'Engenheiro Civil', 'usuario', '8', '(11) 99999-0000'],
             ],
             'projetos' => [
                 ['nome', 'codigo_cc', 'numero', 'ano', 'status', 'cliente', 'descricao', 'horas_orcadas', 'valor_faturado', 'estimativas'],

@@ -27,11 +27,12 @@ class ImportarUsuariosAction
     private const PAPEIS = [
         'administrador' => 'administrador',
         'admin' => 'administrador',
-        'lider' => 'lider',
-        'lideranca' => 'lider',
-        'colaborador' => 'colaborador',
-        'visualizador' => 'visualizador',
-        'diretor' => 'visualizador',
+        'usuario' => 'usuario',
+        'lider' => 'usuario',
+        'lideranca' => 'usuario',
+        'colaborador' => 'usuario',
+        'visualizador' => 'usuario',
+        'diretor' => 'usuario',
     ];
 
     public function __construct(private readonly CsvReader $reader) {}
@@ -91,7 +92,7 @@ class ImportarUsuariosAction
         $analise = $this->analisar($caminho, $empresaId);
 
         $resumo = ['criados' => 0, 'atualizados' => 0, 'erros' => []];
-        $papelPadrao = $this->resolverPapel('colaborador', $empresaId);
+        $papelPadrao = $this->resolverPapel('usuario', $empresaId);
 
         foreach ($analise as $item) {
             if ($item['erro']) {

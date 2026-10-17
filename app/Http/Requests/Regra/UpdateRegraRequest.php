@@ -43,7 +43,7 @@ class UpdateRegraRequest extends FormRequest
             }
 
             $roleName = mb_strtolower(trim((string) $this->input('name')));
-            if (in_array($roleName, ['superadmin', 'administrador', 'admin', 'cliente'], true)) {
+            if (in_array($roleName, ['superadmin', 'administrador', 'admin', 'cliente', 'usuario'], true)) {
                 $validator->errors()->add('name', 'Esse nome de perfil e reservado pelo sistema.');
             }
 

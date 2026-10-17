@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Permissao;
 use App\Models\Regra;
+use Database\Seeders\PapeisPermissoesSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -162,122 +163,57 @@ class PermissaoSyncService
             $pivotCount += count($permissionsForRole);
         }
 
+        $this->limparPapeisGlobaisObsoletos();
+
         return [$createdRoles, $pivotCount];
     }
 
     /**
+     * Perfis globais padrao: administrador (acesso total via isAdministrador)
+     * e usuario (membro padrao, permissoes curadas no seeder).
+     *
      * @return array<string, \Closure(string): bool>
      */
     private function buildRolePermissionFilters(): array
     {
         return [
             'administrador' => fn (string $permissionName) => true,
-
-            // Gerente: opera o sistema operacional/financeiro; sem acesso a gestão de plataforma.
-            'gerente' => fn (string $permissionName) =>
-                ! $this->isDangerousAction($permissionName)
-                && ! $this->isPlatformModule($permissionName)
-                && (
-                    ! $this->isSecurityModule($permissionName)
-                    || $this->isReservationStaffPermission($permissionName)
-                ),
-
-            // Colaborador chefe: foco operacional com leitura ampla; sem plataforma.
-            'colaborador_chefe' => fn (string $permissionName) =>
-                ! $this->isPlatformModule($permissionName)
-                && (
-                    (
-                        $this->isOperationalAction($permissionName)
-                        && $this->isOperationalModule($permissionName)
-                    )
-                    || $this->isReservationStaffPermission($permissionName)
-                ),
-
-            // Colaborador administrativo: leitura + rotinas operacionais básicas; sem plataforma.
-            'colaborador_administrativo' => fn (string $permissionName) =>
-                ! $this->isSecurityModule($permissionName)
-                && ! $this->isPlatformModule($permissionName)
-                && (
-                    $this->isReadOnlyAction($permissionName)
-                    || ($this->isOperationalAction($permissionName) && $this->isOperationalModule($permissionName))
-                    || $this->isReservationStaffPermission($permissionName)
-                ),
-
-            // Cliente: acesso mínimo.
-            'cliente' => fn (string $permissionName) => $this->isReservationClientPermission($permissionName),
-
-            // Compatibilidade (bases antigas).
-            'gestor' => fn (string $permissionName) =>
-                ! $this->isDangerousAction($permissionName)
-                && ! $this->isPlatformModule($permissionName)
-                && (
-                    ! $this->isSecurityModule($permissionName)
-                    || $this->isReservationStaffPermission($permissionName)
-                ),
-            'operador' => fn (string $permissionName) =>
-                ! $this->isPlatformModule($permissionName)
-                && (
-                    (
-                        $this->isOperationalAction($permissionName)
-                        && $this->isOperationalModule($permissionName)
-                    )
-                    || $this->isReservationStaffPermission($permissionName)
-                ),
-            'financeiro' => fn (string $permissionName) =>
-                ! $this->isPlatformModule($permissionName)
-                && (
-                    $this->isReadOnlyAction($permissionName)
-                    || $this->isFinancialModule($permissionName)
-                    || $this->isReservationFinancialPermission($permissionName)
-                ),
-            'visualizador' => fn (string $permissionName) =>
-                ! $this->isPlatformModule($permissionName)
-                && $this->isReadOnlyAction($permissionName),
+            'usuario' => fn (string $permissionName) =>
+                in_array($permissionName, PapeisPermissoesSeeder::PERMISSOES_USUARIO, true),
         ];
     }
 
-    private function actionFromPermissionName(string $permissionName): string
+    /**
+     * Remapeia usuarios de papeis globais fora de [administrador, usuario]
+     * para 'usuario' e remove esses papeis. Papeis de empresa
+     * (empresa_id preenchido) pertencem ao tenant e sao preservados.
+     */
+    private function limparPapeisGlobaisObsoletos(): void
     {
-        if (! str_contains($permissionName, '.')) {
-            return $permissionName;
+        $usuarioRole = Regra::query()
+            ->where('guard_name', 'web')
+            ->whereNull('empresa_id')
+            ->whereRaw('LOWER(name) = ?', ['usuario'])
+            ->first();
+
+        if (! $usuarioRole) {
+            return;
         }
 
-        return (string) str($permissionName)->afterLast('.');
-    }
+        $idsObsoletos = Regra::query()
+            ->where('guard_name', 'web')
+            ->whereNull('empresa_id')
+            ->whereRaw("LOWER(name) NOT IN ('administrador', 'usuario')")
+            ->pluck('id');
 
-    private function isDangerousAction(string $permissionName): bool
-    {
-        $action = $this->actionFromPermissionName($permissionName);
+        if ($idsObsoletos->isEmpty()) {
+            return;
+        }
 
-        return in_array($action, ['destroy', 'excluirMetodoPagamento'], true);
-    }
+        DB::table('users')->whereIn('role_id', $idsObsoletos)->update(['role_id' => $usuarioRole->id]);
 
-    private function isReadOnlyAction(string $permissionName): bool
-    {
-        $action = $this->actionFromPermissionName($permissionName);
-
-        return in_array($action, ['index', 'show', 'filtro', 'setPerPage', 'removerFiltro', 'home', 'dashboard'], true);
-    }
-
-    private function isOperationalAction(string $permissionName): bool
-    {
-        $action = $this->actionFromPermissionName($permissionName);
-
-        return in_array($action, [
-            'index',
-            'show',
-            'create',
-            'store',
-            'edit',
-            'update',
-            'filtro',
-            'setPerPage',
-            'removerFiltro',
-            'alterarSenha',
-            'salvarNovaSenha',
-            'metodoPagamento',
-            'adicionarMetodoPagamento',
-        ], true);
+        DB::table('role_has_permissions')->whereIn('role_id', $idsObsoletos)->delete();
+        Regra::query()->whereIn('id', $idsObsoletos)->delete();
     }
 
     private function grupoFromName(string $name): string
@@ -286,210 +222,5 @@ class PermissaoSyncService
             return $name;
         }
         return (string) str($name)->before('.');
-    }
-
-    private function modulePrefix(string $permissionName): string
-    {
-        if (! str_contains($permissionName, '.')) {
-            return $permissionName;
-        }
-
-        return (string) str($permissionName)->before('.');
-    }
-
-    private function isSecurityModule(string $permissionName): bool
-    {
-        return in_array($this->modulePrefix($permissionName), ['permissao', 'tipo_usuario'], true);
-    }
-
-    /**
-     * Módulos de gestão de plataforma: exclusivos do superadmin.
-     * Nenhum usuário de empresa cliente deve ter acesso a estes módulos.
-     */
-    private function isPlatformModule(string $permissionName): bool
-    {
-        // Módulos de status são somente-leitura para empresa; gerenciamento é do superadmin.
-        if ($this->isStatusManagementAction($permissionName)) {
-            return true;
-        }
-
-        return in_array($this->modulePrefix($permissionName), [
-            'empresa',
-            'replicacao_base',
-            'regra',
-            'permissao',
-            'tipo_usuario',
-            'plano',
-            'planos',
-            'assinatura',
-            // Cadastros globais da plataforma
-            'job',
-            'sitemap',
-            'pais',
-            'dia_util',
-            'dias_uteis',
-            'horario_diario',
-        ], true);
-    }
-
-    /**
-     * Ações de gestão (criar/editar/excluir) nos módulos de status.
-     * Usuários de empresa só podem visualizar esses registros, não gerenciá-los.
-     */
-    private function isStatusManagementAction(string $permissionName): bool
-    {
-        $statusModules = ['status_veiculo', 'status_movimentacao', 'status_reserva', 'status_veiculos'];
-        $prefix = $this->modulePrefix($permissionName);
-
-        if (!in_array($prefix, $statusModules, true)) {
-            return false;
-        }
-
-        // Ações de leitura são permitidas para empresa — apenas gestão é bloqueada
-        $action = $this->actionFromPermissionName($permissionName);
-        return !in_array($action, ['index', 'show', 'filtro', 'setPerPage', 'removerFiltro'], true);
-    }
-
-    private function isFinancialModule(string $permissionName): bool
-    {
-        return in_array($this->modulePrefix($permissionName), ['financeiro', 'transacao', 'cupom', 'calcao'], true);
-    }
-
-    private function isReservationStaffPermission(string $permissionName): bool
-    {
-        return in_array($permissionName, $this->reservationStaffPermissions(), true);
-    }
-
-    private function isReservationFinancialPermission(string $permissionName): bool
-    {
-        return in_array($permissionName, $this->reservationFinancialPermissions(), true);
-    }
-
-    private function isReservationClientPermission(string $permissionName): bool
-    {
-        return in_array($permissionName, $this->reservationClientPermissions(), true);
-    }
-
-    private function isOperationalModule(string $permissionName): bool
-    {
-        return in_array($this->modulePrefix($permissionName), [
-            'reserva',
-            'movimentacao',
-            'veiculo',
-            'checklist',
-            'dano',
-            'sinistro',
-            'multa',
-        ], true);
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function reservationStaffPermissions(): array
-    {
-        return [
-            'reserva.index',
-            'reserva.show',
-            'reserva.create',
-            'reserva.store',
-            'reserva.edit',
-            'reserva.update',
-            'reserva.filtro',
-            'reserva.setPerPage',
-            'reserva.removerFiltro',
-            'reserva.horarios_diarios',
-            'reserva.salvar_horarios_diarios',
-            'reserva.cancelar',
-            'reserva.historico',
-            'reserva.obterOpcionais',
-            'reserva.veiculosDisponiveis',
-            'reserva.dadosEdicaoNoShow',
-            'reserva.atualizarNoShow',
-            'reserva.gerenciar_opcionais',
-            'reserva.editar_no_show',
-            'reserva.checkin',
-            'reserva.checkin.statusUpgrade',
-            'reserva.checkin.veiculosDisponiveis',
-            'reserva.checkin.veiculosModal',
-            'reserva.checkin.excluirContrato',
-            'reserva.minhas.assinar-checkin',
-            'reserva.criarContratoCheckin',
-            'reserva.assinarContratoCheckin',
-            'reserva.salvarAssinarContratoCheckIn',
-            'reserva.salvar.assinatura',
-            'reserva.verContratoCheckin',
-            'reserva.adicionarDanoVeiculo',
-            'reserva.checkout.vistoria',
-            'reserva.checkout.finalizar',
-            'reserva.efetuarPagamento',
-            'reserva.processarPagamento',
-            'reserva.confirmarPagamentoDinheiro',
-            'reserva.emitirNfse',
-            'reserva.calcao',
-            'reserva.calcao.autorizar',
-            'reserva.calcao.capturar',
-            'reserva.calcao.liberar',
-            'reserva.calcao.presencial',
-            'reserva.calcao.presencial.devolver',
-            'reserva.avarias.cobranca',
-            'reserva.avarias.cobrar',
-            'avaria.cobrar',
-        ];
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function reservationFinancialPermissions(): array
-    {
-        return [
-            'reserva.index',
-            'reserva.show',
-            'reserva.filtro',
-            'reserva.setPerPage',
-            'reserva.removerFiltro',
-            'reserva.historico',
-            'reserva.efetuarPagamento',
-            'reserva.processarPagamento',
-            'reserva.confirmarPagamentoDinheiro',
-            'reserva.emitirNfse',
-            'reserva.avarias.cobranca',
-            'reserva.avarias.cobrar',
-            'avaria.cobrar',
-        ];
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function reservationClientPermissions(): array
-    {
-        return [
-            'reserva.minhas',
-            'reserva.show',
-            'reserva.efetuarPagamento',
-            'reserva.processarPagamento',
-            'site.apresentacao',
-            'site.reserva.index',
-            'site.reserva.create',
-            'site.reserva.store',
-            'site.reserva.disponibilidade',
-            'site.reserva.pagamento',
-            'site.reserva.pagamento.metodo',
-            'site.reserva.processarPagamento',
-            'site.reserva.success',
-            'site.reserva.login',
-            'site.reserva.verificarCupom',
-            'cancel',
-            'success',
-            'stripe.payment',
-            'stripe.success',
-            'stripe.failure',
-            'stripe.processPayment',
-            'cashier.payment',
-            'cashier.webhook',
-            'subscription-checkout',
-        ];
     }
 }

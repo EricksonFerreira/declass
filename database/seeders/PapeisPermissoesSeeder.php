@@ -10,25 +10,23 @@ use Illuminate\Support\Facades\DB;
  *
  * Papeis (roles.name):
  *  - administrador : acesso total ao tenant (via isAdministrador + plano)
- *  - lider         : colaborador + gestao de equipe/projetos/aprovacoes/relatorios
- *  - colaborador   : membro padrao — aponta tempo, solicita folga, ve dados proprios
- *  - visualizador  : leitura de paineis e relatorios (sem escopo de restricao)
+ *  - usuario       : membro padrao — aponta tempo, solicita folga, ve dados proprios
  *
  * Idempotente: pode rodar quantas vezes precisar.
- * Remapeamento: papeis legados (DeCars) viram o equivalente DECLOCK.
+ * Limpeza: papeis globais fora de [administrador, usuario] tem seus usuarios
+ * remapeados para 'usuario' e sao removidos. Papeis de empresa
+ * (empresa_id preenchido) pertencem ao tenant e nao sao tocados.
  */
 class PapeisPermissoesSeeder extends Seeder
 {
-    private const PAPEL_COLABORADOR = 'colaborador';
+    private const PAPEL_ADMIN = 'administrador';
 
-    private const PAPEL_LIDER = 'lider';
-
-    private const PAPEL_VISUALIZADOR = 'visualizador';
+    private const PAPEL_USUARIO = 'usuario';
 
     /**
-     * Permissoes base do colaborador: registrar tempo e gerenciar os proprios dados.
+     * Permissoes do usuario: registrar tempo e gerenciar os proprios dados.
      */
-    private const PERMISSOES_COLABORADOR = [
+    public const PERMISSOES_USUARIO = [
         'clockify.tracker.index',
         'clockify.tracker.start',
         'clockify.tracker.stop',
@@ -76,96 +74,19 @@ class PapeisPermissoesSeeder extends Seeder
         'home.projetos',
     ];
 
-    /**
-     * Permissoes extras do lider: gestao de equipe, projetos, aprovacoes
-     * e relatorios com dados de custo/margem.
-     */
-    private const PERMISSOES_LIDER_EXTRA = [
-        'clockify.timeoff.approve',
-        'clockify.timeoff.reject',
-        'clockify.times.store',
-        'clockify.times.update',
-        'clockify.times.destroy',
-        'clockify.projetos.store',
-        'clockify.projetos.update',
-        'clockify.projetos.planejamento',
-        'clockify.projetos.planejamento.store',
-        'clockify.projetos.planejar-equipe',
-        'clockify.projetos.planejar-equipe.store',
-        'clockify.projetos.planejar-equipe-geral',
-        'clockify.projetos.planejar-equipe-geral.store',
-        'clockify.projetos.cronogramas.novo',
-        'clockify.projetos.cronogramas.store',
-        'clockify.projetos.cronogramas.destroy',
-        'clockify.clientes.store',
-        'clockify.clientes.update',
-        'clockify.tags.store',
-        'clockify.tags.update',
-        'clockify.tags.destroy',
-        'relatorios.consumo',
-        'relatorios.consumo.show',
-        'relatorios.consumo.status',
-        'relatorios.consumo.estimativas.store',
-        'relatorios.consumo.estimativas.destroy',
-        'relatorios.matriz',
-        'licitacoes.index',
-        'licitacoes.show',
-        'licitacoes.store',
-        'licitacoes.texto',
-        'licitacoes.status',
-        'licitacoes.analisar',
-        'licitacoes.destroy',
-    ];
-
-    /**
-     * Permissoes do visualizador: paineis e relatorios em modo leitura.
-     */
-    private const PERMISSOES_VISUALIZADOR = [
-        'dashboard',
-        'home.equipe',
-        'home.produtividade',
-        'home.projetos',
-        'relatorios.index',
-        'relatorios.horas',
-        'relatorios.horas-trabalhadas',
-        'relatorios.consumo',
-        'relatorios.consumo.show',
-        'relatorios.export',
-        'relatorios.exportar',
-        'clockify.projetos.index',
-        'clockify.projetos.show',
-        'clockify.clientes.index',
-        'clockify.times.index',
-        'clockify.timeoff.index',
-    ];
-
-    /**
-     * Papeis legados (DeCars) -> equivalente DECLOCK.
-     */
-    private const REMAP_PAPEIS = [
-        'Gerente' => self::PAPEL_LIDER,
-        'gestor' => self::PAPEL_LIDER,
-        'colaborador_chefe' => self::PAPEL_LIDER,
-        'Atendente' => self::PAPEL_COLABORADOR,
-        'Financeiro' => self::PAPEL_COLABORADOR,
-        'Supervisor de Frota' => self::PAPEL_COLABORADOR,
-        'operador' => self::PAPEL_COLABORADOR,
-        'colaborador_administrativo' => self::PAPEL_COLABORADOR,
-        'Cliente' => self::PAPEL_VISUALIZADOR,
-    ];
-
     public function run(): void
     {
         $this->garantirPapeis();
         $this->sincronizarMatriz();
         $this->remapearUsuarios();
+        $this->removerPapeisGlobaisObsoletos();
     }
 
     private function garantirPapeis(): void
     {
-        foreach ([self::PAPEL_COLABORADOR, self::PAPEL_LIDER, self::PAPEL_VISUALIZADOR] as $nome) {
+        foreach ([self::PAPEL_ADMIN, self::PAPEL_USUARIO] as $nome) {
             DB::table('roles')->updateOrInsert(
-                ['name' => $nome, 'guard_name' => 'web'],
+                ['name' => $nome, 'guard_name' => 'web', 'empresa_id' => null],
                 ['created_at' => now(), 'updated_at' => now()]
             );
         }
@@ -173,72 +94,112 @@ class PapeisPermissoesSeeder extends Seeder
 
     private function sincronizarMatriz(): void
     {
-        $matriz = [
-            self::PAPEL_COLABORADOR => self::PERMISSOES_COLABORADOR,
-            self::PAPEL_LIDER => array_merge(self::PERMISSOES_COLABORADOR, self::PERMISSOES_LIDER_EXTRA),
-            self::PAPEL_VISUALIZADOR => self::PERMISSOES_VISUALIZADOR,
-        ];
+        $roleId = DB::table('roles')
+            ->where('name', self::PAPEL_USUARIO)
+            ->where('guard_name', 'web')
+            ->whereNull('empresa_id')
+            ->value('id');
+
+        if (! $roleId) {
+            return;
+        }
 
         $permissaoIds = DB::table('permissions')
             ->where('guard_name', 'web')
             ->pluck('id', 'name');
 
-        foreach ($matriz as $papel => $perms) {
-            $roleId = DB::table('roles')->where('name', $papel)->where('guard_name', 'web')->value('id');
-            if (! $roleId) {
-                continue;
-            }
+        $ids = collect(self::PERMISSOES_USUARIO)
+            ->map(fn ($nome) => $permissaoIds[$nome] ?? null)
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
 
-            $ids = collect($perms)
-                ->map(fn ($nome) => $permissaoIds[$nome] ?? null)
-                ->filter()
-                ->map(fn ($id) => (int) $id)
-                ->unique()
-                ->values();
-
-            $faltantes = collect($perms)->filter(fn ($n) => ! isset($permissaoIds[$n]))->values();
-            if ($faltantes->isNotEmpty()) {
-                $this->command?->warn("Permissoes inexistentes para {$papel}: ".$faltantes->implode(', '));
-            }
-
-            DB::table('role_has_permissions')->where('role_id', $roleId)->delete();
-
-            DB::table('role_has_permissions')->insert(
-                $ids->map(fn ($pid) => ['permission_id' => $pid, 'role_id' => $roleId])->all()
-            );
-
-            $this->command?->info("Papel {$papel}: {$ids->count()} permissoes sincronizadas.");
+        $faltantes = collect(self::PERMISSOES_USUARIO)->filter(fn ($n) => ! isset($permissaoIds[$n]))->values();
+        if ($faltantes->isNotEmpty()) {
+            $this->command?->warn('Permissoes inexistentes para '.self::PAPEL_USUARIO.': '.$faltantes->implode(', '));
         }
+
+        DB::table('role_has_permissions')->where('role_id', $roleId)->delete();
+
+        DB::table('role_has_permissions')->insert(
+            $ids->map(fn ($pid) => ['permission_id' => $pid, 'role_id' => $roleId])->all()
+        );
+
+        $this->command?->info('Papel '.self::PAPEL_USUARIO.": {$ids->count()} permissoes sincronizadas.");
     }
 
     private function remapearUsuarios(): void
     {
-        $roleIds = DB::table('roles')->where('guard_name', 'web')->pluck('id', 'name');
+        $usuarioId = DB::table('roles')
+            ->where('name', self::PAPEL_USUARIO)
+            ->where('guard_name', 'web')
+            ->whereNull('empresa_id')
+            ->value('id');
 
-        foreach (self::REMAP_PAPEIS as $legado => $novo) {
-            $legadoId = $roleIds[$legado] ?? null;
-            $novoId = $roleIds[$novo] ?? null;
-            if (! $legadoId || ! $novoId) {
-                continue;
-            }
+        if (! $usuarioId) {
+            return;
+        }
 
-            $afetados = DB::table('users')->where('role_id', $legadoId)->update(['role_id' => $novoId]);
+        // Qualquer papel global fora de [administrador, usuario] vira usuario.
+        $idsObsoletos = DB::table('roles')
+            ->where('guard_name', 'web')
+            ->whereNull('empresa_id')
+            ->whereNotIn('name', [self::PAPEL_ADMIN, self::PAPEL_USUARIO])
+            ->pluck('id');
+
+        if ($idsObsoletos->isNotEmpty()) {
+            $afetados = DB::table('users')->whereIn('role_id', $idsObsoletos)->update(['role_id' => $usuarioId]);
             if ($afetados > 0) {
-                $this->command?->info("{$afetados} usuario(s) de '{$legado}' -> '{$novo}'.");
+                $this->command?->info("{$afetados} usuario(s) de papeis obsoletos -> '".self::PAPEL_USUARIO."'.");
             }
         }
 
-        // Usuarios de tenant sem papel assumem colaborador.
-        $colaboradorId = $roleIds[self::PAPEL_COLABORADOR] ?? null;
-        if ($colaboradorId) {
-            $semPapel = DB::table('users')
-                ->whereNotNull('empresa_id')
-                ->whereNull('role_id')
-                ->update(['role_id' => $colaboradorId]);
+        // Usuarios de tenant sem papel assumem usuario.
+        $semPapel = DB::table('users')
+            ->whereNotNull('empresa_id')
+            ->whereNull('role_id')
+            ->update(['role_id' => $usuarioId]);
 
-            if ($semPapel > 0) {
-                $this->command?->info("{$semPapel} usuario(s) sem papel -> 'colaborador'.");
-            }
+        if ($semPapel > 0) {
+            $this->command?->info("{$semPapel} usuario(s) sem papel -> '".self::PAPEL_USUARIO."'.");
         }
+    }
+
+    /**
+     * Remove papeis globais que nao sejam administrador/usuario.
+     * Papeis com empresa_id pertencem ao tenant e sao preservados.
+     */
+    private function removerPapeisGlobaisObsoletos(): void
+    {
+        $ids = DB::table('roles')
+            ->where('guard_name', 'web')
+            ->whereNull('empresa_id')
+            ->whereNotIn('name', [self::PAPEL_ADMIN, self::PAPEL_USUARIO])
+            ->pluck('id');
+
+        if ($ids->isEmpty()) {
+            return;
+        }
+
+        // Seguranca: so remove papel sem usuarios vinculados; os que ainda
+        // tiverem usuarios (ex.: role_id apontando para papel de empresa)
+        // ficam para revisao manual.
+        $emUso = DB::table('users')->whereIn('role_id', $ids)->pluck('role_id')->unique();
+        $removiveis = $ids->diff($emUso);
+
+        if ($emUso->isNotEmpty()) {
+            $nomes = DB::table('roles')->whereIn('id', $emUso)->pluck('name')->implode(', ');
+            $this->command?->warn("Papeis globais ainda em uso, nao removidos: {$nomes}");
+        }
+
+        if ($removiveis->isEmpty()) {
+            return;
+        }
+
+        DB::table('role_has_permissions')->whereIn('role_id', $removiveis)->delete();
+        DB::table('roles')->whereIn('id', $removiveis)->delete();
+
+        $this->command?->info($removiveis->count().' papel(is) global(is) obsoleto(s) removido(s).');
     }
 }
