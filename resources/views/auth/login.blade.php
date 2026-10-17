@@ -533,7 +533,7 @@
 
             {{-- Footer --}}
             <div class="card__footer">
-                @if (Route::has('register'))
+                @if (Route::has('register') && ! $loginEmpresa)
                     Não possui uma conta?
                     <a href="{{ route('register') }}">Criar conta</a>
                 @endif

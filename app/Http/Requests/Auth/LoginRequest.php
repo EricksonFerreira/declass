@@ -160,16 +160,21 @@ class LoginRequest extends FormRequest
 
     private function resolveUserForEmpresa(int $empresaId): ?User
     {
-        // Aceita e-mail ou nome de usuario (coluna users.usuario).
+        // Aceita e-mail ou nome de usuario (coluna users.usuario, quando existe).
         $login = Str::lower(trim((string) $this->input('email', '')));
         if ($login === '') {
             return null;
         }
 
+        $hasUsuario = SchemaCache::hasColumn('users', 'usuario');
+
         return User::query()
-            ->where(function ($query) use ($login) {
-                $query->where('email', $login)
-                    ->orWhere('usuario', $login);
+            ->where(function ($query) use ($login, $hasUsuario) {
+                $query->where('email', $login);
+
+                if ($hasUsuario) {
+                    $query->orWhere('usuario', $login);
+                }
             })
             ->where(function ($query) use ($empresaId) {
                 $query->where('empresa_id', $empresaId);

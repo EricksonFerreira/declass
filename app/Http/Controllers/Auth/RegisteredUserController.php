@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
 use App\Models\User;
+use App\Support\EmpresaDominio;
 use App\Support\SchemaCache;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
@@ -19,8 +20,14 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+        // Cadastro so existe no dominio central; em dominio de empresa,
+        // o acesso e via convite/usuarios criados pelo admin.
+        if (EmpresaDominio::porHost(request()->getHost())) {
+            return redirect()->route('login');
+        }
+
         $planos = \App\Models\Plano::ativos()->with('itens')->get();
         $empresa = $this->resolveEmpresaAtivaByHost(request());
 
@@ -29,6 +36,8 @@ class RegisteredUserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        abort_if(EmpresaDominio::porHost($request->getHost()), 404);
+
         $dataLimite = Carbon::now()->subYears(16)->format('Y-m-d');
 
         $request->validate([
@@ -112,7 +121,7 @@ class RegisteredUserController extends Controller
 
     private function resolveEmpresaAtivaByHost(Request $request): ?Empresa
     {
-        $empresa = \App\Support\EmpresaDominio::porHost($request->getHost());
+        $empresa = EmpresaDominio::porHost($request->getHost());
         if ($empresa) {
             return $empresa;
         }
