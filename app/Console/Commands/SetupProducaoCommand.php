@@ -28,6 +28,11 @@ class SetupProducaoCommand extends Command
         Artisan::call('optimize:clear');
         $this->line(Artisan::output());
 
+        // Logo/publicos: cria public/storage (idempotente — avisa se ja existe)
+        $this->info('=== storage:link ===');
+        Artisan::call('storage:link');
+        $this->line(Artisan::output());
+
         $this->info('=== migrate ===');
         Artisan::call('migrate', ['--force' => true]);
         $this->line(Artisan::output());
