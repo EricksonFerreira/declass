@@ -448,6 +448,12 @@ return [
                     'icon' => 'fas fa-user-cog',
                 ],
                 [
+                    'text' => 'Perfis de Acesso',
+                    'route' => 'regra.index',
+                    'icon' => 'fas fa-user-shield',
+                    'can' => 'regra.index',
+                ],
+                [
                     'text' => 'Importar CSV',
                     'route' => 'importacao.index',
                     'icon' => 'fas fa-file-import',
