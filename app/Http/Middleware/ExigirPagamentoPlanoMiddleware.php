@@ -45,8 +45,13 @@ class ExigirPagamentoPlanoMiddleware
             return $next($request);
         }
 
-        // Admin/superadmin nao deve ser bloqueado por pagamento.
-        if (method_exists($user, 'isAdministrador') && $user->isAdministrador()) {
+        // A cobranca do plano e responsabilidade do administrador da empresa.
+        // Membros (perfil usuario etc.) seguem o acesso do proprio perfil.
+        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        if (! method_exists($user, 'isAdministrador') || ! $user->isAdministrador()) {
             return $next($request);
         }
 

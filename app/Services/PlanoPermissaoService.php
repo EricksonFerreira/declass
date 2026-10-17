@@ -161,6 +161,12 @@ class PlanoPermissaoService
 
     public function usuarioPodeUsarPermissao(User $user, string $permissionName): bool
     {
+        // Membros nao administradores seguem as permissoes do perfil —
+        // a exigencia de plano vale apenas para quem gerencia a empresa.
+        if (! $user->isAdministrador()) {
+            return true;
+        }
+
         return $this->empresaPodeUsarPermissao($user->empresa, $permissionName);
     }
 
