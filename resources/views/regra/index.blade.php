@@ -34,16 +34,16 @@
             font-size: .68rem; font-weight: 700; padding: .05rem .4rem;
             border-radius: 10px; margin-left: auto; background: #eef2f9; color: #4b80ff;
         }
-        .rg-perm-sub__items { display: flex; flex-direction: column; gap: .2rem; padding: .35rem 0 .15rem .4rem; }
-        .rg-perm-item {
-            display: flex; align-items: center; gap: .4rem;
-            font-size: .78rem; padding: .2rem .35rem; border-radius: 6px; background: #f8faff;
+        .rg-perm-sub__items {
+            display: flex; flex-wrap: wrap; gap: .25rem;
+            padding: .35rem 0 .15rem .4rem;
         }
         .rg-perm-item__badge {
-            font-size: .68rem; font-weight: 700; padding: .1rem .4rem;
-            border-radius: 5px; flex-shrink: 0; background: #4b80ff20; color: #4b80ff;
+            font-size: .68rem; font-weight: 700; padding: .15rem .45rem;
+            border-radius: 5px; background: #4b80ff1c; color: #4b80ff;
+            cursor: default;
         }
-        .rg-perm-item__desc { color: #495057; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rg-perm-item__badge:hover { background: #4b80ff33; }
         .rg-btn-expand {
             border: 1px solid #d8e1ec; border-radius: 8px;
             background: #fff; color: #4b80ff; font-size: .72rem; font-weight: 600;
@@ -218,10 +218,7 @@
                                                                             $partesNome = explode('.', $p->name);
                                                                             $acao = count($partesNome) >= 3 ? $partesNome[2] : end($partesNome);
                                                                         @endphp
-                                                                        <div class="rg-perm-item" title="{{ $p->name }}">
-                                                                            <span class="rg-perm-item__badge">{{ $acaoLabel[$acao] ?? $acao }}</span>
-                                                                            <span class="rg-perm-item__desc">{{ $p->descricao ?: $p->name }}</span>
-                                                                        </div>
+                                                                        <span class="rg-perm-item__badge" title="{{ $p->name }}">{{ $acaoLabel[$acao] ?? $acao }}</span>
                                                                     @endforeach
                                                                 </div>
                                                             </div>
