@@ -12,6 +12,7 @@
 
     // Mapa grupo → label + ícone (mesmo do index de permissões)
     $grupoMeta = [
+        'clockify'                        => ['label' => 'Operação',                  'icon' => 'fas fa-clock',               'color' => '#4b80ff'],
         'reserva'                         => ['label' => 'Reservas',                  'icon' => 'fas fa-calendar-check',      'color' => '#4b80ff'],
         'veiculo'                         => ['label' => 'Veículos',                  'icon' => 'fas fa-car',                 'color' => '#28a745'],
         'usuario'                         => ['label' => 'Usuários',                  'icon' => 'fas fa-users',               'color' => '#17a2b8'],

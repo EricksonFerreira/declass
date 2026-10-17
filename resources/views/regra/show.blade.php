@@ -9,7 +9,7 @@
 @section('content')
 @php
     $grupoMeta = [
-        'clockify'     => ['label' => 'Declock',          'icon' => 'fas fa-clock',           'color' => '#4b80ff'],
+        'clockify'     => ['label' => 'Operação',         'icon' => 'fas fa-clock',           'color' => '#4b80ff'],
         'usuario'      => ['label' => 'Usuários',         'icon' => 'fas fa-users',           'color' => '#0ea5e9'],
         'regra'        => ['label' => 'Perfis de Acesso', 'icon' => 'fas fa-user-shield',     'color' => '#7c3aed'],
         'permissao'    => ['label' => 'Permissões',       'icon' => 'fas fa-key',             'color' => '#e0a800'],
