@@ -39,7 +39,6 @@ return [
     'sidebar.movimentacoes_lista'          => 'Listagem',
     'sidebar.tipo_movimentacao'            => 'Tipos de Movimentação',
     'sidebar.status_movimentacao'          => 'Status das Movimentações',
-    'sidebar.tempo_estacoes'               => 'Tempo entre Estações',
 
     // Frota
     'sidebar.veiculo'                      => 'Veículos',
@@ -84,7 +83,6 @@ return [
 
     // Cadastros / Estrutura operacional
     'sidebar.pais'                         => 'Países',
-    'sidebar.estacao'                      => 'Estações',
     'sidebar.dia_de_trabalho'              => 'Dias Úteis',
     'sidebar.horario_diario'               => 'Horários Diários',
     'sidebar.horario_funcionamento'        => 'Horários de Funcionamento',

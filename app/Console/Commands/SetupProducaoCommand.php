@@ -94,7 +94,6 @@ class SetupProducaoCommand extends Command
                 'empresa_id' => $empresaId,
                 'password' => Hash::make(self::SENHA_INICIAL),
                 'ativo' => 1,
-                'acesso_todas_estacoes' => 1,
                 'forcar_troca_senha' => 1,
                 'email_verified_at' => now(),
                 'tipo_usuario_id' => 1,
@@ -110,7 +109,6 @@ class SetupProducaoCommand extends Command
             'usuario' => $temColunaUsuario ? $usuario : null,
             'empresa_id' => $empresaId,
             'ativo' => 1,
-            'acesso_todas_estacoes' => 1,
             'tipo_usuario_id' => 1,
             'updated_at' => now(),
         ], fn ($v) => $v !== null));

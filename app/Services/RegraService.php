@@ -26,11 +26,6 @@ class RegraService extends AbstractBaseService
         return !Auth::user()?->isSuperAdmin();
     }
 
-    protected function shouldApplyEstacaoScope(): bool
-    {
-        return false;
-    }
-
     public function __construct(Regra $regra)
     {
         $this->model = $regra;

@@ -2,12 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\Estacao;
 use App\Models\User;
 use App\Support\EmpresaContext;
 use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 
 class UsuarioService extends AbstractBaseService
 {
@@ -76,9 +74,6 @@ class UsuarioService extends AbstractBaseService
 
     public function createUser($data)
     {
-        $acessoTodasEstacoes = $this->resolveAcessoTodasEstacoes($data);
-        [$acessoTodasEstacoes, $data] = $this->enforceRoleStationDefaults($data, $acessoTodasEstacoes);
-
         if (SchemaCache::hasColumn($this->model->getTable(), 'empresa_id')) {
             $empresaId = app(EmpresaContext::class)->empresaId();
             if ($empresaId) {
@@ -86,15 +81,10 @@ class UsuarioService extends AbstractBaseService
             }
         }
 
-        if (SchemaCache::hasColumn($this->model->getTable(), 'acesso_todas_estacoes')) {
-            $data['acesso_todas_estacoes'] = $acessoTodasEstacoes;
-        }
-
         $data['email_verified_at'] = now();
 
         /** @var User $user */
-        $user = $this->model->create($data);
-        $this->syncEstacoesPermitidas($user, $data, $acessoTodasEstacoes);
+        $user = $this->model->create($this->apenasColunasExistentes($data));
 
         return $user;
     }
@@ -124,113 +114,28 @@ class UsuarioService extends AbstractBaseService
             return null;
         }
 
-        $acessoTodasEstacoes = $this->resolveAcessoTodasEstacoes($data, $user);
-        [$acessoTodasEstacoes, $data] = $this->enforceRoleStationDefaults($data, $acessoTodasEstacoes, $user);
-
-        if (SchemaCache::hasColumn($this->model->getTable(), 'acesso_todas_estacoes')) {
-            $data['acesso_todas_estacoes'] = $acessoTodasEstacoes;
-        }
-
-        $user->update($data);
-        $this->syncEstacoesPermitidas($user, $data, $acessoTodasEstacoes);
+        $user->update($this->apenasColunasExistentes($data));
 
         return $user;
     }
 
     /**
-     * Aplica defaults de acesso por estação conforme o perfil (role).
-     *
-     * - gerente: sempre acesso total
-     * - colaborador_administrativo: sempre por estação
-     * - colaborador_chefe: sempre por estação
-     * - cliente: sem acesso por estação (lista vazia)
-     *
-     * @return array{0: bool, 1: array}
+     * Filtra o payload para colunas fillable que existem no schema atual —
+     * evita erro 42S22 quando o banco ainda nao recebeu uma migration
+     * (ex.: deploy sem migrate). Chaves que nao sao colunas (_token etc.)
+     * sao descartadas, como o mass assignment ja faria.
      */
-    private function enforceRoleStationDefaults(array $data, bool $acessoTodasEstacoes, ?User $user = null): array
+    private function apenasColunasExistentes(array $data): array
     {
-        if (! SchemaCache::hasColumn($this->model->getTable(), 'role_id')) {
-            return [$acessoTodasEstacoes, $data];
+        $table = $this->model->getTable();
+        $attrs = [];
+
+        foreach ($this->model->getFillable() as $column) {
+            if (array_key_exists($column, $data) && SchemaCache::hasColumn($table, $column)) {
+                $attrs[$column] = $data[$column];
+            }
         }
 
-        $roleId = (int) ($data['role_id'] ?? ($user?->role_id ?? 0));
-        if ($roleId <= 0 || ! SchemaCache::hasTable('roles')) {
-            return [$acessoTodasEstacoes, $data];
-        }
-
-        $roleName = (string) (DB::table('roles')->where('id', $roleId)->value('name') ?? '');
-        $roleKey = mb_strtolower(trim($roleName));
-
-        if ($roleKey === 'gerente') {
-            $acessoTodasEstacoes = true;
-            $data['acesso_todas_estacoes'] = true;
-            unset($data['estacoes']);
-
-            return [$acessoTodasEstacoes, $data];
-        }
-
-        if (in_array($roleKey, ['colaborador_administrativo', 'colaborador administrativo', 'colaborador_chefe', 'colaborador chefe'], true)) {
-            $acessoTodasEstacoes = false;
-            $data['acesso_todas_estacoes'] = false;
-
-            return [$acessoTodasEstacoes, $data];
-        }
-
-        if ($roleKey === 'cliente') {
-            $acessoTodasEstacoes = false;
-            $data['acesso_todas_estacoes'] = false;
-            $data['estacoes'] = [];
-
-            return [$acessoTodasEstacoes, $data];
-        }
-
-        return [$acessoTodasEstacoes, $data];
-    }
-
-    private function syncEstacoesPermitidas(User $user, array $data, bool $acessoTodasEstacoes): void
-    {
-        if (! SchemaCache::hasTable('estacao_user')) {
-            return;
-        }
-
-        if ($acessoTodasEstacoes) {
-            $user->estacoesPermitidas()->detach();
-
-            return;
-        }
-
-        $estacoes = collect($data['estacoes'] ?? [])
-            ->map(fn ($id) => (int) $id)
-            ->filter(fn ($id) => $id > 0)
-            ->unique()
-            ->values();
-
-        if ($estacoes->isEmpty()) {
-            $user->estacoesPermitidas()->sync([]);
-
-            return;
-        }
-
-        $query = Estacao::query()->whereIn('id', $estacoes->all());
-        if (SchemaCache::hasColumn('estacoes', 'empresa_id') && ! empty($user->empresa_id)) {
-            $query->where('empresa_id', $user->empresa_id);
-        }
-
-        $validIds = $query->pluck('id')->map(fn ($id) => (int) $id)->all();
-
-        $user->estacoesPermitidas()->sync($validIds);
-    }
-
-    private function resolveAcessoTodasEstacoes(array $data, ?User $user = null): bool
-    {
-        if (array_key_exists('acesso_todas_estacoes', $data)) {
-            return (bool) $data['acesso_todas_estacoes'];
-        }
-
-        if ($user !== null) {
-            return $user->hasAcessoTodasEstacoes();
-        }
-
-        return true;
+        return $attrs;
     }
 }

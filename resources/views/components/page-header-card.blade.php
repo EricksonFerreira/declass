@@ -7,19 +7,19 @@
 @once
     @push('css')
         <style>
-            .card-estacao { border-radius: 14px; overflow: hidden; }
-            .card-header-estacao {
+            .card-pagina { border-radius: 14px; overflow: hidden; }
+            .card-header-pagina {
                 background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%);
                 padding: 1.1rem 1.5rem;
             }
-            .card-header-estacao h4 { color: #0f2740; font-weight: 700; }
+            .card-header-pagina h4 { color: #0f2740; font-weight: 700; }
         </style>
     @endpush
 @endonce
 
-<div class="card card-estacao shadow-sm border-0">
+<div class="card card-pagina shadow-sm border-0">
     @if ($showHeader && (!empty($title) || !empty($subtitle) || isset($actions)))
-        <div class="card-header card-header-estacao border-0">
+        <div class="card-header card-header-pagina border-0">
             <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:.75rem;">
                 <div>
                     @if (!empty($title))

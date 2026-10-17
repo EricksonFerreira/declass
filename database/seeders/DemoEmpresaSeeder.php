@@ -222,7 +222,7 @@ class DemoEmpresaSeeder extends Seeder
                 'step_plano_contratado' => true,
                 'step_pagamento_realizado' => true,
                 'step_frota_cadastrada' => true,
-                'step_estacao_cadastrada' => true,
+                'step_primeiro_registro' => true,
                 'step_usuario_criado' => true,
                 'concluido' => true,
                 'created_at' => now(),

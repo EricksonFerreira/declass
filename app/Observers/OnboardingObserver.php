@@ -34,7 +34,7 @@ class OnboardingObserver
 
         match (true) {
             str_ends_with($classe, 'ClockifyProjeto') => $step->update(['step_frota_cadastrada' => true]),
-            str_ends_with($classe, 'ClockifyTimeTracker') => $step->update(['step_estacao_cadastrada' => true]),
+            str_ends_with($classe, 'ClockifyTimeTracker') => $step->update(['step_primeiro_registro' => true]),
             str_ends_with($classe, 'User') => $step->update(['step_usuario_criado' => true]),
             default => null,
         };
@@ -65,7 +65,7 @@ class OnboardingObserver
             && $step->step_plano_contratado
             && ($step->step_frota_cadastrada
                 || ClockifyProjeto::where('empresa_id', $step->empresa_id)->exists())
-            && ($step->step_estacao_cadastrada
+            && ($step->step_primeiro_registro
                 || ClockifyTimeTracker::where('empresa_id', $step->empresa_id)->exists());
 
         if ($todosConcluidos && ! $step->concluido) {

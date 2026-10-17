@@ -32,11 +32,6 @@ class PaisService extends AbstractBaseService
         return false;
     }
 
-    protected function shouldApplyEstacaoScope(): bool
-    {
-        return false;
-    }
-
     public function getAllForSelectSigla(): array
     {
         $data = $this->model->newQuery()

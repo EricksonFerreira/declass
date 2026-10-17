@@ -140,7 +140,6 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 }
 
                 $data['role_id'] = $roleClienteId;
-                $data['acesso_todas_estacoes'] = true;
                 if (empty($data['email'])) {
                     $data['email'] = $this->gerarEmailTemporarioReserva($data);
                 }

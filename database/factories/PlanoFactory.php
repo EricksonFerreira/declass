@@ -21,7 +21,6 @@ class PlanoFactory extends Factory
             'site_vendas' => false,
             'modulo_multas' => false,
             'modulo_nfse' => false,
-            'multi_estacao' => false,
             'api_integracao' => false,
             'ativo' => true,
             'destaque' => false,

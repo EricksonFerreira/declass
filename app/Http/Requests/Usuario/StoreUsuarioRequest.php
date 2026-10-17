@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Usuario;
 
 use App\Support\EmpresaContext;
+use App\Support\SchemaCache;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -19,7 +20,6 @@ class StoreUsuarioRequest extends FormRequest
         }
 
         $this->merge([
-            'acesso_todas_estacoes' => $this->boolean('acesso_todas_estacoes'),
             'cadastro_reserva' => $this->boolean('cadastro_reserva'),
             'usuario' => Str::lower(trim((string) $this->input('usuario', ''))) ?: null,
         ]);
@@ -57,7 +57,9 @@ class StoreUsuarioRequest extends FormRequest
                 'string',
                 'max:60',
                 'regex:/^[a-z0-9._-]+$/',
-                Rule::unique('users', 'usuario')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+                ...(SchemaCache::hasColumn('users', 'usuario')
+                    ? [Rule::unique('users', 'usuario')->where(fn ($query) => $query->where('empresa_id', $empresaId))]
+                    : []),
             ],
             'sexo' => 'nullable|string|max:1',
             'data_nascimento' => 'nullable|date',
@@ -85,9 +87,6 @@ class StoreUsuarioRequest extends FormRequest
             'data_emissao_carta_conducao' => 'nullable|date|before:'.Carbon::now()->format('Y-m-d'),
             'data_validade_carta_conducao' => 'nullable|date|after:data_emissao_carta_conducao',
             'cadastro_reserva' => 'nullable|boolean',
-            'acesso_todas_estacoes' => 'nullable|boolean',
-            'estacoes' => 'nullable|array',
-            'estacoes.*' => 'integer|exists:estacoes,id',
         ];
     }
 
@@ -109,9 +108,6 @@ class StoreUsuarioRequest extends FormRequest
             'usuario.unique' => 'O usuario informado ja esta em uso.',
             'usuario.regex' => 'O usuario pode conter apenas letras minusculas, numeros, ponto, hifen e sublinhado.',
             'celular.regex' => 'O celular deve estar no formato (XX) XXXX-XXXX ou (XX) XXXXX-XXXX.',
-            'estacoes.array' => 'As estacoes permitidas devem ser informadas em lista.',
-            'estacoes.*.integer' => 'Cada estacao permitida deve ser numerica.',
-            'estacoes.*.exists' => 'Uma das estacoes selecionadas nao existe.',
             'cadastro_reserva.boolean' => 'O indicador de cadastro pela reserva deve ser verdadeiro ou falso.',
         ];
     }
@@ -143,9 +139,6 @@ class StoreUsuarioRequest extends FormRequest
             'data_emissao_carta_conducao' => 'data de emissao da carta de conducao',
             'data_validade_carta_conducao' => 'data de validade da carta de conducao',
             'cadastro_reserva' => 'cadastro pela reserva',
-            'acesso_todas_estacoes' => 'acesso a todas as estacoes',
-            'estacoes' => 'estacoes permitidas',
-            'estacoes.*' => 'estacao permitida',
         ];
     }
 }

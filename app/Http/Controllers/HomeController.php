@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\EmpresaAlerta;
 use App\Models\Permissao;
-use App\Models\Estacao;
 use App\Models\Regra;
 use App\Models\TipoTransacao;
 use App\Models\User;
@@ -40,7 +39,6 @@ public function home()
     $hasVisibleItems = collect($items)->contains(fn (array $grupo) => !empty($grupo['items']));
     $hasVisibleCharts = in_array(true, $homeSections, true);
     $totalVeiculos = 0;
-    $estacoesFiltro = $this->estacoesParaFiltro();
 
     $alertas = collect();
     $empresaUser = Auth::user()?->empresa;
@@ -58,7 +56,7 @@ public function home()
         $totalVeiculos = (int) $veiculosQuery->count();
     }
 
-    return view('home', compact('breadcrumb', 'items', 'totalVeiculos', 'homeSections', 'hasVisibleItems', 'hasVisibleCharts', 'estacoesFiltro', 'alertas'))
+    return view('home', compact('breadcrumb', 'items', 'totalVeiculos', 'homeSections', 'hasVisibleItems', 'hasVisibleCharts', 'alertas'))
         ->with('titulo', $this->titulo);
 }
 
@@ -66,8 +64,6 @@ public function chartData(Request $request)
 {
     $homeSections = $this->getHomeSectionPermissions();
     $mesesPt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    $estacaoSelecionadaId = $this->estacaoSelecionadaId($request);
-
     $dataInicio = $request->filled('data_inicio')
         ? Carbon::parse($request->data_inicio)->startOfMonth()
         : Carbon::now()->subMonths(11)->startOfMonth();
@@ -144,7 +140,6 @@ public function chartData(Request $request)
         'labels' => ['Promotores', 'Neutros', 'Detratores'],
         'data' => [0, 0, 0],
     ];
-    $satisfacaoEstacoes = ['labels' => [], 'data' => [], 'respostas' => []];
     $satisfacaoGrupos = ['labels' => [], 'data' => [], 'respostas' => []];
     $satisfacaoVeiculos = ['labels' => [], 'data' => [], 'respostas' => []];
     $satisfacaoMarcas = ['labels' => [], 'data' => [], 'respostas' => []];
@@ -171,9 +166,6 @@ public function chartData(Request $request)
         $reservasNoPeriodo = \App\Models\Reserva::query()
             ->whereBetween('reservas.created_at', [$dataInicio, $dataFim]);
         $reservasNoPeriodo = $this->applyEmpresaScope($reservasNoPeriodo, 'reservas');
-        if ($estacaoSelecionadaId !== null) {
-            $reservasNoPeriodo->where('estacao_retirada_id', $estacaoSelecionadaId);
-        }
 
         if ($homeSections['reservas']) {
             $resConfirmadas = (clone $reservasNoPeriodo)
@@ -261,9 +253,6 @@ public function chartData(Request $request)
                 ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
                 ->selectRaw('grupos_frota.id, grupos_frota.nome, COUNT(*) as total');
             $totalPorGrupoBase = $this->applyEmpresaScope($totalPorGrupoBase, 'veiculos');
-            if ($estacaoSelecionadaId !== null && SchemaCache::hasColumn('veiculos', 'local_disponibilidade')) {
-                $totalPorGrupoBase->where('veiculos.local_disponibilidade', $estacaoSelecionadaId);
-            }
             $totalPorGrupo = $totalPorGrupoBase
                 ->groupBy('grupos_frota.id', 'grupos_frota.nome')
                 ->get();
@@ -274,9 +263,6 @@ public function chartData(Request $request)
                 ->where('data_fim', '>=', $dataInicio)
                 ->selectRaw('grupo_frota_id, COUNT(*) as total');
             $ativasPorGrupoBase = $this->applyEmpresaScope($ativasPorGrupoBase, 'reservas');
-            if ($estacaoSelecionadaId !== null) {
-                $ativasPorGrupoBase->where('estacao_retirada_id', $estacaoSelecionadaId);
-            }
             $ativasPorGrupo = $ativasPorGrupoBase
                 ->groupBy('grupo_frota_id')
                 ->get()
@@ -304,12 +290,6 @@ public function chartData(Request $request)
             ->selectRaw('status_movimentacao.nome as label, COUNT(*) as total')
             ->whereBetween('movimentacoes.created_at', [$dataInicio, $dataFim]);
         $movStatusBase = $this->applyEmpresaScope($movStatusBase, 'movimentacoes');
-        if ($estacaoSelecionadaId !== null) {
-            $movStatusBase->where(function ($query) use ($estacaoSelecionadaId) {
-                $query->where('movimentacoes.local_origem_id', $estacaoSelecionadaId)
-                    ->orWhere('movimentacoes.local_destino_id', $estacaoSelecionadaId);
-            });
-        }
         $movStatus = $movStatusBase
             ->groupBy('status_movimentacao.id', 'status_movimentacao.nome')
             ->get();
@@ -325,9 +305,6 @@ public function chartData(Request $request)
             ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
             ->selectRaw('grupos_frota.nome as label, COUNT(*) as total');
         $gruposVeiculosBase = $this->applyEmpresaScope($gruposVeiculosBase, 'veiculos');
-        if ($estacaoSelecionadaId !== null && SchemaCache::hasColumn('veiculos', 'local_disponibilidade')) {
-            $gruposVeiculosBase->where('veiculos.local_disponibilidade', $estacaoSelecionadaId);
-        }
         $gruposVeiculos = $gruposVeiculosBase
             ->groupBy('grupos_frota.id', 'grupos_frota.nome')
             ->get();
@@ -338,10 +315,6 @@ public function chartData(Request $request)
         $baseFinanceiro = DB::table('transacoes')
             ->whereBetween('transacoes.created_at', [$dataInicio, $dataFim]);
         $baseFinanceiro = $this->applyEmpresaScope($baseFinanceiro, 'transacoes');
-        if ($estacaoSelecionadaId !== null && SchemaCache::hasTable('reservas')) {
-            $baseFinanceiro = $baseFinanceiro->join('reservas as r_fin', 'r_fin.id', '=', 'transacoes.reserva_id')
-                ->where('r_fin.estacao_retirada_id', $estacaoSelecionadaId);
-        }
 
         $financeiroMensal = (clone $baseFinanceiro)
             ->selectRaw('YEAR(transacoes.created_at) as ano, MONTH(transacoes.created_at) as mes')
@@ -403,10 +376,6 @@ public function chartData(Request $request)
                 $baseSatisfacao->where('rs.empresa_id', $empresaId);
             }
         }
-        if ($estacaoSelecionadaId !== null) {
-            $baseSatisfacao->where('r.estacao_retirada_id', $estacaoSelecionadaId);
-        }
-
         $satisfacaoResumo['total_respostas'] = (int) (clone $baseSatisfacao)->count();
         $satisfacaoResumo['media_geral'] = round((float) (clone $baseSatisfacao)->avg('rs.satisfacao_geral'), 2);
         $satisfacaoResumo['media_facilidade'] = round((float) (clone $baseSatisfacao)->avg('rs.facilidade_reserva'), 2);
@@ -445,7 +414,6 @@ public function chartData(Request $request)
             $detratores,
         ];
 
-        $satisfacaoEstacoes = $this->rankingSatisfacaoPorDimensao((clone $baseSatisfacao), 'estacao');
         $satisfacaoGrupos = $this->rankingSatisfacaoPorDimensao((clone $baseSatisfacao), 'grupo');
         $satisfacaoVeiculos = $this->rankingSatisfacaoPorDimensao((clone $baseSatisfacao), 'veiculo');
         $satisfacaoMarcas = $this->rankingSatisfacaoPorDimensao((clone $baseSatisfacao), 'marca');
@@ -461,7 +429,7 @@ public function chartData(Request $request)
             $analiseAvancadaProtecao,
             $analiseAvancadaDetalhes,
             $analiseAvancadaRecomendacoes,
-        ] = $this->analiseAvancadaFrota($dataInicio, $dataFim, $estacaoSelecionadaId);
+        ] = $this->analiseAvancadaFrota($dataInicio, $dataFim);
     }
 
     return response()->json([
@@ -501,12 +469,9 @@ public function chartData(Request $request)
             'qtd_transacoes' => $qtdTransacoesFinanceiro,
             'taxa_aprovacao' => $taxaAprovacaoFinanceiro,
         ],
-        'estacaoSelecionadaId' => $estacaoSelecionadaId,
-        'estacaoSelecionadaNome' => $this->nomeEstacaoSelecionada($estacaoSelecionadaId),
         'satisfacaoResumo' => $satisfacaoResumo,
         'satisfacaoEvolucao' => $satisfacaoEvolucao,
         'satisfacaoDistribuicao' => $satisfacaoDistribuicao,
-        'satisfacaoEstacoes' => $satisfacaoEstacoes,
         'satisfacaoGrupos' => $satisfacaoGrupos,
         'satisfacaoVeiculos' => $satisfacaoVeiculos,
         'satisfacaoMarcas' => $satisfacaoMarcas,
@@ -596,67 +561,6 @@ public function dashboard()
         };
     }
 
-    public function estacoesParaFiltro(): array
-    {
-        $query = Estacao::query()
-            ->select(['id', 'nome'])
-            ->orderBy('nome');
-
-        $query = $this->applyEmpresaScope($query, 'estacoes');
-
-        $user = Auth::user();
-        if ($user && ! $user->isAdministrador() && method_exists($user, 'hasAcessoTodasEstacoes') && ! $user->hasAcessoTodasEstacoes()) {
-            $ids = $user->estacoesPermitidasIds();
-            if (empty($ids)) {
-                return [];
-            }
-
-            $query->whereIn('id', $ids);
-        }
-
-        return $query
-            ->get()
-            ->map(fn ($estacao) => [
-                'id' => (int) $estacao->id,
-                'nome' => (string) $estacao->nome,
-            ])
-            ->all();
-    }
-
-    private function estacaoSelecionadaId(Request $request): ?int
-    {
-        $estacaoId = (int) $request->input('estacao_id', 0);
-        if ($estacaoId <= 0) {
-            return null;
-        }
-
-        $query = Estacao::query()->where('id', $estacaoId);
-        $query = $this->applyEmpresaScope($query, 'estacoes');
-
-        $user = Auth::user();
-        if ($user && ! $user->isAdministrador() && method_exists($user, 'hasAcessoTodasEstacoes') && ! $user->hasAcessoTodasEstacoes()) {
-            $ids = $user->estacoesPermitidasIds();
-            if (empty($ids) || ! in_array($estacaoId, $ids, true)) {
-                return null;
-            }
-        }
-
-        return $query->exists() ? $estacaoId : null;
-    }
-
-    private function nomeEstacaoSelecionada(?int $estacaoId): string
-    {
-        if ($estacaoId === null) {
-            return 'Todas as estações';
-        }
-
-        $nome = Estacao::query()
-            ->where('id', $estacaoId)
-            ->value('nome');
-
-        return $nome ? (string) $nome : 'Todas as estações';
-    }
-
     public function getHomeSectionPermissions(): array
     {
         return [
@@ -670,7 +574,7 @@ public function dashboard()
         ];
     }
 
-    private function analiseAvancadaFrota(Carbon $dataInicio, Carbon $dataFim, ?int $estacaoSelecionadaId): array
+    private function analiseAvancadaFrota(Carbon $dataInicio, Carbon $dataFim): array
     {
         $defaults = [
             [
@@ -714,10 +618,6 @@ public function dashboard()
             $veiculosBase->where('veiculos.empresa_id', $empresaId);
         }
 
-        if ($estacaoSelecionadaId !== null && SchemaCache::hasColumn('veiculos', 'local_disponibilidade')) {
-            $veiculosBase->where('veiculos.local_disponibilidade', $estacaoSelecionadaId);
-        }
-
         $receitasSub = DB::table('reservas')
             ->selectRaw('veiculo_id, COUNT(*) as reservas_qtd, COALESCE(SUM(COALESCE(valor_total_final, 0)), 0) as receita_total')
             ->whereNotNull('veiculo_id')
@@ -726,10 +626,6 @@ public function dashboard()
 
         if ($empresaId !== null && SchemaCache::hasColumn('reservas', 'empresa_id')) {
             $receitasSub->where('empresa_id', $empresaId);
-        }
-
-        if ($estacaoSelecionadaId !== null && SchemaCache::hasColumn('reservas', 'estacao_retirada_id')) {
-            $receitasSub->where('estacao_retirada_id', $estacaoSelecionadaId);
         }
 
         $receitasSub->groupBy('veiculo_id');
@@ -1014,10 +910,6 @@ public function dashboard()
         $selectLabel = 'COALESCE(dim.nome, "Sem dado")';
 
         switch ($tipo) {
-            case 'estacao':
-                $query->leftJoin('estacoes as dim', 'dim.id', '=', 'r.estacao_retirada_id');
-                $selectLabel = 'COALESCE(dim.nome, "Sem estação")';
-                break;
             case 'grupo':
                 $query->leftJoin('grupos_frota as dim', 'dim.id', '=', 'r.grupo_frota_id');
                 $selectLabel = 'COALESCE(dim.nome, "Sem grupo")';
@@ -1205,14 +1097,6 @@ public function dashboard()
                         'prefix' => null,
                         'suffix' => null,
                         'valor' => \App\Models\Pais::count()
-                    ],
-                    [
-                        'nome' => 'Estações',
-                        'route' => 'estacao.index',
-                        'icone' => 'fas fa-map-marker-alt',
-                        'prefix' => null,
-                        'suffix' => null,
-                        'valor' => \App\Models\Estacao::count()
                     ],
                     [
                         'nome' => 'Dias de Trabalho',

@@ -16,18 +16,12 @@ class ProfileController extends Controller
     public function edit(Request $request)
     {
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Meu Perfil');
-        $user = $request->user()->loadMissing(['empresa', 'estacoesPermitidas']);
-        $temAcessoTodasEstacoes = (bool) $user->hasAcessoTodasEstacoes();
-        $estacoesPermitidas = $temAcessoTodasEstacoes
-            ? collect()
-            : $user->estacoesPermitidas->sortBy('nome')->values();
+        $user = $request->user()->loadMissing(['empresa']);
 
         return view('perfil.edit', [
             'user' => $user,
             'titulo' => 'Meu Perfil',
             'breadcrumb' => $breadcrumb,
-            'temAcessoTodasEstacoes' => $temAcessoTodasEstacoes,
-            'estacoesPermitidas' => $estacoesPermitidas,
         ]);
     }
 

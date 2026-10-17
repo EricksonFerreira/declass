@@ -71,7 +71,7 @@ class ClockifyMockDataSeeder extends Seeder
                 'empresa_id' => $empresaId,
             ],
             [
-                'nome' => 'Gestor Todas Estações',
+                'nome' => 'Gestor Geral',
                 'email' => 'gestor@xpandcars.test',
                 'password' => $password,
                 'empresa_id' => $empresaId,
@@ -161,7 +161,7 @@ class ClockifyMockDataSeeder extends Seeder
                 'membros' => [
                     'Carlos Mendes',
                     'Amanda Ribeiro',
-                    'Gestor Todas Estações'
+                    'Gestor Geral'
                 ]
             ],
             [

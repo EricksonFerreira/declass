@@ -49,7 +49,6 @@ class PlanosDeclockSeeder extends Seeder
                     'site_vendas' => false,
                     'modulo_multas' => false,
                     'modulo_nfse' => false,
-                    'multi_estacao' => false,
                     'api_integracao' => true,
                     // Não comprável: só entra via cadastro de empresa nova.
                     'ativo' => false,

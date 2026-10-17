@@ -367,11 +367,6 @@ return [
                     'icon' => 'fas fa-globe',
                 ],
                 [
-                    'text' => 'sidebar.estacao',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-map-marker-alt',
-                ],
-                [
                     'text' => 'sidebar.dia_de_trabalho',
                     'url' => 'admin/settings',
                     'icon' => 'fas fa-calendar-day',

@@ -19,7 +19,6 @@
         'financeiro'        => ['label' => 'Financeiro',         'icon' => 'fas fa-dollar-sign',         'color' => '#28a745'],
         'calcao'            => ['label' => 'Caução',             'icon' => 'fas fa-hand-holding-usd',    'color' => '#28a745'],
         'empresa'           => ['label' => 'Empresa',            'icon' => 'fas fa-building',            'color' => '#343a40'],
-        'estacao'           => ['label' => 'Estações',           'icon' => 'fas fa-map-marker-alt',      'color' => '#17a2b8'],
         'modelo'            => ['label' => 'Modelos',            'icon' => 'fas fa-car-side',            'color' => '#6c757d'],
         'nfse'              => ['label' => 'NFS-e',              'icon' => 'fas fa-file-alt',            'color' => '#343a40'],
         'pagamento'         => ['label' => 'Pagamento',          'icon' => 'fas fa-credit-card',         'color' => '#28a745'],

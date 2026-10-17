@@ -21,7 +21,6 @@
         'financeiro'                       => ['label' => 'Financeiro',                 'icon' => 'fas fa-dollar-sign'],
         'calcao'                           => ['label' => 'Caução',                     'icon' => 'fas fa-hand-holding-usd'],
         'empresa'                          => ['label' => 'Empresa',                    'icon' => 'fas fa-building'],
-        'estacao'                          => ['label' => 'Estações',                   'icon' => 'fas fa-map-marker-alt'],
         'modelo'                           => ['label' => 'Modelos de Veículo',         'icon' => 'fas fa-car-side'],
         'marca'                            => ['label' => 'Marcas',                     'icon' => 'fas fa-tag'],
         'grupo_frota'                      => ['label' => 'Grupos de Frota',            'icon' => 'fas fa-layer-group'],

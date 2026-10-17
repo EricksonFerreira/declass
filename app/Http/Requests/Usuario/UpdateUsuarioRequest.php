@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Usuario;
 
 use App\Support\EmpresaContext;
+use App\Support\SchemaCache;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -19,7 +20,6 @@ class UpdateUsuarioRequest extends FormRequest
         }
 
         $this->merge([
-            'acesso_todas_estacoes' => $this->boolean('acesso_todas_estacoes'),
             'usuario' => Str::lower(trim((string) $this->input('usuario', ''))) ?: null,
         ]);
 
@@ -62,7 +62,9 @@ class UpdateUsuarioRequest extends FormRequest
                 'string',
                 'max:60',
                 'regex:/^[a-z0-9._-]+$/',
-                Rule::unique('users', 'usuario')->ignore($this->route('usuario'))->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+                ...(SchemaCache::hasColumn('users', 'usuario')
+                    ? [Rule::unique('users', 'usuario')->ignore($this->route('usuario'))->where(fn ($query) => $query->where('empresa_id', $empresaId))]
+                    : []),
             ],
             'sexo' => 'nullable|string|max:1',
             'data_nascimento' => 'nullable|date',
@@ -92,9 +94,6 @@ class UpdateUsuarioRequest extends FormRequest
             'pais_emissao_carta_conducao' => 'nullable|string|max:2',
             'data_emissao_carta_conducao' => 'nullable|date|before:'.Carbon::now()->format('Y-m-d'),
             'data_validade_carta_conducao' => 'nullable|date|after:data_emissao_carta_conducao',
-            'acesso_todas_estacoes' => 'nullable|boolean',
-            'estacoes' => 'nullable|array',
-            'estacoes.*' => 'integer|exists:estacoes,id',
         ];
     }
 
@@ -116,9 +115,6 @@ class UpdateUsuarioRequest extends FormRequest
             'usuario.regex' => 'O usuario pode conter apenas letras minusculas, numeros, ponto, hifen e sublinhado.',
             'numero_identificacao.unique' => 'O numero de identificacao informado ja esta em uso.',
             'celular.regex' => 'O celular deve estar no formato (XX) XXXX-XXXX ou (XX) XXXXX-XXXX.',
-            'estacoes.array' => 'As estacoes permitidas devem ser informadas em lista.',
-            'estacoes.*.integer' => 'Cada estacao permitida deve ser numerica.',
-            'estacoes.*.exists' => 'Uma das estacoes selecionadas nao existe.',
         ];
     }
 
@@ -146,9 +142,6 @@ class UpdateUsuarioRequest extends FormRequest
             'pais_emissao_carta_conducao' => 'pais de emissao da carta de conducao',
             'data_emissao_carta_conducao' => 'data de emissao da carta de conducao',
             'data_validade_carta_conducao' => 'data de validade da carta de conducao',
-            'acesso_todas_estacoes' => 'acesso a todas as estacoes',
-            'estacoes' => 'estacoes permitidas',
-            'estacoes.*' => 'estacao permitida',
         ];
     }
 }

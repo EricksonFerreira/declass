@@ -35,11 +35,6 @@ class PermissaoService extends AbstractBaseService
         return false;
     }
 
-    protected function shouldApplyEstacaoScope(): bool
-    {
-        return false;
-    }
-
     public function getAllWithChecked($regraPermissoes)
     {
         $permissoes = $this->getAll();

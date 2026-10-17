@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Notifications\ResetPasswordCustom;
 use App\Notifications\VerifyEmailCustom;
-use App\Support\SchemaCache;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -46,7 +45,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'data_emissao_carta_conducao',
         'data_validade_carta_conducao',
         'empresa_id',
-        'acesso_todas_estacoes',
         'forcar_troca_senha',
         'foto_perfil',
         'saldo_atual',
@@ -73,7 +71,6 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'acesso_todas_estacoes' => 'boolean',
         'forcar_troca_senha' => 'boolean',
         'saldo_atual' => 'decimal:2',
         'jornada_diaria' => 'decimal:2',
@@ -218,33 +215,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getCustoHoraEfetivoAttribute(): float
     {
         return (float) ($this->funcao?->custo_hora ?? 0);
-    }
-
-    public function estacoesPermitidas()
-    {
-        return $this->belongsToMany(Estacao::class, 'estacao_user', 'user_id', 'estacao_id')->withTimestamps();
-    }
-
-    public function hasAcessoTodasEstacoes(): bool
-    {
-        if ($this->isAdministrador()) {
-            return true;
-        }
-
-        if (! SchemaCache::hasColumn($this->getTable(), 'acesso_todas_estacoes')) {
-            return true;
-        }
-
-        return (bool) ($this->acesso_todas_estacoes ?? true);
-    }
-
-    public function estacoesPermitidasIds(): array
-    {
-        if ($this->hasAcessoTodasEstacoes()) {
-            return [];
-        }
-
-        return $this->estacoesPermitidas()->pluck('estacoes.id')->map(fn ($id) => (int) $id)->all();
     }
 
     public function isAdministrador(): bool
