@@ -320,6 +320,7 @@ class EmpresaPlanoService
             app(PermissaoSyncService::class)->syncIfNeeded();
 
             $roleAdminId = Regra::where('guard_name', 'web')
+                ->where('empresa_id', $empresa->id)
                 ->whereRaw('LOWER(name) = ?', ['administrador'])
                 ->value('id');
 

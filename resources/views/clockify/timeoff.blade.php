@@ -78,11 +78,11 @@
                                 </div>
                                 <div class="ux-card__foot">
                                     @if (strtolower($to->status ?? '') === 'pendente' && auth()->user()->podeGerenciarUsuario($to->user_id))
-                                        <form action="{{ route('clockify.timeoff.approve', $to->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('operacao.timeoff.approve', $to->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-xs btn-success"><i class="fa fa-check mr-1"></i>Aprovar</button>
                                         </form>
-                                        <form action="{{ route('clockify.timeoff.reject', $to->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('operacao.timeoff.reject', $to->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-times mr-1"></i>Rejeitar</button>
                                         </form>
@@ -97,7 +97,7 @@
                                             data-obs="{{ $to->observacao }}">
                                             <i class="fas fa-edit mr-1"></i>Editar
                                         </button>
-                                        <form action="{{ route('clockify.timeoff.destroy', $to->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
+                                        <form action="{{ route('operacao.timeoff.destroy', $to->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
@@ -149,11 +149,11 @@
                                     <td class="align-middle">{{ Str::limit($to->observacao, 40) ?? '-' }}</td>
                                     <td class="align-middle text-center">
                                         @if (strtolower($to->status ?? '') === 'pendente' && auth()->user()->podeGerenciarUsuario($to->user_id))
-                                            <form action="{{ route('clockify.timeoff.approve', $to->id) }}" method="POST" class="d-inline mr-1">
+                                            <form action="{{ route('operacao.timeoff.approve', $to->id) }}" method="POST" class="d-inline mr-1">
                                                 @csrf
                                                 <button type="submit" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Aprovar</button>
                                             </form>
-                                            <form action="{{ route('clockify.timeoff.reject', $to->id) }}" method="POST" class="d-inline mr-1">
+                                            <form action="{{ route('operacao.timeoff.reject', $to->id) }}" method="POST" class="d-inline mr-1">
                                                 @csrf
                                                 <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Rejeitar</button>
                                             </form>
@@ -168,7 +168,7 @@
                                                 data-obs="{{ $to->observacao }}">
                                                 <i class="fas fa-edit"></i> Editar
                                             </button>
-                                            <form action="{{ route('clockify.timeoff.destroy', $to->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
+                                            <form action="{{ route('operacao.timeoff.destroy', $to->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-xs btn-default text-danger"><i class="fa fa-trash"></i> Excluir</button>
@@ -198,7 +198,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-modal id="timeoffDrawer" icon="fas fa-plane" title="Solicitar Folga ou Férias" formId="timeoff-form" action="{{ route('clockify.timeoff.store') }}">
+    <x-modal id="timeoffDrawer" icon="fas fa-plane" title="Solicitar Folga ou Férias" formId="timeoff-form" action="{{ route('operacao.timeoff.store') }}">
         <input type="hidden" name="id" id="timeoff_id" value="{{ old('id') }}">
         @if ($usuarios->count() > 1)
             <div class="form-group">
@@ -242,8 +242,8 @@
 @section('js')
     <script>
         $(function() {
-            var updateUrlTemplate = "{{ route('clockify.timeoff.update', ['id' => '__ID__']) }}";
-            var storeUrl = "{{ route('clockify.timeoff.store') }}";
+            var updateUrlTemplate = "{{ route('operacao.timeoff.update', ['id' => '__ID__']) }}";
+            var storeUrl = "{{ route('operacao.timeoff.store') }}";
 
             $('#btn-create-timeoff').on('click', function() {
                 var form = $('#timeoff-form');

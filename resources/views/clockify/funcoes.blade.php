@@ -73,7 +73,7 @@
                                         onclick="editFuncao({{ json_encode($funcao) }})">
                                         <i class="fa fa-edit mr-1"></i>Editar
                                     </button>
-                                    <form action="{{ route('clockify.funcoes.destroy', $funcao->id) }}" method="POST" class="d-inline"
+                                    <form action="{{ route('operacao.funcoes.destroy', $funcao->id) }}" method="POST" class="d-inline"
                                         onsubmit="return confirm('Deseja realmente excluir esta função?{{ $funcao->users_count > 0 ? ' Os ' . $funcao->users_count . ' colaborador(es) vinculado(s) ficarão sem função.' : '' }}')">
                                         @csrf
                                         @method('DELETE')
@@ -123,7 +123,7 @@
                                             onclick="editFuncao({{ json_encode($funcao) }})">
                                             <i class="fa fa-edit"></i> Editar
                                         </button>
-                                        <form action="{{ route('clockify.funcoes.destroy', $funcao->id) }}" method="POST" class="d-inline"
+                                        <form action="{{ route('operacao.funcoes.destroy', $funcao->id) }}" method="POST" class="d-inline"
                                             onsubmit="return confirm('Deseja realmente excluir esta função?{{ $funcao->users_count > 0 ? ' Os ' . $funcao->users_count . ' colaborador(es) vinculado(s) ficarão sem função.' : '' }}')">
                                             @csrf
                                             @method('DELETE')
@@ -153,7 +153,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-modal id="funcaoDrawer" icon="fas fa-briefcase" title="Nova Função" formId="funcao-form" action="{{ route('clockify.funcoes.store') }}">
+    <x-modal id="funcaoDrawer" icon="fas fa-briefcase" title="Nova Função" formId="funcao-form" action="{{ route('operacao.funcoes.store') }}">
         <input type="hidden" name="id" id="funcao_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="nome">Nome da Função <span class="text-danger">*</span></label>
@@ -185,7 +185,7 @@
         $(function() {
             $('#btn-create-funcao').on('click', function() {
                 $('#funcaoDrawerTitle').text('Nova Função');
-                $('#funcao-form').attr('action', '{{ route('clockify.funcoes.store') }}');
+                $('#funcao-form').attr('action', '{{ route('operacao.funcoes.store') }}');
                 $('#funcao-formMethod').val('POST');
                 $('#funcao-form')[0].reset();
                 $('#funcao_id').val('');
@@ -202,7 +202,7 @@
                     $('#status-group').show();
                 @else
                     $('#funcaoDrawerTitle').text('Nova Função');
-                    $('#funcao-form').attr('action', '{{ route('clockify.funcoes.store') }}');
+                    $('#funcao-form').attr('action', '{{ route('operacao.funcoes.store') }}');
                     $('#funcao-formMethod').val('POST');
                 @endif
                 $('#funcaoDrawerBackdrop').addClass('show');

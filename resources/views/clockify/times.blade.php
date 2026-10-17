@@ -34,7 +34,7 @@
                             <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                         </form>
                         @include('partials.ux-view-toggle', ['viewKey' => 'times_index_view'])
-                        @can('clockify.times.store')
+                        @can('operacao.times.store')
                             <button type="button" class="btn btn-sm btn-primary" id="btn-create-time">
                                 <i class="fas fa-plus mr-1"></i> Nova Equipe
                             </button>
@@ -77,7 +77,7 @@
                                             onclick="editTime({{ json_encode($time->only(['id', 'nome', 'descricao', 'lider_id'])) }}, {{ json_encode($time->users->pluck('id')->values()) }})">
                                             <i class="fa fa-edit mr-1"></i>Editar
                                         </button>
-                                        <form action="{{ route('clockify.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
+                                        <form action="{{ route('operacao.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
@@ -129,7 +129,7 @@
                                                 onclick="editTime({{ json_encode($time->only(['id', 'nome', 'descricao', 'lider_id'])) }}, {{ json_encode($time->users->pluck('id')->values()) }})">
                                                 <i class="fa fa-edit"></i> Editar
                                             </button>
-                                            <form action="{{ route('clockify.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
+                                            <form action="{{ route('operacao.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
@@ -161,7 +161,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-modal id="timeDrawer" icon="fas fa-users" title="Nova Equipe" formId="time-form" action="{{ route('clockify.times.store') }}">
+    <x-modal id="timeDrawer" icon="fas fa-users" title="Nova Equipe" formId="time-form" action="{{ route('operacao.times.store') }}">
         <input type="hidden" name="id" id="time_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="nome">Nome do Time <span class="text-danger">*</span></label>
@@ -206,7 +206,7 @@
         $(function() {
             $('#btn-create-time').on('click', function() {
                 $('#timeDrawerTitle').text('Nova Equipe');
-                $('#time-form').attr('action', '{{ route('clockify.times.store') }}');
+                $('#time-form').attr('action', '{{ route('operacao.times.store') }}');
                 $('#time-formMethod').val('POST');
                 $('#time-form')[0].reset();
                 $('#time_id').val('');
@@ -222,7 +222,7 @@
                     $('#time-formMethod').val('PUT');
                 @else
                     $('#timeDrawerTitle').text('Nova Equipe');
-                    $('#time-form').attr('action', '{{ route('clockify.times.store') }}');
+                    $('#time-form').attr('action', '{{ route('operacao.times.store') }}');
                     $('#time-formMethod').val('POST');
                 @endif
                 $('#timeDrawerBackdrop').addClass('show');

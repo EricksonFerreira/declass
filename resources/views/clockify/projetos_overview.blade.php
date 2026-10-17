@@ -293,7 +293,7 @@
                                 </div>
                             </div>
                             <div class="col-md-4 text-md-right mt-3 mt-md-0">
-                                <a href="{{ route('clockify.projetos.planejamento', $project->id) }}" class="btn btn-primary font-weight-bold shadow-sm" target="_blank">
+                                <a href="{{ route('operacao.projetos.planejamento', $project->id) }}" class="btn btn-primary font-weight-bold shadow-sm" target="_blank">
                                     <i class="fas fa-edit mr-1"></i> Ajustar Planejamento
                                 </a>
                             </div>
@@ -303,7 +303,7 @@
                             <i class="far fa-calendar-times fa-4x mb-3 text-muted"></i>
                             <h5 class="font-weight-bold text-dark">Nenhum Cronograma Ativo</h5>
                             <p class="text-sm text-muted mb-4">Este projeto ainda não possui um cronograma de entrega ativo ou válido.</p>
-                            <a href="{{ route('clockify.projetos.planejamento', $project->id) }}" class="btn btn-primary font-weight-bold shadow-sm" target="_blank">
+                            <a href="{{ route('operacao.projetos.planejamento', $project->id) }}" class="btn btn-primary font-weight-bold shadow-sm" target="_blank">
                                 <i class="fas fa-calendar-alt mr-1"></i> Criar Planejamento
                             </a>
                         </div>
@@ -325,7 +325,7 @@
                             <p class="text-sm text-muted mb-0">Você pode gerenciar as cores, nome, orçamento base, atribuir clientes e alterar visibilidade pública/privada.</p>
                         </div>
                         <div class="col-md-4 text-md-right mt-3 mt-md-0">
-                            <a href="{{ route('clockify.projetos.index') }}" class="btn btn-warning text-dark font-weight-bold shadow-sm">
+                            <a href="{{ route('operacao.projetos.index') }}" class="btn btn-warning text-dark font-weight-bold shadow-sm">
                                 <i class="fas fa-sliders-h mr-1"></i> Configurações Gerais
                             </a>
                         </div>

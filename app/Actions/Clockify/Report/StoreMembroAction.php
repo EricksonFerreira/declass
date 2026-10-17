@@ -22,16 +22,12 @@ class StoreMembroAction
             $data['empresa_id'] = auth()->user()?->empresa_id;
         }
 
-        // Assign default collaborator role
+        // Assign the company default member role
         if (! isset($data['role_id'])) {
-            $colaboradorRole = \App\Models\Regra::where('name', 'colaborador_administrativo')
-                ->orWhere('name', 'Colaborador Administrativo')
-                ->first();
-            if ($colaboradorRole) {
-                $data['role_id'] = $colaboradorRole->id;
-            } else {
-                $data['role_id'] = 8; // Fallback
-            }
+            $data['role_id'] = \App\Models\Regra::where('guard_name', 'web')
+                ->where('empresa_id', $data['empresa_id'])
+                ->where('name', 'usuario')
+                ->value('id');
         }
 
         // Ensure password is hashed

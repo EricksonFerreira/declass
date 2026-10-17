@@ -218,7 +218,7 @@
         <div class="card-body p-3">
             @if ($activeTracker)
                 <!-- Rastreador Ativo em Execução -->
-                <form action="{{ route('clockify.tracker.stop') }}" method="POST" id="stop-tracker-form">
+                <form action="{{ route('operacao.tracker.stop') }}" method="POST" id="stop-tracker-form">
                     @csrf
                     <div class="row align-items-center text-center text-md-left">
                         <div class="col-md-4 mb-2 mb-md-0">
@@ -254,7 +254,7 @@
                 </form>
             @else
                 <!-- Iniciar Novo Rastreador -->
-                <form action="{{ route('clockify.tracker.start') }}" method="POST">
+                <form action="{{ route('operacao.tracker.start') }}" method="POST">
                     @csrf
                     <div class="row align-items-center text-center text-md-left">
                         <div class="col-md-5 mb-2 mb-md-0">
@@ -300,7 +300,7 @@
             </div>
         </div>
         <div class="card-body bg-white" style="border-top: 1px solid #f1f5f9;">
-            <form action="{{ route('clockify.tracker.manual') }}" method="POST">
+            <form action="{{ route('operacao.tracker.manual') }}" method="POST">
                 @csrf
                 <div class="row">
                     <div class="col-md-4 mb-3 mb-md-0">
@@ -348,7 +348,7 @@
         <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
             <h3 class="card-title text-bold text-dark mb-0"><i class="fas fa-history text-secondary mr-2"></i> Histórico de Tempo</h3>
             <!-- Filter Form -->
-            <form method="GET" action="{{ route('clockify.tracker.index') }}" class="row g-3 align-items-end" style="flex-wrap: nowrap; margin: 0;">
+            <form method="GET" action="{{ route('operacao.tracker.index') }}" class="row g-3 align-items-end" style="flex-wrap: nowrap; margin: 0;">
                 <div class="col-md-3">
                     <label class="form-label text-xs text-muted">Projeto</label>
                     <select name="project_id" class="form-control form-control-sm select2" style="width:100%">
@@ -380,7 +380,7 @@
                 </div>
                 <div class="col-12 d-flex justify-content-end mt-2">
                     <button type="submit" class="btn btn-primary btn-sm me-2"><i class="fas fa-search me-1"></i>Buscar</button>
-                    <a href="{{ route('clockify.tracker.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync me-1"></i>Reset</a>
+                    <a href="{{ route('operacao.tracker.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync me-1"></i>Reset</a>
                 </div>
             </form>
             <div class="saving-indicator" id="global-saving-indicator">
@@ -431,7 +431,7 @@
                                     </span>
                                 </td>
                                 <td class="align-middle text-center" data-label="Ações">
-                                    <form action="{{ route('clockify.tracker.destroy', $tracker->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este registro de tempo?')">
+                                    <form action="{{ route('operacao.tracker.destroy', $tracker->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este registro de tempo?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-xs btn-outline-danger border-0"><i class="fa fa-trash"></i> Excluir</button>
@@ -521,7 +521,7 @@
             @endif
 
             // Autocomplete update function for past trackers
-            var trackerUpdateUrlTemplate = "{{ route('clockify.tracker.update', ['id' => '__ID__']) }}";
+            var trackerUpdateUrlTemplate = "{{ route('operacao.tracker.update', ['id' => '__ID__']) }}";
 
             function updatePastTrackerInline(trackerId, dataObj) {
                 savingIndicator.style.display = 'flex';
@@ -582,7 +582,7 @@
                 let tags = $('#active-tags').val();
 
                 $.ajax({
-                    url: "{{ route('clockify.tracker.active.update') }}",
+                    url: "{{ route('operacao.tracker.active.update') }}",
                     type: "POST",
                     data: {
                         _token: "{{ csrf_token() }}",

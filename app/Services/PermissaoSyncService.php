@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Empresa;
 use App\Models\Permissao;
 use App\Models\Regra;
 use Database\Seeders\PapeisPermissoesSeeder;
@@ -141,11 +142,39 @@ class PermissaoSyncService
         $createdRoles = 0;
         $pivotCount = 0;
 
+        // Perfis sao vinculados a empresa: cada tenant tem seus proprios
+        // 'administrador' e 'usuario' (empresa_id preenchido).
+        foreach (Empresa::query()->pluck('id') as $empresaId) {
+            [$c, $p] = $this->garantirPapeisParaEmpresa((int) $empresaId, $allPermissions);
+            $createdRoles += $c;
+            $pivotCount += $p;
+        }
+
+        $this->limparPapeisGlobaisObsoletos();
+
+        return [$createdRoles, $pivotCount];
+    }
+
+    /**
+     * Garante os papeis padrao (administrador, usuario) de uma empresa e
+     * sincroniza a matriz de permissoes de cada um.
+     *
+     * @param \Illuminate\Support\Collection<int, Permissao>|null $allPermissions
+     * @return array{0:int, 1:int} [papeis criados, permissoes vinculadas]
+     */
+    public function garantirPapeisParaEmpresa(int $empresaId, $allPermissions = null): array
+    {
+        $allPermissions ??= Permissao::query()->where('guard_name', 'web')->get();
+
+        $createdRoles = 0;
+        $pivotCount = 0;
+
         foreach ($this->buildRolePermissionFilters() as $roleName => $filter) {
             $role = Regra::query()->firstOrCreate(
                 [
                     'name' => $roleName,
                     'guard_name' => 'web',
+                    'empresa_id' => $empresaId,
                 ],
                 []
             );
@@ -162,8 +191,6 @@ class PermissaoSyncService
             $role->permissoes()->sync($permissionsForRole);
             $pivotCount += count($permissionsForRole);
         }
-
-        $this->limparPapeisGlobaisObsoletos();
 
         return [$createdRoles, $pivotCount];
     }
@@ -184,36 +211,63 @@ class PermissaoSyncService
     }
 
     /**
-     * Remapeia usuarios de papeis globais fora de [administrador, usuario]
-     * para 'usuario' e remove esses papeis. Papeis de empresa
-     * (empresa_id preenchido) pertencem ao tenant e sao preservados.
+     * Perfis sao vinculados a empresa: remapeia usuarios de QUALQUER papel
+     * global (empresa_id nulo) para o papel equivalente da propria empresa
+     * — mesmo nome quando for um papel padrao, senao 'usuario'. Papeis
+     * globais que ficam sem usuarios sao removidos; os que ainda tiverem
+     * usuarios sem empresa ficam para revisao manual.
      */
     private function limparPapeisGlobaisObsoletos(): void
     {
-        $usuarioRole = Regra::query()
+        $globais = Regra::query()
             ->where('guard_name', 'web')
             ->whereNull('empresa_id')
-            ->whereRaw('LOWER(name) = ?', ['usuario'])
-            ->first();
+            ->get(['id', 'name']);
 
-        if (! $usuarioRole) {
+        if ($globais->isEmpty()) {
             return;
         }
 
-        $idsObsoletos = Regra::query()
+        // [empresa_id][name em minusculo] => Regra
+        $porEmpresa = Regra::query()
             ->where('guard_name', 'web')
-            ->whereNull('empresa_id')
-            ->whereRaw("LOWER(name) NOT IN ('administrador', 'usuario')")
-            ->pluck('id');
+            ->whereNotNull('empresa_id')
+            ->get(['id', 'name', 'empresa_id'])
+            ->groupBy('empresa_id')
+            ->map(fn ($roles) => $roles->keyBy(fn ($r) => mb_strtolower($r->name)));
 
-        if ($idsObsoletos->isEmpty()) {
-            return;
+        $padroes = ['administrador', 'usuario'];
+        $globaisPorId = $globais->keyBy('id');
+
+        $users = DB::table('users')
+            ->whereIn('role_id', $globais->pluck('id'))
+            ->get(['id', 'role_id', 'empresa_id']);
+
+        foreach ($users as $user) {
+            $empresaId = (int) ($user->empresa_id ?? 0);
+            if ($empresaId === 0 || ! isset($porEmpresa[$empresaId])) {
+                continue;
+            }
+
+            $nomeGlobal = mb_strtolower((string) ($globaisPorId[$user->role_id]->name ?? ''));
+            $alvo = in_array($nomeGlobal, $padroes, true) ? $nomeGlobal : 'usuario';
+            $roleId = $porEmpresa[$empresaId][$alvo]->id ?? null;
+
+            if ($roleId) {
+                DB::table('users')->where('id', $user->id)->update(['role_id' => $roleId]);
+            }
         }
 
-        DB::table('users')->whereIn('role_id', $idsObsoletos)->update(['role_id' => $usuarioRole->id]);
+        $aindaUsados = DB::table('users')
+            ->whereIn('role_id', $globais->pluck('id'))
+            ->pluck('role_id')
+            ->unique();
 
-        DB::table('role_has_permissions')->whereIn('role_id', $idsObsoletos)->delete();
-        Regra::query()->whereIn('id', $idsObsoletos)->delete();
+        $remover = $globais->pluck('id')->diff($aindaUsados);
+        if ($remover->isNotEmpty()) {
+            DB::table('role_has_permissions')->whereIn('role_id', $remover)->delete();
+            Regra::query()->whereIn('id', $remover)->delete();
+        }
     }
 
     private function grupoFromName(string $name): string

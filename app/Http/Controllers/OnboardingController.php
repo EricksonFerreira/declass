@@ -161,6 +161,10 @@ class OnboardingController extends Controller
 
         $user->update(['empresa_id' => $empresa->id]);
 
+        // Perfis padrao vinculados a empresa (administrador + usuario).
+        app(\App\Services\PermissaoSyncService::class)
+            ->garantirPapeisParaEmpresa((int) $empresa->id);
+
         OnboardingStep::firstOrCreate(['empresa_id' => $empresa->id]);
     }
 

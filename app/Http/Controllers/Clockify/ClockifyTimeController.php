@@ -18,7 +18,7 @@ class ClockifyTimeController extends Controller
     use AtualizaFiltrosTrait;
     use FiltroTrait;
 
-    private string $nomeFiltro = 'clockify.times';
+    private string $nomeFiltro = 'operacao.times';
 
     public function index(Request $request, ListarTimesAction $action): View
     {
@@ -76,7 +76,7 @@ class ClockifyTimeController extends Controller
     private function configurarSessao(): void
     {
         session()->put("{$this->nomeFiltro}.urlPadrao", 'times');
-        session()->put("{$this->nomeFiltro}.rotaRedirect", 'clockify.times.index');
+        session()->put("{$this->nomeFiltro}.rotaRedirect", 'operacao.times.index');
     }
 
     private function obterFiltrosPrincipais(): array
@@ -113,7 +113,7 @@ class ClockifyTimeController extends Controller
             'lider_id' => $validated['lider_id'] ?? null,
         ], $request->input('users'));
 
-        return redirect()->route('clockify.times.index')
+        return redirect()->route('operacao.times.index')
             ->with('success', 'Time cadastrado com sucesso!');
     }
 
@@ -123,7 +123,7 @@ class ClockifyTimeController extends Controller
 
         $visibilidade = app(\App\Services\VisibilidadeService::class);
         if (! $visibilidade->podeGerenciarTime($request->user(), $time)) {
-            return redirect()->route('clockify.times.index')
+            return redirect()->route('operacao.times.index')
                 ->with('error', 'Você só pode editar times que lidera.');
         }
 
@@ -146,7 +146,7 @@ class ClockifyTimeController extends Controller
             'lider_id' => $validated['lider_id'] ?? null,
         ], $request->input('users'));
 
-        return redirect()->route('clockify.times.index')
+        return redirect()->route('operacao.times.index')
             ->with('success', 'Time atualizado com sucesso!');
     }
 
@@ -156,13 +156,13 @@ class ClockifyTimeController extends Controller
 
         $visibilidade = app(\App\Services\VisibilidadeService::class);
         if (! $visibilidade->podeGerenciarTime(request()->user(), $time)) {
-            return redirect()->route('clockify.times.index')
+            return redirect()->route('operacao.times.index')
                 ->with('error', 'Você só pode remover times que lidera.');
         }
 
         $action->handle((int) $id);
 
-        return redirect()->route('clockify.times.index')
+        return redirect()->route('operacao.times.index')
             ->with('success', 'Time removido com sucesso!');
     }
 }

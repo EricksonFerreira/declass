@@ -20,7 +20,7 @@ class FuncaoController extends Controller
     use AtualizaFiltrosTrait;
     use FiltroTrait;
 
-    private string $nomeFiltro = 'clockify.funcoes';
+    private string $nomeFiltro = 'operacao.funcoes';
 
     public function index(Request $request, ListarFuncoesAction $action): View
     {
@@ -76,7 +76,7 @@ class FuncaoController extends Controller
     private function configurarSessao(): void
     {
         session()->put("{$this->nomeFiltro}.urlPadrao", 'funcoes');
-        session()->put("{$this->nomeFiltro}.rotaRedirect", 'clockify.funcoes.index');
+        session()->put("{$this->nomeFiltro}.rotaRedirect", 'operacao.funcoes.index');
     }
 
     private function obterFiltrosPrincipais(): array
@@ -112,7 +112,7 @@ class FuncaoController extends Controller
 
         $action->handle($validated);
 
-        return redirect()->route('clockify.funcoes.index')
+        return redirect()->route('operacao.funcoes.index')
             ->with('success', 'Função criada com sucesso!');
     }
 
@@ -135,7 +135,7 @@ class FuncaoController extends Controller
             'ativo' => $request->has('ativo') ? (bool) $request->ativo : true,
         ]));
 
-        return redirect()->route('clockify.funcoes.index')
+        return redirect()->route('operacao.funcoes.index')
             ->with('success', 'Função atualizada com sucesso!');
     }
 
@@ -143,7 +143,7 @@ class FuncaoController extends Controller
     {
         $action->handle((int) $id);
 
-        return redirect()->route('clockify.funcoes.index')
+        return redirect()->route('operacao.funcoes.index')
             ->with('success', 'Função removida com sucesso!');
     }
 }

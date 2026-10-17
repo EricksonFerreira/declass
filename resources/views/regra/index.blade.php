@@ -57,7 +57,7 @@
 
 @php
     $grupoMeta = [
-        'clockify'    => ['label' => 'Operação',          'icon' => 'fas fa-clock'],
+        'operacao'    => ['label' => 'Operação',          'icon' => 'fas fa-clock'],
         'usuario'     => ['label' => 'Usuários',          'icon' => 'fas fa-users'],
         'regra'       => ['label' => 'Perfis de Acesso',  'icon' => 'fas fa-user-shield'],
         'permissao'   => ['label' => 'Permissões',        'icon' => 'fas fa-key'],

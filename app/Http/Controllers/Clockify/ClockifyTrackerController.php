@@ -100,7 +100,7 @@ class ClockifyTrackerController extends Controller
             'faturavel' => $request->has('faturavel') ? (bool) $request->faturavel : false,
         ], $request->input('tags'));
 
-        return redirect()->route('clockify.tracker.index')
+        return redirect()->route('operacao.tracker.index')
             ->with('success', 'Rastreador iniciado!');
     }
 
@@ -114,7 +114,7 @@ class ClockifyTrackerController extends Controller
             $request->input('tags')
         );
 
-        return redirect()->route('clockify.tracker.index')
+        return redirect()->route('operacao.tracker.index')
             ->with('success', 'Rastreador parado com sucesso!');
     }
 
@@ -134,7 +134,7 @@ class ClockifyTrackerController extends Controller
 
         $action->handle($validated, $request->input('tags'));
 
-        return redirect()->route('clockify.tracker.index')
+        return redirect()->route('operacao.tracker.index')
             ->with('success', 'Registro manual inserido com sucesso!');
     }
 
@@ -163,7 +163,7 @@ class ClockifyTrackerController extends Controller
             ]);
         }
 
-        return redirect()->route('clockify.tracker.index')
+        return redirect()->route('operacao.tracker.index')
             ->with('success', 'Registro de tempo atualizado com sucesso!');
     }
 
@@ -189,7 +189,7 @@ class ClockifyTrackerController extends Controller
     {
         $action->handle((int) $id);
 
-        return redirect()->route('clockify.tracker.index')
+        return redirect()->route('operacao.tracker.index')
             ->with('success', 'Registro removido com sucesso!');
     }
 
@@ -301,7 +301,7 @@ class ClockifyTrackerController extends Controller
 
         $action->handle($hoursInput, $startOfWeek);
 
-        return redirect()->route('clockify.timesheet', ['week' => $weekOffset])
+        return redirect()->route('operacao.timesheet', ['week' => $weekOffset])
             ->with('success', 'Planilha de horas salva com sucesso!');
     }
 

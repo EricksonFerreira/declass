@@ -73,11 +73,11 @@ class LembreteHorasCommand extends Command
                     $user->notify(new AvisoSistemaNotification(
                         titulo: 'Horas faltantes',
                         mensagem: "{$resumo} ({$hoje->format('d/m/Y')}). Abra o rastreador para registrar.",
-                        url: route('clockify.tracker.index'),
+                        url: route('operacao.tracker.index'),
                         icone: 'fas fa-clock',
                         cor: 'warning',
                         chave: $chave,
-                        categoria: 'clockify',
+                        categoria: 'operacao',
                     ));
 
                     $notificados++;

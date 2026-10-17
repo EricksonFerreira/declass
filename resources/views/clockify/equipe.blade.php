@@ -686,7 +686,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = $(this).serialize();
 
         $.ajax({
-            url: "{{ route('clockify.calendario.store') }}",
+            url: "{{ route('operacao.calendario.store') }}",
             type: 'POST',
             data: formData,
             success: function() {

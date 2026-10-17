@@ -71,6 +71,10 @@ class EmpresaService extends AbstractBaseService
             /** @var Empresa $empresa */
             $empresa = $this->create($data);
 
+            // Perfis padrao vinculados a empresa (administrador + usuario).
+            app(\App\Services\PermissaoSyncService::class)
+                ->garantirPapeisParaEmpresa((int) $empresa->id);
+
             $templateEmpresaId = $this->resolveDefaultTemplateEmpresaId();
             if ($templateEmpresaId === null || $templateEmpresaId === (int) $empresa->id) {
                 return $empresa;

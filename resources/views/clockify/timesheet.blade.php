@@ -11,13 +11,13 @@
     <!-- Navegador de Semana -->
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
         <div class="d-flex align-items-center">
-            <a href="{{ route('clockify.timesheet', ['week' => $weekOffset - 1]) }}" class="btn btn-sm btn-outline-secondary mr-2">
+            <a href="{{ route('operacao.timesheet', ['week' => $weekOffset - 1]) }}" class="btn btn-sm btn-outline-secondary mr-2">
                 <i class="fas fa-chevron-left"></i> Semana Anterior
             </a>
-            <a href="{{ route('clockify.timesheet', ['week' => 0]) }}" class="btn btn-sm btn-outline-primary mr-2">
+            <a href="{{ route('operacao.timesheet', ['week' => 0]) }}" class="btn btn-sm btn-outline-primary mr-2">
                 Hoje
             </a>
-            <a href="{{ route('clockify.timesheet', ['week' => $weekOffset + 1]) }}" class="btn btn-sm btn-outline-secondary">
+            <a href="{{ route('operacao.timesheet', ['week' => $weekOffset + 1]) }}" class="btn btn-sm btn-outline-secondary">
                 Próxima Semana <i class="fas fa-chevron-right"></i>
             </a>
         </div>
@@ -27,7 +27,7 @@
     </div>
 
     <!-- Tabela Timesheet Grid -->
-    <form action="{{ route('clockify.timesheet.save', ['week' => $weekOffset]) }}" method="POST">
+    <form action="{{ route('operacao.timesheet.save', ['week' => $weekOffset]) }}" method="POST">
         @csrf
         <div class="card card-outline card-primary shadow-sm mb-4">
             <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap" style="gap:8px;">

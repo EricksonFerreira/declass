@@ -12,12 +12,36 @@
 
     // Mapa grupo → label + ícone (mesmo do index de permissões)
     $grupoMeta = [
-        'clockify'                        => ['label' => 'Operação',                  'icon' => 'fas fa-clock',               'color' => '#4b80ff'],
+        'operacao'                        => ['label' => 'Operação',                  'icon' => 'fas fa-clock',               'color' => '#4b80ff'],
+        'assinatura'                      => ['label' => 'Assinatura',                'icon' => 'fas fa-file-signature',      'color' => '#ec4899'],
+        'relatorios'                      => ['label' => 'Relatórios',                'icon' => 'fas fa-chart-line',          'color' => '#14b8a6'],
+        'relatorio'                       => ['label' => 'Relatórios',                'icon' => 'fas fa-chart-line',          'color' => '#14b8a6'],
+        'comandos'                        => ['label' => 'Comandos',                  'icon' => 'fas fa-terminal',            'color' => '#475569'],
+        'importacao'                      => ['label' => 'Importação',                'icon' => 'fas fa-file-import',         'color' => '#f59e0b'],
+        'documentos'                      => ['label' => 'Documentos',                'icon' => 'fas fa-folder-open',         'color' => '#10b981'],
+        'licitacoes'                      => ['label' => 'Licitações',                'icon' => 'fas fa-gavel',               'color' => '#a855f7'],
+        'tutoriais'                       => ['label' => 'Tutoriais',                 'icon' => 'fas fa-graduation-cap',      'color' => '#0ea5e9'],
+        'notificacoes'                    => ['label' => 'Notificações',              'icon' => 'fas fa-bell',                'color' => '#f97316'],
+        'onboarding'                      => ['label' => 'Onboarding',                'icon' => 'fas fa-rocket',              'color' => '#f97316'],
+        'planos'                          => ['label' => 'Planos',                    'icon' => 'fas fa-layer-group',         'color' => '#8b5cf6'],
+        'configuracao-ia'                 => ['label' => 'Config. de IA',             'icon' => 'fas fa-robot',               'color' => '#06b6d4'],
+        'ia-uso'                          => ['label' => 'Uso de IA',                 'icon' => 'fas fa-chart-pie',           'color' => '#06b6d4'],
+        'ia-global'                       => ['label' => 'IA Global',                 'icon' => 'fas fa-robot',               'color' => '#06b6d4'],
+        'regra'                           => ['label' => 'Perfis de Acesso',          'icon' => 'fas fa-user-shield',         'color' => '#7c3aed'],
+        'alerta'                          => ['label' => 'Alertas',                   'icon' => 'fas fa-exclamation-triangle','color' => '#e0a800'],
+        'cadastro'                        => ['label' => 'Cadastro',                  'icon' => 'fas fa-user-plus',           'color' => '#6c757d'],
+        'cron'                            => ['label' => 'Agendador (Cron)',          'icon' => 'fas fa-stopwatch',           'color' => '#475569'],
+        'menu'                            => ['label' => 'Menu',                      'icon' => 'fas fa-bars',                'color' => '#6c757d'],
+        'sitemap'                         => ['label' => 'Sitemap',                   'icon' => 'fas fa-sitemap',             'color' => '#6c757d'],
+        'limpar-cache'                    => ['label' => 'Limpar Cache',              'icon' => 'fas fa-broom',               'color' => '#6c757d'],
+        'log-viewer'                      => ['label' => 'Logs',                      'icon' => 'fas fa-file-alt',            'color' => '#475569'],
+        'admin'                           => ['label' => 'Administração',             'icon' => 'fas fa-user-cog',            'color' => '#6c757d'],
+        'adminlte'                        => ['label' => 'AdminLTE',                  'icon' => 'fas fa-th-large',            'color' => '#6c757d'],
+        'pricing'                         => ['label' => 'Preços',                    'icon' => 'fas fa-tags',                'color' => '#28a745'],
         'reserva'                         => ['label' => 'Reservas',                  'icon' => 'fas fa-calendar-check',      'color' => '#4b80ff'],
         'veiculo'                         => ['label' => 'Veículos',                  'icon' => 'fas fa-car',                 'color' => '#28a745'],
         'usuario'                         => ['label' => 'Usuários',                  'icon' => 'fas fa-users',               'color' => '#17a2b8'],
         'permissao'                       => ['label' => 'Permissões',                'icon' => 'fas fa-key',                 'color' => '#e0a800'],
-        'regra'                           => ['label' => 'Regras de Acesso',          'icon' => 'fas fa-shield-alt',          'color' => '#e0a800'],
         'multa'                           => ['label' => 'Multas',                    'icon' => 'fas fa-file-invoice-dollar', 'color' => '#dc3545'],
         'sinistro'                        => ['label' => 'Sinistros',                 'icon' => 'fas fa-car-crash',           'color' => '#dc3545'],
         'movimentacao'                    => ['label' => 'Movimentações',             'icon' => 'fas fa-exchange-alt',        'color' => '#6c757d'],
@@ -84,6 +108,54 @@
         ? in_array($p->id, $oldPermissions)
         : !empty($p->checked)
     )->count();
+
+    // Labels amigáveis para os subníveis (funcionalidades dentro de cada módulo)
+    $featureLabel = [
+        'calendario' => 'Calendário', 'clientes' => 'Clientes', 'funcoes' => 'Funções',
+        'projetos' => 'Projetos', 'tags' => 'Tags', 'times' => 'Equipes',
+        'timeoff' => 'Folgas e Férias', 'timesheet' => 'Planilha de Horas',
+        'tracker' => 'Rastreador', 'cronogramas' => 'Cronogramas',
+        'planejamento' => 'Planejamento', 'planejar-equipe' => 'Planejar Equipe',
+        'planejar-equipe-geral' => 'Planejar Equipe (Geral)',
+        'pagamento' => 'Pagamento', 'consumo' => 'Consumo', 'estimativas' => 'Estimativas',
+        'membros' => 'Membros', 'categorias' => 'Categorias', 'arquivo' => 'Arquivos',
+        'site-apresentacao' => 'Site de Apresentação', 'site-editor' => 'Editor do Site',
+        'mudanca' => 'Mudança de Plano', 'downgrade' => 'Downgrade', 'contratar' => 'Contratar',
+        'atribuir' => 'Atribuir', 'darkmode' => 'Modo Escuro',
+        'cores' => 'Cores', 'empresa' => 'Empresa', 'orientacoes' => 'Orientações',
+    ];
+
+    $acaoClasses = [
+        'index' => 'badge-primary', 'show' => 'badge-info',
+        'create' => 'badge-success', 'store' => 'badge-success',
+        'edit' => 'badge-warning', 'update' => 'badge-warning',
+        'destroy' => 'badge-danger', 'delete' => 'badge-danger',
+        'export' => 'badge-dark',
+    ];
+
+    // Monta árvore aninhada: módulo → [funcionalidade → [subnível → …]] → permissões
+    $montarArvore = function ($itens) {
+        $root = ['folders' => [], 'perms' => [], 'count' => 0];
+        foreach ($itens as $p) {
+            $parts = explode('.', $p->name);
+            array_shift($parts); // remove o módulo (ex.: operacao)
+            $node = &$root;
+            $node['count']++;
+            while (count($parts) > 1) {
+                $k = array_shift($parts);
+                if (!isset($node['folders'][$k])) {
+                    $node['folders'][$k] = ['folders' => [], 'perms' => [], 'count' => 0];
+                }
+                $node = &$node['folders'][$k];
+                $node['count']++;
+            }
+            $node['perms'][] = $p;
+            unset($node);
+        }
+        return $root;
+    };
+
+    $arvores = $permissoesAgrupadas->mapWithKeys(fn ($itens, $g) => [$g => $montarArvore($itens)]);
 @endphp
 
 @if ($errors->any())
@@ -212,43 +284,14 @@
 
                                 {{-- Group body --}}
                                 <div id="{{ $accordionId }}" class="collapse">
-                                    <div class="re-group__body">
-                                        <div class="re-perm-grid" data-grid="{{ $accordionId }}">
-                                            @foreach ($itens as $permissao)
-                                                @php
-                                                    $checked = is_array($oldPermissions)
-                                                        ? in_array($permissao->id, $oldPermissions)
-                                                        : !empty($permissao->checked);
-                                                    // derive action label from name suffix
-                                                    $acao = str_contains($permissao->name, '.') ? substr($permissao->name, strrpos($permissao->name, '.') + 1) : $permissao->name;
-                                                    $acaoClasses = [
-                                                        'index' => 'badge-primary', 'show' => 'badge-info',
-                                                        'create' => 'badge-success', 'store' => 'badge-success',
-                                                        'edit' => 'badge-warning', 'update' => 'badge-warning',
-                                                        'destroy' => 'badge-danger', 'delete' => 'badge-danger',
-                                                        'export' => 'badge-dark',
-                                                    ];
-                                                    $badgeCls = $acaoClasses[$acao] ?? 'badge-secondary';
-                                                @endphp
-                                                <label class="re-perm-item {{ $checked ? 're-perm-item--checked' : '' }}"
-                                                       for="perm-{{ $permissao->id }}"
-                                                       data-name="{{ strtolower($permissao->name) }}"
-                                                       data-desc="{{ strtolower($permissao->descricao ?? '') }}">
-                                                    <input class="re-perm-item__chk" type="checkbox"
-                                                        name="permissions[]"
-                                                        value="{{ $permissao->id }}"
-                                                        id="perm-{{ $permissao->id }}"
-                                                        {{ $checked ? 'checked' : '' }}>
-                                                    <span class="re-perm-item__body">
-                                                        <span class="badge {{ $badgeCls }} badge-sm re-perm-item__badge">{{ $acao }}</span>
-                                                        <code class="re-perm-item__name">{{ $permissao->name }}</code>
-                                                        @if($permissao->descricao)
-                                                            <span class="re-perm-item__desc">{{ $permissao->descricao }}</span>
-                                                        @endif
-                                                    </span>
-                                                </label>
-                                            @endforeach
-                                        </div>
+                                    <div class="re-group__body" data-grid="{{ $accordionId }}">
+                                        @include('regra._perm-node', [
+                                            'node'           => $arvores[$grupo],
+                                            'prefix'         => $accordionId,
+                                            'featureLabel'   => $featureLabel,
+                                            'acaoClasses'    => $acaoClasses,
+                                            'oldPermissions' => $oldPermissions,
+                                        ])
                                     </div>
                                 </div>
                             </div>
@@ -362,6 +405,28 @@
 
 /* ── Group body + grid ── */
 .re-group__body { background: #fff; padding: .8rem; }
+
+/* ── Subníveis (árvore dentro do módulo) ── */
+.re-sub { margin-bottom: .45rem; }
+.re-sub .re-sub { margin-left: 1.1rem; }
+.re-sub__head {
+    display: flex; align-items: center; gap: .45rem;
+    padding: .4rem .6rem; border-radius: 8px;
+    background: #f6f8fc; border: 1px solid #e9edf5;
+    cursor: pointer; user-select: none; transition: background .12s;
+}
+.re-sub__head:hover { background: #eef2fa; }
+.re-sub__chev   { font-size: .62rem; color: #8ba0b8; transition: transform .2s; width: 10px; }
+.re-sub__head:not(.collapsed) .re-sub__chev { transform: rotate(90deg); }
+.re-sub__icon   { font-size: .75rem; color: #94a9c4; }
+.re-sub__label  { font-size: .78rem; font-weight: 600; color: #2c4a6e; }
+.re-sub__count  { font-size: .65rem; font-weight: 700; color: #8ba0b8; background: #e8edf5;
+                  padding: .05rem .4rem; border-radius: 999px; }
+.re-sub__checked{ font-size: .65rem; font-weight: 700; color: #155724; background: #e8f5e9;
+                  border: 1px solid #c3e6cb; padding: .05rem .4rem; border-radius: 999px; }
+.re-sub__actions { margin-left: auto; display: flex; gap: .3rem; }
+.re-sub__body   { padding: .55rem .3rem .2rem 1.1rem; border-left: 2px solid #edf1f8; margin-left: .45rem; }
+
 .re-perm-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -436,11 +501,20 @@ $(function () {
         });
     }
 
+    function atualizarBadgesSubniveis($el) {
+        $el.parents('.collapse').each(function () {
+            const n  = $(this).find('input[name="permissions[]"]:checked').length;
+            const $b = $(`#subbadge-${this.id}`);
+            if ($b.length) { n > 0 ? $b.text(n).show() : $b.hide(); }
+        });
+    }
+
     $all.on('change', function () {
         atualizarVisual($(this));
         atualizarContador();
         const grid = $(this).closest('[data-grid]').data('grid');
         if (grid) atualizarBadgeGrupo(grid);
+        atualizarBadgesSubniveis($(this));
     });
 
     // Init
@@ -469,28 +543,36 @@ $(function () {
         atualizarTodosBadges();
     });
 
-    // ── Selecionar / desmarcar por grupo ──────────────────────────────────
+    // ── Selecionar / desmarcar por grupo ou subnível ──────────────────────
     $(document).on('click', '.re-btn-group-all', function () {
         const gid = $(this).data('group');
-        const $chks = $(`[data-grid="${gid}"]`).find('input[name="permissions[]"]').filter(function () {
+        const sub = $(this).data('sub');
+        const $scope = gid ? $(`[data-grid="${gid}"]`) : $(`#${sub}`);
+        const $chks = $scope.find('input[name="permissions[]"]').filter(function () {
             return $(this).closest('.re-perm-item').not('.re-hidden').length > 0;
         });
         $chks.prop('checked', true);
         atualizarVisual($chks);
         atualizarContador();
-        atualizarBadgeGrupo(gid);
-        // Abrir o grupo se estiver fechado
-        const $body = $(`#${gid}`);
+        if (gid) atualizarBadgeGrupo(gid);
+        else if ($chks.length) { atualizarBadgeGrupo($chks.first().closest('[data-grid]').data('grid')); }
+        atualizarBadgesSubniveis($chks.first());
+        // Abrir o grupo/subnível se estiver fechado
+        const $body = gid ? $(`#${gid}`) : $(`#${sub}`);
         if (!$body.hasClass('show')) $body.collapse('show');
     });
 
     $(document).on('click', '.re-btn-group-none', function () {
         const gid = $(this).data('group');
-        const $chks = $(`[data-grid="${gid}"]`).find('input[name="permissions[]"]');
+        const sub = $(this).data('sub');
+        const $scope = gid ? $(`[data-grid="${gid}"]`) : $(`#${sub}`);
+        const $chks = $scope.find('input[name="permissions[]"]');
         $chks.prop('checked', false);
         atualizarVisual($chks);
         atualizarContador();
-        atualizarBadgeGrupo(gid);
+        if (gid) atualizarBadgeGrupo(gid);
+        else if ($chks.length) { atualizarBadgeGrupo($chks.first().closest('[data-grid]').data('grid')); }
+        atualizarBadgesSubniveis($chks.first());
     });
 
     // ── Busca ao vivo ──────────────────────────────────────────────────────

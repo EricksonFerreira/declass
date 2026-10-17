@@ -50,7 +50,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="{{ route('clockify.calendario.store') }}" method="POST">
+                <form action="{{ route('operacao.calendario.store') }}" method="POST">
                     @csrf
                     <div class="modal-body">
                         <div class="form-group">
@@ -737,9 +737,9 @@
             var currentUserId = {{ Auth::id() }};
 
             var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            var moveUrlTemplate = "{{ route('clockify.calendario.mover', ['id' => '__ID__']) }}";
-            var deleteCalUrlTemplate = "{{ route('clockify.calendario.destroy', ['id' => '__ID__']) }}";
-            var deleteTrackerUrlTemplate = "{{ route('clockify.tracker.destroy', ['id' => '__ID__']) }}";
+            var moveUrlTemplate = "{{ route('operacao.calendario.mover', ['id' => '__ID__']) }}";
+            var deleteCalUrlTemplate = "{{ route('operacao.calendario.destroy', ['id' => '__ID__']) }}";
+            var deleteTrackerUrlTemplate = "{{ route('operacao.tracker.destroy', ['id' => '__ID__']) }}";
 
             function pad2(n) { return String(n).padStart(2, '0'); }
             function fmtDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }

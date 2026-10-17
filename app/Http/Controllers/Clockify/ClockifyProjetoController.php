@@ -23,7 +23,7 @@ class ClockifyProjetoController extends Controller
     use AtualizaFiltrosTrait;
     use FiltroTrait;
 
-    private string $nomeFiltro = 'clockify.projetos';
+    private string $nomeFiltro = 'operacao.projetos';
 
     public function index(Request $request, ListarProjetosAction $action): View
     {
@@ -94,7 +94,7 @@ class ClockifyProjetoController extends Controller
     private function configurarSessao(): void
     {
         session()->put("{$this->nomeFiltro}.urlPadrao", 'projetos');
-        session()->put("{$this->nomeFiltro}.rotaRedirect", 'clockify.projetos.index');
+        session()->put("{$this->nomeFiltro}.rotaRedirect", 'operacao.projetos.index');
     }
 
     private function obterFiltrosPrincipais($clientes): array
@@ -160,7 +160,7 @@ class ClockifyProjetoController extends Controller
 
         $projeto->users()->sync($validated['membros'] ?? []);
 
-        return redirect()->route('clockify.projetos.index')
+        return redirect()->route('operacao.projetos.index')
             ->with('success', 'Projeto criado com sucesso!');
     }
 
@@ -169,7 +169,7 @@ class ClockifyProjetoController extends Controller
         $projeto = \App\Models\ClockifyProjeto::findOrFail($id);
 
         if (! $projeto->podeSerGerenciadoPor($request->user())) {
-            return redirect()->route('clockify.projetos.index')
+            return redirect()->route('operacao.projetos.index')
                 ->with('error', 'Você só pode editar projetos pelos quais é responsável.');
         }
 
@@ -205,7 +205,7 @@ class ClockifyProjetoController extends Controller
 
         $projeto->users()->sync($validated['membros'] ?? []);
 
-        return redirect()->route('clockify.projetos.show', $id)
+        return redirect()->route('operacao.projetos.show', $id)
             ->with('success', 'Projeto atualizado com sucesso!');
     }
 
@@ -213,7 +213,7 @@ class ClockifyProjetoController extends Controller
     {
         $action->handle((int) $id);
 
-        return redirect()->route('clockify.projetos.index')
+        return redirect()->route('operacao.projetos.index')
             ->with('success', 'Projeto removido com sucesso!');
     }
 
@@ -250,8 +250,8 @@ class ClockifyProjetoController extends Controller
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Gerenciar'],
-                ['name' => 'Projetos', 'url' => route('clockify.projetos.index')],
-                ['name' => $projeto->nome, 'url' => route('clockify.projetos.show', $projeto->id)],
+                ['name' => 'Projetos', 'url' => route('operacao.projetos.index')],
+                ['name' => $projeto->nome, 'url' => route('operacao.projetos.show', $projeto->id)],
                 ['name' => 'Planejamento', 'active' => true],
             ],
         ]);
@@ -329,7 +329,7 @@ class ClockifyProjetoController extends Controller
             }
         });
 
-        return redirect()->route('clockify.projetos.planejamento', [$projeto->id, 'cronograma_id' => $cronograma->id])
+        return redirect()->route('operacao.projetos.planejamento', [$projeto->id, 'cronograma_id' => $cronograma->id])
             ->with('success', 'Planejamento de entrega salvo com sucesso!');
     }
 
@@ -364,7 +364,7 @@ class ClockifyProjetoController extends Controller
             }
         });
 
-        return redirect()->route('clockify.projetos.planejamento', $projeto->id)
+        return redirect()->route('operacao.projetos.planejamento', $projeto->id)
             ->with('success', 'Nova versão de planejamento criada!');
     }
 
@@ -384,7 +384,7 @@ class ClockifyProjetoController extends Controller
             'valor_hora' => $projeto->valor_hora,
         ]);
 
-        return redirect()->route('clockify.projetos.planejamento', [
+        return redirect()->route('operacao.projetos.planejamento', [
             $projeto->id,
             'cronograma_id' => $cronograma->id,
         ])->with('success', 'Nova versão criada: '.$nome);
@@ -409,7 +409,7 @@ class ClockifyProjetoController extends Controller
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Gerenciar'],
-                ['name' => 'Projetos', 'url' => route('clockify.projetos.index')],
+                ['name' => 'Projetos', 'url' => route('operacao.projetos.index')],
                 ['name' => $projeto->nome, 'active' => true],
             ],
         ]);
@@ -426,7 +426,7 @@ class ClockifyProjetoController extends Controller
             $cronograma->delete();
         });
 
-        return redirect()->route('clockify.projetos.show', $projetoId)
+        return redirect()->route('operacao.projetos.show', $projetoId)
             ->with('success', 'Versão de planejamento excluída com sucesso!');
     }
 
@@ -461,8 +461,8 @@ class ClockifyProjetoController extends Controller
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Gerenciar'],
-                ['name' => 'Projetos', 'url' => route('clockify.projetos.index')],
-                ['name' => $projeto->nome, 'url' => route('clockify.projetos.show', $projeto->id)],
+                ['name' => 'Projetos', 'url' => route('operacao.projetos.index')],
+                ['name' => $projeto->nome, 'url' => route('operacao.projetos.show', $projeto->id)],
                 ['name' => 'Planejar Equipe', 'active' => true],
             ],
         ]);
@@ -504,7 +504,7 @@ class ClockifyProjetoController extends Controller
             }
         });
 
-        return redirect()->route('clockify.projetos.show', $projeto->id)
+        return redirect()->route('operacao.projetos.show', $projeto->id)
             ->with('success', 'Planejamento de equipe salvo com sucesso!');
     }
 
@@ -513,7 +513,7 @@ class ClockifyProjetoController extends Controller
         $projetoId = $request->query('projeto_id');
 
         if ($projetoId) {
-            return redirect()->route('clockify.projetos.planejar-equipe', (int) $projetoId);
+            return redirect()->route('operacao.projetos.planejar-equipe', (int) $projetoId);
         }
 
         $projetos = app(\App\Services\VisibilidadeService::class)
@@ -569,7 +569,7 @@ class ClockifyProjetoController extends Controller
             }
         });
 
-        return redirect()->route('clockify.projetos.show', $projetoId)
+        return redirect()->route('operacao.projetos.show', $projetoId)
             ->with('success', 'Planejamento de equipe salvo com sucesso!');
     }
 

@@ -10,7 +10,7 @@ use App\Http\Controllers\Clockify\ClockifyTrackerController;
 use App\Http\Controllers\Clockify\FuncaoController;
 use Illuminate\Support\Facades\Route;
 
-Route::name('clockify.')->group(function () {
+Route::name('operacao.')->group(function () {
     // Time Tracker
     Route::get('tracker', [ClockifyTrackerController::class, 'index'])->name('tracker.index');
     Route::post('tracker/start', [ClockifyTrackerController::class, 'start'])->name('tracker.start');

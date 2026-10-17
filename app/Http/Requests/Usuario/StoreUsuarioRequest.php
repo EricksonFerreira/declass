@@ -25,12 +25,11 @@ class StoreUsuarioRequest extends FormRequest
         ]);
 
         if (! $this->filled('role_id')) {
-            $colaboradorRole = \App\Models\Regra::where('name', 'colaborador_administrativo')
-                ->orWhere('name', 'Colaborador Administrativo')
-                ->first();
-            $this->merge([
-                'role_id' => $colaboradorRole?->id ?? 8,
-            ]);
+            $roleId = \App\Models\Regra::where('guard_name', 'web')
+                ->where('empresa_id', $this->user()?->empresa_id)
+                ->where('name', 'usuario')
+                ->value('id');
+            $this->merge(['role_id' => $roleId]);
         }
     }
 

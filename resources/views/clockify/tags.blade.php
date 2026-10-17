@@ -64,7 +64,7 @@
                                         onclick="editTag({{ json_encode($tag) }})">
                                         <i class="fa fa-edit mr-1"></i>Editar
                                     </button>
-                                    <form action="{{ route('clockify.tags.destroy', $tag->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta tag?')">
+                                    <form action="{{ route('operacao.tags.destroy', $tag->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta tag?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
@@ -113,7 +113,7 @@
                                             onclick="editTag({{ json_encode($tag) }})">
                                             <i class="fa fa-edit"></i> Editar
                                         </button>
-                                        <form action="{{ route('clockify.tags.destroy', $tag->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta tag?')">
+                                        <form action="{{ route('operacao.tags.destroy', $tag->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta tag?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
@@ -142,7 +142,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-modal id="tagDrawer" icon="fas fa-tags" title="Criar Nova Tag" formId="tag-form" action="{{ route('clockify.tags.store') }}">
+    <x-modal id="tagDrawer" icon="fas fa-tags" title="Criar Nova Tag" formId="tag-form" action="{{ route('operacao.tags.store') }}">
         <input type="hidden" name="id" id="tag_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="nome">Nome da Tag <span class="text-danger">*</span></label>
@@ -178,7 +178,7 @@
         $(function() {
             $('#btn-create-tag').on('click', function() {
                 $('#tagDrawerTitle').text('Criar Nova Tag');
-                $('#tag-form').attr('action', '{{ route('clockify.tags.store') }}');
+                $('#tag-form').attr('action', '{{ route('operacao.tags.store') }}');
                 $('#tag-formMethod').val('POST');
                 $('#tag-form')[0].reset();
                 $('#tag_id').val('');
@@ -195,7 +195,7 @@
                     $('#status-group').show();
                 @else
                     $('#tagDrawerTitle').text('Criar Nova Tag');
-                    $('#tag-form').attr('action', '{{ route('clockify.tags.store') }}');
+                    $('#tag-form').attr('action', '{{ route('operacao.tags.store') }}');
                     $('#tag-formMethod').val('POST');
                 @endif
                 $('#tagDrawerBackdrop').addClass('show');

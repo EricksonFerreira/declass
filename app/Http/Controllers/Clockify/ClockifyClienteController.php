@@ -18,7 +18,7 @@ class ClockifyClienteController extends Controller
     use AtualizaFiltrosTrait;
     use FiltroTrait;
 
-    private string $nomeFiltro = 'clockify.clientes';
+    private string $nomeFiltro = 'operacao.clientes';
 
     public function index(Request $request, ListarClientesAction $action): View
     {
@@ -74,7 +74,7 @@ class ClockifyClienteController extends Controller
     private function configurarSessao(): void
     {
         session()->put("{$this->nomeFiltro}.urlPadrao", 'clientes');
-        session()->put("{$this->nomeFiltro}.rotaRedirect", 'clockify.clientes.index');
+        session()->put("{$this->nomeFiltro}.rotaRedirect", 'operacao.clientes.index');
     }
 
     private function obterFiltrosPrincipais(): array
@@ -108,7 +108,7 @@ class ClockifyClienteController extends Controller
 
         $action->handle($validated);
 
-        return redirect()->route('clockify.clientes.index')
+        return redirect()->route('operacao.clientes.index')
             ->with('success', 'Cliente cadastrado com sucesso!');
     }
 
@@ -126,7 +126,7 @@ class ClockifyClienteController extends Controller
             'ativo' => $request->has('ativo') ? (bool) $request->ativo : true,
         ]));
 
-        return redirect()->route('clockify.clientes.index')
+        return redirect()->route('operacao.clientes.index')
             ->with('success', 'Cliente atualizado com sucesso!');
     }
 
@@ -134,7 +134,7 @@ class ClockifyClienteController extends Controller
     {
         $action->handle((int) $id);
 
-        return redirect()->route('clockify.clientes.index')
+        return redirect()->route('operacao.clientes.index')
             ->with('success', 'Cliente removido com sucesso!');
     }
 }

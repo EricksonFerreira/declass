@@ -332,17 +332,17 @@ return [
             'submenu' => [
                 [
                     'text' => 'Rastreador',
-                    'route' => 'clockify.tracker.index',
+                    'route' => 'operacao.tracker.index',
                     'icon' => 'fas fa-stopwatch',
                 ],
                 [
                     'text' => 'Planilha de Horas',
-                    'route' => 'clockify.timesheet',
+                    'route' => 'operacao.timesheet',
                     'icon' => 'fas fa-table',
                 ],
                 [
                     'text' => 'Calendário',
-                    'route' => 'clockify.calendario.index',
+                    'route' => 'operacao.calendario.index',
                     'icon' => 'fas fa-calendar-alt',
                 ],
             ],
@@ -414,7 +414,7 @@ return [
             'submenu' => [
                 [
                     'text' => 'Clientes',
-                    'route' => 'clockify.clientes.index',
+                    'route' => 'operacao.clientes.index',
                     'icon' => 'fas fa-user-friends',
                 ],
                 [
@@ -425,17 +425,17 @@ return [
                 ],
                 [
                     'text' => 'Equipe',
-                    'route' => 'clockify.times.index',
+                    'route' => 'operacao.times.index',
                     'icon' => 'fas fa-users',
                 ],
                 [
                     'text' => 'Folgas e Férias',
-                    'route' => 'clockify.timeoff.index',
+                    'route' => 'operacao.timeoff.index',
                     'icon' => 'fas fa-plane',
                 ],
                 [
                     'text' => 'Funções',
-                    'route' => 'clockify.funcoes.index',
+                    'route' => 'operacao.funcoes.index',
                     'icon' => 'fas fa-briefcase',
                 ],
                 [
@@ -452,12 +452,12 @@ return [
                 ],
                 [
                     'text' => 'Projetos',
-                    'route' => 'clockify.projetos.index',
+                    'route' => 'operacao.projetos.index',
                     'icon' => 'fas fa-project-diagram',
                 ],
                 [
                     'text' => 'Tags',
-                    'route' => 'clockify.tags.index',
+                    'route' => 'operacao.tags.index',
                     'icon' => 'fas fa-tags',
                 ],
                 [

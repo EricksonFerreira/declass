@@ -156,7 +156,7 @@ class DemoEmpresaSeeder extends Seeder
         $roles = [];
         foreach (['administrador', 'usuario'] as $nome) {
             $roles[$nome] = Regra::firstOrCreate(
-                ['name' => $nome, 'guard_name' => 'web']
+                ['name' => $nome, 'guard_name' => 'web', 'empresa_id' => $this->empresaId]
             )->id;
         }
 

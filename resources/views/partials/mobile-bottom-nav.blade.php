@@ -22,7 +22,7 @@
             'icone' => 'fas fa-stopwatch',
             'url' => route('menu.index', 'registrar-tempo'),
             'slug' => 'registrar-tempo',
-            'prefixos' => ['clockify.tracker.', 'clockify.timesheet', 'clockify.calendario.'],
+            'prefixos' => ['operacao.tracker.', 'operacao.timesheet', 'operacao.calendario.'],
         ],
         [
             'label' => 'Painel',
@@ -43,7 +43,7 @@
             'icone' => 'fas fa-folder-open',
             'url' => route('menu.index', 'gerenciar'),
             'slug' => 'gerenciar',
-            'prefixos' => ['clockify.projetos.', 'clockify.clientes.', 'clockify.times.', 'clockify.timeoff.', 'clockify.funcoes.', 'clockify.tags.', 'usuario.'],
+            'prefixos' => ['operacao.projetos.', 'operacao.clientes.', 'operacao.times.', 'operacao.timeoff.', 'operacao.funcoes.', 'operacao.tags.', 'usuario.'],
         ],
         [
             'label' => 'Menu',

@@ -53,7 +53,7 @@
     <div class="col-12">
         <div class="card planning-card shadow-sm border-0">
             <div class="card-body">
-                <form action="{{ route('clockify.projetos.planejamento', $projeto->id) }}" method="GET" id="version-selector-form">
+                <form action="{{ route('operacao.projetos.planejamento', $projeto->id) }}" method="GET" id="version-selector-form">
                     <div class="row align-items-center">
                         <div class="col-md-6 mb-3 mb-md-0">
                             <label class="text-xs text-bold text-muted d-block mb-1"><i class="fas fa-code-branch text-primary mr-1"></i> Versões de Planejamento deste Projeto</label>
@@ -70,7 +70,7 @@
                             @endif
                         </div>
                         <div class="col-md-6 text-md-right">
-                            <a href="{{ route('clockify.projetos.cronogramas.novo', $projeto->id) }}" class="btn btn-sm btn-primary font-weight-bold shadow-sm">
+                            <a href="{{ route('operacao.projetos.cronogramas.novo', $projeto->id) }}" class="btn btn-sm btn-primary font-weight-bold shadow-sm">
                                 <i class="fas fa-plus mr-1"></i> Criar Nova Versão / Etapa
                             </a>
                         </div>
@@ -82,7 +82,7 @@
 </div>
 
 @if($selectedCronograma)
-<form action="{{ route('clockify.projetos.planejamento.store', $projeto->id) }}" method="POST" id="planning-form">
+<form action="{{ route('operacao.projetos.planejamento.store', $projeto->id) }}" method="POST" id="planning-form">
     @csrf
     <input type="hidden" name="cronograma_id" value="{{ $selectedCronograma->id }}">
     
@@ -216,7 +216,7 @@
                         <button type="submit" class="btn btn-success btn-block font-weight-bold shadow-sm" id="btn-save-planning" style="display: none;">
                             <i class="fas fa-save mr-1"></i> Salvar Planejamento
                         </button>
-                        {{-- <a href="{{ route('clockify.projetos.index') }}" class="btn btn-default btn-block mt-2 font-weight-bold text-secondary">
+                        {{-- <a href="{{ route('operacao.projetos.index') }}" class="btn btn-default btn-block mt-2 font-weight-bold text-secondary">
                             <i class="fas fa-arrow-left mr-1"></i> Voltar para Projetos
                         </a> --}}
                     </div>

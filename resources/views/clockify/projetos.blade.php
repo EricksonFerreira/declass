@@ -34,7 +34,7 @@
                             <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                         </form>
                         @include('partials.ux-view-toggle', ['viewKey' => 'projetos_index_view'])
-                        @can('clockify.projetos.store')
+                        @can('operacao.projetos.store')
                             <button type="button" class="btn btn-sm btn-primary" id="btn-create-projeto">
                                 <i class="fas fa-plus mr-1"></i> Novo Projeto
                             </button>
@@ -88,7 +88,7 @@
                                     </div>
                                 </div>
                                 <div class="ux-card__foot">
-                                    <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary">
+                                    <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary">
                                         <i class="fas fa-eye mr-1"></i>Detalhes
                                     </a>
                                     @if ($projeto->podeSerGerenciadoPor(auth()->user()))
@@ -97,8 +97,8 @@
                                             <i class="fa fa-edit mr-1"></i>Editar
                                         </button>
                                     @endif
-                                    @can('clockify.projetos.destroy')
-                                        <form action="{{ route('clockify.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"
+                                    @can('operacao.projetos.destroy')
+                                        <form action="{{ route('operacao.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"
                                             onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
                                             @csrf
                                             @method('DELETE')
@@ -135,7 +135,7 @@
                                     </td>
                                     <td class="align-middle">
                                         <div class="font-weight-bold">
-                                            <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="text-dark font-weight-bold" style="text-decoration: none;">{{ $projeto->nome }}</a>
+                                            <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="text-dark font-weight-bold" style="text-decoration: none;">{{ $projeto->nome }}</a>
                                             @if (! $projeto->publico)
                                                 <span class="badge badge-secondary ml-1" title="Projeto privado: visível apenas para administradores, o responsável e os membros"><i class="fas fa-lock mr-1"></i>Privado</span>
                                             @endif
@@ -180,7 +180,7 @@
                                         </span>
                                     </td>
                                     <td class="align-middle text-center" style="white-space: nowrap;">
-                                        <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary mr-1">
+                                        <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary mr-1">
                                             <i class="fas fa-eye"></i> Detalhes
                                         </a>
                                         @if ($projeto->podeSerGerenciadoPor(auth()->user()))
@@ -189,8 +189,8 @@
                                                 <i class="fa fa-edit"></i> Editar
                                             </button>
                                         @endif
-                                        @can('clockify.projetos.destroy')
-                                            <form action="{{ route('clockify.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"
+                                        @can('operacao.projetos.destroy')
+                                            <form action="{{ route('operacao.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"
                                                 onsubmit="return confirm('Deseja realmente excluir este projeto? Todos os dados vinculados serão removidos.')">
                                                 @csrf
                                                 @method('DELETE')
@@ -221,7 +221,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-modal id="projetoDrawer" icon="fas fa-project-diagram" title="Novo Projeto" formId="projeto-form" action="{{ route('clockify.projetos.store') }}">
+    <x-modal id="projetoDrawer" icon="fas fa-project-diagram" title="Novo Projeto" formId="projeto-form" action="{{ route('operacao.projetos.store') }}">
         <input type="hidden" name="id" id="projeto_id" value="{{ old('id') }}">
         <div class="form-row">
             <div class="col-12 form-group">
@@ -365,7 +365,7 @@
 
             $('#btn-create-projeto').on('click', function() {
                 $('#projetoDrawerTitle').text('Novo Projeto');
-                $('#projeto-form').attr('action', '{{ route('clockify.projetos.store') }}');
+                $('#projeto-form').attr('action', '{{ route('operacao.projetos.store') }}');
                 $('#projeto-formMethod').val('POST');
                 $('#projeto-form')[0].reset();
                 $('#projeto_id').val('');
@@ -384,7 +384,7 @@
                     $('#status-group').show();
                 @else
                     $('#projetoDrawerTitle').text('Novo Projeto');
-                    $('#projeto-form').attr('action', '{{ route('clockify.projetos.store') }}');
+                    $('#projeto-form').attr('action', '{{ route('operacao.projetos.store') }}');
                     $('#projeto-formMethod').val('POST');
                 @endif
                 $('#projetoDrawerBackdrop').addClass('show');

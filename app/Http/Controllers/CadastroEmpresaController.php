@@ -109,17 +109,14 @@ class CadastroEmpresaController extends Controller
                 ]);
             }
 
-            // Garante que o perfil "Administrador" existe com todas as permissões do sistema.
-            Regra::firstOrCreate(
-                ['name' => 'administrador', 'guard_name' => 'web'],
-                []
-            );
-            $permissaoSyncService->sync();
+            // Perfis sao vinculados a empresa: cria 'administrador' e
+            // 'usuario' ja com empresa_id da empresa recem-criada.
+            $permissaoSyncService->garantirPapeisParaEmpresa((int) $empresa->id);
 
-            $role = Regra::where('name', 'administrador')
+            $roleId = Regra::where('name', 'administrador')
                 ->where('guard_name', 'web')
-                ->first();
-            $roleId = $role?->id;
+                ->where('empresa_id', $empresa->id)
+                ->value('id');
 
             $user = User::create([
                 'nome' => $data['admin_nome'],

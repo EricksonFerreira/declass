@@ -22,7 +22,7 @@ class ClockifyTagController extends Controller
     use AtualizaFiltrosTrait;
     use FiltroTrait;
 
-    private string $nomeFiltro = 'clockify.tags';
+    private string $nomeFiltro = 'operacao.tags';
 
     public function index(Request $request, ListarTagsAction $action): View
     {
@@ -84,7 +84,7 @@ class ClockifyTagController extends Controller
     private function configurarSessao(): void
     {
         session()->put("{$this->nomeFiltro}.urlPadrao", 'tags');
-        session()->put("{$this->nomeFiltro}.rotaRedirect", 'clockify.tags.index');
+        session()->put("{$this->nomeFiltro}.rotaRedirect", 'operacao.tags.index');
     }
 
     private function obterFiltrosPrincipais(): array
@@ -118,7 +118,7 @@ class ClockifyTagController extends Controller
 
         $action->handle($validated);
 
-        return redirect()->route('clockify.tags.index')
+        return redirect()->route('operacao.tags.index')
             ->with('success', 'Tag criada com sucesso!');
     }
 
@@ -138,7 +138,7 @@ class ClockifyTagController extends Controller
             'ativo' => $request->has('ativo') ? (bool) $request->ativo : true,
         ]));
 
-        return redirect()->route('clockify.tags.index')
+        return redirect()->route('operacao.tags.index')
             ->with('success', 'Tag atualizada com sucesso!');
     }
 
@@ -162,7 +162,7 @@ class ClockifyTagController extends Controller
     {
         $action->handle((int) $id);
 
-        return redirect()->route('clockify.tags.index')
+        return redirect()->route('operacao.tags.index')
             ->with('success', 'Tag removida com sucesso!');
     }
 }

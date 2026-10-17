@@ -30,10 +30,10 @@ class UpdateUsuarioRequest extends FormRequest
                 : 0;
 
             if ($roleId <= 0) {
-                $colaboradorRole = \App\Models\Regra::where('name', 'colaborador_administrativo')
-                    ->orWhere('name', 'Colaborador Administrativo')
-                    ->first();
-                $roleId = (int) ($colaboradorRole?->id ?? 8);
+                $roleId = (int) (\App\Models\Regra::where('guard_name', 'web')
+                    ->where('empresa_id', $this->user()?->empresa_id)
+                    ->where('name', 'usuario')
+                    ->value('id') ?? 0);
             }
 
             $this->merge(['role_id' => $roleId]);

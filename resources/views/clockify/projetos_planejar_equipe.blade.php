@@ -154,7 +154,7 @@
                 <p class="mb-0">Cadastre um projeto antes de planejar a equipe.</p>
             </div>
         @else
-            <form method="GET" action="{{ route('clockify.projetos.planejar-equipe-geral') }}" class="d-flex flex-wrap align-items-end">
+            <form method="GET" action="{{ route('operacao.projetos.planejar-equipe-geral') }}" class="d-flex flex-wrap align-items-end">
                 <div class="form-group mb-2 mr-3" style="min-width: 300px; max-width: 100%;">
                     <label class="text-xs text-uppercase text-muted font-weight-bold">Projeto</label>
                     <select name="projeto_id" id="projeto-selector" class="form-control select2" required>
@@ -194,7 +194,7 @@
                     <span class="text-warning text-sm"><i class="fas fa-exclamation-triangle mr-1"></i>Nenhum cronograma com datas definidas</span>
                 @endforelse
             </div>
-            <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="btn btn-default btn-sm font-weight-bold text-secondary mt-2 mt-md-0">
+            <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="btn btn-default btn-sm font-weight-bold text-secondary mt-2 mt-md-0">
                 <i class="fas fa-arrow-left mr-1"></i> Voltar ao Projeto
             </a>
         </div>
@@ -217,7 +217,7 @@
         </h3>
     </div>
     <div class="card-body p-0">
-        <form id="form-alocacao" action="{{ route('clockify.projetos.planejar-equipe.store', $projeto->id) }}" method="POST">
+        <form id="form-alocacao" action="{{ route('operacao.projetos.planejar-equipe.store', $projeto->id) }}" method="POST">
             @csrf
             <input type="hidden" id="global-min-date" value="{{ $dataInicioGlobal }}">
             <input type="hidden" id="global-max-date" value="{{ $dataFimGlobal }}">
@@ -411,7 +411,7 @@
 
             {{-- Actions --}}
             <div class="d-flex justify-content-between align-items-center p-3 border-top bg-white" style="border-radius: 0 0 12px 12px;">
-                <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="btn btn-default font-weight-bold text-secondary">
+                <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="btn btn-default font-weight-bold text-secondary">
                     <i class="fas fa-arrow-left mr-1"></i> Cancelar
                 </a>
                 <button type="submit" class="btn btn-success font-weight-bold shadow-sm px-4">

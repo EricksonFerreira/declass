@@ -221,7 +221,12 @@ class VisibilidadeService
             return;
         }
 
-        $roleIds = DB::table('roles')->pluck('id', 'name');
+        $empresaId = (int) DB::table('users')->where('id', $liderId)->value('empresa_id');
+        if (! $empresaId) {
+            return;
+        }
+
+        $roleIds = DB::table('roles')->where('empresa_id', $empresaId)->pluck('id', 'name');
         $liderRoleId = $roleIds['lider'] ?? null;
         $administradorRoleId = $roleIds['administrador'] ?? null;
 

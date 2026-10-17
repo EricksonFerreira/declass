@@ -78,7 +78,7 @@
                                         onclick="editCliente({{ json_encode($cliente) }})">
                                         <i class="fa fa-edit mr-1"></i>Editar
                                     </button>
-                                    <form action="{{ route('clockify.clientes.destroy', $cliente->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este cliente?')">
+                                    <form action="{{ route('operacao.clientes.destroy', $cliente->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este cliente?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
@@ -119,7 +119,7 @@
                                             onclick="editCliente({{ json_encode($cliente) }})">
                                             <i class="fa fa-edit"></i> Editar
                                         </button>
-                                        <form action="{{ route('clockify.clientes.destroy', $cliente->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este cliente?')">
+                                        <form action="{{ route('operacao.clientes.destroy', $cliente->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este cliente?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
@@ -148,7 +148,7 @@
     </div>
 
     <!-- Side Drawer Component -->
-    <x-modal id="clienteDrawer" icon="fas fa-user-friends" title="Cadastrar Novo Cliente" formId="cliente-form" action="{{ route('clockify.clientes.store') }}">
+    <x-modal id="clienteDrawer" icon="fas fa-user-friends" title="Cadastrar Novo Cliente" formId="cliente-form" action="{{ route('operacao.clientes.store') }}">
         <input type="hidden" name="id" id="cliente_id" value="{{ old('id') }}">
         <div class="form-group">
             <label for="nome">Nome <span class="text-danger">*</span></label>
@@ -195,7 +195,7 @@
             
             $('#btn-create-cliente').on('click', function() {
                 $('#clienteDrawerTitle').text('Cadastrar Novo Cliente');
-                $('#cliente-form').attr('action', '{{ route('clockify.clientes.store') }}');
+                $('#cliente-form').attr('action', '{{ route('operacao.clientes.store') }}');
                 $('#cliente-formMethod').val('POST');
                 $('#cliente-form')[0].reset();
                 $('#cliente_id').val('');
@@ -212,7 +212,7 @@
                     $('#status-group').show();
                 @else
                     $('#clienteDrawerTitle').text('Cadastrar Novo Cliente');
-                    $('#cliente-form').attr('action', '{{ route('clockify.clientes.store') }}');
+                    $('#cliente-form').attr('action', '{{ route('operacao.clientes.store') }}');
                     $('#cliente-formMethod').val('POST');
                 @endif
                 $('#clienteDrawerBackdrop').addClass('show');

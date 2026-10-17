@@ -50,7 +50,7 @@
                 </select>
                 <button type="submit" class="btn btn-sm btn-outline-primary">Atualizar status</button>
             </form>
-            <a href="{{ route('clockify.projetos.show', $projeto->id) }}" class="btn btn-sm btn-outline-secondary">
+            <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="btn btn-sm btn-outline-secondary">
                 <i class="fas fa-project-diagram mr-1"></i> Ver projeto
             </a>
         </div>

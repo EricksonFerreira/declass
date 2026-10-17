@@ -21,7 +21,7 @@ class ClockifyTimeOffController extends Controller
     use AtualizaFiltrosTrait;
     use FiltroTrait;
 
-    private string $nomeFiltro = 'clockify.timeoff';
+    private string $nomeFiltro = 'operacao.timeoff';
 
     public function index(Request $request, ListarTimeOffsAction $action): View
     {
@@ -79,7 +79,7 @@ class ClockifyTimeOffController extends Controller
     private function configurarSessao(): void
     {
         session()->put("{$this->nomeFiltro}.urlPadrao", 'timeoff');
-        session()->put("{$this->nomeFiltro}.rotaRedirect", 'clockify.timeoff.index');
+        session()->put("{$this->nomeFiltro}.rotaRedirect", 'operacao.timeoff.index');
     }
 
     private function obterFiltrosPrincipais($usuarios): array
@@ -136,7 +136,7 @@ class ClockifyTimeOffController extends Controller
 
         $action->handle($validated);
 
-        return redirect()->route('clockify.timeoff.index')
+        return redirect()->route('operacao.timeoff.index')
             ->with('success', 'Solicitação de folga ou férias registrada com sucesso!');
     }
 
@@ -148,7 +148,7 @@ class ClockifyTimeOffController extends Controller
             || Auth::user()->podeGerenciarUsuario($timeoff->user_id);
 
         if (! $podeEditar) {
-            return redirect()->route('clockify.timeoff.index')
+            return redirect()->route('operacao.timeoff.index')
                 ->with('error', 'Você só pode editar solicitações próprias ou da sua equipe.');
         }
 
@@ -166,7 +166,7 @@ class ClockifyTimeOffController extends Controller
 
         $action->handle((int) $id, $validated);
 
-        return redirect()->route('clockify.timeoff.index')
+        return redirect()->route('operacao.timeoff.index')
             ->with('success', 'Solicitação de folga ou férias atualizada com sucesso!');
     }
 
@@ -180,7 +180,7 @@ class ClockifyTimeOffController extends Controller
 
         $action->handle((int) $id);
 
-        return redirect()->route('clockify.timeoff.index')
+        return redirect()->route('operacao.timeoff.index')
             ->with('success', 'Solicitação aprovada com sucesso!');
     }
 
@@ -194,7 +194,7 @@ class ClockifyTimeOffController extends Controller
 
         $action->handle((int) $id);
 
-        return redirect()->route('clockify.timeoff.index')
+        return redirect()->route('operacao.timeoff.index')
             ->with('success', 'Solicitação rejeitada com sucesso!');
     }
 
@@ -202,7 +202,7 @@ class ClockifyTimeOffController extends Controller
     {
         $action->handle((int) $id);
 
-        return redirect()->route('clockify.timeoff.index')
+        return redirect()->route('operacao.timeoff.index')
             ->with('success', 'Solicitação removida com sucesso!');
     }
 }

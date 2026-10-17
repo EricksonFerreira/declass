@@ -131,7 +131,7 @@ class ClockifyCalendarioController extends Controller
 
         $action->handle($validated);
 
-        return redirect()->route('clockify.calendario.index')
+        return redirect()->route('operacao.calendario.index')
             ->with('success', 'Alocação agendada no calendário com sucesso!');
     }
 
@@ -155,7 +155,7 @@ class ClockifyCalendarioController extends Controller
     {
         $action->handle((int) $id);
 
-        return redirect()->route('clockify.calendario.index')
+        return redirect()->route('operacao.calendario.index')
             ->with('success', 'Alocação removida com sucesso!');
     }
 }

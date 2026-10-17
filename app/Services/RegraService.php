@@ -45,7 +45,8 @@ class RegraService extends AbstractBaseService
     }
 
     /**
-     * Aplica escopo de empresa incluindo registros globais (empresa_id IS NULL).
+     * Aplica escopo de empresa: perfis sao vinculados a empresa,
+     * entao o tenant ve apenas os proprios.
      */
     protected function applyEmpresaScope($query)
     {
@@ -66,10 +67,7 @@ class RegraService extends AbstractBaseService
             throw new AccessDeniedHttpException('Empresa nao identificada para a operacao.');
         }
 
-        return $query->where(function ($q) use ($empresaId) {
-            $q->where($this->model->getTable() . '.empresa_id', $empresaId)
-              ->orWhereNull($this->model->getTable() . '.empresa_id');
-        });
+        return $query->where($this->model->getTable() . '.empresa_id', $empresaId);
     }
 
     public function getAllTiposUsuarios()
