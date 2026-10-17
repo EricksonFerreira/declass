@@ -413,14 +413,15 @@ return [
             'icon' => 'fas fa-folder-open',
             'submenu' => [
                 [
-                    'text' => 'Projetos',
-                    'route' => 'clockify.projetos.index',
-                    'icon' => 'fas fa-project-diagram',
-                ],
-                [
                     'text' => 'Clientes',
                     'route' => 'clockify.clientes.index',
                     'icon' => 'fas fa-user-friends',
+                ],
+                [
+                    'text' => 'Documentos da Empresa',
+                    'route' => 'documentos.index',
+                    'icon' => 'fas fa-folder-open',
+                    'can' => 'documentos.index',
                 ],
                 [
                     'text' => 'Equipe',
@@ -438,14 +439,10 @@ return [
                     'icon' => 'fas fa-briefcase',
                 ],
                 [
-                    'text' => 'Tags',
-                    'route' => 'clockify.tags.index',
-                    'icon' => 'fas fa-tags',
-                ],
-                [
-                    'text' => 'Usuários',
-                    'route' => 'usuario.index',
-                    'icon' => 'fas fa-user-cog',
+                    'text' => 'Importar CSV',
+                    'route' => 'importacao.index',
+                    'icon' => 'fas fa-file-import',
+                    'can' => 'importacao.index',
                 ],
                 [
                     'text' => 'Perfis de Acesso',
@@ -454,22 +451,25 @@ return [
                     'can' => 'regra.index',
                 ],
                 [
-                    'text' => 'Importar CSV',
-                    'route' => 'importacao.index',
-                    'icon' => 'fas fa-file-import',
-                    'can' => 'importacao.index',
+                    'text' => 'Projetos',
+                    'route' => 'clockify.projetos.index',
+                    'icon' => 'fas fa-project-diagram',
                 ],
                 [
-                    'text' => 'Documentos da Empresa',
-                    'route' => 'documentos.index',
-                    'icon' => 'fas fa-folder-open',
-                    'can' => 'documentos.index',
+                    'text' => 'Tags',
+                    'route' => 'clockify.tags.index',
+                    'icon' => 'fas fa-tags',
                 ],
                 [
                     'text' => 'Uso de IA',
                     'route' => 'configuracao-ia.edit',
                     'icon' => 'fas fa-chart-line',
                     'can' => 'configuracao-ia.edit',
+                ],
+                [
+                    'text' => 'Usuários',
+                    'route' => 'usuario.index',
+                    'icon' => 'fas fa-user-cog',
                 ],
             ],
         ],
