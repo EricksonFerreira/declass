@@ -15,15 +15,7 @@ class RegraService extends AbstractBaseService
 
     protected function shouldApplyEmpresaScope(): bool
     {
-        if (!SchemaCache::hasColumn($this->model->getTable(), 'empresa_id')) {
-            return false;
-        }
-
-        if (request()?->routeIs('tipo_usuario.*') || request()?->routeIs('usuario.*')) {
-            return true;
-        }
-
-        return !Auth::user()?->isSuperAdmin();
+        return SchemaCache::hasColumn($this->model->getTable(), 'empresa_id');
     }
 
     public function __construct(Regra $regra)
