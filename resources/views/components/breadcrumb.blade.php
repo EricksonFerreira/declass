@@ -27,8 +27,8 @@
             border-radius: 999px;
             padding: .3rem .95rem;
         }
-        .navbar-breadcrumb-badge .breadcrumb-item a { color: #2563eb; }
-        .navbar-breadcrumb-badge .breadcrumb-item.active { color: #1e3a8a; }
-        .navbar-breadcrumb-badge .breadcrumb-item + .breadcrumb-item::before { color: #93c5fd; }
+        .navbar-breadcrumb-badge .breadcrumb-item a { color: #4b5563; }
+        .navbar-breadcrumb-badge .breadcrumb-item.active { color: #111827; }
+        .navbar-breadcrumb-badge .breadcrumb-item + .breadcrumb-item::before { color: #9ca3af; }
     </style>
 @endsection
