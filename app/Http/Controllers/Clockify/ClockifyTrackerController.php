@@ -77,6 +77,7 @@ class ClockifyTrackerController extends Controller
 
         return view('clockify.tracker', [
             'titulo' => 'Time Tracker (Rastreador de Tempo)',
+            'tagsPorProjeto' => app(\App\Actions\Clockify\Tag\TagsPorProjetoAction::class)->ativo(),
             'activeTracker' => $activeTracker,
             'pastTrackers' => $pastTrackers,
             'projetos' => $projetos,

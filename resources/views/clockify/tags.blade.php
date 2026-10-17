@@ -49,7 +49,9 @@
                                     <div class="ux-card__avatar"><i class="fas fa-tag"></i></div>
                                     <div class="ux-card__head-info">
                                         <div class="ux-card__title">{{ $tag->nome }}</div>
-                                        <div class="ux-card__sub">Etiqueta de classificação</div>
+                                        <div class="ux-card__sub">
+                                            {{ $tagsPorProjeto ? ($tag->projeto?->nome ?? 'Global') : 'Etiqueta de classificação' }}
+                                        </div>
                                     </div>
                                     <div class="ux-card__badges">
                                         <span class="ux-card__badge ux-card__badge--{{ $tag->ativo ? 'green' : 'red' }}">
@@ -81,6 +83,9 @@
                         <thead>
                             <tr>
                                 <th>Nome</th>
+                                @if ($tagsPorProjeto)
+                                    <th>Projeto</th>
+                                @endif
                                 <th>Status</th>
                                 <th style="width: 150px;" class="text-center">Ações</th>
                             </tr>
@@ -89,6 +94,15 @@
                             @forelse ($tags as $tag)
                                 <tr>
                                     <td class="align-middle font-weight-bold">{{ $tag->nome }}</td>
+                                    @if ($tagsPorProjeto)
+                                        <td class="align-middle">
+                                            @if ($tag->clockify_projeto_id)
+                                                <span class="badge badge-info">{{ $tag->projeto?->nome }}</span>
+                                            @else
+                                                <span class="badge badge-secondary">Global</span>
+                                            @endif
+                                        </td>
+                                    @endif
                                     <td class="align-middle">
                                         <span class="badge badge-{{ $tag->ativo ? 'success' : 'danger' }}">
                                             {{ $tag->ativo ? 'Ativa' : 'Inativa' }}
@@ -108,7 +122,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="text-center text-muted py-4">
+                                    <td colspan="{{ $tagsPorProjeto ? 4 : 3 }}" class="text-center text-muted py-4">
                                         <i class="fas fa-tags fa-2x mb-2 d-block"></i>
                                         Nenhuma tag cadastrada.
                                     </td>
@@ -137,6 +151,18 @@
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
+        @if ($tagsPorProjeto)
+            <div class="form-group">
+                <label for="clockify_projeto_id">Projeto</label>
+                <select name="clockify_projeto_id" id="clockify_projeto_id" class="form-control form-control-sm">
+                    <option value="">Global (todos os projetos)</option>
+                    @foreach ($projetos as $proj)
+                        <option value="{{ $proj->id }}" @selected(old('clockify_projeto_id') == $proj->id)>{{ $proj->nome }}</option>
+                    @endforeach
+                </select>
+                <small class="text-muted">Tags de projeto aparecem no Rastreador somente quando o projeto é selecionado.</small>
+            </div>
+        @endif
         <div class="form-group" id="status-group" style="display: none;">
             <label for="ativo">Status</label>
             <select name="ativo" id="ativo" class="form-control form-control-sm">
@@ -184,6 +210,7 @@
             $('#tag_id').val(tag.id);
             $('#tag-form #nome').val(tag.nome);
             $('#tag-form #ativo').val(tag.ativo ? "1" : "0");
+            $('#tag-form #clockify_projeto_id').val(tag.clockify_projeto_id || '');
             
             $('#status-group').show();
             $('#tagDrawerBackdrop').addClass('show');

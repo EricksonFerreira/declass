@@ -126,6 +126,22 @@
                 </div>
 
                 <hr class="my-4">
+                <div class="empresa-section-title" style="font-size:.9rem;">Rastreamento de Tempo</div>
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="form-group form-group-empresa">
+                            <label class="font-weight-bold" style="font-size:.82rem;">Escopo das tags</label>
+                            <select name="tags_por_projeto" class="form-control form-control-sm">
+                                <option value="0" @selected(! old('tags_por_projeto', $empresa->tags_por_projeto))>Tags globais — todas as tags disponíveis em qualquer projeto</option>
+                                <option value="1" @selected(old('tags_por_projeto', $empresa->tags_por_projeto))>Tags por projeto — cada projeto tem suas próprias tags</option>
+                            </select>
+                            <small class="text-muted">No modo por projeto, o Rastreador exibe apenas as tags do projeto selecionado (além das globais).</small>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
 
                 <div class="d-flex justify-content-between align-items-center" style="gap:10px;flex-wrap:wrap;">
                     {{-- <a href="{{ route('empresa.minha') }}" class="btn btn-secondary btn-sm">

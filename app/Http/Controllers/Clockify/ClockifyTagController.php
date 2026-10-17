@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Clockify;
 
 use App\Http\Controllers\Controller;
+use App\Actions\Clockify\Tag\DeleteTagAction;
 use App\Actions\Clockify\Tag\ListarTagsAction;
 use App\Actions\Clockify\Tag\SaveTagAction;
+use App\Actions\Clockify\Tag\TagsPorProjetoAction;
 use App\Actions\Clockify\Tag\UpdateTagAction;
-use App\Actions\Clockify\Tag\DeleteTagAction;
+use App\Models\ClockifyProjeto;
+use App\Support\EmpresaContext;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ClockifyTagController extends Controller
@@ -27,6 +31,10 @@ class ClockifyTagController extends Controller
         $itensFiltered = session("{$this->nomeFiltro}.filtro", []);
         $perPage = session("{$this->nomeFiltro}.perPage", 15);
         $tags = $action->handle($request->search, $itensFiltered, $perPage);
+        $tagsPorProjeto = app(TagsPorProjetoAction::class)->ativo();
+        $projetos = $tagsPorProjeto
+            ? ClockifyProjeto::where('ativo', true)->orderBy('nome')->get()
+            : collect();
 
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
@@ -40,6 +48,8 @@ class ClockifyTagController extends Controller
             'additionalFilters' => $additionalFilters,
             'itensFiltered' => $itensFiltered,
             'nomeFiltro' => $this->nomeFiltro,
+            'tagsPorProjeto' => $tagsPorProjeto,
+            'projetos' => $projetos,
             'perPages' => [10, 15, 25, 50, 100],
             'perPage' => $perPage,
             'breadcrumb' => [
@@ -99,7 +109,12 @@ class ClockifyTagController extends Controller
     {
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
+            'clockify_projeto_id' => ['nullable', $this->projetoDaEmpresaRule()],
         ]);
+
+        if (! app(TagsPorProjetoAction::class)->ativo()) {
+            $validated['clockify_projeto_id'] = null;
+        }
 
         $action->handle($validated);
 
@@ -112,7 +127,12 @@ class ClockifyTagController extends Controller
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'ativo' => 'nullable|boolean',
+            'clockify_projeto_id' => ['nullable', $this->projetoDaEmpresaRule()],
         ]);
+
+        if (! app(TagsPorProjetoAction::class)->ativo()) {
+            $validated['clockify_projeto_id'] = null;
+        }
 
         $action->handle((int) $id, array_merge($validated, [
             'ativo' => $request->has('ativo') ? (bool) $request->ativo : true,
@@ -120,6 +140,22 @@ class ClockifyTagController extends Controller
 
         return redirect()->route('clockify.tags.index')
             ->with('success', 'Tag atualizada com sucesso!');
+    }
+
+    /**
+     * Restringe o projeto vinculado a tag aos projetos do tenant atual.
+     */
+    private function projetoDaEmpresaRule(): \Illuminate\Validation\Rules\Exists
+    {
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? auth()->user()?->empresa_id;
+
+        $rule = Rule::exists('clockify_projetos', 'id');
+
+        if ($empresaId) {
+            $rule->where('empresa_id', $empresaId);
+        }
+
+        return $rule;
     }
 
     public function destroy($id, DeleteTagAction $action): RedirectResponse

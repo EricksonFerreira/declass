@@ -475,6 +475,51 @@
 
             initSelect2();
 
+            @if ($tagsPorProjeto)
+            // Modo "tags por projeto": cada select de tags exibe apenas as
+            // tags globais + as do projeto selecionado no select pareado.
+            const ALL_TAGS = @json($tags->map(fn ($t) => ['id' => $t->id, 'nome' => $t->nome, 'projeto' => $t->clockify_projeto_id])->values());
+
+            function rebuildTagOptions($tagSel, projetoId, emptyShowsAll) {
+                var allowed = ALL_TAGS.filter(function (t) {
+                    if (emptyShowsAll && !projetoId) return true;
+                    return !t.projeto || String(t.projeto) === String(projetoId || '');
+                });
+                var selected = ($tagSel.val() || []).map(String);
+                $tagSel.empty();
+                allowed.forEach(function (t) {
+                    $tagSel.append(new Option(t.nome, t.id, false, selected.indexOf(String(t.id)) !== -1));
+                });
+                if ($tagSel.hasClass('select2-hidden-accessible')) {
+                    $tagSel.trigger('change.select2');
+                }
+            }
+
+            // Pares projeto -> tags dentro de cada form (iniciar/parar rastreador
+            // e filtro do historico, que usa name="project_id").
+            $('form').each(function () {
+                var $form = $(this);
+                var $tags = $form.find('select[name="tags[]"]');
+                if (! $tags.length) return;
+
+                var $proj = $form.find('select[name="clockify_projeto_id"], select[name="project_id"]');
+                if (! $proj.length) return;
+
+                var emptyShowsAll = $proj.attr('name') === 'project_id';
+                rebuildTagOptions($tags, $proj.val(), emptyShowsAll);
+                $proj.on('change', function () {
+                    rebuildTagOptions($tags, $(this).val(), emptyShowsAll);
+                });
+            });
+
+            // Edicao inline no historico: troca de projeto refiltra as tags da linha
+            $('.tracker-inline-project').each(function () {
+                rebuildTagOptions($(this).closest('tr').find('.tracker-inline-tags'), $(this).val(), false);
+            }).on('change', function () {
+                rebuildTagOptions($(this).closest('tr').find('.tracker-inline-tags'), $(this).val(), false);
+            });
+            @endif
+
             // Autocomplete update function for past trackers
             var trackerUpdateUrlTemplate = "{{ route('clockify.tracker.update', ['id' => '__ID__']) }}";
 

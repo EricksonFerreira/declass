@@ -2,6 +2,7 @@
 
 namespace App\Actions\Clockify\Tracker;
 
+use App\Actions\Clockify\Tag\TagsPorProjetoAction;
 use App\Models\ClockifyTimeTracker;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,6 +21,9 @@ class IniciarTrackerAction
             'user_id' => $userId,
             'inicio' => now(),
         ]));
+
+        $tagIds = app(TagsPorProjetoAction::class)
+            ->filtrar($tagIds, $tracker->clockify_projeto_id ? (int) $tracker->clockify_projeto_id : null);
 
         if (!empty($tagIds)) {
             $tracker->tags()->sync($tagIds);

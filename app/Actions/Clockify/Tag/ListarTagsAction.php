@@ -11,6 +11,7 @@ class ListarTagsAction
     public function handle(?string $search, array $filtros = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = ClockifyTag::query()
+            ->with('projeto')
             ->when($search, function ($query, $search) {
                 $query->where('nome', 'like', "%{$search}%");
             });

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Clockify\Tracker;
 
+use App\Actions\Clockify\Tag\TagsPorProjetoAction;
 use App\Models\ClockifyTimeTracker;
 
 class UpdateTrackerAction
@@ -32,6 +33,17 @@ class UpdateTrackerAction
 
         if (! empty($updateData)) {
             $tracker->update($updateData);
+        }
+
+        $tagsPorProjeto = app(TagsPorProjetoAction::class);
+        if ($tagsPorProjeto->ativo()) {
+            // Projeto trocado sem novas tags: remove tags que nao pertencem
+            // ao novo projeto (mantem as globais).
+            $tagIds ??= $tracker->tags()->pluck('clockify_tags.id')->all();
+            $tagIds = $tagsPorProjeto->filtrar(
+                $tagIds,
+                $tracker->clockify_projeto_id ? (int) $tracker->clockify_projeto_id : null
+            );
         }
 
         if ($tagIds !== null) {
