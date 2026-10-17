@@ -8,14 +8,13 @@
 @stop
 
 @section('css')
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 <style>
     /* =====================================================
        PADRÃO VISUAL DO SISTEMA (mesmo da tela de projeto)
     ===================================================== */
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f6f9; }
+    body { background-color: #f4f6f9; }
 
     .dash-card {
         border-radius: 12px;
@@ -32,8 +31,8 @@
         position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s;
     }
     .dash-kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
-    .dash-kpi__label { font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#64748b; margin:0 0 6px; }
-    .dash-kpi__value { font-family:'Plus Jakarta Sans',sans-serif; font-size:26px; font-weight:800; color:#0f172a; line-height:1.1; margin:0; letter-spacing:-.02em; }
+    .dash-kpi__label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#64748b; margin:0 0 6px; }
+    .dash-kpi__value { font-size:26px; font-weight:800; color:#0f172a; line-height:1.1; margin:0; letter-spacing:-.02em; }
     .dash-kpi__sub { font-size:12px; color:#94a3b8; margin:4px 0 0; }
     .dash-kpi__icon { position:absolute; top:16px; right:16px; width:40px; height:40px; border-radius:10px; background:var(--accent-soft, #e0f5fa); display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--accent, #0891b2); }
     .c-teal { --accent:#0891b2; --accent-soft:#e0f5fa; }

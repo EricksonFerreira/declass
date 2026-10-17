@@ -9,12 +9,11 @@
 
 @section('css')
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Incluir Select2 CSS e Tema Bootstrap 4 -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f6f9; }
+    body { background-color: #f4f6f9; }
     
     /* Clockify-like Tracker Bar */
     .tracker-bar-card {

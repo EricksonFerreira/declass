@@ -8,7 +8,6 @@
 @stop
 
 @section('css')
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 <style>
@@ -19,8 +18,8 @@
         position: relative; overflow: hidden;
     }
     .prod-kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--accent, #0891b2); }
-    .prod-kpi__label { font-family:'Plus Jakarta Sans',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#64748b; margin:0 0 4px; }
-    .prod-kpi__value { font-family:'Plus Jakarta Sans',sans-serif; font-size:20px; font-weight:800; color:#0f172a; line-height:1.1; margin:0; }
+    .prod-kpi__label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#64748b; margin:0 0 4px; }
+    .prod-kpi__value { font-size:20px; font-weight:800; color:#0f172a; line-height:1.1; margin:0; }
     .prod-kpi__sub { font-size:11px; color:#94a3b8; margin:3px 0 0; }
 
     .chart-wrap { position: relative; height: 180px; }

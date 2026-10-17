@@ -20,9 +20,8 @@
 @stop
 
 @section('css')
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-    body { background-color: #f4f6f9; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: #f4f6f9; }
     
     /* Tabs Navigation Style Clockify */
     .clockify-tabs { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px; background: #fff; padding: 10px 16px 0; border-radius: 12px 12px 0 0; }
@@ -54,7 +53,7 @@
     }
     .proj-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background: var(--proj-color, #6c757d); }
     .proj-card__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .proj-card__name { font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; font-weight:700; color:#1a1d2e; margin:0; }
+    .proj-card__name { font-size:15px; font-weight:700; color:#1a1d2e; margin:0; }
     
     .proj-card__metric { display: flex; justify-content: space-between; font-size: 13px; color: #64748b; margin-bottom: 6px; }
     .proj-card__metric strong { color: #1a1d2e; }
@@ -98,7 +97,7 @@
         <!-- ============================================== -->
         <!-- VISÃO FOCADA: STATUS INDIVIDUAL DO PROJETO -->
         <!-- ============================================== -->
-        <h3 class="font-weight-bold text-dark mb-4" style="font-family:'Plus Jakarta Sans',sans-serif; letter-spacing: -0.02em;">
+        <h3 class="font-weight-bold text-dark mb-4" style="letter-spacing: -0.02em;">
             <i class="fas fa-circle mr-2" style="font-size: 14px; color: {{ $project->cor ?? '#6c757d' }};"></i> {{ $project->nome }}
             <!-- Abas do Projeto Clockify Style -->
         <div class="clockify-tabs">
@@ -378,7 +377,7 @@
         </div>
 
         <!-- Cards de Projetos Ativos -->
-        <p class="dash-section-title" style="font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#94a3b8; margin:28px 0 14px; display:flex; align-items:center; gap:10px;">
+        <p class="dash-section-title" style="font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#94a3b8; margin:28px 0 14px; display:flex; align-items:center; gap:10px;">
             Projetos com Horas no Período
             <span style="flex:1; height:1px; background:#e2e5ef;"></span>
         </p>

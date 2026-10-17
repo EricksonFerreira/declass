@@ -100,7 +100,7 @@
     </div>
 
     <!-- POPOVER DE DETALHES DO EVENTO - DESIGN PREMIUM -->
-    <div id="clockify-event-popover" class="ck-popover d-none" style="position: absolute; z-index: 9999; width: 310px; font-family:'Plus Jakarta Sans',sans-serif;">
+    <div id="clockify-event-popover" class="ck-popover d-none" style="position: absolute; z-index: 9999; width: 310px; ">
         <!-- Header colorido por projeto -->
         <div class="ck-pop-header" id="popover-header">
             <div class="ck-pop-header-top">
@@ -145,12 +145,11 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
     <!-- FullCalendar CSS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <style>
         /* =====================================================
            PADRÃO VISUAL DO SISTEMA (mesmo da tela de projeto)
         ===================================================== */
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f6f9; }
+        body { background-color: #f4f6f9; }
 
         .cal-card {
             border-radius: 12px;
@@ -177,7 +176,7 @@
         /* =====================================================
            FULLCALENDAR BASE
         ===================================================== */
-        .fc { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; }
+        .fc { font-size: 13px; }
         .fc-theme-standard td, .fc-theme-standard th { border-color: var(--ck-border); }
         .fc-timegrid-slots td { height: 44px !important; }
         .fc-timeGridThreeDay-view .fc-timegrid-slots td { height: 58px !important; }

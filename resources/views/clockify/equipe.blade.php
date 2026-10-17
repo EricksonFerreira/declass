@@ -6,16 +6,15 @@
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
     <div class="d-flex justify-content-between align-items-center mb-3">
         <x-page-title :title="$titulo" />
-        <div class="badge badge-info py-2 px-3 shadow-sm border" id="autorefresh-indicator" style="border-radius: 20px; font-family:'Plus Jakarta Sans',sans-serif; font-size:12px;">
+        <div class="badge badge-info py-2 px-3 shadow-sm border" id="autorefresh-indicator" style="border-radius: 20px; font-size:12px;">
             <i class="fas fa-sync fa-spin mr-2"></i> Autorefresh ativo: <span id="countdown">10</span>s
         </div>
     </div>
 @stop
 
 @section('css')
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-    body { background-color: #f4f6f9; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: #f4f6f9; }
     
     .clockify-tabs { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px; background: #fff; padding: 10px 16px 0; border-radius: 12px 12px 0 0; }
     .clockify-tab-btn {
@@ -33,12 +32,12 @@
     }
     .clockify-card-summary:hover { transform: translateY(-2px); }
     .clockify-card-summary__label {
-        font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px;
+        font-size: 11px;
         font-weight: 700; text-transform: uppercase; color: #94a3b8;
         letter-spacing: 0.08em; margin-bottom: 6px;
     }
     .clockify-card-summary__value {
-        font-family: 'Plus Jakarta Sans', sans-serif; font-size: 28px;
+        font-size: 28px;
         font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.02em;
     }
 
@@ -47,7 +46,7 @@
         padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
     .chart-container-large__title {
-        font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px;
+        font-size: 14px;
         font-weight: 800; color: #1e293b; margin-bottom: 20px;
         display: flex; align-items: center; gap: 8px;
     }
@@ -61,7 +60,7 @@
     }
     .eq-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--status-color, #94a3b8); }
     .eq-card__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .eq-card__name { font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700; color:#1a1d2e; margin:0; }
+    .eq-card__name { font-size:14px; font-weight:700; color:#1a1d2e; margin:0; }
     
     .status-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
     .status-badge.tracking { background: #dcfce7; color: #166534; }
@@ -287,7 +286,7 @@
         </div>
 
         <!-- Status da Equipe -->
-        <p class="dash-section-title" style="font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#94a3b8; margin:28px 0 14px; display:flex; align-items:center; gap:10px;">
+        <p class="dash-section-title" style="font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#94a3b8; margin:28px 0 14px; display:flex; align-items:center; gap:10px;">
             Todos os Membros da Equipe
             <span style="flex:1; height:1px; background:#e2e5ef;"></span>
         </p>

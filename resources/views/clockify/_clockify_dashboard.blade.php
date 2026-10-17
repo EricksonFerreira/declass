@@ -68,7 +68,7 @@
 @endphp
 
 {{-- ══ CLOCKIFY DASHBOARD ══ --}}
-<div style="font-family: 'Plus Jakarta Sans', sans-serif; margin-bottom: 28px;">
+<div style="margin-bottom: 28px;">
 
     {{-- Header --}}
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
