@@ -9,37 +9,73 @@
 @section('content')
 @php
     $grupoMeta = [
-        'reserva'      => ['label' => 'Reservas',       'icon' => 'fas fa-calendar-check',      'color' => '#4b80ff'],
-        'veiculo'      => ['label' => 'Veículos',        'icon' => 'fas fa-car',                 'color' => '#28a745'],
-        'usuario'      => ['label' => 'Usuários',        'icon' => 'fas fa-users',               'color' => '#17a2b8'],
-        'permissao'    => ['label' => 'Permissões',      'icon' => 'fas fa-key',                 'color' => '#e0a800'],
-        'regra'        => ['label' => 'Regras',          'icon' => 'fas fa-shield-alt',          'color' => '#e0a800'],
-        'multa'        => ['label' => 'Multas',          'icon' => 'fas fa-file-invoice-dollar', 'color' => '#dc3545'],
-        'movimentacao' => ['label' => 'Movimentações',   'icon' => 'fas fa-exchange-alt',        'color' => '#6c757d'],
-        'financeiro'   => ['label' => 'Financeiro',      'icon' => 'fas fa-dollar-sign',         'color' => '#28a745'],
-        'calcao'       => ['label' => 'Caução',          'icon' => 'fas fa-hand-holding-usd',    'color' => '#28a745'],
-        'empresa'      => ['label' => 'Empresa',         'icon' => 'fas fa-building',            'color' => '#343a40'],
-        'modelo'       => ['label' => 'Modelos',         'icon' => 'fas fa-car-side',            'color' => '#6c757d'],
-        'nfse'         => ['label' => 'NFS-e',           'icon' => 'fas fa-file-alt',            'color' => '#343a40'],
-        'pagamento'    => ['label' => 'Pagamento',       'icon' => 'fas fa-credit-card',         'color' => '#28a745'],
-        'dashboard'    => ['label' => 'Dashboard',       'icon' => 'fas fa-chart-bar',           'color' => '#17a2b8'],
-        '_outros'      => ['label' => 'Outros',          'icon' => 'fas fa-ellipsis-h',          'color' => '#6c757d'],
+        'clockify'     => ['label' => 'Declock',          'icon' => 'fas fa-clock',           'color' => '#4b80ff'],
+        'usuario'      => ['label' => 'Usuários',         'icon' => 'fas fa-users',           'color' => '#0ea5e9'],
+        'regra'        => ['label' => 'Perfis de Acesso', 'icon' => 'fas fa-user-shield',     'color' => '#7c3aed'],
+        'permissao'    => ['label' => 'Permissões',       'icon' => 'fas fa-key',             'color' => '#e0a800'],
+        'importacao'   => ['label' => 'Importação',       'icon' => 'fas fa-file-import',     'color' => '#f59e0b'],
+        'documentos'   => ['label' => 'Documentos',       'icon' => 'fas fa-folder-open',     'color' => '#10b981'],
+        'dashboard'    => ['label' => 'Dashboard',        'icon' => 'fas fa-chart-bar',       'color' => '#06b6d4'],
+        'home'         => ['label' => 'Painel',           'icon' => 'fas fa-chart-pie',       'color' => '#64748b'],
+        'empresa'      => ['label' => 'Empresa',          'icon' => 'fas fa-building',        'color' => '#334155'],
+        'assinatura'   => ['label' => 'Assinatura',       'icon' => 'fas fa-file-signature',  'color' => '#ec4899'],
+        'licitacoes'   => ['label' => 'Licitações',       'icon' => 'fas fa-gavel',           'color' => '#a855f7'],
+        'relatorios'   => ['label' => 'Relatórios',       'icon' => 'fas fa-chart-line',      'color' => '#14b8a6'],
+        'relatorio'    => ['label' => 'Relatórios',       'icon' => 'fas fa-chart-line',      'color' => '#14b8a6'],
+        'onboarding'   => ['label' => 'Onboarding',       'icon' => 'fas fa-rocket',          'color' => '#f97316'],
+        'comandos'     => ['label' => 'Comandos',         'icon' => 'fas fa-terminal',        'color' => '#475569'],
+        'planos'       => ['label' => 'Planos',           'icon' => 'fas fa-layer-group',     'color' => '#8b5cf6'],
+        '_outros'      => ['label' => 'Outros',           'icon' => 'fas fa-ellipsis-h',      'color' => '#6c757d'],
+    ];
+
+    $featureLabel = [
+        'calendario'    => 'Calendário',
+        'clientes'      => 'Clientes',
+        'projetos'      => 'Projetos',
+        'tags'          => 'Tags',
+        'times'         => 'Equipes',
+        'timeoff'       => 'Folgas e Férias',
+        'timesheet'     => 'Planilha de Horas',
+        'tracker'       => 'Rastreador',
+        'funcoes'       => 'Funções',
+        'relatorios'    => 'Relatórios',
+        'equipe'        => 'Equipe',
+        'produtividade' => 'Produtividade',
     ];
 
     $acaoBadge = [
-        'index'   => ['Listar',    '#4b80ff'],
-        'show'    => ['Ver',       '#17a2b8'],
-        'create'  => ['Criar',     '#28a745'],
-        'store'   => ['Salvar',    '#28a745'],
-        'edit'    => ['Editar',    '#e0a800'],
-        'update'  => ['Atualizar', '#e0a800'],
-        'destroy' => ['Excluir',   '#dc3545'],
-        'delete'  => ['Excluir',   '#dc3545'],
+        'index'         => ['Listar',          '#4b80ff'],
+        'show'          => ['Ver',             '#0ea5e9'],
+        'create'        => ['Criar',           '#10b981'],
+        'store'         => ['Salvar',          '#10b981'],
+        'edit'          => ['Editar',          '#f59e0b'],
+        'update'        => ['Atualizar',       '#f59e0b'],
+        'destroy'       => ['Excluir',         '#ef4444'],
+        'delete'        => ['Excluir',         '#ef4444'],
+        'filtro'        => ['Filtrar',         '#64748b'],
+        'removerFiltro' => ['Limpar filtro',   '#64748b'],
+        'setPerPage'    => ['Itens/página',    '#64748b'],
+        'start'         => ['Iniciar',         '#10b981'],
+        'stop'          => ['Parar',           '#ef4444'],
+        'manual'        => ['Manual',          '#8b5cf6'],
+        'save'          => ['Salvar',          '#10b981'],
+        'mover'         => ['Mover',           '#0ea5e9'],
+        'approve'       => ['Aprovar',         '#10b981'],
+        'reject'        => ['Rejeitar',        '#ef4444'],
+        'export'        => ['Exportar',        '#06b6d4'],
+        'exportar'      => ['Exportar',        '#06b6d4'],
     ];
 
-    $totalPerms  = $regra->permissoes->count();
-    $groupedPerms = $regra->permissoes->groupBy(fn($p) => $p->grupo_efetivo ?: '_outros');
-    $totalGrupos  = $groupedPerms->count();
+    $totalPerms   = $regra->permissoes->count();
+
+    // Árvore: módulo -> funcionalidade -> permissões
+    $arvore = $regra->permissoes
+        ->sortBy('name')
+        ->groupBy(fn ($p) => $p->grupo_efetivo ?: '_outros')
+        ->map(fn ($perms) => $perms->groupBy(fn ($p) => count(explode('.', $p->name)) >= 3 ? explode('.', $p->name)[1] : '_geral'));
+
+    $totalGrupos    = $arvore->count();
+    $totalFeatures  = $arvore->sum(fn ($g) => $g->count());
 @endphp
 
 <div class="container-fluid px-0">
@@ -52,7 +88,7 @@
                     <i class="fas fa-shield-alt"></i>
                 </div>
                 <div>
-                    <div class="module-header-eyebrow">Configuração &bull; Regras de Acesso</div>
+                    <div class="module-header-eyebrow">Gerenciar &bull; Perfis de Acesso</div>
                     <h1 class="module-header-title">{{ $regra->name }}</h1>
                     <p class="module-header-sub">
                         Guard: <strong style="color:#93c5fd">{{ $regra->guard_name }}</strong>
@@ -75,7 +111,7 @@
     {{-- ════ GRID PRINCIPAL ════ --}}
     <div class="row">
 
-        {{-- ── Coluna esquerda: permissões agrupadas ── --}}
+        {{-- ── Coluna esquerda: árvore de permissões ── --}}
         <div class="col-lg-8">
 
             @if($regra->permissoes->isEmpty())
@@ -83,7 +119,7 @@
                     <div class="config-block">
                         <div class="empty-state">
                             <i class="fas fa-key"></i>
-                            <p>Esta regra ainda não possui permissões atribuídas.</p>
+                            <p>Este perfil ainda não possui permissões atribuídas.</p>
                             <a href="{{ route('regra.edit', $regra->id) }}" class="btn-xp btn-xp--sm mt-2">
                                 <i class="fas fa-plus mr-1"></i>Atribuir permissões
                             </a>
@@ -91,42 +127,76 @@
                     </div>
                 </div>
             @else
-                @foreach($groupedPerms as $grupo => $perms)
-                    @php
-                        $gm  = $grupoMeta[$grupo] ?? $grupoMeta['_outros'];
-                        $hex = $gm['color'];
-                    @endphp
-                    <div class="config-card mb-3">
-                        <div class="config-block">
-                            <div class="config-block-label" style="border-left: 3px solid {{ $hex }}; padding-left: .75rem;">
-                                <i class="{{ $gm['icon'] }}" style="color:{{ $hex }}"></i>
-                                <div>
-                                    <strong style="color:{{ $hex }}">{{ $gm['label'] }}</strong>
-                                    <span>{{ $perms->count() }} permissão{{ $perms->count() !== 1 ? 'ões' : '' }}</span>
+                <div class="d-flex justify-content-end mb-2" style="gap:6px">
+                    <button type="button" class="btn btn-xs btn-outline-secondary" id="expandAll">
+                        <i class="fas fa-expand-alt mr-1"></i>Expandir tudo
+                    </button>
+                    <button type="button" class="btn btn-xs btn-outline-secondary" id="collapseAll">
+                        <i class="fas fa-compress-alt mr-1"></i>Recolher tudo
+                    </button>
+                </div>
+
+                <div class="config-card mb-4">
+                    @foreach($arvore as $grupo => $features)
+                        @php
+                            $gm  = $grupoMeta[$grupo] ?? ['label' => ucfirst(str_replace(['_', '-'], ' ', $grupo)), 'icon' => 'fas fa-puzzle-piece', 'color' => '#6c757d'];
+                            $hex = $gm['color'];
+                            $modId = 'rg-mod-' . $loop->index;
+                            $modTotal = $features->sum(fn ($f) => $f->count());
+                        @endphp
+                        <div class="rg-tree-mod">
+                            <button type="button" class="rg-tree-mod__head" data-toggle="collapse"
+                                data-target="#{{ $modId }}" aria-expanded="true" style="border-left-color:{{ $hex }}">
+                                <i class="{{ $gm['icon'] }} rg-tree-mod__icon" style="color:{{ $hex }}"></i>
+                                <span class="rg-tree-mod__label">{{ $gm['label'] }}</span>
+                                <span class="rg-tree-mod__count" style="background:{{ $hex }}18;color:{{ $hex }}">
+                                    {{ $modTotal }} permissã{{ $modTotal !== 1 ? 'ões' : 'o' }}
+                                </span>
+                                <i class="fas fa-chevron-down rg-tree-mod__chev"></i>
+                            </button>
+
+                            <div id="{{ $modId }}" class="collapse show">
+                                <div class="rg-tree-mod__body">
+                                    @foreach($features as $feature => $perms)
+                                        @php
+                                            $featId = $modId . '-' . $loop->index;
+                                            $featNome = $featureLabel[$feature] ?? ($feature === '_geral' ? 'Geral' : ucfirst(str_replace(['_', '-'], ' ', $feature)));
+                                        @endphp
+                                        <div class="rg-tree-feat">
+                                            <button type="button" class="rg-tree-feat__head" data-toggle="collapse"
+                                                data-target="#{{ $featId }}" aria-expanded="true">
+                                                <i class="fas fa-chevron-down rg-tree-feat__chev"></i>
+                                                <span class="rg-tree-feat__label">{{ $featNome }}</span>
+                                                <span class="rg-tree-feat__count">{{ $perms->count() }}</span>
+                                            </button>
+                                            <div id="{{ $featId }}" class="collapse show">
+                                                <div class="rg-tree-perms">
+                                                    @foreach($perms as $p)
+                                                        @php
+                                                            $partesNome = explode('.', $p->name);
+                                                            $acao = count($partesNome) >= 3 ? end($partesNome) : $partesNome[1] ?? $p->name;
+                                                            [$acaoLabel, $acaoColor] = $acaoBadge[$acao] ?? [ucfirst(str_replace(['_', '-'], ' ', $acao)), '#6c757d'];
+                                                        @endphp
+                                                        <div class="rg-show-perm-item">
+                                                            <span class="rg-show-perm-item__badge"
+                                                                  style="background:{{ $acaoColor }}1a;color:{{ $acaoColor }};border-color:{{ $acaoColor }}40">
+                                                                {{ $acaoLabel }}
+                                                            </span>
+                                                            <div class="rg-show-perm-item__info">
+                                                                <span class="rg-show-perm-item__desc">{{ $p->descricao ?: $acaoLabel }}</span>
+                                                                <span class="rg-show-perm-item__name">{{ $p->name }}</span>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
-
-                            <div class="rg-show-perms-grid">
-                                @foreach($perms as $p)
-                                    @php
-                                        $acao = str_contains($p->name, '.') ? explode('.', $p->name)[1] : $p->name;
-                                        [$acaoLabel, $acaoColor] = $acaoBadge[$acao] ?? [$acao, '#6c757d'];
-                                    @endphp
-                                    <div class="rg-show-perm-item">
-                                        <span class="rg-show-perm-item__badge"
-                                              style="background:{{ $acaoColor }}20;color:{{ $acaoColor }};border-color:{{ $acaoColor }}40">
-                                            {{ $acaoLabel }}
-                                        </span>
-                                        <div class="rg-show-perm-item__info">
-                                            <span class="rg-show-perm-item__desc">{{ $p->descricao ?: $p->name }}</span>
-                                            <span class="rg-show-perm-item__name">{{ $p->name }}</span>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             @endif
 
         </div>
@@ -144,15 +214,15 @@
                     <div class="veiculo-acoes-grid">
                         <a href="{{ route('regra.edit', $regra->id) }}" class="veiculo-acao veiculo-acao--primary">
                             <i class="fas fa-pen"></i>
-                            <span>Editar regra</span>
+                            <span>Editar perfil</span>
                         </a>
                         <a href="{{ route('regra.index') }}" class="veiculo-acao">
                             <i class="fas fa-list"></i>
-                            <span>Ver todas</span>
+                            <span>Ver todos</span>
                         </a>
                         <a href="{{ route('regra.create') }}" class="veiculo-acao">
                             <i class="fas fa-plus"></i>
-                            <span>Nova regra</span>
+                            <span>Novo perfil</span>
                         </a>
                     </div>
                 </div>
@@ -165,7 +235,7 @@
                         <i class="fas fa-info-circle"></i>
                         <div>
                             <strong>Resumo</strong>
-                            <span>Visão geral da regra</span>
+                            <span>Visão geral do perfil</span>
                         </div>
                     </div>
                     <div class="veiculo-summary">
@@ -174,16 +244,24 @@
                             <strong>#{{ $regra->id }}</strong>
                         </div>
                         <div class="veiculo-summary__row">
+                            <span>Tipo</span>
+                            <strong>{{ is_null($regra->empresa_id) ? 'Padrão (global)' : 'Empresa' }}</strong>
+                        </div>
+                        <div class="veiculo-summary__row">
                             <span>Guard</span>
                             <strong>{{ $regra->guard_name }}</strong>
                         </div>
                         <div class="veiculo-summary__row">
-                            <span>Total de permissões</span>
+                            <span>Permissões</span>
                             <strong class="text-primary">{{ $totalPerms }}</strong>
                         </div>
                         <div class="veiculo-summary__row">
-                            <span>Módulos cobertos</span>
+                            <span>Módulos</span>
                             <strong class="text-info">{{ $totalGrupos }}</strong>
+                        </div>
+                        <div class="veiculo-summary__row">
+                            <span>Funcionalidades</span>
+                            <strong class="text-info">{{ $totalFeatures }}</strong>
                         </div>
                         <div class="veiculo-summary__row">
                             <span>Criado em</span>
@@ -208,15 +286,15 @@
                         </div>
                     </div>
                     <div class="rg-show-modulos">
-                        @foreach($groupedPerms as $grupo => $perms)
+                        @foreach($arvore as $grupo => $features)
                             @php
-                                $gm  = $grupoMeta[$grupo] ?? $grupoMeta['_outros'];
+                                $gm  = $grupoMeta[$grupo] ?? ['label' => ucfirst($grupo), 'icon' => 'fas fa-puzzle-piece', 'color' => '#6c757d'];
                                 $hex = $gm['color'];
                             @endphp
-                            <div class="rg-show-modulo-chip" style="background:{{ $hex }}15;border-color:{{ $hex }}30">
+                            <div class="rg-show-modulo-chip" style="background:{{ $hex }}12;border-color:{{ $hex }}30">
                                 <i class="{{ $gm['icon'] }}" style="color:{{ $hex }}"></i>
                                 <span style="color:{{ $hex }}">{{ $gm['label'] }}</span>
-                                <span class="rg-show-modulo-chip__count" style="background:{{ $hex }};color:#fff">{{ $perms->count() }}</span>
+                                <span class="rg-show-modulo-chip__count" style="background:{{ $hex }};color:#fff">{{ $features->sum(fn ($f) => $f->count()) }}</span>
                             </div>
                         @endforeach
                     </div>
@@ -230,14 +308,48 @@
 
 @section('css')
 <style>
-/* ── Grid de permissões ── */
-.rg-show-perms-grid {
-    display: flex;
-    flex-direction: column;
-    gap: .4rem;
-    margin-top: .75rem;
+/* ── Árvore de permissões ── */
+.rg-tree-mod + .rg-tree-mod { border-top: 1px solid #eef2f8; }
+
+.rg-tree-mod__head {
+    display: flex; align-items: center; gap: .6rem; width: 100%;
+    background: #fbfcff; border: none; border-left: 3px solid transparent;
+    padding: .8rem 1.1rem; cursor: pointer; text-align: left;
+}
+.rg-tree-mod__head:hover { background: #f4f7fd; }
+.rg-tree-mod__icon { font-size: 1rem; width: 20px; text-align: center; }
+.rg-tree-mod__label { font-size: .88rem; font-weight: 700; color: #1e293b; }
+.rg-tree-mod__count {
+    font-size: .7rem; font-weight: 700; padding: .12rem .5rem; border-radius: 10px;
+}
+.rg-tree-mod__chev { margin-left: auto; font-size: .7rem; color: #94a3b8; transition: transform .2s; }
+.rg-tree-mod__head[aria-expanded="false"] .rg-tree-mod__chev { transform: rotate(-90deg); }
+
+.rg-tree-mod__body { padding: .35rem 1.1rem .9rem 1.6rem; }
+
+/* ── Nó de funcionalidade ── */
+.rg-tree-feat__head {
+    display: flex; align-items: center; gap: .45rem; width: 100%;
+    background: none; border: none; padding: .45rem .55rem;
+    border-radius: 8px; cursor: pointer; text-align: left;
+}
+.rg-tree-feat__head:hover { background: #f4f7fd; }
+.rg-tree-feat__chev { font-size: .62rem; color: #8ca0b8; transition: transform .2s; }
+.rg-tree-feat__head[aria-expanded="false"] .rg-tree-feat__chev { transform: rotate(-90deg); }
+.rg-tree-feat__label { font-size: .8rem; font-weight: 600; color: #334155; }
+.rg-tree-feat__count {
+    margin-left: auto; font-size: .68rem; font-weight: 700;
+    background: #eef2f9; color: #4b80ff; padding: .05rem .42rem; border-radius: 10px;
 }
 
+.rg-tree-perms {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: .4rem;
+    padding: .25rem 0 .6rem 1.3rem;
+}
+
+/* ── Item de permissão ── */
 .rg-show-perm-item {
     display: flex;
     align-items: center;
@@ -489,4 +601,24 @@
 .empty-state i { font-size: 2.5rem; margin-bottom: .75rem; display: block; }
 .empty-state p { font-size: .9rem; margin: 0; }
 </style>
+@stop
+
+@section('js')
+<script>
+    (function () {
+        var heads = document.querySelectorAll('.rg-tree-mod__head, .rg-tree-feat__head');
+        var targets = [];
+        heads.forEach(function (h) {
+            var sel = h.getAttribute('data-target');
+            if (sel) targets.push(sel);
+        });
+
+        document.getElementById('expandAll')?.addEventListener('click', function () {
+            targets.forEach(function (sel) { $(sel).collapse('show'); });
+        });
+        document.getElementById('collapseAll')?.addEventListener('click', function () {
+            targets.forEach(function (sel) { $(sel).collapse('hide'); });
+        });
+    })();
+</script>
 @stop
