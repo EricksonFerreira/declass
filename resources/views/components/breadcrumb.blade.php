@@ -27,8 +27,8 @@
             border-radius: 999px;
             padding: .3rem .95rem;
         }
-        .navbar-breadcrumb-badge .breadcrumb-item a { color: #4b5563; }
+        .navbar-breadcrumb-badge .breadcrumb-item a { color: #374151; }
         .navbar-breadcrumb-badge .breadcrumb-item.active { color: #111827; }
-        .navbar-breadcrumb-badge .breadcrumb-item + .breadcrumb-item::before { color: #9ca3af; }
+        .navbar-breadcrumb-badge .breadcrumb-item + .breadcrumb-item::before { color: #6b7280; }
     </style>
 @endsection
