@@ -19,4 +19,9 @@ class Regra extends Model
     {
         return $this->belongsToMany(Permissao::class, 'role_has_permissions', 'role_id', 'permission_id');
     }
+
+    public function empresa()
+    {
+        return $this->belongsTo(Empresa::class, 'empresa_id');
+    }
 }

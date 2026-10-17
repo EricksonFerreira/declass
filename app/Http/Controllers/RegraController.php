@@ -50,7 +50,7 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $regras = $this->regraService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['permissoes'], 'name', 'asc');
+        $regras = $this->regraService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['permissoes', 'empresa'], 'name', 'asc');
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Perfis de Acesso');
         $filters = $this->obterFiltrosPrincipais();
@@ -95,7 +95,7 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
 
     public function show($id)
     {
-        $regra = $this->regraService->getById($id, ['permissoes']);
+        $regra = $this->regraService->getById($id, ['permissoes', 'empresa']);
         if (! $regra) {
             abort(404, 'Perfil de acesso não encontrado.');
         }

@@ -165,9 +165,9 @@
                                     </div>
                                     <div class="ux-card__badges">
                                         @if (is_null($regra->empresa_id))
-                                            <span class="ux-card__badge ux-card__badge--gray">Padrão</span>
+                                            <span class="ux-card__badge ux-card__badge--gray" title="Disponível para todas as empresas">Padrão</span>
                                         @else
-                                            <span class="ux-card__badge ux-card__badge--blue">Empresa</span>
+                                            <span class="ux-card__badge ux-card__badge--blue" title="Perfil exclusivo desta empresa">{{ $regra->empresa->nome ?? 'Empresa' }}</span>
                                         @endif
                                     </div>
                                 </div>
@@ -252,7 +252,7 @@
                                 <tr>
                                     <th style="width: 60px;">#</th>
                                     <th>Nome</th>
-                                    <th>Tipo</th>
+                                    <th>Empresa</th>
                                     <th>Guard</th>
                                     <th>Permissões</th>
                                     <th>Módulos</th>
@@ -270,7 +270,7 @@
                                         <td class="align-middle font-weight-bold">{{ $regra->name }}</td>
                                         <td class="align-middle">
                                             <span class="badge badge-{{ is_null($regra->empresa_id) ? 'secondary' : 'primary' }}">
-                                                {{ is_null($regra->empresa_id) ? 'Padrão' : 'Empresa' }}
+                                                {{ is_null($regra->empresa_id) ? 'Padrão (todas)' : ($regra->empresa->nome ?? 'Empresa') }}
                                             </span>
                                         </td>
                                         <td class="align-middle"><span class="badge badge-light border">{{ $regra->guard_name }}</span></td>

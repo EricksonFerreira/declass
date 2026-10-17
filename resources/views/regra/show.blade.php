@@ -244,8 +244,8 @@
                             <strong>#{{ $regra->id }}</strong>
                         </div>
                         <div class="veiculo-summary__row">
-                            <span>Tipo</span>
-                            <strong>{{ is_null($regra->empresa_id) ? 'Padrão (global)' : 'Empresa' }}</strong>
+                            <span>Empresa</span>
+                            <strong>{{ is_null($regra->empresa_id) ? 'Padrão (todas)' : ($regra->empresa->nome ?? '#'.$regra->empresa_id) }}</strong>
                         </div>
                         <div class="veiculo-summary__row">
                             <span>Guard</span>
