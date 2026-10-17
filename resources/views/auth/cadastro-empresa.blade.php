@@ -393,8 +393,8 @@ document.getElementById('empresa_telefone')?.addEventListener('input', function 
     if (v.length > 11) v = v.slice(0, 11);
     var m = '';
     if (v.length > 0) m = '(' + v.slice(0, 2);
-    if (v.length > 2) m += ') ' + v.slice(2, 7);
-    if (v.length > 7) m += '-' + v.slice(7, 11);
+    if (v.length > 2) m += ') ' + (v.length > 10 ? v.slice(2, 7) : v.slice(2, 6));
+    if (v.length > 6) m += '-' + (v.length > 10 ? v.slice(7, 11) : v.slice(6, 10));
     this.value = m;
     if (v.length > 0) {
         if (!validarTelefone(v)) mostrarErro(this, 'Telefone invalido. Use (XX) XXXXX-XXXX.');

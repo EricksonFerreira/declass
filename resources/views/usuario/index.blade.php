@@ -686,7 +686,15 @@
 
             // Load masks if available
             if (typeof $.fn.mask !== 'undefined') {
-                $('#drawer_celular').mask('(00) 0000-00009');
+                var foneMask = function (val) {
+                    return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
+                };
+                var foneOpts = {
+                    onKeyPress: function (val, e, field, options) {
+                        field.mask(foneMask.apply({}, arguments), options);
+                    }
+                };
+                $('#drawer_celular').mask(foneMask, foneOpts);
             }
 
             function abrirDrawer(titulo, action, method, data = null) {

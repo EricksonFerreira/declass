@@ -183,7 +183,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     <script>
         $(function() {
-            $('#cliente-form #telefone').mask('(00) 00000-0000');
+            var foneMask = function (val) {
+                return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
+            };
+            var foneOpts = {
+                onKeyPress: function (val, e, field, options) {
+                    field.mask(foneMask.apply({}, arguments), options);
+                }
+            };
+            $('#cliente-form #telefone').mask(foneMask, foneOpts);
             
             $('#btn-create-cliente').on('click', function() {
                 $('#clienteDrawerTitle').text('Cadastrar Novo Cliente');
