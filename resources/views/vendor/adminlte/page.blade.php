@@ -79,6 +79,24 @@
     @yield('js')
 
     <script src="{{ asset('js/sweetAlert.min.js') }}"></script>
+    <script src="{{ asset('js/form-ux.js') }}"></script>
+    @if ($errors->any())
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const validationErrors = @json($errors->all());
+                if (typeof Swal === 'undefined' || typeof Swal.fire !== 'function' || !validationErrors.length) return;
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Não foi possível salvar. Verifique os campos:',
+                    html: '<ul style="text-align:left;margin:0;padding-left:1.2rem;">' +
+                        validationErrors.map(function (e) { return '<li>' + e + '</li>'; }).join('') +
+                        '</ul>',
+                    confirmButtonText: 'OK',
+                });
+            });
+        </script>
+    @endif
     @if (session('success') || session('error'))
         <script>
             document.addEventListener('DOMContentLoaded', function () {

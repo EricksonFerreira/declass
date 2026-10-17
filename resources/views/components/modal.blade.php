@@ -32,7 +32,7 @@
 
             <div class="ux-modal-footer">
                 <button type="button" class="btn btn-light" id="cancel{{ $id }}">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="submit" class="btn btn-success"><i class="fas fa-save mr-1"></i> Salvar</button>
             </div>
         </form>
     </div>

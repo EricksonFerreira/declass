@@ -29,9 +29,11 @@
 
             <!-- Page Content -->
             <main>
+                @include('partials.form-errors-banner')
                 @yield('content')
             </main>
         </div>
+        <script src="{{ asset('js/form-ux.js') }}"></script>
         @stack('js')
     </body>
 </html>

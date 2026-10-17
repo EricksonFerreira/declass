@@ -29,7 +29,7 @@
 
         <div class="side-drawer-footer text-right">
             <button type="button" class="btn btn-secondary mr-2" id="cancel{{ $id }}">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button type="submit" class="btn btn-success"><i class="fas fa-save mr-1"></i> Salvar</button>
         </div>
     </form>
 </div>

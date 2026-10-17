@@ -55,4 +55,6 @@
 @section('adminlte_js')
     @stack('js')
     @yield('js')
+
+    <script src="{{ asset('js/form-ux.js') }}"></script>
 @stop

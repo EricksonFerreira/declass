@@ -154,9 +154,11 @@
     </nav>
 
     <main class="onb-main">
+        @include('partials.form-errors-banner')
         @yield('content')
     </main>
 </div>
+<script src="{{ asset('js/form-ux.js') }}"></script>
 @stack('scripts')
 </body>
 </html>

@@ -487,7 +487,497 @@
                     <p class="fhead__sub">Preencha os dados abaixo para se registrar.</p>
                 </div>
 
-                <form method="POST" action="{{ route('register') }}" novalidate>
+                !DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php
+        $registerEmpresa = null;
+        $registerTitle = config('adminlte.title', 'Sistema');
+        $registerBrandColor = '#1e4fd8';
+        $registerLogoUrl = null;
+        $registerPoweredLogoUrl = asset('assets/imgs/logo.png');
+
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('empresas')) {
+                $host = \App\Support\DomainNormalizer::normalize(request()->getHost());
+                if ($host) {
+                    $registerEmpresa = \App\Models\Empresa::query()
+                        ->withoutGlobalScopes()
+                        ->where('ativo', 'S')
+                        ->whereNotNull('dominio')
+                        ->get()
+                        ->first(function (\App\Models\Empresa $empresa) use ($host) {
+                            return \App\Support\DomainNormalizer::normalize($empresa->dominio) === $host;
+                        });
+                }
+            }
+        } catch (\Throwable $e) {
+            $registerEmpresa = null;
+        }
+
+        if ($registerEmpresa) {
+            $registerTitle = (string) ($registerEmpresa->nome ?: $registerTitle);
+            $registerBrandColor = (string) ($registerEmpresa->cor_primaria ?: $registerBrandColor);
+            $registerLogoUrl = $registerEmpresa->logo_url ?? null;
+        }
+
+        $hex = ltrim(trim((string) $registerBrandColor), '#');
+        $registerBrandContrast = '#FFFFFF';
+        if (preg_match('/^[A-Fa-f0-9]{6}$/', $hex)) {
+            $r = hexdec(substr($hex, 0, 2));
+            $g = hexdec(substr($hex, 2, 2));
+            $b = hexdec(substr($hex, 4, 2));
+            $brightness = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+            $registerBrandContrast = $brightness >= 155 ? '#0F172A' : '#FFFFFF';
+        }
+    @endphp
+    <title>{{ $registerTitle }} - Criar conta</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand: {{ $registerBrandColor }};
+            --brand-contrast: {{ $registerBrandContrast }};
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: color-mix(in srgb, var(--brand) 6%, #f0f2f6 94%);
+            color: #111827;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 560px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+
+        .logo__img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            display: block;
+            border-radius: 11px;
+            filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .06));
+        }
+
+        .logo__name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #111827;
+            letter-spacing: -.02em;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 18px;
+            width: 100%;
+            box-shadow:
+                0 0 0 1px rgba(0, 0, 0, .05),
+                0 4px 6px rgba(0, 0, 0, .04),
+                0 16px 48px rgba(0, 0, 0, .09);
+            overflow: hidden;
+        }
+
+        .card__body {
+            padding: 2.25rem 2.375rem 2rem;
+        }
+
+        .card__footer {
+            border-top: 1px solid #f3f4f6;
+            padding: 1.1rem 2.375rem;
+            text-align: center;
+            font-size: .8rem;
+            color: #9ca3af;
+        }
+
+        .card__footer a {
+            color: var(--brand);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .card__footer a:hover {
+            text-decoration: underline;
+        }
+
+        .fhead {
+            margin-bottom: 1.5rem;
+        }
+
+        .fhead__title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #111827;
+            letter-spacing: -.025em;
+            line-height: 1.3;
+            margin-bottom: .3rem;
+        }
+
+        .fhead__sub {
+            font-size: .8rem;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+
+        .flash {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            padding: .7rem .9rem;
+            border-radius: 9px;
+            font-size: .8rem;
+            margin-bottom: 1rem;
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .section-label {
+            font-size: .7rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin: 1.35rem 0 .875rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #f3f4f6;
+        }
+
+        .row {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .row--1 {
+            grid-template-columns: 1fr;
+        }
+
+        .row--2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .row--3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        @media (max-width: 520px) {
+            .row--2,
+            .row--3 {
+                grid-template-columns: 1fr;
+            }
+
+            .card__body {
+                padding: 1.75rem 1.375rem 1.5rem;
+            }
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: .35rem;
+        }
+
+        .field__label {
+            font-size: .775rem;
+            font-weight: 500;
+            color: #374151;
+            letter-spacing: .005em;
+        }
+
+        .field__label .req {
+            color: #e53e3e;
+            margin-left: 1px;
+        }
+
+        .field__label small {
+            color: #6b7280;
+            font-size: .72rem;
+        }
+
+        .label-tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+        .label-tooltip__icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            border: 1px solid color-mix(in srgb, var(--brand) 28%, #cbd5e1 72%);
+            color: color-mix(in srgb, var(--brand) 80%, #111827 20%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .68rem;
+            font-weight: 700;
+            line-height: 1;
+            cursor: help;
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .label-tooltip__bubble {
+            position: absolute;
+            left: 0;
+            top: calc(100% + .45rem);
+            z-index: 30;
+            min-width: 220px;
+            max-width: 280px;
+            padding: .65rem .75rem;
+            border-radius: 10px;
+            background: #111827;
+            color: #fff;
+            font-size: .76rem;
+            line-height: 1.35;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, .2);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-4px);
+            transition: opacity .15s ease, transform .15s ease;
+        }
+
+        .label-tooltip__bubble::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 14px;
+            width: 10px;
+            height: 10px;
+            background: #111827;
+            transform: rotate(45deg);
+        }
+
+        .label-tooltip:hover .label-tooltip__bubble,
+        .label-tooltip:focus-within .label-tooltip__bubble {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrap__icon {
+            position: absolute;
+            left: .85rem;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            pointer-events: none;
+            transition: color .15s;
+            flex-shrink: 0;
+        }
+
+        .input-wrap:focus-within .input-wrap__icon {
+            color: var(--brand);
+        }
+
+        .input {
+            width: 100%;
+            height: 43px;
+            padding: 0 2.6rem 0 2.55rem;
+            font-size: .855rem;
+            font-family: 'Inter', sans-serif;
+            color: #111827;
+            background: #f8f9fc;
+            border: 1.5px solid #e9eaee;
+            border-radius: 10px;
+            outline: none;
+            transition: border-color .15s, background .15s, box-shadow .15s;
+            -webkit-appearance: none;
+        }
+
+        .input--no-icon {
+            padding-left: .875rem;
+        }
+
+        .input::placeholder {
+            color: #c5ccd7;
+        }
+
+        .input:hover {
+            border-color: #d1d5db;
+            background: #f3f4f8;
+        }
+
+        .input:focus {
+            border-color: var(--brand);
+            background: #fff;
+            box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--brand) 12%, transparent 88%);
+        }
+
+        .field--error .input {
+            border-color: #f05252;
+            background: #fef7f7;
+        }
+
+        .field--error .input:focus {
+            box-shadow: 0 0 0 3.5px rgba(240, 82, 82, .1);
+        }
+
+        .field--error .input-wrap__icon {
+            color: #f05252;
+        }
+
+        .field__error {
+            font-size: .75rem;
+            color: #e53e3e;
+            line-height: 1.4;
+        }
+
+        .eye-btn {
+            position: absolute;
+            right: .7rem;
+            background: none;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            color: #c5ccd7;
+            display: flex;
+            align-items: center;
+            border-radius: 6px;
+            transition: color .15s, background .15s;
+        }
+
+        .eye-btn:hover {
+            color: #6b7280;
+            background: #f3f4f6;
+        }
+
+        .postal-spinner {
+            position: absolute;
+            right: .75rem;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #e9eaee;
+            border-top-color: var(--brand);
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn {
+            width: 100%;
+            height: 44px;
+            margin-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            background: var(--brand);
+            color: #fff;
+            font-size: .875rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: .01em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background .15s, transform .1s, box-shadow .15s;
+            box-shadow:
+                0 1px 3px color-mix(in srgb, var(--brand) 30%, transparent 70%),
+                0 4px 14px color-mix(in srgb, var(--brand) 20%, transparent 80%);
+        }
+
+        .btn:hover {
+            background: color-mix(in srgb, var(--brand) 82%, #000 18%);
+            transform: translateY(-1px);
+            box-shadow:
+                0 2px 6px color-mix(in srgb, var(--brand) 35%, transparent 65%),
+                0 8px 22px color-mix(in srgb, var(--brand) 22%, transparent 78%);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            background: color-mix(in srgb, var(--brand) 72%, #000 28%);
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="wrap">
+        <div class="logo">
+            @if(!empty($registerLogoUrl))
+                <img class="logo__img" src="{{ $registerLogoUrl }}" alt="Logo {{ $registerTitle }}">
+            @else
+                <img class="logo__img" src="{{ $registerPoweredLogoUrl }}" alt="Logo {{ $registerTitle }}">
+            @endif
+            <span class="logo__name">{{ $registerTitle }}</span>
+        </div>
+
+        <div class="card">
+            <div class="card__body">
+                @if (session('status'))
+                    <div class="flash">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                            <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"></circle>
+                            <path d="M4 6.5l2 2 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        {{ session('status') }}
+                    </div>
+                @endif
+
+                <div class="fhead">
+                    <h1 class="fhead__title">Criar nova conta</h1>
+                    <p class="fhead__sub">Preencha os dados abaixo para se registrar.</p>
+                </div>
+
+                @include('partials.form-errors-banner')
+<form method="POST" action="{{ route('register') }}" novalidate>
                     @csrf
 
                     <div class="section-label">Dados pessoais</div>
@@ -825,5 +1315,6 @@
     }
 }());
 </script>
+<script src="{{ asset('js/form-ux.js') }}"></script>
 </body>
 </html>
