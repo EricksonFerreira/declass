@@ -116,8 +116,12 @@ class VisibilidadeService
         $ids = $this->idsVisiveis($user);
 
         $query = User::orderBy('nome');
-        if ($user->empresa_id) {
-            $query->where('empresa_id', $user->empresa_id);
+        // Para admin a empresa certa e a do contexto resolvido (pode estar
+        // administrando outra empresa pela sessao), nao a do proprio cadastro.
+        $empresaContexto = app(\App\Support\EmpresaContext::class)->empresaId()
+            ?? $user->empresa_id;
+        if ($empresaContexto) {
+            $query->where('empresa_id', $empresaContexto);
         }
         if ($ids !== null) {
             $query->whereIn('id', $ids);
