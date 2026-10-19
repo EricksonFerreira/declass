@@ -181,9 +181,10 @@
                         <input type="number" step="0.01" min="0" name="valor_faturado" id="valor_faturado" class="form-control form-control-sm font-weight-bold" value="{{ $selectedCronograma->valor_faturado ?? 0.00 }}">
                     </div>
 
-                    <div class="mb-3 d-flex justify-content-between align-items-center">
-                        <span class="text-sm text-muted">Orçamento de Horas:</span>
-                        <span class="calc-value text-primary">{{ number_format($selectedCronograma->horas_orcadas ?? 0, 1, ',', '.') }} h</span>
+                    <!-- Orçamento de horas contratado para a etapa -->
+                    <div class="form-group mb-3">
+                        <label for="horas_orcadas" class="text-xs text-bold text-muted mb-1"><i class="fas fa-hourglass-half text-info mr-1"></i> Orçamento de Horas (h)</label>
+                        <input type="number" step="0.5" min="0" name="horas_orcadas" id="horas_orcadas" class="form-control form-control-sm font-weight-bold" value="{{ $selectedCronograma->horas_orcadas ?? 0 }}">
                     </div>
                     <div class="mb-4 d-flex justify-content-between align-items-center">
                         <span class="text-sm text-muted">Valor Orçado Total:</span>
@@ -244,7 +245,9 @@
 
 @section('js')
 <script>
-    const budgetedHours = parseFloat("{{ $selectedCronograma ? $selectedCronograma->horas_orcadas : 0 }}") || 0.0;
+    function getBudgetedHours() {
+        return parseFloat($('#horas_orcadas').val()) || 0.0;
+    }
     const existingData = {!! json_encode($existingPlanning) !!};
 
     $(document).ready(function() {
@@ -254,7 +257,7 @@
         }
 
         // Recalculate everything when Hourly Rate is changed
-        $('#valor_hora').on('input change', function() {
+        $('#valor_hora, #horas_orcadas').on('input change', function() {
             calculateTotals();
         });
     });
@@ -405,6 +408,7 @@
             $(this).closest('tr').find('.daily-cost-preview').text('R$ ' + cost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
         });
 
+        const budgetedHours = getBudgetedHours();
         const totalCost = totalHours * hourlyRate;
         const totalBudgetedCost = budgetedHours * hourlyRate;
 

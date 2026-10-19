@@ -290,6 +290,7 @@ class ClockifyProjetoController extends Controller
             'planejamento.*.eh_extra' => 'nullable|boolean',
             'valor_hora' => 'nullable|numeric|min:0',
             'valor_faturado' => 'nullable|numeric|min:0',
+            'horas_orcadas' => 'nullable|numeric|min:0',
             'status' => 'required|in:valido,invalido,rascunho',
         ]);
 
@@ -298,9 +299,10 @@ class ClockifyProjetoController extends Controller
         $planejamentosData = $request->input('planejamento');
         $valorHora = $request->input('valor_hora');
         $valorFaturado = $request->input('valor_faturado');
+        $horasOrcadas = $request->input('horas_orcadas');
         $status = $request->input('status');
 
-        \DB::transaction(function () use ($projeto, $cronograma, $planejamentosData, $valorHora, $valorFaturado, $status) {
+        \DB::transaction(function () use ($projeto, $cronograma, $planejamentosData, $valorHora, $valorFaturado, $horasOrcadas, $status) {
             $cronograma->planejamentos()->delete();
 
             $insertData = [];
@@ -339,6 +341,7 @@ class ClockifyProjetoController extends Controller
                 'data_fim' => $maxDate,
                 'valor_hora' => $valorHora,
                 'valor_faturado' => $valorFaturado ?? 0.00,
+                'horas_orcadas' => $horasOrcadas ?? $cronograma->horas_orcadas,
                 'status' => $status,
             ]);
 

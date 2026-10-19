@@ -87,7 +87,7 @@
                                     <i class="fas fa-user-shield mr-1"></i>{{ $roleLabel }}
                                 </span> --}}
                                 <span class="profile-badge profile-badge--soft">
-                                    <i class="fas fa-circle-info mr-1"></i>Visualização apenas
+                                    <i class="fas fa-pen mr-1"></i>Dados de contato editáveis
                                 </span>
                             </div>
                         </div>
@@ -119,6 +119,39 @@
                         <span class="profile-info-card__value">{{ $info['value'] }}</span>
                     </div>
                 @endforeach
+            </section>
+
+            <section class="profile-action card">
+                <div class="card-body p-4">
+                    <span class="profile-action__eyebrow">Dados de contato</span>
+                    <form action="{{ route('profile.update') }}" method="POST" class="mt-3">
+                        @csrf
+                        @method('PUT')
+                        <div class="row">
+                            <div class="col-md-4 form-group">
+                                <label class="text-xs text-muted font-weight-bold">Telefone</label>
+                                <input type="text" name="telefone" class="form-control @error('telefone') is-invalid @enderror"
+                                    value="{{ old('telefone', $user->telefone) }}" placeholder="(00) 0000-0000">
+                                @error('telefone') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="text-xs text-muted font-weight-bold">Celular</label>
+                                <input type="text" name="celular" class="form-control @error('celular') is-invalid @enderror"
+                                    value="{{ old('celular', $user->celular) }}" placeholder="(00) 00000-0000">
+                                @error('celular') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="text-xs text-muted font-weight-bold">Cidade</label>
+                                <input type="text" name="cidade" class="form-control @error('cidade') is-invalid @enderror"
+                                    value="{{ old('cidade', $user->cidade) }}" placeholder="Sua cidade">
+                                @error('cidade') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary font-weight-bold">
+                            <i class="fas fa-save mr-1"></i> Salvar
+                        </button>
+                    </form>
+                </div>
             </section>
 
             {{-- <section class="profile-action card">

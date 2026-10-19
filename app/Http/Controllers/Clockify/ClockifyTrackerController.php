@@ -210,8 +210,8 @@ class ClockifyTrackerController extends Controller
     public function timesheet(Request $request): View
     {
         $weekOffset = (int) $request->input('week', 0);
-        $startOfWeek = Carbon::now()->startOfWeek()->addWeeks($weekOffset);
-        $endOfWeek = (clone $startOfWeek)->endOfWeek();
+        $startOfWeek = Carbon::now()->startOfWeek(Carbon::MONDAY)->addWeeks($weekOffset);
+        $endOfWeek = (clone $startOfWeek)->endOfWeek(Carbon::SUNDAY);
 
         $weekDays = [];
         for ($i = 0; $i < 7; $i++) {
@@ -316,7 +316,7 @@ class ClockifyTrackerController extends Controller
     public function timesheetSave(Request $request, SaveTimesheetAction $action): RedirectResponse
     {
         $weekOffset = (int) $request->input('week', 0);
-        $startOfWeek = Carbon::now()->startOfWeek()->addWeeks($weekOffset);
+        $startOfWeek = Carbon::now()->startOfWeek(Carbon::MONDAY)->addWeeks($weekOffset);
 
         $hoursInput = $request->input('hours', []);
         $visibilidade = app(\App\Services\VisibilidadeService::class);

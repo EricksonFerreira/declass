@@ -54,7 +54,7 @@
                 ({{ $fmtPct($totais['pct']) }}). Novas horas aumentam o estouro.
             </div>
         </div>
-    @elseif (($totais['pct'] ?? 0) >= 80 || ($previsao['dias'] ?? 99) <= 10)
+    @elseif (($totais['pct'] ?? 0) >= 80 || (($previsao['dias'] ?? 99) <= 10 && ($totais['pct'] ?? 0) >= 50))
         <div class="alert alert-warning d-flex align-items-center" style="gap:.6rem;">
             <i class="fas fa-exclamation-triangle fa-lg"></i>
             <div>

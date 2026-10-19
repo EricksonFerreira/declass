@@ -22,6 +22,8 @@ class PapeisPermissoesSeeder extends Seeder
 {
     private const PAPEL_ADMIN = 'administrador';
 
+    private const PAPEL_EQUIPE = 'equipe';
+
     private const PAPEL_USUARIO = 'usuario';
 
     /**
@@ -39,7 +41,6 @@ class PapeisPermissoesSeeder extends Seeder
         'operacao.timesheet.save',
         'operacao.timesheet.copiar',
         'escopo.proprio',
-        'escopo.equipe',
         'operacao.calendario.index',
         'operacao.calendario.store',
         'operacao.timeoff.index',
@@ -75,6 +76,15 @@ class PapeisPermissoesSeeder extends Seeder
         'home.projetos',
     ];
 
+    /**
+     * Perfil 'equipe' (lideres/membros com visao de time): mesma matriz do
+     * usuario + escopo.equipe, que libera ver dados das equipes lideradas.
+     */
+    public static function permissoesEquipe(): array
+    {
+        return array_merge(self::PERMISSOES_USUARIO, ['escopo.equipe']);
+    }
+
     public function run(): void
     {
         $this->garantirPapeis();
@@ -88,7 +98,7 @@ class PapeisPermissoesSeeder extends Seeder
         $empresaIds = DB::table('empresas')->pluck('id');
 
         foreach ($empresaIds as $empresaId) {
-            foreach ([self::PAPEL_ADMIN, self::PAPEL_USUARIO] as $nome) {
+            foreach ([self::PAPEL_ADMIN, self::PAPEL_USUARIO, self::PAPEL_EQUIPE] as $nome) {
                 DB::table('roles')->updateOrInsert(
                     ['name' => $nome, 'guard_name' => 'web', 'empresa_id' => $empresaId],
                     ['created_at' => now(), 'updated_at' => now()]
@@ -103,20 +113,26 @@ class PapeisPermissoesSeeder extends Seeder
             ->where('guard_name', 'web')
             ->pluck('id', 'name');
 
-        $ids = collect(self::PERMISSOES_USUARIO)
+        $this->sincronizarMatrizPapel(self::PAPEL_USUARIO, self::PERMISSOES_USUARIO, $permissaoIds);
+        $this->sincronizarMatrizPapel(self::PAPEL_EQUIPE, self::permissoesEquipe(), $permissaoIds);
+    }
+
+    private function sincronizarMatrizPapel(string $papel, array $permissoes, $permissaoIds): void
+    {
+        $ids = collect($permissoes)
             ->map(fn ($nome) => $permissaoIds[$nome] ?? null)
             ->filter()
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->values();
 
-        $faltantes = collect(self::PERMISSOES_USUARIO)->filter(fn ($n) => ! isset($permissaoIds[$n]))->values();
+        $faltantes = collect($permissoes)->filter(fn ($n) => ! isset($permissaoIds[$n]))->values();
         if ($faltantes->isNotEmpty()) {
-            $this->command?->warn('Permissoes inexistentes para '.self::PAPEL_USUARIO.': '.$faltantes->implode(', '));
+            $this->command?->warn('Permissoes inexistentes para '.$papel.': '.$faltantes->implode(', '));
         }
 
         $roleIds = DB::table('roles')
-            ->where('name', self::PAPEL_USUARIO)
+            ->where('name', $papel)
             ->where('guard_name', 'web')
             ->pluck('id');
 
@@ -133,7 +149,7 @@ class PapeisPermissoesSeeder extends Seeder
             DB::table('role_has_permissions')->insert($pivots);
         }
 
-        $this->command?->info('Papel '.self::PAPEL_USUARIO.": {$ids->count()} permissoes sincronizadas em {$roleIds->count()} perfil(is).");
+        $this->command?->info('Papel '.$papel.": {$ids->count()} permissoes sincronizadas em {$roleIds->count()} perfil(is).");
     }
 
     private function remapearUsuarios(): void
@@ -146,7 +162,7 @@ class PapeisPermissoesSeeder extends Seeder
             ->groupBy('empresa_id')
             ->map(fn ($roles) => $roles->keyBy(fn ($r) => mb_strtolower($r->name)));
 
-        $padroes = [self::PAPEL_ADMIN, self::PAPEL_USUARIO];
+        $padroes = [self::PAPEL_ADMIN, self::PAPEL_USUARIO, self::PAPEL_EQUIPE];
 
         // Usuarios em papeis globais migram para o papel equivalente da empresa.
         $globais = DB::table('roles')

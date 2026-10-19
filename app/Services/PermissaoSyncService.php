@@ -239,6 +239,8 @@ class PermissaoSyncService
                 && ! str_starts_with($permissionName, 'documentos.'),
             'usuario' => fn (string $permissionName) =>
                 in_array($permissionName, PapeisPermissoesSeeder::PERMISSOES_USUARIO, true),
+            'equipe' => fn (string $permissionName) =>
+                in_array($permissionName, PapeisPermissoesSeeder::permissoesEquipe(), true),
         ];
     }
 

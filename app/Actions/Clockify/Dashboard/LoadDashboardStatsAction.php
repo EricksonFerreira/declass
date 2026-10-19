@@ -26,7 +26,7 @@ class LoadDashboardStatsAction
 
         $now = Carbon::now();
         $todayStart = (clone $now)->startOfDay();
-        $weekStart = (clone $now)->startOfWeek();
+        $weekStart = (clone $now)->startOfWeek(Carbon::MONDAY);
         $monthStart = (clone $now)->startOfMonth();
 
         // 1. Absolute KPIs for the target user
@@ -42,7 +42,7 @@ class LoadDashboardStatsAction
         };
 
         $hoursToday = $getLoggedHours($todayStart, (clone $now)->endOfDay());
-        $hoursThisWeek = $getLoggedHours($weekStart, (clone $now)->endOfWeek());
+        $hoursThisWeek = $getLoggedHours($weekStart, (clone $now)->endOfWeek(Carbon::SUNDAY));
         $hoursThisMonth = $getLoggedHours($monthStart, (clone $now)->endOfMonth());
 
         // 2. Parse Date filters

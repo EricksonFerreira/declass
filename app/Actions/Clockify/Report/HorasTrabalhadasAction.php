@@ -39,7 +39,7 @@ class HorasTrabalhadasAction
             'linhas' => $linhas,
             'totais' => [
                 'horas' => round($linhas->sum('segundos') / 3600, 2),
-                'projetos' => $linhas->pluck('clockify_projeto_id')->unique()->count(),
+                'projetos' => $linhas->pluck('clockify_projeto_id')->filter()->unique()->count(),
                 'colaboradores' => $linhas->pluck('user_id')->unique()->count(),
             ],
             'chart' => [

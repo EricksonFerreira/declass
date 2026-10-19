@@ -25,6 +25,19 @@ class ProfileController extends Controller
         ]);
     }
 
+    public function update(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'telefone' => ['nullable', 'string', 'max:30'],
+            'celular' => ['nullable', 'string', 'max:30'],
+            'cidade' => ['nullable', 'string', 'max:120'],
+        ]);
+
+        $request->user()->update($data);
+
+        return redirect()->route('profile.edit')->with('success', 'Dados de contato atualizados com sucesso.');
+    }
+
     public function editPassword(Request $request)
     {
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Meu Perfil', 'profile.edit', 'Alterar Senha');

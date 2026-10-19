@@ -157,12 +157,17 @@ class ClockifyTimeOffController extends Controller
     {
         $timeoff = \App\Models\ClockifyTimeOff::findOrFail($id);
 
-        $podeEditar = (int) $timeoff->user_id === (int) Auth::id()
-            || Auth::user()->podeGerenciarUsuario($timeoff->user_id);
+        $ehDono = (int) $timeoff->user_id === (int) Auth::id();
+        $ehGerente = Auth::user()->podeGerenciarUsuario($timeoff->user_id);
 
-        if (! $podeEditar) {
+        if (! $ehDono && ! $ehGerente) {
             return redirect()->route('operacao.timeoff.index')
                 ->with('error', 'Você só pode editar solicitações próprias ou da sua equipe.');
+        }
+
+        if (! $ehGerente && $timeoff->status !== 'pendente') {
+            return redirect()->route('operacao.timeoff.index')
+                ->with('error', 'Solicitação já ' . $timeoff->status . ' não pode ser alterada.');
         }
 
         $validated = $request->validate([
@@ -213,6 +218,17 @@ class ClockifyTimeOffController extends Controller
 
     public function destroy($id, DeleteTimeOffAction $action): RedirectResponse
     {
+        $timeoff = \App\Models\ClockifyTimeOff::findOrFail($id);
+
+        $ehDono = (int) $timeoff->user_id === (int) Auth::id();
+        $ehGerente = Auth::user()->podeGerenciarUsuario($timeoff->user_id);
+        $podeRemover = $ehGerente || ($ehDono && $timeoff->status === 'pendente');
+
+        if (! $podeRemover) {
+            return redirect()->route('operacao.timeoff.index')
+                ->with('error', 'Você só pode remover solicitações pendentes próprias ou registros da sua equipe.');
+        }
+
         $action->handle((int) $id);
 
         return redirect()->route('operacao.timeoff.index')

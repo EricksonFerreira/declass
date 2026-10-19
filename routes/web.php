@@ -135,6 +135,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
 
     Route::middleware('auth')->group(function (): void {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::get('/profile/senha', [ProfileController::class, 'editPassword'])->name('profile.password.edit');
         Route::put('/profile/senha', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
         Route::get('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordEdit'])->name('profile.force-password.edit');

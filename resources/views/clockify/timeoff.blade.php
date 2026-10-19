@@ -93,7 +93,7 @@
                                             </form>
                                         @endcan
                                     @endif
-                                    @if ($to->user_id === auth()->id() || auth()->user()->podeGerenciarUsuario($to->user_id))
+                                    @if (auth()->user()->podeGerenciarUsuario($to->user_id) || ($to->user_id === auth()->id() && strtolower($to->status ?? '') === 'pendente'))
                                         @can('operacao.timeoff.update')
                                             <button type="button" class="btn btn-xs btn-warning btn-edit-timeoff"
                                                 data-id="{{ $to->id }}"
@@ -172,7 +172,7 @@
                                                 </form>
                                             @endcan
                                         @endif
-                                        @if ($to->user_id === auth()->id() || auth()->user()->podeGerenciarUsuario($to->user_id))
+                                        @if (auth()->user()->podeGerenciarUsuario($to->user_id) || ($to->user_id === auth()->id() && strtolower($to->status ?? '') === 'pendente'))
                                             @can('operacao.timeoff.update')
                                                 <button type="button" class="btn btn-xs btn-info mr-1 btn-edit-timeoff"
                                                     data-id="{{ $to->id }}"
