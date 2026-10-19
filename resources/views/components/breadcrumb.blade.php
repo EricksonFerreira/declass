@@ -29,9 +29,11 @@
         }
         .main-header .navbar-breadcrumb-badge,
         .main-header .navbar-breadcrumb-badge .breadcrumb-item { font-weight: 700 !important; }
-        .main-header .navbar-breadcrumb-badge .breadcrumb-item,
+        /* Links: preto puro */
         .main-header .navbar-breadcrumb-badge .breadcrumb-item a { color: #000 !important; font-weight: 700 !important; opacity: 1 !important; }
-        .main-header .navbar-breadcrumb-badge .breadcrumb-item.active { color: #000 !important; font-weight: 700 !important; }
+        /* Item atual e itens sem link: cinza mais claro */
+        .main-header .navbar-breadcrumb-badge .breadcrumb-item,
+        .main-header .navbar-breadcrumb-badge .breadcrumb-item.active { color: #6b7280 !important; font-weight: 700 !important; }
         .main-header .navbar-breadcrumb-badge .breadcrumb-item + .breadcrumb-item::before { color: #000 !important; font-weight: 700 !important; opacity: 1 !important; }
     </style>
 @endsection

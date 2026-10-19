@@ -65,13 +65,16 @@ class ExigirPagamentoPlanoMiddleware
             return $next($request);
         }
 
-        $assinatura = $empresa->planoAtivo()->with('plano')->first();
-        if ($assinatura && method_exists($assinatura, 'estaAtivo') && $assinatura->estaAtivo()) {
+        // So bloqueia quando existe cobranca vencida (inadimplencia real).
+        // Empresa sem assinatura ou em contratacao navega normalmente —
+        // a assinatura fica disponivel em "Meu plano" a qualquer momento.
+        $assinatura = $empresa->planoAtivo()->first();
+        if (! $assinatura || ! $assinatura->estaInadimplente()) {
             return $next($request);
         }
 
         return redirect()->route('assinatura.meu-plano')
-            ->with('warning', 'Seu período de teste terminou. Escolha um plano para continuar usando o sistema.');
+            ->with('warning', 'Há uma cobrança pendente no plano da sua empresa. Regularize para continuar usando o sistema.');
     }
 
     private function isAllowedRoute(?string $routeName): bool

@@ -141,8 +141,10 @@ class PlanoPermissaoService
         }
 
         $plano = $this->planoAtivoDaEmpresa($empresa);
+        // Empresa sem plano ativo nao tem escopo de plano para restringir —
+        // quem manda no acesso e o perfil (role) do usuario.
         if (! $plano) {
-            return false;
+            return true;
         }
 
         if (! SchemaCache::hasTable('plano_permissao')) {
@@ -210,9 +212,10 @@ class PlanoPermissaoService
             ->values()
             ->all();
 
+        // Sem plano ativo nao ha escopo de plano para validar — vale o perfil.
         $plano = $this->planoAtivoDaEmpresa($user->empresa);
         if (! $plano) {
-            return ['ok' => false, 'message' => 'A empresa precisa ter um plano ativo para configurar perfis de acesso.'];
+            return ['ok' => true, 'message' => null];
         }
 
         $permitidos = $this->idsPermitidosDoPlano($plano);
