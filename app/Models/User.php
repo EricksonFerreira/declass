@@ -299,12 +299,10 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        if ($this->isAdministrador()) {
-            return app(\App\Services\PlanoPermissaoService::class)->usuarioPodeUsarPermissao($this, $permissao);
-        }
-
         if (! $this->role_id) {
-            return false;
+            // Administrador legado sem perfil vinculado mantem acesso total
+            // da empresa; os demais nao tem de onde herdar permissao.
+            return $this->isAdministrador();
         }
 
         $hasPermission = DB::table('permissions')

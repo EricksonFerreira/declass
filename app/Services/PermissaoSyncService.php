@@ -179,10 +179,14 @@ class PermissaoSyncService
                 []
             );
 
-            if ($role->wasRecentlyCreated) {
-                $createdRoles++;
+            if (! $role->wasRecentlyCreated) {
+                continue;
             }
 
+            $createdRoles++;
+
+            // A matriz padrao so e aplicada na criacao do perfil — re-syncs
+            // nao sobrescrevem ajustes feitos manualmente na edicao.
             $permissionsForRole = $allPermissions
                 ->filter(fn (Permissao $permission) => $filter($permission->name))
                 ->pluck('id')

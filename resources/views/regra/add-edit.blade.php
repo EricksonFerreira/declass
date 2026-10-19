@@ -235,7 +235,10 @@
                     <div id="reAccordion" class="re-accordion">
                         @foreach ($permissoesAgrupadas as $grupo => $itens)
                             @php
-                                $meta = $grupoMeta[$grupo] ?? $grupoMeta['_outros'];
+                                $meta = $grupoMeta[$grupo]
+                                    ?? array_merge($grupoMeta['_outros'], [
+                                        'label' => ucfirst(str_replace(['-', '_'], ' ', $grupo)),
+                                    ]);
                                 $accordionId = 'reg_' . preg_replace('/[^a-z0-9]/', '_', strtolower($grupo));
                                 $qtdChecked = $itens->filter(fn ($p) => is_array($oldPermissions)
                                     ? in_array($p->id, $oldPermissions)
