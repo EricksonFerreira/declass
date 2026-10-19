@@ -13,6 +13,7 @@
     // Mapa grupo → label + ícone (mesmo do index de permissões)
     $grupoMeta = [
         'operacao'                        => ['label' => 'Operação',                  'icon' => 'fas fa-clock',               'color' => '#4b80ff'],
+        'escopo'                          => ['label' => 'Escopo de Visão',           'icon' => 'fas fa-eye',                 'color' => '#8b5cf6'],
         'assinatura'                      => ['label' => 'Assinatura',                'icon' => 'fas fa-file-signature',      'color' => '#ec4899'],
         'relatorios'                      => ['label' => 'Relatórios',                'icon' => 'fas fa-chart-line',          'color' => '#14b8a6'],
         'relatorio'                       => ['label' => 'Relatórios',                'icon' => 'fas fa-chart-line',          'color' => '#14b8a6'],

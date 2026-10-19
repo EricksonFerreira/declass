@@ -10,6 +10,7 @@
 @php
     $grupoMeta = [
         'operacao'     => ['label' => 'Operação',         'icon' => 'fas fa-clock',           'color' => '#4b80ff'],
+        'escopo'       => ['label' => 'Escopo de Visão',  'icon' => 'fas fa-eye',             'color' => '#8b5cf6'],
         'usuario'      => ['label' => 'Usuários',         'icon' => 'fas fa-users',           'color' => '#0ea5e9'],
         'regra'        => ['label' => 'Perfis de Acesso', 'icon' => 'fas fa-user-shield',     'color' => '#7c3aed'],
         'permissao'    => ['label' => 'Permissões',       'icon' => 'fas fa-key',             'color' => '#e0a800'],

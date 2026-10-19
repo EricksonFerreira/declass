@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\Auth;
 
 class SaveTimesheetAction
 {
-    public function handle(array $hoursInput, Carbon $startOfWeek): void
+    public function handle(array $hoursInput, Carbon $startOfWeek, ?int $userId = null): void
     {
-        $userId = Auth::id();
+        $userId ??= Auth::id();
 
         foreach ($hoursInput as $projId => $days) {
             $projId = (int) $projId === 0 ? null : (int) $projId;

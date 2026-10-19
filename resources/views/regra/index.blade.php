@@ -58,6 +58,7 @@
 @php
     $grupoMeta = [
         'operacao'    => ['label' => 'Operação',          'icon' => 'fas fa-clock'],
+        'escopo'      => ['label' => 'Escopo de Visão',   'icon' => 'fas fa-eye'],
         'usuario'     => ['label' => 'Usuários',          'icon' => 'fas fa-users'],
         'regra'       => ['label' => 'Perfis de Acesso',  'icon' => 'fas fa-user-shield'],
         'permissao'   => ['label' => 'Permissões',        'icon' => 'fas fa-key'],

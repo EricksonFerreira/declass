@@ -75,6 +75,11 @@ class VisibilidadeService
             return null;
         }
 
+        // Escopo explicito no perfil: "todos" enxerga a empresa inteira.
+        if ($user->hasPermissao('escopo.todos')) {
+            return null;
+        }
+
         // Empresa sem visao restrita: membros veem dados de todos.
         if (! $this->visaoRestrita($user)) {
             return null;
@@ -88,6 +93,13 @@ class VisibilidadeService
             return null;
         }
 
+        // Escopo "proprio" sem "equipe": somente os proprios registros.
+        if ($user->hasPermissao('escopo.proprio') && ! $user->hasPermissao('escopo.equipe')) {
+            return [(int) $user->id];
+        }
+
+        // Escopo "equipe" (ou perfil sem escopo definido): proprios dados
+        // mais os das equipes que lidera.
         return collect([$user->id])
             ->merge($this->idsEquipeLiderada($user))
             ->map(fn ($id) => (int) $id)
@@ -174,6 +186,11 @@ class VisibilidadeService
             return true;
         }
 
+        // Escopo "todos": ve qualquer projeto do tenant.
+        if ($user->hasPermissao('escopo.todos')) {
+            return true;
+        }
+
         if ((int) $projeto->responsavel_id === (int) $user->id) {
             return true;
         }
@@ -182,8 +199,12 @@ class VisibilidadeService
             return true;
         }
 
+        // Escopo "proprio" estrito: so os projetos dele, nem os publicos.
+        $escopoProprio = $user->hasPermissao('escopo.proprio')
+            && ! $user->hasPermissao('escopo.equipe');
+
         // Projeto privado: fora responsavel/membro/admin, ninguem mais ve.
-        if (! $projeto->publico) {
+        if (! $projeto->publico || $escopoProprio) {
             return false;
         }
 
@@ -224,10 +245,33 @@ class VisibilidadeService
             return $query;
         }
 
-        return $query->where(function ($q) use ($user) {
+        // Escopo "todos": ve todos os projetos do tenant.
+        if ($user->hasPermissao('escopo.todos')) {
+            return $query;
+        }
+
+        // Escopo "proprio" (sem "equipe"): apenas os projetos dele —
+        // responsavel ou membro, sem os publicos.
+        if ($user->hasPermissao('escopo.proprio') && ! $user->hasPermissao('escopo.equipe')) {
+            return $query->where(function ($q) use ($user) {
+                $q->where('responsavel_id', $user->id)
+                    ->orWhereHas('users', fn ($m) => $m->where('users.id', $user->id));
+            });
+        }
+
+        // Escopo "equipe" (ou perfil sem escopo): publicos + os dele +
+        // os dos membros das equipes que lidera.
+        $idsEquipe = $this->idsEquipeLiderada($user);
+
+        return $query->where(function ($q) use ($user, $idsEquipe) {
             $q->where('publico', true)
                 ->orWhere('responsavel_id', $user->id)
                 ->orWhereHas('users', fn ($m) => $m->where('users.id', $user->id));
+
+            if ($idsEquipe !== []) {
+                $q->orWhereIn('responsavel_id', $idsEquipe)
+                    ->orWhereHas('users', fn ($m) => $m->whereIn('users.id', $idsEquipe));
+            }
         });
     }
 

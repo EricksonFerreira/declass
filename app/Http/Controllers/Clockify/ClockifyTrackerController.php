@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ClockifyProjeto;
 use App\Models\ClockifyTag;
 use App\Models\ClockifyTimeTracker;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -217,9 +218,21 @@ class ClockifyTrackerController extends Controller
             $weekDays[] = (clone $startOfWeek)->addDays($i);
         }
 
-        $userId = Auth::id();
-        $projetos = app(\App\Services\VisibilidadeService::class)
-            ->projetosVisiveis(Auth::user(), ClockifyProjeto::where('ativo', true))
+        $visibilidade = app(\App\Services\VisibilidadeService::class);
+        $user = Auth::user();
+        $alvoId = (int) $request->input('user_id', $user->id);
+
+        // Editar a planilha de outro colaborador exige poder gerencia-lo.
+        if ($alvoId !== (int) $user->id) {
+            abort_unless($visibilidade->podeGerenciarUsuario($user, $alvoId), 403);
+            $alvo = User::where('empresa_id', $user->empresa_id)->findOrFail($alvoId);
+        } else {
+            $alvo = $user;
+        }
+
+        $userId = $alvo->id;
+        $projetos = $visibilidade
+            ->projetosVisiveis($user, ClockifyProjeto::where('ativo', true))
             ->orderBy('nome')->get();
 
         $trackers = ClockifyTimeTracker::where('user_id', $userId)
@@ -285,6 +298,13 @@ class ClockifyTrackerController extends Controller
             'tsMatrix' => $tsMatrix,
             'prevTsMatrix' => $prevTsMatrix,
             'projetos' => $projetos,
+            'alvo' => $alvo,
+            // Colaboradores que o usuario pode gerenciar (seletor) — ele
+            // proprio mais quem esta no escopo gerenciavel.
+            'colaboradores' => $visibilidade->usuariosVisiveis($user)
+                ->filter(fn ($u) => (int) $u->id === (int) $user->id
+                    || $visibilidade->podeGerenciarUsuario($user, (int) $u->id))
+                ->values(),
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Registrar Tempo'],
@@ -312,9 +332,15 @@ class ClockifyTrackerController extends Controller
             }
         }
 
-        $action->handle($hoursInput, $startOfWeek);
+        // Salvar a planilha de outro colaborador exige poder gerencia-lo.
+        $alvoId = (int) $request->input('user_id', $request->user()->id);
+        if ($alvoId !== (int) $request->user()->id) {
+            abort_unless($visibilidade->podeGerenciarUsuario($request->user(), $alvoId), 403);
+        }
 
-        return redirect()->route('operacao.timesheet', ['week' => $weekOffset])
+        $action->handle($hoursInput, $startOfWeek, $alvoId);
+
+        return redirect()->route('operacao.timesheet', ['week' => $weekOffset, 'user_id' => $alvoId])
             ->with('success', 'Planilha de horas salva com sucesso!');
     }
 

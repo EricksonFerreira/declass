@@ -11,30 +11,54 @@
     <!-- Navegador de Semana -->
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
         <div class="d-flex align-items-center">
-            <a href="{{ route('operacao.timesheet', ['week' => $weekOffset - 1]) }}" class="btn btn-sm btn-outline-secondary mr-2">
+            <a href="{{ route('operacao.timesheet', ['week' => $weekOffset - 1, 'user_id' => $alvo->id]) }}" class="btn btn-sm btn-outline-secondary mr-2">
                 <i class="fas fa-chevron-left"></i> Semana Anterior
             </a>
-            <a href="{{ route('operacao.timesheet', ['week' => 0]) }}" class="btn btn-sm btn-outline-primary mr-2">
+            <a href="{{ route('operacao.timesheet', ['week' => 0, 'user_id' => $alvo->id]) }}" class="btn btn-sm btn-outline-primary mr-2">
                 Hoje
             </a>
-            <a href="{{ route('operacao.timesheet', ['week' => $weekOffset + 1]) }}" class="btn btn-sm btn-outline-secondary">
+            <a href="{{ route('operacao.timesheet', ['week' => $weekOffset + 1, 'user_id' => $alvo->id]) }}" class="btn btn-sm btn-outline-secondary">
                 Próxima Semana <i class="fas fa-chevron-right"></i>
             </a>
         </div>
-        <h5 class="mb-0 text-bold text-secondary">
-            {{ $startOfWeek->format('d/m/Y') }} - {{ $endOfWeek->format('d/m/Y') }}
-        </h5>
+        <div class="d-flex align-items-center" style="gap:12px;">
+            @if ($colaboradores->count() > 1)
+                <form method="GET" action="{{ route('operacao.timesheet') }}" class="d-flex align-items-center mb-0" style="gap:6px;">
+                    <input type="hidden" name="week" value="{{ $weekOffset }}">
+                    <label for="ts-user" class="text-muted text-sm mb-0">Colaborador:</label>
+                    <select name="user_id" id="ts-user" class="form-control form-control-sm" onchange="this.form.submit()">
+                        @foreach ($colaboradores as $colab)
+                            <option value="{{ $colab->id }}" {{ (int) $colab->id === (int) $alvo->id ? 'selected' : '' }}>
+                                {{ (int) $colab->id === (int) auth()->id() ? $colab->nome . ' (você)' : $colab->nome }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            @else
+                <span class="badge badge-info">Lançando para: {{ $alvo->nome }} (você)</span>
+            @endif
+            <h5 class="mb-0 text-bold text-secondary">
+                {{ $startOfWeek->format('d/m/Y') }} - {{ $endOfWeek->format('d/m/Y') }}
+            </h5>
+        </div>
     </div>
 
     <!-- Tabela Timesheet Grid -->
     <form action="{{ route('operacao.timesheet.save', ['week' => $weekOffset]) }}" method="POST">
         @csrf
+        <input type="hidden" name="user_id" value="{{ $alvo->id }}">
         <div class="card card-outline card-primary shadow-sm mb-4">
             <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap" style="gap:8px;">
-                <h3 class="card-title text-sm text-bold text-muted mb-0">Lançamento Semanal de Horas</h3>
-                <button type="button" id="btn-copy-prev" class="btn btn-sm btn-outline-info">
-                    <i class="fas fa-copy mr-1"></i> Copiar semana anterior
-                </button>
+                <h3 class="card-title text-sm text-bold text-muted mb-0">
+                    Lançamento Semanal de Horas
+                    <span class="badge badge-info ml-1">{{ $alvo->nome }}</span>
+                </h3>
+                @can('operacao.timesheet.copiar')
+                    <button type="button" id="btn-copy-prev" class="btn btn-sm btn-outline-info"
+                            data-nome="{{ $alvo->id === auth()->id() ? 'sua' : 'de ' . $alvo->nome }}">
+                        <i class="fas fa-copy mr-1"></i> Copiar semana anterior
+                    </button>
+                @endcan
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -166,6 +190,10 @@
             }
 
             $('#btn-copy-prev').on('click', function() {
+                var nome = $(this).data('nome') || 'sua';
+                if (!confirm('Copiar a semana anterior ' + nome + ' para esta semana?')) {
+                    return;
+                }
                 var filled = 0;
                 $('#timesheet-table tbody tr').each(function() {
                     var projId = $(this).data('project');
@@ -182,7 +210,7 @@
                 });
                 recalculate();
                 if (filled === 0) {
-                    alert('A semana anterior não tem horas lançadas via Timesheet para copiar.');
+                    alert('A semana anterior ' + nome + ' não tem horas lançadas via Timesheet para copiar.');
                 }
             });
 
