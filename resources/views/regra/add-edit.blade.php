@@ -203,6 +203,29 @@
                     </div>
                 </div>
 
+                {{-- Visão do Perfil: até onde o usuário enxerga dados --}}
+                <div class="col-12 mt-2 mb-2">
+                    <div class="re-section-title"><i class="fas fa-eye mr-1"></i> Visão do Perfil</div>
+                </div>
+                <div class="col-12 mb-3">
+                    <div class="re-visao">
+                        @foreach ([
+                            'proprio' => ['label' => 'Apenas as dele', 'desc' => 'Vê somente os próprios dados — visão geral, produtividade, projetos e relatórios ficam limitados a ele.'],
+                            'equipe'  => ['label' => 'Da equipe',      'desc' => 'Vê os dados dele e de todos os membros das equipes que ele lidera.'],
+                            'todos'   => ['label' => 'De todos',       'desc' => 'Vê os dados de todos os colaboradores da empresa.'],
+                        ] as $valor => $opcao)
+                            <label class="re-visao__item {{ ($escopoAtual ?? 'proprio') === $valor ? 're-visao__item--on' : '' }}">
+                                <input type="radio" name="escopo" value="{{ $valor }}"
+                                    {{ ($escopoAtual ?? 'proprio') === $valor ? 'checked' : '' }}>
+                                <span class="re-visao__texts">
+                                    <strong>{{ $opcao['label'] }}</strong>
+                                    <small>{{ $opcao['desc'] }}</small>
+                                </span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
                 {{-- Permissões --}}
                 <div class="col-12 mt-2 mb-2">
                     <div class="re-section-title"><i class="fas fa-key mr-1"></i> Permissões</div>
@@ -380,6 +403,19 @@
 .re-btn-uncheck { background: #fef3f3; border-color: #f5c6cb; color: #721c24; }
 .re-btn-gray    { background: #f1f3f5; border-color: #ced4da; color: #495057; }
 
+.re-visao { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.re-visao__item {
+    display: flex; gap: 10px; align-items: flex-start; cursor: pointer;
+    border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;
+    background: #fff; margin: 0; transition: border-color .15s, background .15s;
+}
+.re-visao__item:hover { border-color: #a5b4fc; }
+.re-visao__item--on { border-color: #6366f1; background: #eef2ff; }
+.re-visao__item input[type="radio"] { margin-top: 3px; }
+.re-visao__texts { display: flex; flex-direction: column; gap: 2px; }
+.re-visao__texts strong { font-size: .85rem; color: #1e293b; }
+.re-visao__texts small { font-size: .74rem; color: #64748b; line-height: 1.35; }
+
 /* ── Accordion ── */
 .re-accordion { border: 1px solid #e5eaf2; border-top: none; border-radius: 0 0 12px 12px; overflow: hidden; }
 .re-group     { border-bottom: 1px solid #eef1f7; }
@@ -556,6 +592,12 @@ $(function () {
         atualizarVisual($visible);
         atualizarContador();
         atualizarTodosBadges();
+    });
+
+    // ── Visão do Perfil: destaca a opção marcada ─────────────────────────
+    $('input[name="escopo"]').on('change', function () {
+        $('.re-visao__item').removeClass('re-visao__item--on');
+        $(this).closest('.re-visao__item').addClass('re-visao__item--on');
     });
 
     // ── Expandir / minimizar todos os nós ────────────────────────────────

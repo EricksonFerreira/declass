@@ -76,21 +76,23 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
     {
         $this->permissaoSyncService->syncIfNeeded();
         $permissoes = $this->permissaoService->getAllForUserContext(auth()->user())
-            ->reject(fn (\App\Models\Permissao $p) => \App\Models\Permissao::isNomeInterno($p->name))
+            ->reject(fn (\App\Models\Permissao $p) => \App\Models\Permissao::isNomeInterno($p->name)
+                || str_starts_with($p->name, 'escopo.'))
             ->values();
         $plano = auth()->user()?->empresa?->planoAtivo()?->with('plano')->first()?->plano;
         $limitePermissoesPorRegra = $plano?->limite_permissoes_por_regra;
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Perfis de Acesso', 'regra.index', 'Criar');
         [$metodo, $rota] = $this->getFormMethodAndRoute();
+        $escopoAtual = old('escopo', 'proprio');
 
-        return view('regra.add-edit', compact('breadcrumb', 'metodo', 'rota', 'permissoes', 'plano', 'limitePermissoesPorRegra'))->with('titulo', $this->titulo);
+        return view('regra.add-edit', compact('breadcrumb', 'metodo', 'rota', 'permissoes', 'plano', 'limitePermissoesPorRegra', 'escopoAtual'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreRegraRequest $request)
     {
         $regra = $this->regraService->create($request->all());
-        $this->regraPermissaoService->atribuirPermissoesARole($regra->id, $request->input('permissions', []));
+        $this->regraPermissaoService->atribuirPermissoesARole($regra->id, $this->permissionIdsComEscopo($request));
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Perfil de acesso criado com sucesso.');
     }
@@ -114,7 +116,8 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
 
         $this->permissaoSyncService->syncIfNeeded();
         $permissoes = $this->permissaoService->getAllWithCheckedForUserContext($regra->permissoes, auth()->user())
-            ->reject(fn (\App\Models\Permissao $p) => \App\Models\Permissao::isNomeInterno($p->name))
+            ->reject(fn (\App\Models\Permissao $p) => \App\Models\Permissao::isNomeInterno($p->name)
+                || str_starts_with($p->name, 'escopo.'))
             ->values();
         $plano = auth()->user()?->empresa?->planoAtivo()?->with('plano')->first()?->plano;
         $limitePermissoesPorRegra = $plano?->limite_permissoes_por_regra;
@@ -122,7 +125,11 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Perfis de Acesso', 'regra.index', "Editar: $regra->name");
         [$metodo, $rota] = $this->getFormMethodAndRoute($regra);
 
-        return view('regra.add-edit', compact('regra', 'breadcrumb', 'permissoes', 'metodo', 'rota', 'plano', 'limitePermissoesPorRegra'))->with('titulo', $this->titulo);
+        $nomes = $regra->permissoes->pluck('name');
+        $escopoAtual = old('escopo', $nomes->contains('escopo.todos') ? 'todos'
+            : ($nomes->contains('escopo.equipe') ? 'equipe' : 'proprio'));
+
+        return view('regra.add-edit', compact('regra', 'breadcrumb', 'permissoes', 'metodo', 'rota', 'plano', 'limitePermissoesPorRegra', 'escopoAtual'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateRegraRequest $request, $id)
@@ -135,7 +142,7 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
             abort(403, 'Sem acesso para editar este perfil de acesso.');
         }
 
-        $this->regraPermissaoService->atribuirPermissoesARole($regra->id, $request->input('permissions', []));
+        $this->regraPermissaoService->atribuirPermissoesARole($regra->id, $this->permissionIdsComEscopo($request));
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Perfil de acesso atualizado com sucesso.');
     }
@@ -220,5 +227,34 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
             'POST',
             route('regra.store'),
         ];
+    }
+
+    /**
+     * Resolve o radio "Visão do Perfil" para os ids das permissoes
+     * escopo.* e junta com o restante vindo dos checkboxes.
+     *
+     * @return array<int, int|string>
+     */
+    private function permissionIdsComEscopo($request): array
+    {
+        $permIds = $request->input('permissions', []);
+
+        $map = [
+            'proprio' => ['escopo.proprio'],
+            'equipe'  => ['escopo.proprio', 'escopo.equipe'],
+            'todos'   => ['escopo.todos'],
+        ];
+        $escopo = $request->input('escopo');
+
+        if (isset($map[$escopo])) {
+            $escopoIds = \App\Models\Permissao::query()
+                ->where('guard_name', 'web')
+                ->whereIn('name', $map[$escopo])
+                ->pluck('id')
+                ->all();
+            $permIds = array_merge($permIds, $escopoIds);
+        }
+
+        return $permIds;
     }
 }
