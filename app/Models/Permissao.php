@@ -26,7 +26,8 @@ class Permissao extends Model
      */
     public const PREFIXOS_INTERNOS = [
         'planos', 'pricing', 'onboarding', 'migrations', 'log-viewer',
-        'limpar-cache', 'ia-global', 'assinatura.pagamento',
+        'limpar-cache', 'ia-global', 'configuracao-ia', 'comandos',
+        'cadastro', 'assinatura.pagamento',
         'site', 'empresa-contexto', 'empresa_context', 'cashier',
         'darkmode', 'adminlte',
     ];
