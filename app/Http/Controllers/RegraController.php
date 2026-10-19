@@ -75,7 +75,9 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
     public function create()
     {
         $this->permissaoSyncService->syncIfNeeded();
-        $permissoes = $this->permissaoService->getAllForUserContext(auth()->user());
+        $permissoes = $this->permissaoService->getAllForUserContext(auth()->user())
+            ->reject(fn (\App\Models\Permissao $p) => \App\Models\Permissao::isNomeInterno($p->name))
+            ->values();
         $plano = auth()->user()?->empresa?->planoAtivo()?->with('plano')->first()?->plano;
         $limitePermissoesPorRegra = $plano?->limite_permissoes_por_regra;
 
@@ -111,7 +113,9 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
         $this->abortIfRegraGlobal($regra);
 
         $this->permissaoSyncService->syncIfNeeded();
-        $permissoes = $this->permissaoService->getAllWithCheckedForUserContext($regra->permissoes, auth()->user());
+        $permissoes = $this->permissaoService->getAllWithCheckedForUserContext($regra->permissoes, auth()->user())
+            ->reject(fn (\App\Models\Permissao $p) => \App\Models\Permissao::isNomeInterno($p->name))
+            ->values();
         $plano = auth()->user()?->empresa?->planoAtivo()?->with('plano')->first()?->plano;
         $limitePermissoesPorRegra = $plano?->limite_permissoes_por_regra;
 

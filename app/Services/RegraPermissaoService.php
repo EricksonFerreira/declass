@@ -12,9 +12,12 @@ class RegraPermissaoService
         $regra = Regra::query()
             ->findOrFail($regraId);
 
+        // Permissoes internas nao sao tratadas por perfil — sao
+        // descartadas mesmo que cheguem no payload.
         $permissoes = Permissao::query()
             ->whereIn('id', $permissionIds)
-            ->get();
+            ->get()
+            ->reject(fn (Permissao $p) => Permissao::isNomeInterno($p->name));
 
         $regra->permissoes()->sync($permissoes);
     }

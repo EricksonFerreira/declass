@@ -29,8 +29,6 @@ class PlanoPermissaoService
         'onboarding.',
         'assinatura.',
         'menu.',
-        'site.reserva.',
-        'site.multa.',
     ];
 
     /**
@@ -43,35 +41,6 @@ class PlanoPermissaoService
         'dashboard',
         'home.chart-data',
         'site.apresentacao',
-        'site.reserva.disponibilidade',
-        'site.reserva.index',
-        'reserva.minhas',
-        'reserva.minhas.show',
-        'reserva.minhas.multa.show',
-        'reserva.minhas.assinar-checkin',
-        'reserva.minhas.assinar-checkout',
-        'reserva.minhas.salvar-assinatura-checkout',
-        'reserva.minhas.vercontratocheckout',
-        'reserva.minhas.vercontratocheckin',
-        'reserva.minhas.satisfacao.store',
-        'reserva.minhas.pagamento.efetuar',
-        'reserva.minhas.salvarAssinarContratoCheckInMinhaReserva',
-        'reserva.minhas.pagamento.confirmar',
-        'reserva.minhas.motorista-app.show',
-        'reserva.minhas.motorista-app.efetivar',
-        'reserva.minhas.motorista-app.aceitar-termo',
-        'reserva.minhas.motorista-app.assinar-contrato',
-        'reserva.minhas.motorista-app.assinar-devolucao',
-        'reserva.minhas.motorista-app.ver-contrato',
-        'reserva.minhas.motorista-app.renovar',
-        'reserva.minhas.motorista-app.cancelar',
-        'reserva.show',
-        'reserva.cancelar',
-        'reserva.efetuarPagamento',
-        'reserva.processarPagamento',
-        'reserva.historico',
-        'reserva.salvarAssinarContratoCheckIn',
-        'reserva.salvarAssinaturaContratoCheckout',
         'tutoriais.index',
     ];
 
@@ -253,10 +222,6 @@ class PlanoPermissaoService
             return null;
         }
 
-        if (! $plano->modulo_multas && $this->routeIsInModule($routeName, ['multa'])) {
-            return 'Seu plano não inclui o módulo de multas. Faça upgrade para acessar este recurso.';
-        }
-
         if (! $plano->modulo_nfse && $this->routeIsInModule($routeName, ['nfse'])) {
             return 'Seu plano não inclui a emissão de NFS-e. Faça upgrade para acessar este recurso.';
         }
@@ -297,6 +262,12 @@ class PlanoPermissaoService
 
     private function shouldIgnoreRoute(string $routeName): bool
     {
+        // Rotas internas nao sao tratadas como permissao — a protecao
+        // delas e propria (superadmin, token de cron, gateway...).
+        if (Permissao::isNomeInterno($routeName)) {
+            return true;
+        }
+
         foreach ($this->ignoredRoutePrefixes as $prefix) {
             if (str_starts_with($routeName, $prefix)) {
                 return true;
