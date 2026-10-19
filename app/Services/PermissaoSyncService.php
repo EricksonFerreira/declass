@@ -16,12 +16,29 @@ class PermissaoSyncService
      *
      * @return array{permissions:int, roles:int, pivots:int}
      */
+    /**
+     * Permissoes que nao derivam de rotas mas fazem parte do produto —
+     * sempre garantidas pelo sync (independente de migration).
+     *
+     * @var array<int, string>
+     */
+    private const PERMISSOES_EXTRAS = [
+        'escopo.proprio',
+        'escopo.equipe',
+        'escopo.todos',
+        'operacao.timesheet.copiar',
+    ];
+
     public function sync(): array
     {
         $permissionNames = $this->collectPermissionNamesFromRoutes();
         if (empty($permissionNames)) {
             return ['permissions' => 0, 'roles' => 0, 'pivots' => 0];
         }
+
+        $permissionNames = array_values(array_unique(
+            array_merge($permissionNames, self::PERMISSOES_EXTRAS)
+        ));
 
         $createdPermissions = $this->syncPermissionsGlobal($permissionNames);
         [$createdRoles, $pivotCount] = $this->syncRolesGlobal($permissionNames);
@@ -49,7 +66,15 @@ class PermissaoSyncService
             ? DB::table('role_has_permissions')->where('role_id', $adminRoleId)->exists()
             : false;
 
-        if (! $hasPermissions || ! $hasAnyPivot || ! $adminHasPivot) {
+        // Garante tambem as permissoes extras (escopo, copiar timesheet)
+        // mesmo quando o restante ja esta populado — cobre ambientes onde
+        // a migration correspondente ainda nao rodou.
+        $faltamExtras = Permissao::query()
+            ->where('guard_name', 'web')
+            ->whereIn('name', self::PERMISSOES_EXTRAS)
+            ->count() < count(self::PERMISSOES_EXTRAS);
+
+        if (! $hasPermissions || ! $hasAnyPivot || ! $adminHasPivot || $faltamExtras) {
             $this->sync();
         }
     }
