@@ -17,6 +17,7 @@ class ClockifyTag extends Model
         'empresa_id',
         'clockify_projeto_id',
         'nome',
+        'cor',
         'ativo',
         'usuinc',
         'datainc',
@@ -42,5 +43,15 @@ class ClockifyTag extends Model
     public function trackers(): BelongsToMany
     {
         return $this->belongsToMany(ClockifyTimeTracker::class, 'clockify_tracker_tag', 'clockify_tag_id', 'clockify_time_tracker_id');
+    }
+
+    /**
+     * Cor da tag em hex; cai num azul padrao quando nao definida.
+     */
+    public function getCorCssAttribute(): string
+    {
+        $cor = trim((string) $this->cor);
+
+        return preg_match('/^#[0-9a-fA-F]{6}$/', $cor) ? $cor : '#2563eb';
     }
 }

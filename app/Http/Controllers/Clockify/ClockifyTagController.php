@@ -120,6 +120,7 @@ class ClockifyTagController extends Controller
     {
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
+            'cor' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'clockify_projeto_id' => ['nullable', $this->projetoDaEmpresaRule()],
         ]);
 
@@ -137,6 +138,7 @@ class ClockifyTagController extends Controller
     {
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
+            'cor' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'ativo' => 'nullable|boolean',
             'clockify_projeto_id' => ['nullable', $this->projetoDaEmpresaRule()],
         ]);

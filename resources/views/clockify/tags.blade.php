@@ -50,7 +50,7 @@
                                 <div class="ux-card__head">
                                     <div class="ux-card__avatar"><i class="fas fa-tag"></i></div>
                                     <div class="ux-card__head-info">
-                                        <div class="ux-card__title">{{ $tag->nome }}</div>
+                                        <div class="ux-card__title"><span class="d-inline-block rounded-circle mr-1" style="width:10px;height:10px;background:{{ $tag->cor_css }};"></span>{{ $tag->nome }}</div>
                                         <div class="ux-card__sub">
                                             {{ $tagsPorProjeto ? ($tag->projeto?->nome ?? 'Global') : 'Etiqueta de classificação' }}
                                         </div>
@@ -99,7 +99,7 @@
                         <tbody>
                             @forelse ($tags as $tag)
                                 <tr>
-                                    <td class="align-middle font-weight-bold">{{ $tag->nome }}</td>
+                                    <td class="align-middle font-weight-bold"><span class="d-inline-block rounded-circle mr-1" style="width:10px;height:10px;background:{{ $tag->cor_css }};"></span>{{ $tag->nome }}</td>
                                     @if ($tagsPorProjeto)
                                         <td class="align-middle">
                                             @if ($tag->clockify_projeto_id)
@@ -161,6 +161,13 @@
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
+        <div class="form-group">
+            <label for="cor">Cor da Tag</label>
+            <input type="color" name="cor" id="cor" class="form-control form-control-sm @error('cor') is-invalid @enderror" value="{{ old('cor', '#2563eb') }}" style="height:38px;padding:2px 4px;cursor:pointer;">
+            @error('cor')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
         @if ($tagsPorProjeto)
             <div class="form-group">
                 <label for="clockify_projeto_id">Projeto</label>
@@ -219,6 +226,7 @@
             $('#tag-formMethod').val('PUT');
             $('#tag_id').val(tag.id);
             $('#tag-form #nome').val(tag.nome);
+            $('#tag-form #cor').val(tag.cor || '#2563eb');
             $('#tag-form #ativo').val(tag.ativo ? "1" : "0");
             $('#tag-form #clockify_projeto_id').val(tag.clockify_projeto_id || '');
             
