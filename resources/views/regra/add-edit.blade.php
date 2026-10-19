@@ -229,10 +229,10 @@
                             <button type="button" class="re-btn-sm re-btn-uncheck" id="reDesmarcarTodos">
                                 <i class="fas fa-times mr-1"></i> Desmarcar todos
                             </button>
-                            <button type="button" class="re-btn-sm re-btn-uncheck" id="reExpandirTodos">
+                            <button type="button" class="re-btn-sm re-btn-gray" id="reExpandirTodos">
                                 <i class="fas fa-expand-alt mr-1"></i> Expandir todos
                             </button>
-                            <button type="button" class="re-btn-sm re-btn-uncheck" id="reMinimizarTodos">
+                            <button type="button" class="re-btn-sm re-btn-gray" id="reMinimizarTodos">
                                 <i class="fas fa-compress-alt mr-1"></i> Minimizar todos
                             </button>
                         </div>
@@ -378,6 +378,7 @@
 }
 .re-btn-check   { background: #e8f5e9; border-color: #c3e6cb; color: #155724; }
 .re-btn-uncheck { background: #fef3f3; border-color: #f5c6cb; color: #721c24; }
+.re-btn-gray    { background: #f1f3f5; border-color: #ced4da; color: #495057; }
 
 /* ── Accordion ── */
 .re-accordion { border: 1px solid #e5eaf2; border-top: none; border-radius: 0 0 12px 12px; overflow: hidden; }

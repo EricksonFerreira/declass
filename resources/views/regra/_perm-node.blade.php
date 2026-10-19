@@ -53,6 +53,11 @@
                     ? in_array($permissao->id, $oldPermissions)
                     : !empty($permissao->checked);
                 $acao = str_contains($permissao->name, '.') ? substr($permissao->name, strrpos($permissao->name, '.') + 1) : $permissao->name;
+                $acaoLabel = [
+                    'proprio' => 'Apenas dele',
+                    'equipe'  => 'Da equipe',
+                    'todos'   => 'De todos',
+                ][$acao] ?? $acao;
                 $badgeCls = $acaoClasses[$acao] ?? 'badge-secondary';
             @endphp
             <label class="re-perm-item re-perm-item--compact {{ $checked ? 're-perm-item--checked' : '' }}"
@@ -65,7 +70,7 @@
                     value="{{ $permissao->id }}"
                     id="perm-{{ $permissao->id }}"
                     {{ $checked ? 'checked' : '' }}>
-                <span class="badge {{ $badgeCls }} badge-sm re-perm-item__badge">{{ $acao }}</span>
+                <span class="badge {{ $badgeCls }} badge-sm re-perm-item__badge">{{ $acaoLabel }}</span>
             </label>
         @endforeach
     </div>
