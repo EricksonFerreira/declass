@@ -229,6 +229,12 @@
                             <button type="button" class="re-btn-sm re-btn-uncheck" id="reDesmarcarTodos">
                                 <i class="fas fa-times mr-1"></i> Desmarcar todos
                             </button>
+                            <button type="button" class="re-btn-sm re-btn-uncheck" id="reExpandirTodos">
+                                <i class="fas fa-expand-alt mr-1"></i> Expandir todos
+                            </button>
+                            <button type="button" class="re-btn-sm re-btn-uncheck" id="reMinimizarTodos">
+                                <i class="fas fa-compress-alt mr-1"></i> Minimizar todos
+                            </button>
                         </div>
                     </div>
 
@@ -549,6 +555,19 @@ $(function () {
         atualizarVisual($visible);
         atualizarContador();
         atualizarTodosBadges();
+    });
+
+    // ── Expandir / minimizar todos os nós ────────────────────────────────
+    $('#reExpandirTodos').on('click', function () {
+        $('#reAccordion .collapse').collapse('show');
+        $('#reAccordion [data-toggle="collapse"]')
+            .removeClass('collapsed').attr('aria-expanded', 'true');
+    });
+
+    $('#reMinimizarTodos').on('click', function () {
+        $('#reAccordion .collapse').collapse('hide');
+        $('#reAccordion [data-toggle="collapse"]')
+            .addClass('collapsed').attr('aria-expanded', 'false');
     });
 
     // ── Selecionar / desmarcar por grupo ou subnível ──────────────────────

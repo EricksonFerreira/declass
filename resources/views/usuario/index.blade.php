@@ -44,7 +44,7 @@
                     </div>
 
                     @if (auth()->user()->hasPermissao('usuario.create'))
-                        <a href="{{ route('usuario.create') }}" class="btn btn-xs btn-success btn-create-resource">
+                        <a href="{{ route('usuario.create') }}" class="btn btn-xs btn-primary btn-create-resource">
                             <i class="fa fa-plus" style="font-size:10px"></i> Adicionar
                         </a>
                     @endif
