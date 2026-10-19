@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" :createUrl="route('usuario.create')" :createCan="'usuario.create'" />
+    <x-page-title :title="$titulo" />
 @stop
 
 @section('content')
@@ -42,6 +42,12 @@
                             <i class="fas fa-table mr-1"></i>Tabela
                         </button>
                     </div>
+
+                    @if (auth()->user()->hasPermissao('usuario.create'))
+                        <a href="{{ route('usuario.create') }}" class="btn btn-xs btn-success btn-create-resource">
+                            <i class="fa fa-plus" style="font-size:10px"></i> Adicionar
+                        </a>
+                    @endif
 
                     <div class="d-flex align-items-end ux-header-pagination">
                         {{ $usuarios->links() }}
