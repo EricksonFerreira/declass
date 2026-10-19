@@ -85,7 +85,7 @@
             </p>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <a href="{{ route('operacao.tracker') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px; font-size:12px; font-weight:600;">
+            <a href="{{ route('operacao.tracker.index') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px; font-size:12px; font-weight:600;">
                 <i class="fas fa-history mr-1"></i> Histórico
             </a>
             <a href="{{ route('operacao.projetos.index') }}" class="btn btn-sm" style="background:#0891b2; color:#fff; border-radius:8px; font-size:12px; font-weight:600; border:none;">
@@ -199,9 +199,9 @@
 
             @php
                 $atalhos = [
-                    ['icon'=>'fa-stopwatch','label'=>'Novo Tracker','url'=>route('operacao.tracker'),'color'=>'#0891b2'],
+                    ['icon'=>'fa-stopwatch','label'=>'Novo Tracker','url'=>route('operacao.tracker.index'),'color'=>'#0891b2'],
                     ['icon'=>'fa-folder-plus','label'=>'Novo Projeto','url'=>route('operacao.projetos.create'),'color'=>'#10b981'],
-                    ['icon'=>'fa-history','label'=>'Histórico de Tempo','url'=>route('operacao.tracker'),'color'=>'#7c3aed'],
+                    ['icon'=>'fa-history','label'=>'Histórico de Tempo','url'=>route('operacao.tracker.index'),'color'=>'#7c3aed'],
                     ['icon'=>'fa-users','label'=>'Planejar Equipe','url'=>route('operacao.projetos.index'),'color'=>'#f59e0b'],
                 ];
             @endphp

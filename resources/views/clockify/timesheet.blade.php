@@ -120,9 +120,11 @@
                 </div>
             </div>
             <div class="card-footer clearfix">
-                <button type="submit" class="btn btn-primary float-right font-weight-bold">
-                    <i class="fas fa-save mr-1"></i> Salvar Planilha de Horas
-                </button>
+                @can('operacao.timesheet.save')
+                    <button type="submit" class="btn btn-primary float-right font-weight-bold">
+                        <i class="fas fa-save mr-1"></i> Salvar Planilha de Horas
+                    </button>
+                @endcan
             </div>
         </div>
     </form>

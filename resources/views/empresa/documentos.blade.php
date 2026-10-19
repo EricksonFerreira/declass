@@ -26,9 +26,11 @@
     <div class="card card-outline card-primary shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title text-bold text-sm"><i class="fas fa-folder-open mr-1"></i> Habilitação e documentos</h3>
-            <button type="button" id="btn-novo-documento" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus mr-1"></i>Novo documento
-            </button>
+            @can('documentos.store')
+                <button type="button" id="btn-novo-documento" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus mr-1"></i>Novo documento
+                </button>
+            @endcan
         </div>
         <div class="card-body p-0">
             <table class="table table-sm table-hover mb-0">
@@ -61,24 +63,30 @@
                             <td class="align-middle text-right small">{{ $d->valor ? 'R$ '.number_format((float) $d->valor, 0, ',', '.') : '—' }}</td>
                             <td class="align-middle text-center">
                                 @if ($d->arquivo_path)
-                                    <a href="{{ route('documentos.arquivo', $d) }}" class="btn btn-xs btn-outline-secondary" title="Baixar arquivo"><i class="fas fa-download"></i></a>
+                                    @can('documentos.arquivo')
+                                        <a href="{{ route('documentos.arquivo', $d) }}" class="btn btn-xs btn-outline-secondary" title="Baixar arquivo"><i class="fas fa-download"></i></a>
+                                    @endcan
                                 @else
                                     <span class="text-muted small">—</span>
                                 @endif
                             </td>
                             <td class="align-middle text-center">
-                                <button type="button" class="btn btn-xs btn-warning btn-edit-documento"
-                                    data-update-url="{{ route('documentos.update', $d) }}"
-                                    data-tipo="{{ $d->tipo }}" data-numero="{{ $d->numero }}"
-                                    data-orgao_emissor="{{ $d->orgao_emissor }}" data-descricao="{{ $d->descricao }}"
-                                    data-valor="{{ $d->valor }}" data-data_emissao="{{ $d->data_emissao?->format('Y-m-d') }}"
-                                    data-data_validade="{{ $d->data_validade?->format('Y-m-d') }}">
-                                    <i class="fas fa-pen"></i>
-                                </button>
-                                <form action="{{ route('documentos.destroy', $d) }}" method="POST" class="d-inline" onsubmit="return confirm('Excluir este documento e seu arquivo?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></button>
-                                </form>
+                                @can('documentos.update')
+                                    <button type="button" class="btn btn-xs btn-warning btn-edit-documento"
+                                        data-update-url="{{ route('documentos.update', $d) }}"
+                                        data-tipo="{{ $d->tipo }}" data-numero="{{ $d->numero }}"
+                                        data-orgao_emissor="{{ $d->orgao_emissor }}" data-descricao="{{ $d->descricao }}"
+                                        data-valor="{{ $d->valor }}" data-data_emissao="{{ $d->data_emissao?->format('Y-m-d') }}"
+                                        data-data_validade="{{ $d->data_validade?->format('Y-m-d') }}">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                @endcan
+                                @can('documentos.destroy')
+                                    <form action="{{ route('documentos.destroy', $d) }}" method="POST" class="d-inline" onsubmit="return confirm('Excluir este documento e seu arquivo?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></button>
+                                    </form>
+                                @endcan
                             </td>
                         </tr>
                     @empty

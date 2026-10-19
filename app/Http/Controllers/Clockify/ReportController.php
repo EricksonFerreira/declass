@@ -13,6 +13,17 @@ use Illuminate\Support\Facades\View;
 
 class ReportController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:relatorios.index')->only('index');
+        $this->middleware('can:relatorios.membros')->only('membros');
+        $this->middleware('can:relatorios.membros.store')->only('storeMembro');
+        $this->middleware('can:relatorios.membros.update')->only('updateMembro');
+        $this->middleware('can:relatorios.membros.reset-password')->only('resetPassword');
+        $this->middleware('can:relatorios.membros.destroy')->only('destroyMembro');
+        $this->middleware('can:relatorios.horas-trabalhadas')->only('horasTrabalhadas');
+    }
+
     public function index(IndexAction $action)
     {
         return $action->handle();
@@ -114,6 +125,11 @@ class ReportController extends Controller
 
     public function export(Request $request, ExportReportAction $action)
     {
+        abort_unless(
+            $request->user()->hasPermissao('relatorios.export') || $request->user()->hasPermissao('relatorios.exportar'),
+            403
+        );
+
         $visibilidade = app(\App\Services\VisibilidadeService::class);
         $idsVisiveis = auth()->user()->idsVisiveis();
 

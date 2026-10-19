@@ -245,14 +245,17 @@
                             </h2>
                         </div>
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-danger btn-block btn-lg font-weight-bold">
-                                <i class="fas fa-stop mr-1"></i> PARAR
-                            </button>
+                            @can('operacao.tracker.stop')
+                                <button type="submit" class="btn btn-danger btn-block btn-lg font-weight-bold">
+                                    <i class="fas fa-stop mr-1"></i> PARAR
+                                </button>
+                            @endcan
                         </div>
                     </div>
                 </form>
             @else
                 <!-- Iniciar Novo Rastreador -->
+                @can('operacao.tracker.start')
                 <form action="{{ route('operacao.tracker.start') }}" method="POST">
                     @csrf
                     <div class="row align-items-center text-center text-md-left">
@@ -282,11 +285,13 @@
                         </div>
                     </div>
                 </form>
+                @endcan
             @endif
         </div>
     </div>
 
     <!-- Toggle para Registro Manual -->
+    @can('operacao.tracker.manual')
     <div class="card collapsed-card mb-4 shadow-sm" style="border-radius: 12px; border: none;">
         <div class="card-header bg-white py-2" data-card-widget="collapse" style="cursor: pointer; border-radius: 12px;">
             <h3 class="card-title text-sm text-bold text-muted mb-0">
@@ -341,6 +346,7 @@
             </form>
         </div>
     </div>
+    @endcan
 
     <!-- Histórico de Registros de Tempo -->
     <div class="card history-card">
@@ -430,11 +436,13 @@
                                     </span>
                                 </td>
                                 <td class="align-middle text-center" data-label="Ações">
-                                    <form action="{{ route('operacao.tracker.destroy', $tracker->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este registro de tempo?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-xs btn-outline-danger border-0"><i class="fa fa-trash"></i> Excluir</button>
-                                    </form>
+                                    @can('operacao.tracker.destroy')
+                                        <form action="{{ route('operacao.tracker.destroy', $tracker->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este registro de tempo?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-outline-danger border-0"><i class="fa fa-trash"></i> Excluir</button>
+                                        </form>
+                                    @endcan
                                 </td>
                             </tr>
                         @empty
@@ -521,8 +529,19 @@
 
             // Autocomplete update function for past trackers
             var trackerUpdateUrlTemplate = "{{ route('operacao.tracker.update', ['id' => '__ID__']) }}";
+            var canTrackerUpdate = {{ auth()->user()->can('operacao.tracker.update') ? 'true' : 'false' }};
+            var canActiveUpdate = {{ auth()->user()->can('operacao.tracker.active.update') ? 'true' : 'false' }};
+
+            if (!canTrackerUpdate) {
+                $('.inline-tracker-input, .inline-tracker-select, .tracker-inline-tags').prop('disabled', true);
+            }
+            if (!canActiveUpdate) {
+                $('#active-descricao').prop('readonly', true);
+                $('#active-projeto, #active-tags').prop('disabled', true);
+            }
 
             function updatePastTrackerInline(trackerId, dataObj) {
+                if (!canTrackerUpdate) { return; }
                 savingIndicator.style.display = 'flex';
 
                 $.ajax({
@@ -574,7 +593,7 @@
 
             // Function to autosave active tracker fields
             function autosaveActiveTracker() {
-                if (!$('#active-descricao').length) return; // No active tracker running
+                if (!canActiveUpdate || !$('#active-descricao').length) return; // No active tracker running
                 
                 let descricao = $('#active-descricao').val();
                 let project_id = $('#active-projeto').val();

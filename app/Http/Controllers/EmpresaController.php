@@ -247,6 +247,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         $data = $request->validated();
         $data['tags_por_projeto'] = $request->boolean('tags_por_projeto');
+        $data['visao_restrita'] = $request->boolean('visao_restrita');
         $data = $this->handleLogoUpload($request, $data);
 
         $empresa = $this->empresaService->createWithDefaultTemplate($data);
@@ -293,9 +294,11 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             'cor_secundaria' => 'nullable|string|max:20',
             'logo' => 'nullable|image|mimes:png,jpeg,jpg,webp|max:2048',
             'tags_por_projeto' => 'nullable|boolean',
+            'visao_restrita' => 'nullable|boolean',
         ]);
 
         $data['tags_por_projeto'] = $request->boolean('tags_por_projeto');
+        $data['visao_restrita'] = $request->boolean('visao_restrita');
 
         if ($request->hasFile('logo')) {
             $path = $request->file('logo')->store('empresas/logo', 'public');
@@ -428,6 +431,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         $data = $request->validated();
         $data['tags_por_projeto'] = $request->boolean('tags_por_projeto');
+        $data['visao_restrita'] = $request->boolean('visao_restrita');
 
         $empresaAtual = $this->empresaService->getById($id);
         if (! $empresaAtual) {

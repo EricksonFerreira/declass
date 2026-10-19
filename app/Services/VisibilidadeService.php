@@ -54,6 +54,16 @@ class VisibilidadeService
     }
 
     /**
+     * A empresa limita membros a enxergar apenas os proprios dados
+     * (visao_restrita = true). Quando desligada, todo membro ve os
+     * dados de todos os colaboradores e projetos do tenant.
+     */
+    public function visaoRestrita(User $user): bool
+    {
+        return (bool) ($user->empresa?->visao_restrita ?? true);
+    }
+
+    /**
      * Ids de usuarios cujos registros o usuario pode ver.
      * Retorna null quando nao ha restricao (admin/superadmin).
      *
@@ -62,6 +72,11 @@ class VisibilidadeService
     public function idsVisiveis(User $user): ?array
     {
         if ($user->isAdministrador()) {
+            return null;
+        }
+
+        // Empresa sem visao restrita: membros veem dados de todos.
+        if (! $this->visaoRestrita($user)) {
             return null;
         }
 
@@ -89,6 +104,9 @@ class VisibilidadeService
         $ids = $this->idsVisiveis($user);
 
         $query = User::orderBy('nome');
+        if ($user->empresa_id) {
+            $query->where('empresa_id', $user->empresa_id);
+        }
         if ($ids !== null) {
             $query->whereIn('id', $ids);
         }
@@ -152,6 +170,10 @@ class VisibilidadeService
             return true;
         }
 
+        if (! $this->visaoRestrita($user)) {
+            return true;
+        }
+
         if ((int) $projeto->responsavel_id === (int) $user->id) {
             return true;
         }
@@ -198,7 +220,7 @@ class VisibilidadeService
      */
     public function projetosVisiveis(User $user, $query)
     {
-        if ($user->isAdministrador()) {
+        if ($user->isAdministrador() || ! $this->visaoRestrita($user)) {
             return $query;
         }
 

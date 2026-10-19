@@ -538,7 +538,11 @@ function togglePlannerExpand(userId, btn) {
 
 // Open modal for adding allocation
 const memberList = @json($plannerData);
+var canCalStore = {{ auth()->user()->can('operacao.calendario.store') ? 'true' : 'false' }};
+var canCalDestroy = {{ auth()->user()->can('operacao.calendario.destroy') ? 'true' : 'false' }};
+
 function openAddAllocationModal(userId, dateStr) {
+    if (!canCalStore) { return; }
     const member = memberList.find(m => m.id == userId);
     if (!member) return;
 
@@ -554,6 +558,7 @@ function openAddAllocationModal(userId, dateStr) {
 let selectedAllocIdForDelete = null;
 function openEditAllocationModal(allocId, projName, hours, obs) {
     selectedAllocIdForDelete = allocId;
+    document.getElementById('btn-delete-allocation').style.display = canCalDestroy ? '' : 'none';
     document.getElementById('edit-proj-name').textContent = projName;
     document.getElementById('edit-hours').textContent = hours;
     
@@ -701,7 +706,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Delete allocation via AJAX
     document.getElementById('btn-delete-allocation').addEventListener('click', function() {
-        if (!selectedAllocIdForDelete) return;
+        if (!canCalDestroy || !selectedAllocIdForDelete) return;
         if (!confirm('Deseja realmente remover esta alocação planejada?')) return;
 
         $.ajax({

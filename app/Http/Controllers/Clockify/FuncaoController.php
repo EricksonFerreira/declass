@@ -22,6 +22,17 @@ class FuncaoController extends Controller
 
     private string $nomeFiltro = 'operacao.funcoes';
 
+    public function __construct()
+    {
+        $this->middleware('can:operacao.funcoes.index')->only('index');
+        $this->middleware('can:operacao.funcoes.store')->only('store');
+        $this->middleware('can:operacao.funcoes.update')->only('update');
+        $this->middleware('can:operacao.funcoes.destroy')->only('destroy');
+        $this->middleware('can:operacao.funcoes.filtro')->only('filtro');
+        $this->middleware('can:operacao.funcoes.removerFiltro')->only('removerFiltro');
+        $this->middleware('can:operacao.funcoes.setPerPage')->only('setPerPage');
+    }
+
     public function index(Request $request, ListarFuncoesAction $action): View
     {
         $this->configurarSessao();

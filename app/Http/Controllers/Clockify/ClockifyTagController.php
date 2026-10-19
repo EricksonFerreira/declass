@@ -24,6 +24,17 @@ class ClockifyTagController extends Controller
 
     private string $nomeFiltro = 'operacao.tags';
 
+    public function __construct()
+    {
+        $this->middleware('can:operacao.tags.index')->only('index');
+        $this->middleware('can:operacao.tags.store')->only('store');
+        $this->middleware('can:operacao.tags.update')->only('update');
+        $this->middleware('can:operacao.tags.destroy')->only('destroy');
+        $this->middleware('can:operacao.tags.filtro')->only('filtro');
+        $this->middleware('can:operacao.tags.removerFiltro')->only('removerFiltro');
+        $this->middleware('can:operacao.tags.setPerPage')->only('setPerPage');
+    }
+
     public function index(Request $request, ListarTagsAction $action): View
     {
         $this->configurarSessao();

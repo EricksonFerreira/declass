@@ -333,16 +333,19 @@ return [
                 [
                     'text' => 'Rastreador',
                     'route' => 'operacao.tracker.index',
+                    'can' => 'operacao.tracker.index',
                     'icon' => 'fas fa-stopwatch',
                 ],
                 [
                     'text' => 'Planilha de Horas',
                     'route' => 'operacao.timesheet',
+                    'can' => 'operacao.timesheet',
                     'icon' => 'fas fa-table',
                 ],
                 [
                     'text' => 'Calendário',
                     'route' => 'operacao.calendario.index',
+                    'can' => 'operacao.calendario.index',
                     'icon' => 'fas fa-calendar-alt',
                 ],
             ],
@@ -356,21 +359,25 @@ return [
                 [
                     'text' => 'Visão Geral',
                     'route' => 'dashboard',
+                    'can' => 'dashboard',
                     'icon' => 'fas fa-tachometer-alt',
                 ],
                 [
                     'text' => 'Produtividade',
                     'route' => 'home.produtividade',
+                    'can' => 'home.produtividade',
                     'icon' => 'fas fa-chart-line',
                 ],
                 [
                     'text' => 'Equipe',
                     'route' => 'home.equipe',
+                    'can' => 'home.equipe',
                     'icon' => 'fas fa-users',
                 ],
                 [
                     'text' => 'Projetos',
                     'route' => 'home.projetos',
+                    'can' => 'home.projetos',
                     'icon' => 'fas fa-project-diagram',
                 ],
             ],
@@ -382,26 +389,31 @@ return [
                 [
                     'text' => 'Visão geral',
                     'route' => 'relatorios.index',
+                    'can' => 'relatorios.index',
                     'icon' => 'fas fa-file-alt',
                 ],
                 [
                     'text' => 'Horas trabalhadas',
                     'route' => 'relatorios.horas-trabalhadas',
+                    'can' => 'relatorios.horas-trabalhadas',
                     'icon' => 'fas fa-clock',
                 ],
                 [
                     'text' => 'Consumo × Estimado',
                     'route' => 'relatorios.consumo',
+                    'can' => 'relatorios.consumo',
                     'icon' => 'fas fa-chart-bar',
                 ],
                 [
                     'text' => 'Matriz de Horas',
                     'route' => 'relatorios.matriz',
+                    'can' => 'relatorios.matriz',
                     'icon' => 'fas fa-th',
                 ],
                 [
                     'text' => 'Exportar CSV',
                     'route' => 'relatorios.export',
+                    'can' => 'relatorios.export',
                     'icon' => 'fas fa-file-export',
                 ],
             ],
@@ -415,6 +427,7 @@ return [
                 [
                     'text' => 'Clientes',
                     'route' => 'operacao.clientes.index',
+                    'can' => 'operacao.clientes.index',
                     'icon' => 'fas fa-user-friends',
                 ],
                 [
@@ -426,16 +439,19 @@ return [
                 [
                     'text' => 'Equipe',
                     'route' => 'operacao.times.index',
+                    'can' => 'operacao.times.index',
                     'icon' => 'fas fa-users',
                 ],
                 [
                     'text' => 'Folgas e Férias',
                     'route' => 'operacao.timeoff.index',
+                    'can' => 'operacao.timeoff.index',
                     'icon' => 'fas fa-plane',
                 ],
                 [
                     'text' => 'Funções',
                     'route' => 'operacao.funcoes.index',
+                    'can' => 'operacao.funcoes.index',
                     'icon' => 'fas fa-briefcase',
                 ],
                 [
@@ -453,11 +469,13 @@ return [
                 [
                     'text' => 'Projetos',
                     'route' => 'operacao.projetos.index',
+                    'can' => 'operacao.projetos.index',
                     'icon' => 'fas fa-project-diagram',
                 ],
                 [
                     'text' => 'Tags',
                     'route' => 'operacao.tags.index',
+                    'can' => 'operacao.tags.index',
                     'icon' => 'fas fa-tags',
                 ],
                 [
@@ -469,6 +487,7 @@ return [
                 [
                     'text' => 'Usuários',
                     'route' => 'usuario.index',
+                    'can' => 'usuario.index',
                     'icon' => 'fas fa-user-cog',
                 ],
             ],

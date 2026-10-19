@@ -35,9 +35,11 @@
                             <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                         </form>
                         @include('partials.ux-view-toggle', ['viewKey' => 'tags_index_view', 'default' => 'table'])
+                        @can('operacao.tags.store')
                         <button type="button" class="btn btn-sm btn-primary" id="btn-create-tag">
                             <i class="fas fa-plus mr-1"></i> Novo Tag
                         </button>
+                        @endcan
                     </div>
                 </div>
                 <div class="card-body p-0 ux-index-body" data-view="table">
@@ -60,15 +62,19 @@
                                     </div>
                                 </div>
                                 <div class="ux-card__foot">
-                                    <button type="button" class="btn btn-xs btn-warning"
-                                        onclick="editTag({{ json_encode($tag) }})">
-                                        <i class="fa fa-edit mr-1"></i>Editar
-                                    </button>
-                                    <form action="{{ route('operacao.tags.destroy', $tag->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta tag?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
-                                    </form>
+                                    @can('operacao.tags.update')
+                                        <button type="button" class="btn btn-xs btn-warning"
+                                            onclick="editTag({{ json_encode($tag) }})">
+                                            <i class="fa fa-edit mr-1"></i>Editar
+                                        </button>
+                                    @endcan
+                                    @can('operacao.tags.destroy')
+                                        <form action="{{ route('operacao.tags.destroy', $tag->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta tag?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                        </form>
+                                    @endcan
                                 </div>
                             </article>
                         @empty
@@ -109,15 +115,19 @@
                                         </span>
                                     </td>
                                     <td class="align-middle text-center">
-                                        <button type="button" class="btn btn-xs btn-warning mr-1" 
-                                            onclick="editTag({{ json_encode($tag) }})">
-                                            <i class="fa fa-edit"></i> Editar
-                                        </button>
-                                        <form action="{{ route('operacao.tags.destroy', $tag->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta tag?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
-                                        </form>
+                                        @can('operacao.tags.update')
+                                            <button type="button" class="btn btn-xs btn-warning mr-1"
+                                                onclick="editTag({{ json_encode($tag) }})">
+                                                <i class="fa fa-edit"></i> Editar
+                                            </button>
+                                        @endcan
+                                        @can('operacao.tags.destroy')
+                                            <form action="{{ route('operacao.tags.destroy', $tag->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta tag?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                            </form>
+                                        @endcan
                                     </td>
                                 </tr>
                             @empty

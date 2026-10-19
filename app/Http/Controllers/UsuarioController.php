@@ -42,6 +42,21 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $this->usuarioService = $usuarioService;
         $this->breadcrumbService = $breadcrumbService;
         $this->regraService = $regraService;
+
+        $this->middleware('can:usuario.index')->only('index');
+        $this->middleware('can:usuario.show')->only('show');
+        $this->middleware('can:usuario.create')->only('create');
+        $this->middleware('can:usuario.store')->only('store');
+        $this->middleware('can:usuario.edit')->only('edit');
+        $this->middleware('can:usuario.update')->only('update');
+        $this->middleware('can:usuario.destroy')->only('destroy');
+        $this->middleware('can:usuario.alterarSenha')->only('alterarSenha');
+        $this->middleware('can:usuario.salvarNovaSenha')->only('salvarNovaSenha');
+        $this->middleware('can:usuario.buscar')->only('buscar');
+        $this->middleware('can:usuario.selectOptions')->only('selectOptions');
+        $this->middleware('can:usuario.filtro')->only('filtro');
+        $this->middleware('can:usuario.removerFiltro')->only('removerFiltro');
+        $this->middleware('can:usuario.setPerPage')->only('setPerPage');
     }
 
     public function index()

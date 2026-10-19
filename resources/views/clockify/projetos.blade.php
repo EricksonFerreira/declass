@@ -88,14 +88,18 @@
                                     </div>
                                 </div>
                                 <div class="ux-card__foot">
-                                    <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary">
-                                        <i class="fas fa-eye mr-1"></i>Detalhes
-                                    </a>
+                                    @can('operacao.projetos.show')
+                                        <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary">
+                                            <i class="fas fa-eye mr-1"></i>Detalhes
+                                        </a>
+                                    @endcan
                                     @if ($projeto->podeSerGerenciadoPor(auth()->user()))
-                                        <button type="button" class="btn btn-xs btn-warning"
-                                            onclick="editProjeto({{ json_encode($projeto) }}, {{ json_encode($projeto->users->pluck('id')->values()) }})">
-                                            <i class="fa fa-edit mr-1"></i>Editar
-                                        </button>
+                                        @can('operacao.projetos.update')
+                                            <button type="button" class="btn btn-xs btn-warning"
+                                                onclick="editProjeto({{ json_encode($projeto) }}, {{ json_encode($projeto->users->pluck('id')->values()) }})">
+                                                <i class="fa fa-edit mr-1"></i>Editar
+                                            </button>
+                                        @endcan
                                     @endif
                                     @can('operacao.projetos.destroy')
                                         <form action="{{ route('operacao.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"
@@ -135,7 +139,11 @@
                                     </td>
                                     <td class="align-middle">
                                         <div class="font-weight-bold">
-                                            <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="text-dark font-weight-bold" style="text-decoration: none;">{{ $projeto->nome }}</a>
+                                            @can('operacao.projetos.show')
+                                                <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="text-dark font-weight-bold" style="text-decoration: none;">{{ $projeto->nome }}</a>
+                                            @else
+                                                {{ $projeto->nome }}
+                                            @endcan
                                             @if (! $projeto->publico)
                                                 <span class="badge badge-secondary ml-1" title="Projeto privado: visível apenas para administradores, o responsável e os membros"><i class="fas fa-lock mr-1"></i>Privado</span>
                                             @endif
@@ -180,14 +188,18 @@
                                         </span>
                                     </td>
                                     <td class="align-middle text-center" style="white-space: nowrap;">
-                                        <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary mr-1">
-                                            <i class="fas fa-eye"></i> Detalhes
-                                        </a>
+                                        @can('operacao.projetos.show')
+                                            <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="btn btn-xs btn-primary mr-1">
+                                                <i class="fas fa-eye"></i> Detalhes
+                                            </a>
+                                        @endcan
                                         @if ($projeto->podeSerGerenciadoPor(auth()->user()))
-                                            <button type="button" class="btn btn-xs btn-warning mr-1"
-                                                onclick="editProjeto({{ json_encode($projeto) }}, {{ json_encode($projeto->users->pluck('id')->values()) }})">
-                                                <i class="fa fa-edit"></i> Editar
-                                            </button>
+                                            @can('operacao.projetos.update')
+                                                <button type="button" class="btn btn-xs btn-warning mr-1"
+                                                    onclick="editProjeto({{ json_encode($projeto) }}, {{ json_encode($projeto->users->pluck('id')->values()) }})">
+                                                    <i class="fa fa-edit"></i> Editar
+                                                </button>
+                                            @endcan
                                         @endif
                                         @can('operacao.projetos.destroy')
                                             <form action="{{ route('operacao.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline"

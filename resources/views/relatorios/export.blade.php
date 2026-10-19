@@ -31,6 +31,7 @@
                 <h3 class="card-title font-weight-bold"><i class="fas fa-file-export mr-1"></i> Parâmetros</h3>
                 <small class="exp-hint d-block mt-1">Gere um CSV com as horas registradas pela equipe no período.</small>
             </div>
+            @can('relatorios.exportar')
             <form method="POST" action="{{ route('relatorios.exportar') }}">
                 @csrf
                 <div class="card-body">
@@ -75,6 +76,7 @@
                     </button>
                 </div>
             </form>
+            @endcan
         </div>
     </div>
 </div>

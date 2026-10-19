@@ -40,20 +40,6 @@
                 <span class="badge badge-{{ $projeto->status_cor }}">{{ $projeto->status_label }}</span>
             </div>
         </div>
-        <div class="d-flex align-items-center" style="gap:.5rem;">
-            <form method="POST" action="{{ route('relatorios.consumo.status', $projeto->id) }}" class="d-flex align-items-center" style="gap:.4rem;">
-                @csrf @method('PATCH')
-                <select name="status" class="form-control form-control-sm">
-                    @foreach ($statusLabels as $key => $label)
-                        <option value="{{ $key }}" {{ $projeto->status === $key ? 'selected' : '' }}>{{ $label }}</option>
-                    @endforeach
-                </select>
-                <button type="submit" class="btn btn-sm btn-outline-primary">Atualizar status</button>
-            </form>
-            <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-project-diagram mr-1"></i> Ver projeto
-            </a>
-        </div>
     </div>
 </div>
 
@@ -146,6 +132,13 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title font-weight-bold"><i class="fas fa-chart-bar mr-1"></i> Consumo por função</h3>
+                <div class="card-tools">
+                    @can('relatorios.consumo.estimativas.store')
+                        <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#modalEstimativa">
+                            <i class="fas fa-plus mr-1"></i> Adicionar estimativa
+                        </button>
+                    @endcan
+                </div>
             </div>
             <div class="card-body table-responsive p-0">
                 <table class="table table-sm mb-0">
@@ -174,13 +167,15 @@
                                 </td>
                                 <td class="text-center pr-3">
                                     @if ($estimativa)
-                                        <form method="POST" action="{{ route('relatorios.consumo.estimativas.destroy', $estimativa->id) }}"
-                                              onsubmit="return confirm('Remover a estimativa de {{ $l['nome'] }}?')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-xs btn-outline-danger" title="Remover estimativa">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        @can('relatorios.consumo.estimativas.destroy')
+                                            <form method="POST" action="{{ route('relatorios.consumo.estimativas.destroy', $estimativa->id) }}"
+                                                  onsubmit="return confirm('Remover a estimativa de {{ $l['nome'] }}?')">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="btn btn-xs btn-outline-danger" title="Remover estimativa">
+                                                    <i class="fas fa-trash mr-1"></i>Remover
+                                                </button>
+                                            </form>
+                                        @endcan
                                     @endif
                                 </td>
                             </tr>
@@ -212,24 +207,6 @@
                 @endforeach
             </div>
 
-            {{-- Nova estimativa --}}
-            <div class="card-footer">
-                <form method="POST" action="{{ route('relatorios.consumo.estimativas.store', $projeto->id) }}" class="form-inline flex-wrap" style="gap:.5rem;">
-                    @csrf
-                    <select name="funcao_id" class="form-control form-control-sm" style="width:180px;">
-                        <option value="">— Nova função —</option>
-                        @foreach ($funcoes as $id => $nome)
-                            <option value="{{ $id }}">{{ $nome }}</option>
-                        @endforeach
-                    </select>
-                    <input type="text" name="nova_funcao" class="form-control form-control-sm" placeholder="Ou digite a função" style="width:160px;">
-                    <input type="number" name="horas_estimadas" class="form-control form-control-sm" placeholder="Horas" step="0.01" min="0.01" style="width:110px;" required>
-                    <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-plus mr-1"></i> Adicionar estimativa</button>
-                </form>
-                <small class="text-muted d-block mt-2">
-                    Se a função já existir no projeto, o valor é atualizado. Funções novas ficam disponíveis para todos os projetos.
-                </small>
-            </div>
         </div>
     </div>
 
@@ -277,6 +254,53 @@
         </div>
     </div>
 </div>
+
+{{-- Modal: nova estimativa de função --}}
+@can('relatorios.consumo.estimativas.store')
+    <div class="modal fade" id="modalEstimativa" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 10px 30px rgba(0,0,0,.15);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title font-weight-bold text-dark">
+                        <i class="fas fa-plus mr-2 text-primary"></i> Adicionar estimativa
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('relatorios.consumo.estimativas.store', $projeto->id) }}">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="text-sm">Função existente</label>
+                            <select name="funcao_id" class="form-control form-control-sm">
+                                <option value="">— Nova função —</option>
+                                @foreach ($funcoes as $id => $nome)
+                                    <option value="{{ $id }}">{{ $nome }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="text-sm">Ou nova função</label>
+                            <input type="text" name="nova_funcao" class="form-control form-control-sm" placeholder="Digite o nome da função">
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="text-sm">Horas estimadas <span class="text-danger">*</span></label>
+                            <input type="number" name="horas_estimadas" class="form-control form-control-sm" placeholder="Ex.: 40" step="0.01" min="0.01" required>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Se a função já existir no projeto, o valor é atualizado. Funções novas ficam disponíveis para todos os projetos.
+                        </small>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus mr-1"></i> Adicionar estimativa</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endcan
 @endsection
 
 @section('js')

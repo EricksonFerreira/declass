@@ -16,9 +16,10 @@ class ListarTimesAction
             });
 
         // Escopo: admin ve todos os times; demais veem apenas os times
-        // que lideram ou dos quais sao membros.
+        // que lideram ou dos quais sao membros. Empresas com visao
+        // ampla (visao_restrita = false) liberam todos os times.
         $user = \Illuminate\Support\Facades\Auth::user();
-        if (! $user->isAdministrador()) {
+        if (! $user->isAdministrador() && app(\App\Services\VisibilidadeService::class)->visaoRestrita($user)) {
             $query->where(function ($q) use ($user) {
                 $q->where('lider_id', $user->id)
                     ->orWhereHas('users', fn ($u) => $u->where('users.id', $user->id));

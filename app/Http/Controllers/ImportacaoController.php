@@ -18,6 +18,14 @@ class ImportacaoController extends Controller
 {
     private const TIPOS = ['usuarios', 'projetos'];
 
+    public function __construct()
+    {
+        $this->middleware('can:importacao.index')->only('index');
+        $this->middleware('can:importacao.modelo')->only('modelo');
+        $this->middleware('can:importacao.preview')->only('preview');
+        $this->middleware('can:importacao.importar')->only('importar');
+    }
+
     public function index(): View
     {
         return view('importacao.index', [

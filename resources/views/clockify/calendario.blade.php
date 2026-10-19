@@ -10,9 +10,11 @@
         <!-- Filtros Rápidos do Calendário estilo Clockify -->
         <div class="d-flex align-items-center flex-wrap cal-header-actions">
             <!-- Botão rápido para agendar nova alocação sem precisar de coluna lateral -->
-            <button type="button" class="btn btn-sm btn-success font-weight-bold mr-2 mb-2 shadow-sm" onclick="openAddAllocationModalDirect()" style="border-radius: 8px;">
-                <i class="fas fa-calendar-plus mr-1"></i> Agendar Alocação
-            </button>
+            @can('operacao.calendario.store')
+                <button type="button" class="btn btn-sm btn-success font-weight-bold mr-2 mb-2 shadow-sm" onclick="openAddAllocationModalDirect()" style="border-radius: 8px;">
+                    <i class="fas fa-calendar-plus mr-1"></i> Agendar Alocação
+                </button>
+            @endcan
 
             <select id="calendar-user-filter" class="form-control form-control-sm select2 mb-2" style="min-width: 220px; border-radius: 8px;">
                 <option value="all" selected>👥 Colegas de equipe (Todos)</option>
@@ -739,6 +741,10 @@
             var moveUrlTemplate = "{{ route('operacao.calendario.mover', ['id' => '__ID__']) }}";
             var deleteCalUrlTemplate = "{{ route('operacao.calendario.destroy', ['id' => '__ID__']) }}";
             var deleteTrackerUrlTemplate = "{{ route('operacao.tracker.destroy', ['id' => '__ID__']) }}";
+            var canCalStore = {{ auth()->user()->can('operacao.calendario.store') ? 'true' : 'false' }};
+            var canCalMove = {{ auth()->user()->can('operacao.calendario.mover') ? 'true' : 'false' }};
+            var canCalDestroy = {{ auth()->user()->can('operacao.calendario.destroy') ? 'true' : 'false' }};
+            var canTrackerDestroy = {{ auth()->user()->can('operacao.tracker.destroy') ? 'true' : 'false' }};
 
             function pad2(n) { return String(n).padStart(2, '0'); }
             function fmtDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
@@ -825,11 +831,11 @@
                 stickyHeaderDates: true,
                 dayMaxEvents: 3,
                 eventDisplay: 'block',
-                editable: true,
-                eventStartEditable: true,
-                eventDurationEditable: true,
-                eventResizableFromStart: true,
-                selectable: true,
+                editable: canCalMove,
+                eventStartEditable: canCalMove,
+                eventDurationEditable: canCalMove,
+                eventResizableFromStart: canCalMove,
+                selectable: canCalStore,
                 eventLongPressDelay: 400, // segurar ~0.4s p/ arrastar no touch
                 selectLongPressDelay: 500,
                 views: {
@@ -866,6 +872,7 @@
                     persistEventMove(info);
                 },
                 dateClick: function(info) {
+                    if (!canCalStore) { return; }
                     // Clique no número do dia (navLink) deve navegar, não abrir o modal
                     if (info.jsEvent && info.jsEvent.target.closest('.fc-daygrid-day-number')) {
                         return;
@@ -876,6 +883,7 @@
                     openAddAllocationModalDirect();
                 },
                 select: function(info) {
+                    if (!canCalStore) { calendar.unselect(); return; }
                     // Arrastar para selecionar um intervalo abre o modal já preenchido
                     var startStr = info.startStr.split('T')[0];
                     var endDate = info.allDay ? addDays(info.end, -1) : info.end;
@@ -911,6 +919,8 @@
                         typeBadge.textContent = 'Alocação';
                         document.getElementById('popover-delete-form').action = deleteCalUrlTemplate.replace('__ID__', ev.id);
                     }
+                    document.getElementById('popover-delete-form').style.display =
+                        (type === 'tracker' ? canTrackerDestroy : canCalDestroy) ? '' : 'none';
 
                     const projColor = ev.extendedProps.project_color || '#0284c7';
                     const headerEl = document.getElementById('popover-header');

@@ -32,6 +32,17 @@ class EmpresaDocumentoController extends Controller
         'arquivo' => 'nullable|file|mimes:pdf,jpg,jpeg,png,docx|max:10240',
     ];
 
+    public function __construct()
+    {
+        $this->middleware('can:documentos.index')->only('index');
+        $this->middleware('can:documentos.store')->only('store');
+        $this->middleware('can:documentos.update')->only('update');
+        $this->middleware('can:documentos.arquivo')->only('download');
+        $this->middleware('can:documentos.destroy')->only('destroy');
+        $this->middleware('can:documentos.filtro')->only('filtro');
+        $this->middleware('can:documentos.removerFiltro')->only('removerFiltro');
+    }
+
     public function index(ListarDocumentosAction $action): View
     {
         $this->configurarSessao();

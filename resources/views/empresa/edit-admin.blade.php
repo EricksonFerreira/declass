@@ -139,6 +139,16 @@
                             <small class="text-muted">No modo por projeto, o Rastreador exibe apenas as tags do projeto selecionado (além das globais).</small>
                         </div>
                     </div>
+                    <div class="col-lg-6">
+                        <div class="form-group form-group-empresa">
+                            <label class="font-weight-bold" style="font-size:.82rem;">Visibilidade dos membros</label>
+                            <select name="visao_restrita" class="form-control form-control-sm">
+                                <option value="1" @selected(old('visao_restrita', $empresa->visao_restrita ?? true))>Restrita — cada membro vê só sua produtividade, suas equipes e os projetos de que participa</option>
+                                <option value="0" @selected(! old('visao_restrita', $empresa->visao_restrita ?? true))>Ampla — membros podem ver os dados de todos os colaboradores e projetos</option>
+                            </select>
+                            <small class="text-muted">Vale para relatórios, calendário, equipe e projetos. Administradores e líderes mantêm a visão ampliada de gestão.</small>
+                        </div>
+                    </div>
                 </div>
 
                 <hr class="my-4">

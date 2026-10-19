@@ -35,9 +35,11 @@
                             <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                         </form>
                         @include('partials.ux-view-toggle', ['viewKey' => 'timeoff_index_view', 'default' => 'table'])
-                        <button type="button" class="btn btn-sm btn-primary" id="btn-create-timeoff">
-                            <i class="fas fa-plus mr-1"></i> Solicitar Folga ou Férias
-                        </button>
+                        @can('operacao.timeoff.store')
+                            <button type="button" class="btn btn-sm btn-primary" id="btn-create-timeoff">
+                                <i class="fas fa-plus mr-1"></i> Solicitar Folga ou Férias
+                            </button>
+                        @endcan
                     </div>
                 </div>
                 <div class="card-body p-0 ux-index-body" data-view="table">
@@ -78,30 +80,38 @@
                                 </div>
                                 <div class="ux-card__foot">
                                     @if (strtolower($to->status ?? '') === 'pendente' && auth()->user()->podeGerenciarUsuario($to->user_id))
-                                        <form action="{{ route('operacao.timeoff.approve', $to->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-xs btn-success"><i class="fa fa-check mr-1"></i>Aprovar</button>
-                                        </form>
-                                        <form action="{{ route('operacao.timeoff.reject', $to->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-times mr-1"></i>Rejeitar</button>
-                                        </form>
+                                        @can('operacao.timeoff.approve')
+                                            <form action="{{ route('operacao.timeoff.approve', $to->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-xs btn-success"><i class="fa fa-check mr-1"></i>Aprovar</button>
+                                            </form>
+                                        @endcan
+                                        @can('operacao.timeoff.reject')
+                                            <form action="{{ route('operacao.timeoff.reject', $to->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-times mr-1"></i>Rejeitar</button>
+                                            </form>
+                                        @endcan
                                     @endif
                                     @if ($to->user_id === auth()->id() || auth()->user()->podeGerenciarUsuario($to->user_id))
-                                        <button type="button" class="btn btn-xs btn-warning btn-edit-timeoff"
-                                            data-id="{{ $to->id }}"
-                                            data-user="{{ $to->user_id }}"
-                                            data-tipo="{{ $to->tipo }}"
-                                            data-inicio="{{ $to->data_inicio->format('Y-m-d') }}"
-                                            data-fim="{{ $to->data_fim->format('Y-m-d') }}"
-                                            data-obs="{{ $to->observacao }}">
-                                            <i class="fas fa-edit mr-1"></i>Editar
-                                        </button>
-                                        <form action="{{ route('operacao.timeoff.destroy', $to->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
-                                        </form>
+                                        @can('operacao.timeoff.update')
+                                            <button type="button" class="btn btn-xs btn-warning btn-edit-timeoff"
+                                                data-id="{{ $to->id }}"
+                                                data-user="{{ $to->user_id }}"
+                                                data-tipo="{{ $to->tipo }}"
+                                                data-inicio="{{ $to->data_inicio->format('Y-m-d') }}"
+                                                data-fim="{{ $to->data_fim->format('Y-m-d') }}"
+                                                data-obs="{{ $to->observacao }}">
+                                                <i class="fas fa-edit mr-1"></i>Editar
+                                            </button>
+                                        @endcan
+                                        @can('operacao.timeoff.destroy')
+                                            <form action="{{ route('operacao.timeoff.destroy', $to->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                            </form>
+                                        @endcan
                                     @endif
                                 </div>
                             </article>
@@ -149,30 +159,38 @@
                                     <td class="align-middle">{{ Str::limit($to->observacao, 40) ?? '-' }}</td>
                                     <td class="align-middle text-center">
                                         @if (strtolower($to->status ?? '') === 'pendente' && auth()->user()->podeGerenciarUsuario($to->user_id))
-                                            <form action="{{ route('operacao.timeoff.approve', $to->id) }}" method="POST" class="d-inline mr-1">
-                                                @csrf
-                                                <button type="submit" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Aprovar</button>
-                                            </form>
-                                            <form action="{{ route('operacao.timeoff.reject', $to->id) }}" method="POST" class="d-inline mr-1">
-                                                @csrf
-                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Rejeitar</button>
-                                            </form>
+                                            @can('operacao.timeoff.approve')
+                                                <form action="{{ route('operacao.timeoff.approve', $to->id) }}" method="POST" class="d-inline mr-1">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Aprovar</button>
+                                                </form>
+                                            @endcan
+                                            @can('operacao.timeoff.reject')
+                                                <form action="{{ route('operacao.timeoff.reject', $to->id) }}" method="POST" class="d-inline mr-1">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Rejeitar</button>
+                                                </form>
+                                            @endcan
                                         @endif
                                         @if ($to->user_id === auth()->id() || auth()->user()->podeGerenciarUsuario($to->user_id))
-                                            <button type="button" class="btn btn-xs btn-info mr-1 btn-edit-timeoff"
-                                                data-id="{{ $to->id }}"
-                                                data-user="{{ $to->user_id }}"
-                                                data-tipo="{{ $to->tipo }}"
-                                                data-inicio="{{ $to->data_inicio->format('Y-m-d') }}"
-                                                data-fim="{{ $to->data_fim->format('Y-m-d') }}"
-                                                data-obs="{{ $to->observacao }}">
-                                                <i class="fas fa-edit"></i> Editar
-                                            </button>
-                                            <form action="{{ route('operacao.timeoff.destroy', $to->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-xs btn-default text-danger"><i class="fa fa-trash"></i> Excluir</button>
-                                            </form>
+                                            @can('operacao.timeoff.update')
+                                                <button type="button" class="btn btn-xs btn-info mr-1 btn-edit-timeoff"
+                                                    data-id="{{ $to->id }}"
+                                                    data-user="{{ $to->user_id }}"
+                                                    data-tipo="{{ $to->tipo }}"
+                                                    data-inicio="{{ $to->data_inicio->format('Y-m-d') }}"
+                                                    data-fim="{{ $to->data_fim->format('Y-m-d') }}"
+                                                    data-obs="{{ $to->observacao }}">
+                                                    <i class="fas fa-edit"></i> Editar
+                                                </button>
+                                            @endcan
+                                            @can('operacao.timeoff.destroy')
+                                                <form action="{{ route('operacao.timeoff.destroy', $to->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover esta solicitação?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-xs btn-default text-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                                </form>
+                                            @endcan
                                         @endif
                                     </td>
                                 </tr>

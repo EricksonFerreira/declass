@@ -61,15 +61,17 @@
         </div>
         <div class="card-footer d-flex justify-content-between align-items-center">
             <a href="{{ route('importacao.index') }}" class="btn btn-sm btn-light"><i class="fas fa-arrow-left mr-1"></i>Voltar</a>
-            <form method="POST" action="{{ route('importacao.importar', $tipo) }}">
-                @csrf
-                <input type="hidden" name="token" value="{{ $token }}">
-                <input type="hidden" name="senha_inicial" value="{{ $senhaInicial }}">
-                <button type="submit" class="btn btn-sm btn-success" {{ $validas->isEmpty() ? 'disabled' : '' }}
-                    onclick="return confirm('Importar {{ $validas->count() }} registro(s) válidos?{{ $invalidas->isNotEmpty() ? ' As ' . $invalidas->count() . ' linhas com erro serão ignoradas.' : '' }}')">
-                    <i class="fas fa-upload mr-1"></i>Confirmar importação de {{ $validas->count() }} registro(s)
-                </button>
-            </form>
+            @can('importacao.importar')
+                <form method="POST" action="{{ route('importacao.importar', $tipo) }}">
+                    @csrf
+                    <input type="hidden" name="token" value="{{ $token }}">
+                    <input type="hidden" name="senha_inicial" value="{{ $senhaInicial }}">
+                    <button type="submit" class="btn btn-sm btn-success" {{ $validas->isEmpty() ? 'disabled' : '' }}
+                        onclick="return confirm('Importar {{ $validas->count() }} registro(s) válidos?{{ $invalidas->isNotEmpty() ? ' As ' . $invalidas->count() . ' linhas com erro serão ignoradas.' : '' }}')">
+                        <i class="fas fa-upload mr-1"></i>Confirmar importação de {{ $validas->count() }} registro(s)
+                    </button>
+                </form>
+            @endcan
         </div>
     </div>
 

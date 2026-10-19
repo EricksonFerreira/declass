@@ -21,6 +21,19 @@ use Illuminate\View\View;
 
 class ClockifyTrackerController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:operacao.tracker.index')->only('index');
+        $this->middleware('can:operacao.tracker.start')->only('start');
+        $this->middleware('can:operacao.tracker.stop')->only('stop');
+        $this->middleware('can:operacao.tracker.manual')->only('manualStore');
+        $this->middleware('can:operacao.tracker.update')->only('update');
+        $this->middleware('can:operacao.tracker.active.update')->only('updateActive');
+        $this->middleware('can:operacao.tracker.destroy')->only('destroy');
+        $this->middleware('can:operacao.timesheet')->only('timesheet');
+        $this->middleware('can:operacao.timesheet.save')->only('timesheetSave');
+    }
+
     public function index(Request $request): View
     {
         $userId = Auth::id();

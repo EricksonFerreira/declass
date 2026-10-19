@@ -20,6 +20,17 @@ class ClockifyClienteController extends Controller
 
     private string $nomeFiltro = 'operacao.clientes';
 
+    public function __construct()
+    {
+        $this->middleware('can:operacao.clientes.index')->only('index');
+        $this->middleware('can:operacao.clientes.store')->only('store');
+        $this->middleware('can:operacao.clientes.update')->only('update');
+        $this->middleware('can:operacao.clientes.destroy')->only('destroy');
+        $this->middleware('can:operacao.clientes.filtro')->only('filtro');
+        $this->middleware('can:operacao.clientes.removerFiltro')->only('removerFiltro');
+        $this->middleware('can:operacao.clientes.setPerPage')->only('setPerPage');
+    }
+
     public function index(Request $request, ListarClientesAction $action): View
     {
         $this->configurarSessao();

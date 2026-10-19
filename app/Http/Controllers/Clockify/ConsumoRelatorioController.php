@@ -14,6 +14,16 @@ use Illuminate\View\View;
 
 class ConsumoRelatorioController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:relatorios.consumo')->only('index');
+        $this->middleware('can:relatorios.matriz')->only('matriz');
+        $this->middleware('can:relatorios.consumo.show')->only('show');
+        $this->middleware('can:relatorios.consumo.estimativas.store')->only('estimativaStore');
+        $this->middleware('can:relatorios.consumo.estimativas.destroy')->only('estimativaDestroy');
+        $this->middleware('can:relatorios.consumo.status')->only('updateStatus');
+    }
+
     /**
      * Aba A01 — resumo: projetos × funções (consumida × estimada × %).
      */
@@ -197,6 +207,7 @@ class ConsumoRelatorioController extends Controller
                 ['name' => 'Análise'],
                 ['name' => 'Relatórios', 'url' => route('relatorios.index')],
                 ['name' => 'Consumo × Estimado', 'url' => route('relatorios.consumo')],
+                ['name' => 'Projeto', 'url' => route('operacao.projetos.show', $projeto->id)],
                 ['name' => $projeto->nome, 'active' => true],
             ],
         ]);

@@ -17,9 +17,26 @@
         return (btn.tagName === 'INPUT' ? btn.value : btn.textContent || '').trim();
     }
 
+    function isDeleteButton(btn) {
+        // Form com _method=DELETE é ação destrutiva; botão com classe danger também.
+        var form = btn.closest('form');
+        var methodInput = form ? form.querySelector('input[name="_method"]') : null;
+        if (methodInput && /delete/i.test(methodInput.value || '')) {
+            return true;
+        }
+        return /(^|\s)btn-(outline-)?danger(\s|$)/.test(btn.className || '');
+    }
+
     function isSaveButton(btn) {
+        if (isDeleteButton(btn)) {
+            return false;
+        }
         var text = buttonText(btn);
-        return text === '' || SAVE_VERBS.test(text);
+        // Botão só de ícone (sem texto visível) não deve virar "Salvar".
+        if (text === '') {
+            return !btn.querySelector('i, svg');
+        }
+        return SAVE_VERBS.test(text);
     }
 
     function normalizeSubmitButtons(root) {

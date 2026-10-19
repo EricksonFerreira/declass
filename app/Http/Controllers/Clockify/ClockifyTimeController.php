@@ -20,6 +20,17 @@ class ClockifyTimeController extends Controller
 
     private string $nomeFiltro = 'operacao.times';
 
+    public function __construct()
+    {
+        $this->middleware('can:operacao.times.index')->only('index');
+        $this->middleware('can:operacao.times.store')->only('store');
+        $this->middleware('can:operacao.times.update')->only('update');
+        $this->middleware('can:operacao.times.destroy')->only('destroy');
+        $this->middleware('can:operacao.times.filtro')->only('filtro');
+        $this->middleware('can:operacao.times.removerFiltro')->only('removerFiltro');
+        $this->middleware('can:operacao.times.setPerPage')->only('setPerPage');
+    }
+
     public function index(Request $request, ListarTimesAction $action): View
     {
         $this->configurarSessao();

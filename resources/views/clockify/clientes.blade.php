@@ -35,9 +35,11 @@
                             <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                         </form>
                         @include('partials.ux-view-toggle', ['viewKey' => 'clientes_index_view'])
-                        <button type="button" class="btn btn-sm btn-primary" id="btn-create-cliente">
-                            <i class="fas fa-plus mr-1"></i> Novo Cliente
-                        </button>
+                        @can('operacao.clientes.store')
+                            <button type="button" class="btn btn-sm btn-primary" id="btn-create-cliente">
+                                <i class="fas fa-plus mr-1"></i> Novo Cliente
+                            </button>
+                        @endcan
                     </div>
                 </div>
                 <div class="card-body p-0 ux-index-body" data-view="cards">
@@ -74,15 +76,19 @@
                                     </div>
                                 </div>
                                 <div class="ux-card__foot">
-                                    <button type="button" class="btn btn-xs btn-warning"
-                                        onclick="editCliente({{ json_encode($cliente) }})">
-                                        <i class="fa fa-edit mr-1"></i>Editar
-                                    </button>
-                                    <form action="{{ route('operacao.clientes.destroy', $cliente->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este cliente?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
-                                    </form>
+                                    @can('operacao.clientes.update')
+                                        <button type="button" class="btn btn-xs btn-warning"
+                                            onclick="editCliente({{ json_encode($cliente) }})">
+                                            <i class="fa fa-edit mr-1"></i>Editar
+                                        </button>
+                                    @endcan
+                                    @can('operacao.clientes.destroy')
+                                        <form action="{{ route('operacao.clientes.destroy', $cliente->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este cliente?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                        </form>
+                                    @endcan
                                 </div>
                             </article>
                         @empty
@@ -115,15 +121,19 @@
                                         </span>
                                     </td>
                                     <td class="align-middle text-center">
-                                        <button type="button" class="btn btn-xs btn-warning mr-1" 
-                                            onclick="editCliente({{ json_encode($cliente) }})">
-                                            <i class="fa fa-edit"></i> Editar
-                                        </button>
-                                        <form action="{{ route('operacao.clientes.destroy', $cliente->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este cliente?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
-                                        </form>
+                                        @can('operacao.clientes.update')
+                                            <button type="button" class="btn btn-xs btn-warning mr-1"
+                                                onclick="editCliente({{ json_encode($cliente) }})">
+                                                <i class="fa fa-edit"></i> Editar
+                                            </button>
+                                        @endcan
+                                        @can('operacao.clientes.destroy')
+                                            <form action="{{ route('operacao.clientes.destroy', $cliente->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este cliente?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                            </form>
+                                        @endcan
                                     </td>
                                 </tr>
                             @empty

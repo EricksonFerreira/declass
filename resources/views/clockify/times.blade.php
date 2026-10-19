@@ -73,15 +73,19 @@
                                 </div>
                                 <div class="ux-card__foot">
                                     @if ($time->podeSerGerenciadoPor(auth()->user()))
-                                        <button type="button" class="btn btn-xs btn-warning"
-                                            onclick="editTime({{ json_encode($time->only(['id', 'nome', 'descricao', 'lider_id'])) }}, {{ json_encode($time->users->pluck('id')->values()) }})">
-                                            <i class="fa fa-edit mr-1"></i>Editar
-                                        </button>
-                                        <form action="{{ route('operacao.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
-                                        </form>
+                                        @can('operacao.times.update')
+                                            <button type="button" class="btn btn-xs btn-warning"
+                                                onclick="editTime({{ json_encode($time->only(['id', 'nome', 'descricao', 'lider_id'])) }}, {{ json_encode($time->users->pluck('id')->values()) }})">
+                                                <i class="fa fa-edit mr-1"></i>Editar
+                                            </button>
+                                        @endcan
+                                        @can('operacao.times.destroy')
+                                            <form action="{{ route('operacao.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+                                            </form>
+                                        @endcan
                                     @endif
                                 </div>
                             </article>
@@ -125,15 +129,19 @@
                                     </td>
                                     <td class="align-middle text-center">
                                         @if ($time->podeSerGerenciadoPor(auth()->user()))
-                                            <button type="button" class="btn btn-xs btn-warning mr-1"
-                                                onclick="editTime({{ json_encode($time->only(['id', 'nome', 'descricao', 'lider_id'])) }}, {{ json_encode($time->users->pluck('id')->values()) }})">
-                                                <i class="fa fa-edit"></i> Editar
-                                            </button>
-                                            <form action="{{ route('operacao.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
-                                            </form>
+                                            @can('operacao.times.update')
+                                                <button type="button" class="btn btn-xs btn-warning mr-1"
+                                                    onclick="editTime({{ json_encode($time->only(['id', 'nome', 'descricao', 'lider_id'])) }}, {{ json_encode($time->users->pluck('id')->values()) }})">
+                                                    <i class="fa fa-edit"></i> Editar
+                                                </button>
+                                            @endcan
+                                            @can('operacao.times.destroy')
+                                                <form action="{{ route('operacao.times.destroy', $time->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este time?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                                </form>
+                                            @endcan
                                         @else
                                             <span class="text-muted text-xs">Somente leitura</span>
                                         @endif

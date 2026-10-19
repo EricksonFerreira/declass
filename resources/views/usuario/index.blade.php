@@ -55,7 +55,7 @@
                 @forelse ($usuarios as $usuario)
                     @php
                         $canEditar = auth()->user()->hasPermissao('usuario.edit');
-                        $canAlterarSenha = auth()->user()->hasPermissao('usuario.alterarSenha');
+                        $canAlterarSenha = auth()->user()->hasPermissao('usuario.salvarNovaSenha');
                         $canExcluir = auth()->user()->hasPermissao('usuario.destroy');
                         $temAlgumaAcao = $canEditar || $canAlterarSenha || $canExcluir;
                         $nomeUsuario = trim((string) ($usuario->nome ?? 'Usuário'));
@@ -170,7 +170,7 @@
                         @forelse ($usuarios as $usuario)
                             @php
                                 $canEditar = auth()->user()->hasPermissao('usuario.edit');
-                                $canAlterarSenha = auth()->user()->hasPermissao('usuario.alterarSenha');
+                                $canAlterarSenha = auth()->user()->hasPermissao('usuario.salvarNovaSenha');
                                 $canExcluir = auth()->user()->hasPermissao('usuario.destroy');
                                 $temAlgumaAcao = $canEditar || $canAlterarSenha || $canExcluir;
                                 $perfilNome = $usuario->tipoUsuario?->name;

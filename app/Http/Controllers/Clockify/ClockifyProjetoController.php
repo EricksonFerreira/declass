@@ -25,6 +25,27 @@ class ClockifyProjetoController extends Controller
 
     private string $nomeFiltro = 'operacao.projetos';
 
+    public function __construct()
+    {
+        $this->middleware('can:operacao.projetos.index')->only('index');
+        $this->middleware('can:operacao.projetos.show')->only('show');
+        $this->middleware('can:operacao.projetos.store')->only('store');
+        $this->middleware('can:operacao.projetos.update')->only('update');
+        $this->middleware('can:operacao.projetos.destroy')->only('destroy');
+        $this->middleware('can:operacao.projetos.planejamento')->only('planejamento');
+        $this->middleware('can:operacao.projetos.planejamento.store')->only('planejamentoStore');
+        $this->middleware('can:operacao.projetos.cronogramas.novo')->only('cronogramaNovo');
+        $this->middleware('can:operacao.projetos.cronogramas.store')->only('cronogramaStore');
+        $this->middleware('can:operacao.projetos.cronogramas.destroy')->only('cronogramaDestroy');
+        $this->middleware('can:operacao.projetos.planejar-equipe')->only('planejarEquipe');
+        $this->middleware('can:operacao.projetos.planejar-equipe.store')->only('planejarEquipeStore');
+        $this->middleware('can:operacao.projetos.planejar-equipe-geral')->only('planejarEquipeGeral');
+        $this->middleware('can:operacao.projetos.planejar-equipe-geral.store')->only('planejarEquipeGeralStore');
+        $this->middleware('can:operacao.projetos.filtro')->only('filtro');
+        $this->middleware('can:operacao.projetos.removerFiltro')->only('removerFiltro');
+        $this->middleware('can:operacao.projetos.setPerPage')->only('setPerPage');
+    }
+
     public function index(Request $request, ListarProjetosAction $action): View
     {
         $this->configurarSessao();

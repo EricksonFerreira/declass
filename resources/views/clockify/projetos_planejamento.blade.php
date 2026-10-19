@@ -69,9 +69,11 @@
                             @endif
                         </div>
                         <div class="col-md-6 text-md-right">
-                            <a href="{{ route('operacao.projetos.cronogramas.novo', $projeto->id) }}" class="btn btn-sm btn-primary font-weight-bold shadow-sm">
-                                <i class="fas fa-plus mr-1"></i> Criar Nova Versão / Etapa
-                            </a>
+                            @can('operacao.projetos.cronogramas.novo')
+                                <a href="{{ route('operacao.projetos.cronogramas.novo', $projeto->id) }}" class="btn btn-sm btn-primary font-weight-bold shadow-sm">
+                                    <i class="fas fa-plus mr-1"></i> Criar Nova Versão / Etapa
+                                </a>
+                            @endcan
                         </div>
                     </div>
                 </form>
@@ -212,9 +214,11 @@
 
                     <!-- Botão de Salvar -->
                     <div class="mt-4">
-                        <button type="submit" class="btn btn-success btn-block font-weight-bold shadow-sm" id="btn-save-planning" style="display: none;">
-                            <i class="fas fa-save mr-1"></i> Salvar Planejamento
-                        </button>
+                        @can('operacao.projetos.planejamento.store')
+                            <button type="submit" class="btn btn-success btn-block font-weight-bold shadow-sm" id="btn-save-planning" style="display: none;">
+                                <i class="fas fa-save mr-1"></i> Salvar Planejamento
+                            </button>
+                        @endcan
                         {{-- <a href="{{ route('operacao.projetos.index') }}" class="btn btn-default btn-block mt-2 font-weight-bold text-secondary">
                             <i class="fas fa-arrow-left mr-1"></i> Voltar para Projetos
                         </a> --}}

@@ -413,9 +413,11 @@
                 <a href="{{ route('operacao.projetos.show', $projeto->id) }}" class="btn btn-default font-weight-bold text-secondary">
                     <i class="fas fa-arrow-left mr-1"></i> Cancelar
                 </a>
-                <button type="submit" class="btn btn-success font-weight-bold shadow-sm px-4">
-                    <i class="fas fa-save mr-1"></i> Salvar Alocações
-                </button>
+                @can('operacao.projetos.planejar-equipe.store')
+                    <button type="submit" class="btn btn-success font-weight-bold shadow-sm px-4">
+                        <i class="fas fa-save mr-1"></i> Salvar Alocações
+                    </button>
+                @endcan
             </div>
         </form>
     </div>

@@ -21,9 +21,11 @@
                             <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
                         </div>
                     </form>
-                    <button type="button" class="btn btn-sm btn-primary" id="btn-novo-membro">
-                        <i class="fas fa-plus mr-1"></i> Novo
-                    </button>
+                    @can('relatorios.membros.store')
+                        <button type="button" class="btn btn-sm btn-primary" id="btn-novo-membro">
+                            <i class="fas fa-plus mr-1"></i> Novo
+                        </button>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -42,23 +44,29 @@
                             <td class="pl-3 font-weight-bold">{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
                             <td class="pr-3">
-                                <button type="button" class="btn btn-xs btn-warning btn-editar-membro"
-                                        data-id="{{ $user->id }}"
-                                        data-name="{{ $user->name }}"
-                                        data-email="{{ $user->email }}">
-                                    <i class="fa fa-edit"></i> Editar
-                                </button>
-                                <form action="{{ route('relatorios.membros.reset-password', $user->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="button" class="btn btn-xs btn-info" onclick="confirmResetPassword(this)">
-                                        <i class="fa fa-key"></i> Resetar Senha
+                                @can('relatorios.membros.update')
+                                    <button type="button" class="btn btn-xs btn-warning btn-editar-membro"
+                                            data-id="{{ $user->id }}"
+                                            data-name="{{ $user->name }}"
+                                            data-email="{{ $user->email }}">
+                                        <i class="fa fa-edit"></i> Editar
                                     </button>
-                                </form>
-                                <form action="{{ route('relatorios.membros.destroy', $user->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" class="btn btn-xs btn-danger" onclick="confirmDelete(this)"><i class="fa fa-trash"></i> Excluir</button>
-                                </form>
+                                @endcan
+                                @can('relatorios.membros.reset-password')
+                                    <form action="{{ route('relatorios.membros.reset-password', $user->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="button" class="btn btn-xs btn-info" onclick="confirmResetPassword(this)">
+                                            <i class="fa fa-key"></i> Resetar Senha
+                                        </button>
+                                    </form>
+                                @endcan
+                                @can('relatorios.membros.destroy')
+                                    <form action="{{ route('relatorios.membros.destroy', $user->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-xs btn-danger" onclick="confirmDelete(this)"><i class="fa fa-trash"></i> Excluir</button>
+                                    </form>
+                                @endcan
                             </td>
                         </tr>
                     @empty

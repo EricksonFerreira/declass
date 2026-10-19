@@ -121,8 +121,12 @@
                         <div class="status-kpi-row">
                             <span class="status-kpi-label">Valor (Faturado)</span>
                             <span class="status-kpi-value text-success">R$ {{ number_format($valor_faturado, 2, ',', '.') }}</span>
-                            <span class="status-kpi-label">Valor Faturado Etapas</span>
+                        </div>
+                        <div class="status-kpi-row">
+                            <span class="status-kpi-label">Faturado por Etapas</span>
                             <span class="status-kpi-value text-warning">R$ {{ number_format($valor_faturado_etapas, 2, ',', '.') }}</span>
+                        </div>
+                        <div class="status-kpi-row">
                             <span class="status-kpi-label">Diferença</span>
                             <span class="status-kpi-value {{ $valor_faturado_diff >= 0 ? 'text-success' : 'text-danger' }}">R$ {{ number_format($valor_faturado_diff, 2, ',', '.') }}</span>
                         </div>
@@ -292,9 +296,11 @@
                                 </div>
                             </div>
                             <div class="col-md-4 text-md-right mt-3 mt-md-0">
-                                <a href="{{ route('operacao.projetos.planejamento', $project->id) }}" class="btn btn-primary font-weight-bold shadow-sm" target="_blank">
-                                    <i class="fas fa-edit mr-1"></i> Ajustar Planejamento
-                                </a>
+                                @can('operacao.projetos.planejamento')
+                                    <a href="{{ route('operacao.projetos.planejamento', $project->id) }}" class="btn btn-primary font-weight-bold shadow-sm" target="_blank">
+                                        <i class="fas fa-edit mr-1"></i> Ajustar Planejamento
+                                    </a>
+                                @endcan
                             </div>
                         </div>
                     @else
@@ -302,9 +308,11 @@
                             <i class="far fa-calendar-times fa-4x mb-3 text-muted"></i>
                             <h5 class="font-weight-bold text-dark">Nenhum Cronograma Ativo</h5>
                             <p class="text-sm text-muted mb-4">Este projeto ainda não possui um cronograma de entrega ativo ou válido.</p>
-                            <a href="{{ route('operacao.projetos.planejamento', $project->id) }}" class="btn btn-primary font-weight-bold shadow-sm" target="_blank">
-                                <i class="fas fa-calendar-alt mr-1"></i> Criar Planejamento
-                            </a>
+                            @can('operacao.projetos.planejamento')
+                                <a href="{{ route('operacao.projetos.planejamento', $project->id) }}" class="btn btn-primary font-weight-bold shadow-sm" target="_blank">
+                                    <i class="fas fa-calendar-alt mr-1"></i> Criar Planejamento
+                                </a>
+                            @endcan
                         </div>
                     @endif
                 </div>
@@ -324,9 +332,11 @@
                             <p class="text-sm text-muted mb-0">Você pode gerenciar as cores, nome, orçamento base, atribuir clientes e alterar visibilidade pública/privada.</p>
                         </div>
                         <div class="col-md-4 text-md-right mt-3 mt-md-0">
-                            <a href="{{ route('operacao.projetos.index') }}" class="btn btn-warning text-dark font-weight-bold shadow-sm">
-                                <i class="fas fa-sliders-h mr-1"></i> Configurações Gerais
-                            </a>
+                            @can('operacao.projetos.index')
+                                <a href="{{ route('operacao.projetos.index') }}" class="btn btn-warning text-dark font-weight-bold shadow-sm">
+                                    <i class="fas fa-sliders-h mr-1"></i> Configurações Gerais
+                                </a>
+                            @endcan
                         </div>
                     </div>
                 </div>

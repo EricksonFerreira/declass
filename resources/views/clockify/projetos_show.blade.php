@@ -103,25 +103,35 @@
                         <a href="{{ route('operacao.projetos.index') }}" class="btn btn-default font-weight-bold text-secondary mr-2 mb-2 shadow-sm">
                             <i class="fas fa-arrow-left mr-1"></i> Voltar
                         </a>
-                        <button type="button" class="btn btn-warning font-weight-bold text-dark mr-2 mb-2 shadow-sm" data-toggle="modal" data-target="#modal-edit-projeto">
-                            <i class="fas fa-edit mr-1"></i> Editar Projeto
-                        </button>
-                        <form action="{{ route('operacao.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline mr-2 mb-2" onsubmit="return confirm('Deseja realmente excluir este projeto e todas as suas versões de planejamento?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger font-weight-bold shadow-sm">
-                                <i class="fas fa-trash mr-1"></i> Excluir Projeto
+                        @can('operacao.projetos.update')
+                            <button type="button" class="btn btn-warning font-weight-bold text-dark mr-2 mb-2 shadow-sm" data-toggle="modal" data-target="#modal-edit-projeto">
+                                <i class="fas fa-edit mr-1"></i> Editar Projeto
                             </button>
-                        </form>
-                        <a href="{{ route('operacao.projetos.planejar-equipe', $projeto->id) }}" class="btn btn-info font-weight-bold text-white mr-2 mb-2 shadow-sm">
-                            <i class="fas fa-users mr-1"></i> Planejar Equipe
-                        </a>
-                        <a href="{{ route('relatorios.consumo.show', $projeto->id) }}" class="btn btn-secondary font-weight-bold text-white mr-2 mb-2 shadow-sm">
-                            <i class="fas fa-chart-bar mr-1"></i> Consumo × Estimado
-                        </a>
-                        <a href="{{ route('operacao.projetos.cronogramas.novo', $projeto->id) }}" class="btn btn-primary font-weight-bold mb-2 shadow-sm">
-                            <i class="fas fa-plus mr-1"></i> Nova Versão/Etapa
-                        </a>
+                        @endcan
+                        @can('operacao.projetos.destroy')
+                            <form action="{{ route('operacao.projetos.destroy', $projeto->id) }}" method="POST" class="d-inline mr-2 mb-2" onsubmit="return confirm('Deseja realmente excluir este projeto e todas as suas versões de planejamento?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger font-weight-bold shadow-sm">
+                                    <i class="fas fa-trash mr-1"></i> Excluir Projeto
+                                </button>
+                            </form>
+                        @endcan
+                        @can('operacao.projetos.planejar-equipe')
+                            <a href="{{ route('operacao.projetos.planejar-equipe', $projeto->id) }}" class="btn btn-info font-weight-bold text-white mr-2 mb-2 shadow-sm">
+                                <i class="fas fa-users mr-1"></i> Planejar Equipe
+                            </a>
+                        @endcan
+                        @can('relatorios.consumo.show')
+                            <a href="{{ route('relatorios.consumo.show', $projeto->id) }}" class="btn btn-secondary font-weight-bold text-white mr-2 mb-2 shadow-sm">
+                                <i class="fas fa-chart-bar mr-1"></i> Consumo × Estimado
+                            </a>
+                        @endcan
+                        @can('operacao.projetos.cronogramas.novo')
+                            <a href="{{ route('operacao.projetos.cronogramas.novo', $projeto->id) }}" class="btn btn-primary font-weight-bold mb-2 shadow-sm">
+                                <i class="fas fa-plus mr-1"></i> Nova Versão/Etapa
+                            </a>
+                        @endcan
                     </div>
                 </div>
                 @if($projeto->descricao)
@@ -440,16 +450,20 @@
                                     </td>
                                     <td class="align-middle text-center cell-acoes" data-label="">
                                         <!-- Editar abre o planejador com a versão correspondente -->
-                                        <a href="{{ route('operacao.projetos.planejamento', [$projeto->id, 'cronograma_id' => $cron->id]) }}" class="btn btn-xs btn-info font-weight-bold mr-1">
-                                            <i class="fas fa-edit mr-1"></i> Editar
-                                        </a>
-                                        
+                                        @can('operacao.projetos.planejamento')
+                                            <a href="{{ route('operacao.projetos.planejamento', [$projeto->id, 'cronograma_id' => $cron->id]) }}" class="btn btn-xs btn-info font-weight-bold mr-1">
+                                                <i class="fas fa-edit mr-1"></i> Editar
+                                            </a>
+                                        @endcan
+
                                         <!-- Excluir Versão -->
-                                        <form action="{{ route('operacao.projetos.cronogramas.destroy', $cron->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta versão de planejamento? Esta ação é irreversível.')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
-                                        </form>
+                                        @can('operacao.projetos.cronogramas.destroy')
+                                            <form action="{{ route('operacao.projetos.cronogramas.destroy', $cron->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta versão de planejamento? Esta ação é irreversível.')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Excluir</button>
+                                            </form>
+                                        @endcan
                                     </td>
                                 </tr>
                             @empty

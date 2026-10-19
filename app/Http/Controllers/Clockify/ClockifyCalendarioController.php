@@ -17,6 +17,14 @@ use Illuminate\View\View;
 
 class ClockifyCalendarioController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:operacao.calendario.index')->only('index');
+        $this->middleware('can:operacao.calendario.store')->only('store');
+        $this->middleware('can:operacao.calendario.mover')->only('mover');
+        $this->middleware('can:operacao.calendario.destroy')->only('destroy');
+    }
+
     public function index(Request $request, ListarCalendarioAction $action): View
     {
         $empresaId = $request->user()->empresa_id;

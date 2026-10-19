@@ -23,6 +23,19 @@ class ClockifyTimeOffController extends Controller
 
     private string $nomeFiltro = 'operacao.timeoff';
 
+    public function __construct()
+    {
+        $this->middleware('can:operacao.timeoff.index')->only('index');
+        $this->middleware('can:operacao.timeoff.store')->only('store');
+        $this->middleware('can:operacao.timeoff.update')->only('update');
+        $this->middleware('can:operacao.timeoff.approve')->only('approve');
+        $this->middleware('can:operacao.timeoff.reject')->only('reject');
+        $this->middleware('can:operacao.timeoff.destroy')->only('destroy');
+        $this->middleware('can:operacao.timeoff.filtro')->only('filtro');
+        $this->middleware('can:operacao.timeoff.removerFiltro')->only('removerFiltro');
+        $this->middleware('can:operacao.timeoff.setPerPage')->only('setPerPage');
+    }
+
     public function index(Request $request, ListarTimeOffsAction $action): View
     {
         $this->configurarSessao();

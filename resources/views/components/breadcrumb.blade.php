@@ -27,8 +27,11 @@
             border-radius: 999px;
             padding: .3rem .95rem;
         }
-        .navbar-breadcrumb-badge .breadcrumb-item a { color: #111827; font-weight: 700; }
-        .navbar-breadcrumb-badge .breadcrumb-item.active { color: #000; }
-        .navbar-breadcrumb-badge .breadcrumb-item + .breadcrumb-item::before { color: #6b7280; }
+        .navbar-breadcrumb-badge,
+        .navbar-breadcrumb-badge .breadcrumb-item { font-weight: 700; }
+        .navbar-breadcrumb-badge .breadcrumb-item,
+        .navbar-breadcrumb-badge .breadcrumb-item a { color: #000; font-weight: 700; }
+        .navbar-breadcrumb-badge .breadcrumb-item.active { color: #000; font-weight: 700; }
+        .navbar-breadcrumb-badge .breadcrumb-item + .breadcrumb-item::before { color: #000; font-weight: 700; }
     </style>
 @endsection

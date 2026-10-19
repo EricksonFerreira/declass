@@ -60,9 +60,11 @@
                                 <strong>papel</strong>: administrador · lider · colaborador (padrão) · visualizador.<br>
                                 <strong>funcao</strong>: cria a função se não existir (o custo/hora vem dela). E-mail já cadastrado → atualiza os dados.
                             </div>
-                            <a href="{{ route('importacao.modelo', 'usuarios') }}" class="btn btn-xs btn-outline-primary mt-2">
-                                <i class="fas fa-download mr-1"></i>Baixar modelo CSV
-                            </a>
+                            @can('importacao.modelo')
+                                <a href="{{ route('importacao.modelo', 'usuarios') }}" class="btn btn-xs btn-outline-primary mt-2">
+                                    <i class="fas fa-download mr-1"></i>Baixar modelo CSV
+                                </a>
+                            @endcan
                         </div>
                         <div class="form-group">
                             <label>Arquivo CSV <span class="text-danger">*</span></label>
@@ -75,7 +77,9 @@
                         </div>
                     </div>
                     <div class="card-footer text-right">
-                        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search mr-1"></i>Enviar e conferir</button>
+                        @can('importacao.preview')
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search mr-1"></i>Enviar e conferir</button>
+                        @endcan
                     </div>
                 </form>
             </div>
@@ -100,9 +104,11 @@
                                 <strong>estimativas</strong>: <code>Engenheiro Civil:530|Projetista:130</code> cria as estimativas por função.<br>
                                 Projeto já cadastrado (mesmo nome) → atualiza os dados.
                             </div>
-                            <a href="{{ route('importacao.modelo', 'projetos') }}" class="btn btn-xs btn-outline-success mt-2">
-                                <i class="fas fa-download mr-1"></i>Baixar modelo CSV
-                            </a>
+                            @can('importacao.modelo')
+                                <a href="{{ route('importacao.modelo', 'projetos') }}" class="btn btn-xs btn-outline-success mt-2">
+                                    <i class="fas fa-download mr-1"></i>Baixar modelo CSV
+                                </a>
+                            @endcan
                         </div>
                         <div class="form-group mb-0">
                             <label>Arquivo CSV <span class="text-danger">*</span></label>
@@ -110,7 +116,9 @@
                         </div>
                     </div>
                     <div class="card-footer text-right">
-                        <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-search mr-1"></i>Enviar e conferir</button>
+                        @can('importacao.preview')
+                            <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-search mr-1"></i>Enviar e conferir</button>
+                        @endcan
                     </div>
                 </form>
             </div>
