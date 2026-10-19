@@ -482,7 +482,7 @@ return [
                     'text' => 'Uso de IA',
                     'route' => 'configuracao-ia.edit',
                     'icon' => 'fas fa-chart-line',
-                    'can' => 'configuracao-ia.edit',
+                    'can' => 'acessar-superadmin',
                 ],
                 [
                     'text' => 'Usuários',

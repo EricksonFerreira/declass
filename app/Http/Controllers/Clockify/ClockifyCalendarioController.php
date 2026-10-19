@@ -95,6 +95,7 @@ class ClockifyCalendarioController extends Controller
             'events' => json_encode($events, JSON_INVALID_UTF8_SUBSTITUTE),
             'projetos' => $projetos,
             'usuarios' => $usuarios,
+            'verApenasSi' => $idsVisiveis !== null && count($idsVisiveis) <= 1,
             'breadcrumb' => [
                 ['name' => 'Home', 'url' => route('home')],
                 ['name' => 'Registrar Tempo'],

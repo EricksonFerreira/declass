@@ -56,13 +56,13 @@
                         </select>
                     </div>
                     <div class="form-group mb-0">
-                        <label for="user_ids" class="exp-label">Equipe</label>
+                        <label for="user_ids" class="exp-label">Colaboradores</label>
                         <select class="form-control select2" id="user_ids" name="user_ids[]" multiple="multiple" style="width: 100%;">
                             @foreach($users as $user)
-                                <option value="{{ $user->id }}" @selected(in_array($user->id, (array) old('user_ids', [])))>{{ $user->name }} ({{ $user->email }})</option>
+                                <option value="{{ $user->id }}" @selected(in_array($user->id, (array) old('user_ids', [])))>{{ $user->name }}</option>
                             @endforeach
                         </select>
-                        <small class="exp-hint">Deixe vazio para incluir todos os usuários.</small>
+                        <small class="exp-hint">Escolha um ou mais colaboradores para filtrar o relatório. Deixe vazio para incluir todos.</small>
                     </div>
                 </div>
                 <div class="card-footer d-flex justify-content-end" style="gap: 8px; background:#f8fafc; border-top:1px solid #e5e7eb;">
@@ -87,9 +87,9 @@
         if ($.fn.select2) {
             $('#user_ids').select2({
                 theme: 'bootstrap4',
-                placeholder: 'Todos os usuários',
+                placeholder: 'Todos os colaboradores',
                 allowClear: true,
-                language: { noResults: function () { return 'Nenhum usuário encontrado'; } }
+                language: { noResults: function () { return 'Nenhum colaborador encontrado'; } }
             });
         }
     });

@@ -233,7 +233,10 @@ class PermissaoSyncService
     private function buildRolePermissionFilters(): array
     {
         return [
-            'administrador' => fn (string $permissionName) => true,
+            'administrador' => fn (string $permissionName) =>
+                ! Permissao::isNomeInterno($permissionName)
+                && ! str_starts_with($permissionName, 'licitacoes.')
+                && ! str_starts_with($permissionName, 'documentos.'),
             'usuario' => fn (string $permissionName) =>
                 in_array($permissionName, PapeisPermissoesSeeder::PERMISSOES_USUARIO, true),
         ];

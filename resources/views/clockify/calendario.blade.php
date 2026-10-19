@@ -16,15 +16,21 @@
                 </button>
             @endcan
 
-            <select id="calendar-user-filter" class="form-control form-control-sm select2 mb-2" style="min-width: 220px; border-radius: 8px;">
-                <option value="all" selected>👥 Colegas de equipe (Todos)</option>
-                <option value="current">👤 Apenas meus registros</option>
-                @foreach ($usuarios as $u)
-                    @if($u->id !== Auth::id())
-                        <option value="user-{{ $u->id }}">👤 {{ $u->nome }}</option>
-                    @endif
-                @endforeach
+            @if (empty($verApenasSi))
+            <select id="calendar-user-filter" class="form-control form-control-sm mb-2" style="min-width: 220px; border-radius: 8px;">
+                <optgroup label="Visão geral">
+                    <option value="all" selected>Todos os colaboradores</option>
+                    <option value="current">Apenas meus registros</option>
+                </optgroup>
+                <optgroup label="Colaboradores">
+                    @foreach ($usuarios as $u)
+                        @if($u->id !== Auth::id())
+                            <option value="user-{{ $u->id }}">{{ $u->nome }}</option>
+                        @endif
+                    @endforeach
+                </optgroup>
             </select>
+            @endif
         </div>
     </div>
 @stop
@@ -147,6 +153,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
     <!-- FullCalendar CSS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <style>
         /* =====================================================
            PADRÃO VISUAL DO SISTEMA (mesmo da tela de projeto)
@@ -681,7 +688,16 @@
     <!-- FullCalendar JS -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script>
+        $(function() {
+            $('#calendar-user-filter').select2({ width: '220px' });
+            $('#modal-user-id, #modal-projeto-id').select2({
+                width: '100%',
+                dropdownParent: $('#modalAddAllocationDirect')
+            });
+        });
+
         let popoverEl = null;
 
         function openAddAllocationModalDirect() {
@@ -944,7 +960,8 @@
                     document.getElementById('popover-event-time').textContent = timeStr;
                 },
                 events: function(info, successCallback, failureCallback) {
-                    var filter = document.getElementById('calendar-user-filter').value;
+                    var filterEl = document.getElementById('calendar-user-filter');
+                    var filter = filterEl ? filterEl.value : 'all';
                     var filtered = rawEvents.filter(function(ev) {
                         if (filter === 'all') return true;
                         var eventUserId = ev.extendedProps.user_id;
@@ -1043,10 +1060,13 @@
 
             calendar.render();
 
-            document.getElementById('calendar-user-filter').addEventListener('change', function() {
-                calendar.refetchEvents();
-                closePopover();
-            });
+            var filterSelect = document.getElementById('calendar-user-filter');
+            if (filterSelect) {
+                filterSelect.addEventListener('change', function() {
+                    calendar.refetchEvents();
+                    closePopover();
+                });
+            }
 
             // Close popover when clicking outside
             document.addEventListener('mousedown', function(e) {
