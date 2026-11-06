@@ -58,6 +58,13 @@ class SetupProducaoCommand extends Command
             $this->info("{$admin['email']} (usuario: {$admin['usuario']}): ".($criado ? 'criado (senha inicial + troca obrigatoria)' : 'atualizado como superadmin'));
         }
 
+        // Modulos novos adicionam permissoes as rotas; papeis existentes
+        // so recebem a matriz na criacao — aqui completamos o que falta
+        // (aditivo, nunca remove ajustes manuais).
+        $this->info('=== permissoes:aplicar-matriz ===');
+        Artisan::call('permissoes:aplicar-matriz');
+        $this->line(Artisan::output());
+
         $this->info('Setup de producao concluido.');
 
         return self::SUCCESS;
