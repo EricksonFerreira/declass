@@ -145,6 +145,7 @@ class PerfisEscolaresSeeder extends Seeder
             'ano_letivo.index', 'periodo_letivo.index', 'etapa.index', 'disciplina.index',
             'turma.index', 'turma.show', 'turma.filtro', 'turma.removerFiltro', 'turma.setPerPage',
             'matricula.index', 'matricula.create', 'matricula.store', 'matricula.edit', 'matricula.update',
+            'matricula.rematricula', 'matricula.rematricular',
             'solicitacao_matricula.index', 'solicitacao_matricula.create', 'solicitacao_matricula.store', 'solicitacao_matricula.show', 'solicitacao_matricula.edit', 'solicitacao_matricula.update', 'solicitacao_matricula.destroy', 'solicitacao_matricula.aprovar', 'solicitacao_matricula.recusar', 'solicitacao_matricula.cancelar', 'solicitacao_matricula.filtro', 'solicitacao_matricula.removerFiltro', 'solicitacao_matricula.setPerPage',
             'matricula.filtro', 'matricula.removerFiltro', 'matricula.setPerPage',
             'diario.index', 'diario.create', 'diario.store', 'diario.edit', 'diario.update',

@@ -23,6 +23,7 @@ class MatriculaController extends BaseController implements FiltroInterface, Res
     public function __construct(
         protected MatriculaService $matriculaService,
         protected BreadcrumbService $breadcrumbService,
+        protected \App\Services\RematriculaService $rematriculaService,
     ) {
         $this->titulo = 'Matrículas';
         $this->nomeFiltro = 'matricula';
@@ -33,6 +34,8 @@ class MatriculaController extends BaseController implements FiltroInterface, Res
         $this->middleware('can:matricula.edit')->only('edit');
         $this->middleware('can:matricula.update')->only('update');
         $this->middleware('can:matricula.destroy')->only('destroy');
+        $this->middleware('can:matricula.rematricula')->only('rematricula');
+        $this->middleware('can:matricula.rematricular')->only('rematricular');
         $this->middleware('can:matricula.filtro')->only('filtro');
         $this->middleware('can:matricula.removerFiltro')->only('removerFiltro');
         $this->middleware('can:matricula.setPerPage')->only('setPerPage');
@@ -103,6 +106,91 @@ class MatriculaController extends BaseController implements FiltroInterface, Res
         abort_if(! $success, 403, 'Sem acesso para excluir esta matrícula.');
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    /**
+     * Rematricula em lote: passo 1 escolhe ano origem/destino,
+     * passo 2 lista alunos elegiveis com a turma de destino.
+     */
+    public function rematricula(Request $request)
+    {
+        $empresaId = (int) $request->user()->empresa_id;
+        $anoOrigemId = (int) $request->query('ano_origem', 0);
+        $anoDestinoId = (int) $request->query('ano_destino', 0);
+
+        $anosLetivos = \App\Models\AnoLetivo::query()
+            ->where('empresa_id', $empresaId)
+            ->with('escola:id,nome')
+            ->orderByDesc('ano')
+            ->get(['id', 'escola_id', 'ano']);
+
+        $dados = null;
+        $erroAnos = null;
+
+        if ($anoOrigemId && $anoDestinoId) {
+            try {
+                [$anoOrigem, $anoDestino] = $this->rematriculaService->validarAnos($anoOrigemId, $anoDestinoId, $empresaId);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                $erroAnos = collect($e->errors())->flatten()->first();
+                $anoOrigem = $anoDestino = null;
+            }
+
+            if ($anoOrigem && $anoDestino) {
+                $elegiveis = $this->rematriculaService->matriculasElegiveis($anoOrigemId, $anoDestinoId, $empresaId);
+                $turmasDestino = $this->rematriculaService->turmasDestino(
+                    $anoDestinoId, (int) $anoOrigem->escola_id, $empresaId
+                );
+
+                $dados = [
+                    'anoOrigem' => $anoOrigem,
+                    'anoDestino' => $anoDestino,
+                    'elegiveis' => $elegiveis,
+                    'turmasDestino' => $turmasDestino,
+                ];
+            }
+        }
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Rematrícula em lote', 'Vida Acadêmica');
+
+        return view('matricula.rematricula', compact(
+            'anosLetivos', 'anoOrigemId', 'anoDestinoId', 'dados', 'erroAnos', 'breadcrumb'
+        ))->with('titulo', 'Rematrícula em lote');
+    }
+
+    public function rematricular(Request $request)
+    {
+        $request->validate([
+            'ano_origem' => ['required', 'integer'],
+            'ano_destino' => ['required', 'integer'],
+            'itens' => ['required', 'array', 'min:1'],
+            'itens.*' => ['integer'],
+        ]);
+
+        $empresaId = (int) $request->user()->empresa_id;
+        $anoDestinoId = (int) $request->input('ano_destino');
+
+        // garante que os anos sao validos antes de gravar
+        $this->rematriculaService->validarAnos(
+            (int) $request->input('ano_origem'), $anoDestinoId, $empresaId
+        );
+
+        $resultado = $this->rematriculaService->rematricular(
+            $request->input('itens'), $anoDestinoId, $empresaId
+        );
+
+        $mensagem = "Rematrícula concluída: {$resultado['criadas']} matrícula(s) criada(s)";
+        if ($resultado['ignoradas'] !== []) {
+            $mensagem .= ', '.count($resultado['ignoradas']).' ignorada(s)';
+        }
+        $mensagem .= '.';
+
+        return redirect()
+            ->route('matricula.rematricula', [
+                'ano_origem' => $request->input('ano_origem'),
+                'ano_destino' => $anoDestinoId,
+            ])
+            ->with('success', $mensagem)
+            ->with('ignoradas', $resultado['ignoradas']);
     }
 
     public function filtro(Request $request)

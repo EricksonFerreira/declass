@@ -407,6 +407,12 @@ return [
                     'icon' => 'fas fa-id-card',
                 ],
                 [
+                    'text' => 'Rematrícula em Lote',
+                    'route' => 'matricula.rematricula',
+                    'can' => 'matricula.rematricula',
+                    'icon' => 'fas fa-exchange-alt',
+                ],
+                [
                     'text' => 'Solicitações de Matrícula',
                     'route' => 'solicitacao_matricula.index',
                     'can' => 'solicitacao_matricula.index',
