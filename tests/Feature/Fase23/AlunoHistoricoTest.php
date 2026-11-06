@@ -62,6 +62,7 @@ test('historico exibe secoes consolidadas do aluno', function () {
 
     $this->actingAs($user)->get("/admin/aluno/{$aluno->id}/historico")
         ->assertOk()
+        ->assertSee('<a href="'.route('aluno.show', $aluno->id).'">'.$aluno->nome.'</a>', false)
         ->assertSee('Aluno Historico')
         ->assertSee('Histórico escolar por ano letivo')
         ->assertSee('Linha do tempo')

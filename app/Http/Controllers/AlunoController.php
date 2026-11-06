@@ -115,9 +115,12 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
 
         $dados = app(\App\Services\AlunoHistoricoService::class)->montar($aluno);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow(
-            'Alunos', 'aluno.index', 'Histórico: '.($aluno->nome ?? 'Aluno')
-        );
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCustom([
+            ['Home', route('home')],
+            ['Alunos', route('aluno.index')],
+            [$aluno->nome ?? 'Aluno', route('aluno.show', $aluno->id)],
+            ['Histórico', null],
+        ]);
 
         return view('aluno.historico', array_merge(compact('aluno', 'breadcrumb'), $dados))
             ->with('titulo', 'Histórico — '.($aluno->nome ?? 'Aluno'));

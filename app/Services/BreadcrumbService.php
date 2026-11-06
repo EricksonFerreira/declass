@@ -68,6 +68,15 @@ class BreadcrumbService
         return $this->prepararBreadcrumb($items);
     }
 
+    /**
+     * Breadcrumb com itens livres: cada par e [nome, url|null].
+     * Util para hierarquias que nao seguem index -> show (ex.: historico do aluno).
+     */
+    public function prepararBreadcrumbCustom(array $itemsData)
+    {
+        return $this->prepararBreadcrumb($this->buildBreadCrumbItems($itemsData));
+    }
+
     private function buildBreadCrumbItems(array $itemsData)
     {
         $items = [];
