@@ -169,12 +169,12 @@ test('veiculo de outro tenant nao e acessivel', function () {
     expect(Veiculo::where('placa', 'NEW3D45')->exists())->toBeTrue(); // campo extra ignorado
 });
 
-test('professor nao pode cadastrar veiculo (somente leitura)', function () {
+test('professor nao acessa transporte', function () {
     $empresa = tenant();
     $ids = setupTransporte($empresa);
     $user = usuarioTenant($empresa, 'professor');
 
-    $this->actingAs($user)->get(route('veiculo.index'))->assertOk();
+    $this->actingAs($user)->get(route('veiculo.index'))->assertForbidden();
     $this->actingAs($user)->get(route('veiculo.create'))->assertForbidden();
 });
 

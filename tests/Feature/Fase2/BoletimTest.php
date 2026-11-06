@@ -171,31 +171,27 @@ test('aluno sem matricula ativa retorna 404 no boletim', function () {
     $this->actingAs($admin)->get(route('boletim.aluno', $aluno->id))->assertNotFound();
 });
 
-test('professor so ve boletim de turmas que leciona', function () {
+test('professor nao acessa boletim', function () {
     $empresa = tenant();
     $admin = usuarioTenant($empresa, 'administrador');
     $professor = usuarioTenant($empresa, 'professor');
     $ids = setupBoletim($empresa);
 
-    // professor SEM atribuicao -> 403 na turma
+    // sem atribuicao -> 403
     $this->actingAs($professor)->get(route('boletim.turma', $ids['turma']->id))->assertForbidden();
     $this->actingAs($professor)->get(route('boletim.aluno', $ids['aluno']->id))->assertForbidden();
+    $this->actingAs($professor)->get(route('boletim.index'))->assertForbidden();
 
-    // com atribuicao -> acesso liberado
+    // mesmo com atribuicao ativa, perfil professor nao tem permissao de boletim
     Atribuicao::create([
         'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
         'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
         'papel' => 'titular',
     ]);
 
-    $this->actingAs($professor)->get(route('boletim.turma', $ids['turma']->id))->assertOk();
-    $this->actingAs($professor)->get(route('boletim.aluno', $ids['aluno']->id))->assertOk();
-
-    // seletor so lista a turma do professor
-    $response = $this->actingAs($professor)->get(route('boletim.index'));
-    $turmasVisiveis = $response->viewData('turmas');
-    expect($turmasVisiveis)->toHaveCount(1)
-        ->and($turmasVisiveis->first()->id)->toBe($ids['turma']->id);
+    $this->actingAs($professor)->get(route('boletim.turma', $ids['turma']->id))->assertForbidden();
+    $this->actingAs($professor)->get(route('boletim.aluno', $ids['aluno']->id))->assertForbidden();
+    $this->actingAs($professor)->get(route('boletim.index'))->assertForbidden();
 });
 
 test('boletim tem escopo de tenant', function () {

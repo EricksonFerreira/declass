@@ -118,7 +118,7 @@ test('show retorna 404 quando aluno nao tem ficha', function () {
     $this->actingAs($user)->get(route('saude.show', $ids['aluno']->id))->assertNotFound();
 });
 
-test('professor ve ficha mas nao edita', function () {
+test('professor nao acessa saude dos alunos', function () {
     $empresa = tenant();
     $ids = setupSaude($empresa);
     SaudeAluno::create([
@@ -127,8 +127,8 @@ test('professor ve ficha mas nao edita', function () {
     ]);
     $user = usuarioTenant($empresa, 'professor');
 
-    $this->actingAs($user)->get(route('saude.index'))->assertOk();
-    $this->actingAs($user)->get(route('saude.show', $ids['aluno']->id))->assertOk();
+    $this->actingAs($user)->get(route('saude.index'))->assertForbidden();
+    $this->actingAs($user)->get(route('saude.show', $ids['aluno']->id))->assertForbidden();
     $this->actingAs($user)->get(route('saude.edit', $ids['aluno']->id))->assertForbidden();
     $this->actingAs($user)->put(route('saude.update', $ids['aluno']->id), [])->assertForbidden();
 });

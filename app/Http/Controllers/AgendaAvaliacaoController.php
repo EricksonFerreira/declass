@@ -73,7 +73,11 @@ class AgendaAvaliacaoController extends BaseController
             'mesAtual' => now()->format('Y-m'),
             'filtros' => $filtros,
             'escolas' => Escola::query()->orderBy('nome')->get(['id', 'nome']),
-            'turmas' => Turma::query()->orderBy('nome')->get(['id', 'nome']),
+            'turmas' => Turma::query()
+                ->when($user->isProfessor(), fn ($q) => $q->whereHas('atribuicoes', fn ($a) => $a
+                    ->where('user_id', $user->id)
+                    ->where('ativo', 'S')))
+                ->orderBy('nome')->get(['id', 'nome']),
             'tipos' => Avaliacao::TIPOS,
         ]);
     }

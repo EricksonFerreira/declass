@@ -105,11 +105,19 @@ test('ocorrencias tem escopo de tenant', function () {
         ->assertOk()->assertSee('Bom desempenho');
 });
 
-test('professor registra ocorrencia mas nao exclui', function () {
+test('professor nao acessa ocorrencias', function () {
     $empresa = tenant();
     $ids = setupOcorrencia($empresa);
     $user = usuarioTenant($empresa, 'professor');
 
+    $ocorrencia = Ocorrencia::create([
+        'empresa_id' => $empresa->id, 'aluno_id' => $ids['aluno']->id,
+        'escola_id' => $ids['escola']->id, 'data' => now()->toDateString(),
+        'tipo' => 'ocorrencia', 'gravidade' => 'leve',
+        'descricao' => 'Conversa durante explicação', 'ativo' => 'S',
+    ]);
+
+    $this->actingAs($user)->get(route('ocorrencia.index'))->assertForbidden();
     $this->actingAs($user)->post(route('ocorrencia.store'), [
         'aluno_id' => $ids['aluno']->id,
         'escola_id' => $ids['escola']->id,
@@ -117,10 +125,7 @@ test('professor registra ocorrencia mas nao exclui', function () {
         'tipo' => 'ocorrencia',
         'gravidade' => 'leve',
         'descricao' => 'Conversa durante explicação',
-    ])->assertRedirect();
-
-    $ocorrencia = Ocorrencia::first();
-
+    ])->assertForbidden();
     $this->actingAs($user)->get(route('ocorrencia.edit', $ocorrencia->id))
         ->assertForbidden();
     $this->actingAs($user)->delete(route('ocorrencia.destroy', $ocorrencia->id))

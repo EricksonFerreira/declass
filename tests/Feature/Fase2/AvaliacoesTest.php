@@ -214,6 +214,40 @@ test('media da disciplina e calculada na grade', function () {
     expect($response->viewData('medias')[$ids['matricula']->id])->toBe(7.0);
 });
 
+test('professor ve avaliacoes das turmas que leciona', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $professor = usuarioTenant($empresa, 'professor');
+    $ids = setupAvaliacao($empresa);
+
+    // avaliacao criada pelo admin na turma
+    $this->actingAs($admin)->post(route('avaliacao.store'), payloadAvaliacao($ids));
+
+    // sem atribuicao: index vazio
+    $response = $this->actingAs($professor)->get(route('avaliacao.index'));
+    expect($response->viewData('avaliacoes')->total())->toBe(0);
+
+    // com atribuicao: ve a avaliacao da turma mesmo criada por outro usuario
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
+        'papel' => 'titular',
+    ]);
+
+    $response = $this->actingAs($professor)->get(route('avaliacao.index'));
+    expect($response->viewData('avaliacoes')->total())->toBe(1);
+});
+
+test('professor nao cria avaliacao em turma que nao leciona', function () {
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+    $ids = setupAvaliacao($empresa);
+
+    $this->actingAs($professor)->post(route('avaliacao.store'), payloadAvaliacao($ids))
+        ->assertSessionHasErrors('turma_id');
+    expect(Avaliacao::count())->toBe(0);
+});
+
 test('avaliacoes tem escopo de tenant', function () {
     $empresa = tenant();
     $admin = usuarioTenant($empresa, 'administrador');

@@ -178,12 +178,12 @@ test('matriculas tem escopo de tenant', function () {
     expect(Matricula::count())->toBe(0);
 });
 
-test('professor pode listar matriculas mas nao criar', function () {
+test('professor nao acessa matriculas', function () {
     $empresa = tenant();
     $professor = usuarioTenant($empresa, 'professor');
     $ids = setupMatricula($empresa);
 
-    $this->actingAs($professor)->get(route('matricula.index'))->assertOk();
+    $this->actingAs($professor)->get(route('matricula.index'))->assertForbidden();
 
     $this->actingAs($professor)->post(route('matricula.store'), payloadMatricula($ids))
         ->assertForbidden();

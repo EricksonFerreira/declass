@@ -9,16 +9,17 @@ use Database\Seeders\PerfisEscolaresSeeder;
 use Illuminate\Console\Command;
 
 /**
- * Aplica ADITIVAMENTE a matriz padrao de PerfisEscolaresSeeder aos
- * papeis ja existentes de cada tenant. Nunca remove permissoes —
- * seguro para reexecucao e para ajustes manuais feitos na tela de
- * perfis. Uso: apos adicionar rotas/permissoes novas (modulos).
+ * Aplica a matriz padrao de PerfisEscolaresSeeder aos papeis ja
+ * existentes de cada tenant. Por padrao e ADITIVA (nunca remove
+ * permissoes — seguro para reexecucao e ajustes manuais). Com
+ * --sincronizar o papel fica exatamente igual a matriz, revogando
+ * o que saiu dela (use quando a matriz remove permissoes).
  */
 class AplicarMatrizPermissoesCommand extends Command
 {
-    protected $signature = 'permissoes:aplicar-matriz {--empresa= : Limita a um empresa_id}';
+    protected $signature = 'permissoes:aplicar-matriz {--empresa= : Limita a um empresa_id} {--sincronizar : Replica a matriz exatamente, revogando permissoes fora dela}';
 
-    protected $description = 'Concede aos papeis existentes as permissoes que faltam da matriz padrao (sem remover nenhuma).';
+    protected $description = 'Concede aos papeis existentes as permissoes que faltam da matriz padrao. Use --sincronizar para revogar as que sairam da matriz.';
 
     public function handle(): int
     {
@@ -55,7 +56,14 @@ class AplicarMatrizPermissoesCommand extends Command
                 $jaTem = $role->permissoes()->pluck('permissions.id')->all();
                 $faltando = array_diff($ids, $jaTem);
 
-                if ($faltando) {
+                if ($this->option('sincronizar')) {
+                    $sobrando = array_diff($jaTem, $ids);
+                    if ($faltando || $sobrando) {
+                        $role->permissoes()->sync($ids);
+                        $totalVinculos += count($faltando);
+                        $this->line("{$nomePapel} (empresa {$eid}): +".count($faltando).' -'.count($sobrando).' permissoes');
+                    }
+                } elseif ($faltando) {
                     $role->permissoes()->syncWithoutDetaching($faltando);
                     $totalVinculos += count($faltando);
                     $this->line("{$nomePapel} (empresa {$eid}): +".count($faltando).' permissoes');

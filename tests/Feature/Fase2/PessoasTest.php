@@ -187,7 +187,7 @@ test('cpf duplicado no mesmo tenant e rejeitado', function () {
         ->assertSessionHasErrors('cpf');
 });
 
-test('professor pode listar e ver alunos mas nao criar', function () {
+test('professor nao acessa cadastro de alunos', function () {
     $empresa = tenant();
     $admin = usuarioTenant($empresa, 'administrador');
     $prof = usuarioTenant($empresa, 'professor');
@@ -197,8 +197,8 @@ test('professor pode listar e ver alunos mas nao criar', function () {
     app(EmpresaContext::class)->setEmpresaId($empresa->id);
     $aluno = Aluno::first();
 
-    $this->actingAs($prof)->get(route('aluno.index'))->assertOk();
-    $this->actingAs($prof)->get(route('aluno.show', $aluno->id))->assertOk();
+    $this->actingAs($prof)->get(route('aluno.index'))->assertForbidden();
+    $this->actingAs($prof)->get(route('aluno.show', $aluno->id))->assertForbidden();
     $this->actingAs($prof)->get(route('aluno.create'))->assertForbidden();
     $this->actingAs($prof)->post(route('aluno.store'), payloadAluno(['nome' => 'Teste']))->assertForbidden();
 });

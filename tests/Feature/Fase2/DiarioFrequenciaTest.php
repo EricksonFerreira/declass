@@ -172,13 +172,20 @@ test('professor nao edita diario de outro professor', function () {
     ])->assertForbidden();
 });
 
-test('professor so ve os proprios diarios na listagem', function () {
+test('professor ve diarios das turmas que leciona', function () {
     $empresa = tenant();
     $admin = usuarioTenant($empresa, 'administrador');
     $professor = usuarioTenant($empresa, 'professor');
     $ids = setupDiario($empresa);
 
-    // diario do admin
+    // professor precisa de atribuicao ativa na turma
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
+        'papel' => 'titular',
+    ]);
+
+    // diario do admin na mesma turma
     $this->actingAs($admin)->post(route('diario.store'), payloadDiario($ids));
 
     // diario do professor (disciplina precisa estar ofertada — usa a mesma)
@@ -188,16 +195,29 @@ test('professor so ve os proprios diarios na listagem', function () {
 
     expect(Diario::count())->toBe(2);
 
-    // professor ve apenas o seu
+    // professor ve os diarios da turma que leciona (o seu e o do admin)
     $response = $this->actingAs($professor)->get(route('diario.index'));
     $response->assertOk();
     $diariosVisiveis = $response->viewData('diarios');
-    expect($diariosVisiveis->total())->toBe(1)
-        ->and($diariosVisiveis->first()->user_id)->toBe($professor->id);
+    expect($diariosVisiveis->total())->toBe(2);
 
     // admin ve ambos
     $responseAdmin = $this->actingAs($admin)->get(route('diario.index'));
     expect($responseAdmin->viewData('diarios')->total())->toBe(2);
+});
+
+test('professor nao registra aula em turma que nao leciona', function () {
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+    $ids = setupDiario($empresa);
+
+    // sem atribuicao: store rejeitado e index vazio
+    $this->actingAs($professor)->post(route('diario.store'), payloadDiario($ids))
+        ->assertSessionHasErrors('turma_id');
+    expect(Diario::count())->toBe(0);
+
+    $response = $this->actingAs($professor)->get(route('diario.index'));
+    expect($response->viewData('diarios')->total())->toBe(0);
 });
 
 test('diarios tem escopo de tenant', function () {

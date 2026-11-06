@@ -201,21 +201,38 @@ test('atribuicao rejeita usuario de outro tenant', function () {
     ])->assertSessionHasErrors('user_id');
 });
 
-test('professor pode ver turmas mas nao gerenciar estrutura', function () {
+test('professor ve apenas turmas que leciona e nao gerencia estrutura', function () {
     $empresa = tenant();
     $admin = usuarioTenant($empresa, 'administrador');
     $prof = usuarioTenant($empresa, 'professor');
     $ids = setupEstrutura($empresa);
 
     $this->actingAs($admin)->post(route('turma.store'), payloadTurma($ids));
+    $this->actingAs($admin)->post(route('turma.store'), payloadTurma($ids, ['nome' => '2º Ano B', 'sala' => '202']));
     app(EmpresaContext::class)->setEmpresaId($empresa->id);
-    $turma = Turma::first();
+    $turma = Turma::where('nome', '1º Ano A')->first();
 
+    // sem atribuicao: index vazio, show bloqueado
     $this->actingAs($prof)->get(route('turma.index'))->assertOk();
-    $this->actingAs($prof)->get(route('turma.show', $turma->id))->assertOk();
+    expect($this->actingAs($prof)->get(route('turma.index'))->viewData('turmas')->total())->toBe(0);
+    $this->actingAs($prof)->get(route('turma.show', $turma->id))->assertForbidden();
     $this->actingAs($prof)->get(route('turma.create'))->assertForbidden();
     $this->actingAs($prof)->post(route('turma.store'), payloadTurma($ids))->assertForbidden();
     $this->actingAs($prof)->post(route('etapa.store'), ['nome' => 'X', 'segmento' => 'outro'])->assertForbidden();
+
+    // com atribuicao ativa: show liberado
+    \App\Models\Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $turma->id,
+        'user_id' => $prof->id, 'papel' => 'titular',
+    ]);
+
+    $this->actingAs($prof)->get(route('turma.show', $turma->id))->assertOk();
+
+    // index lista apenas a turma lecionada (a outra fica de fora)
+    $response = $this->actingAs($prof)->get(route('turma.index'));
+    $turmasVisiveis = $response->viewData('turmas');
+    expect($turmasVisiveis->total())->toBe(1)
+        ->and($turmasVisiveis->first()->id)->toBe($turma->id);
 });
 
 test('turmas tem escopo de tenant', function () {

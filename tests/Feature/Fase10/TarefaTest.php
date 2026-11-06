@@ -141,36 +141,27 @@ test('nota acima da nota maxima e rejeitada', function () {
     ])->assertSessionHasErrors('entregas.'.$ids['matricula']->id.'.nota');
 });
 
-test('professor so gerencia tarefas de turmas que leciona', function () {
+test('professor nao acessa tarefas', function () {
     $empresa = tenant();
     $ids = setupTarefa($empresa);
     $professor = usuarioTenant($empresa, 'professor');
     $tarefa = criarTarefaDemo($ids, $empresa);
 
-    // sem atribuicao -> index vazio e create permitido, mas store bloqueado
-    $this->actingAs($professor)->get(route('tarefa.index'))->assertOk();
-    $response = $this->actingAs($professor)->get(route('tarefa.index'));
-    expect($response->viewData('tarefas')->total())->toBe(0);
-
-    $this->actingAs($professor)->post(route('tarefa.store'), [
-        'turma_id' => $ids['turma']->id,
-        'titulo' => 'Tarefa indevida',
-        'data_entrega' => now()->addDay()->toDateString(),
-        'ativo' => 'S',
-    ])->assertSessionHasErrors('turma_id');
-
-    $this->actingAs($professor)->get(route('tarefa.entregas', $tarefa->id))->assertForbidden();
-
-    // com atribuicao -> acesso liberado
+    // perfil professor nao tem permissao de tarefas — 403 mesmo com atribuicao
     Atribuicao::create([
         'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
         'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
         'papel' => 'titular',
     ]);
 
-    $this->actingAs($professor)->get(route('tarefa.entregas', $tarefa->id))->assertOk();
-    $response = $this->actingAs($professor)->get(route('tarefa.index'));
-    expect($response->viewData('tarefas')->total())->toBe(1);
+    $this->actingAs($professor)->get(route('tarefa.index'))->assertForbidden();
+    $this->actingAs($professor)->get(route('tarefa.entregas', $tarefa->id))->assertForbidden();
+    $this->actingAs($professor)->post(route('tarefa.store'), [
+        'turma_id' => $ids['turma']->id,
+        'titulo' => 'Tarefa indevida',
+        'data_entrega' => now()->addDay()->toDateString(),
+        'ativo' => 'S',
+    ])->assertForbidden();
 });
 
 test('tarefas tem escopo de tenant', function () {

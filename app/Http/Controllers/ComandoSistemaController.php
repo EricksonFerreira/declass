@@ -30,7 +30,8 @@ class ComandoSistemaController extends Controller
             'titulo' => 'Permissões e Perfis',
             'icone' => 'fas fa-key',
             'itens' => [
-                ['key' => 'permissoes-sync', 'nome' => 'Sincronizar Permissões', 'artisan' => 'permissoes:sincronizar-telas', 'icone' => 'fas fa-sync-alt', 'cor' => '#0ea5e9', 'descricao' => 'Cria permissões por tela/ação e ressincroniza os perfis padrão'],
+                ['key' => 'permissoes-matriz', 'nome' => 'Aplicar Matriz de Permissões', 'artisan' => 'permissoes:aplicar-matriz', 'icone' => 'fas fa-key', 'cor' => '#0ea5e9', 'descricao' => 'Concede aos perfis as permissões que faltam da matriz (não remove nenhuma)'],
+                ['key' => 'permissoes-matriz-sync', 'nome' => 'Sincronizar Matriz (revoga excedentes)', 'artisan' => 'permissoes:aplicar-matriz', 'params' => ['--sincronizar' => true], 'icone' => 'fas fa-sync-alt', 'cor' => '#f59e0b', 'confirm' => 'Deixa cada perfil exatamente igual à matriz: permissões concedidas manualmente fora dela serão REVOGADAS. Continuar?'],
             ],
         ],
         [

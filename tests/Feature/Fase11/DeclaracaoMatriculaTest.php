@@ -74,13 +74,13 @@ test('declaracao de aluno de outro tenant retorna 404', function () {
         ->assertNotFound();
 });
 
-test('professor tambem pode baixar declaracao de aluno visivel', function () {
+test('professor nao baixa declaracao de matricula', function () {
     $empresa = tenant();
     $ids = setupDeclaracao($empresa);
     $professor = usuarioTenant($empresa, 'professor');
 
-    // professor tem aluno.show na matriz — acesso liberado
+    // perfil professor nao tem permissao de aluno — 403
     $this->actingAs($professor)
         ->get(route('aluno.declaracao', $ids['aluno']->id))
-        ->assertOk();
+        ->assertForbidden();
 });

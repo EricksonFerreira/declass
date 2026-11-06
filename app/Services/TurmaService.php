@@ -42,6 +42,14 @@ class TurmaService extends AbstractBaseService
         $query = $this->applyEmpresaScope($this->model->newQuery())
             ->with(['escola', 'anoLetivo', 'etapa']);
 
+        // Professor ve apenas as turmas onde tem atribuicao ativa.
+        $user = auth()->user();
+        if ($user?->isProfessor()) {
+            $query->whereHas('atribuicoes', fn ($q) => $q
+                ->where('user_id', $user->id)
+                ->where('ativo', 'S'));
+        }
+
         foreach ($filters as $field => $filter) {
             if (! is_array($filter) || ! array_key_exists('valor', $filter)) {
                 continue;
@@ -74,6 +82,24 @@ class TurmaService extends AbstractBaseService
         }
 
         return $query->orderBy('nome')->orderBy('id')->paginate($perPage);
+    }
+
+    /** Professor so acessa turmas onde tem atribuicao ativa. */
+    public function podeAcessar(Turma $turma, ?\App\Models\User $user = null): bool
+    {
+        $user = $user ?? auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        if (! $user->isProfessor()) {
+            return true;
+        }
+
+        return $turma->atribuicoes()
+            ->where('user_id', $user->id)
+            ->where('ativo', 'S')
+            ->exists();
     }
 
     /**

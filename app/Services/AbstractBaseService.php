@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\Atribuicao;
 use App\Services\Interfaces\BaseServiceInterface;
 use App\Support\EmpresaContext;
 use App\Support\EscolaContext;
 use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 abstract class AbstractBaseService implements BaseServiceInterface
@@ -358,6 +360,30 @@ abstract class AbstractBaseService implements BaseServiceInterface
         }
 
         return $filters;
+    }
+
+    /**
+     * Professor so opera registros pedagogicos de turmas onde possui
+     * atribuicao ativa. No-op para demais perfis.
+     */
+    protected function garantirProfessorTurma(int $turmaId): void
+    {
+        $user = Auth::user();
+        if (! $user?->isProfessor()) {
+            return;
+        }
+
+        $leciona = Atribuicao::query()
+            ->where('turma_id', $turmaId)
+            ->where('user_id', $user->id)
+            ->where('ativo', 'S')
+            ->exists();
+
+        if (! $leciona) {
+            throw ValidationException::withMessages([
+                'turma_id' => 'Você só pode registrar registros nas turmas que leciona.',
+            ]);
+        }
     }
 
     protected function ensureEmpresaSelectedForWrite(): void

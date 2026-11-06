@@ -42,7 +42,9 @@ class AvaliacaoService extends AbstractBaseService
 
         $user = auth()->user();
         if ($user instanceof User && $user->isProfessor()) {
-            $query->where('user_id', $user->id);
+            $query->whereHas('turma.atribuicoes', fn ($q) => $q
+                ->where('user_id', $user->id)
+                ->where('ativo', 'S'));
         }
 
         foreach ($filters as $field => $filter) {
@@ -78,6 +80,8 @@ class AvaliacaoService extends AbstractBaseService
     {
         $user = auth()->user();
 
+        $this->garantirProfessorTurma((int) $data['turma_id']);
+
         $ofertada = DB::table('turma_disciplina')
             ->where('turma_id', $data['turma_id'])
             ->where('disciplina_id', $data['disciplina_id'])
@@ -95,7 +99,7 @@ class AvaliacaoService extends AbstractBaseService
         return parent::create($data);
     }
 
-    /** Professor so gerencia avaliacoes que ele mesmo criou. */
+    /** Professor gerencia avaliacoes das turmas onde tem atribuicao ativa. */
     public function podeGerenciar(Avaliacao $avaliacao, ?User $user = null): bool
     {
         $user = $user ?? auth()->user();
@@ -107,13 +111,20 @@ class AvaliacaoService extends AbstractBaseService
             return true;
         }
 
-        return (int) $avaliacao->user_id === (int) $user->id;
+        return $avaliacao->turma?->atribuicoes()
+            ->where('user_id', $user->id)
+            ->where('ativo', 'S')
+            ->exists() ?? false;
     }
 
     public function update($id, array $data)
     {
         $avaliacao = $this->getById($id);
         abort_if(! $avaliacao || ! $this->podeGerenciar($avaliacao), 403, 'Sem acesso a esta avaliação.');
+
+        if (! empty($data['turma_id'])) {
+            $this->garantirProfessorTurma((int) $data['turma_id']);
+        }
 
         $this->sincronizarPeriodo($data);
 

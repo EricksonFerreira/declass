@@ -155,7 +155,7 @@ test('aluno show exibe documentos', function () {
         ->assertSee('RG / Identidade');
 });
 
-test('professor pode baixar documento mas nao pode anexar', function () {
+test('professor nao acessa documentos de alunos', function () {
     Storage::fake('local');
 
     $empresa = tenant();
@@ -170,7 +170,7 @@ test('professor pode baixar documento mas nao pode anexar', function () {
     $doc = AlunoDocumento::first();
 
     $this->actingAs($professor)->get(route('aluno.documento.arquivo', [$aluno->id, $doc->id]))
-        ->assertOk();
+        ->assertForbidden();
 
     $this->actingAs($professor)->post(
         route('aluno.documento.store', $aluno->id),

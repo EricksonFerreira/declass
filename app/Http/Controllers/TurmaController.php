@@ -148,6 +148,7 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
             'matriculas.aluno.pessoa',
         ]);
         abort_if(! $turma, 404, 'Turma não encontrada.');
+        abort_if(! $this->turmaService->podeAcessar($turma), 403, 'Sem acesso a esta turma.');
 
         $disciplinasOfertadasIds = $turma->disciplinas->pluck('id')->all();
         $disciplinasOpcoes = Disciplina::query()

@@ -250,7 +250,11 @@
                             <tr>
                                 <td class="text-muted">{{ $matricula->numero_chamada ?? '—' }}</td>
                                 <td>
-                                    <a href="{{ route('aluno.show', $matricula->aluno_id) }}" class="font-weight-bold">{{ $matricula->aluno->pessoa->nome ?? '—' }}</a>
+                                    @can('aluno.show')
+                                        <a href="{{ route('aluno.show', $matricula->aluno_id) }}" class="font-weight-bold">{{ $matricula->aluno->pessoa->nome ?? '—' }}</a>
+                                    @else
+                                        {{ $matricula->aluno->pessoa->nome ?? '—' }}
+                                    @endcan
                                 </td>
                                 <td>
                                     @php $cor = ['ativa' => 'success', 'trancada' => 'warning', 'cancelada' => 'danger', 'concluida' => 'info'][$matricula->status] ?? 'secondary'; @endphp

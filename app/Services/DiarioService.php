@@ -49,7 +49,9 @@ class DiarioService extends AbstractBaseService
 
         $user = auth()->user();
         if ($user && self::ehProfessor($user)) {
-            $query->where('user_id', $user->id);
+            $query->whereHas('turma.atribuicoes', fn ($q) => $q
+                ->where('user_id', $user->id)
+                ->where('ativo', 'S'));
         }
 
         foreach ($filters as $field => $filter) {
@@ -88,6 +90,8 @@ class DiarioService extends AbstractBaseService
     {
         $user = auth()->user();
 
+        $this->garantirProfessorTurma((int) $data['turma_id']);
+
         $ofertada = DB::table('turma_disciplina')
             ->where('turma_id', $data['turma_id'])
             ->where('disciplina_id', $data['disciplina_id'])
@@ -116,7 +120,7 @@ class DiarioService extends AbstractBaseService
         return parent::create($data);
     }
 
-    /** Professor so edita/remove diarios que ele mesmo registrou. */
+    /** Professor gerencia diarios das turmas onde tem atribuicao ativa. */
     public function podeGerenciar(Diario $diario, ?User $user = null): bool
     {
         $user = $user ?? auth()->user();
@@ -128,13 +132,20 @@ class DiarioService extends AbstractBaseService
             return true;
         }
 
-        return (int) $diario->user_id === (int) $user->id;
+        return $diario->turma?->atribuicoes()
+            ->where('user_id', $user->id)
+            ->where('ativo', 'S')
+            ->exists() ?? false;
     }
 
     public function update($id, array $data)
     {
         $diario = $this->getById($id);
         abort_if(! $diario || ! $this->podeGerenciar($diario), 403, 'Sem acesso a este diário.');
+
+        if (! empty($data['turma_id'])) {
+            $this->garantirProfessorTurma((int) $data['turma_id']);
+        }
 
         return parent::update($id, $data);
     }
