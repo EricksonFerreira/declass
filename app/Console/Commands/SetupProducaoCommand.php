@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Hash;
 
 class SetupProducaoCommand extends Command
 {
-    protected $signature = 'declass:setup-producao {--demo : Popula tambem os dados de demonstracao escolar}';
+    protected $signature = 'declass:setup-producao {--demo : Popula tambem os dados de demonstracao escolar} {--reset-demo : Remove a massa academica demo antes de recriar}';
 
     protected $description = 'Sobe a producao: optimize:clear + migrate + seed, tenant declass e superadmins com troca de senha no primeiro acesso';
 
@@ -42,10 +42,14 @@ class SetupProducaoCommand extends Command
         $this->line(Artisan::output());
 
         if ($this->option('demo')) {
-            $this->info('=== db:seed --class=DemoEscolarSeeder ===');
+            $seeder = $this->option('reset-demo')
+                ? \Database\Seeders\DemoEscolarResetSeeder::class
+                : \Database\Seeders\DemoEscolarSeeder::class;
+
+            $this->info('=== db:seed --class='.class_basename($seeder).' ===');
             Artisan::call('db:seed', [
                 '--force' => true,
-                '--class' => \Database\Seeders\DemoEscolarSeeder::class,
+                '--class' => $seeder,
             ]);
             $this->line(Artisan::output());
         }

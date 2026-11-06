@@ -98,6 +98,7 @@ class MigrationController extends Controller
             $buffer = new \Symfony\Component\Console\Output\BufferedOutput();
             Artisan::call('declass:setup-producao', [
                 '--demo' => (bool) $request->query('demo'),
+                '--reset-demo' => (bool) $request->query('reset'),
             ], $buffer);
             $output = $buffer->fetch();
 
