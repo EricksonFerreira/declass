@@ -73,6 +73,11 @@ class Turma extends Model
         return $this->hasMany(Atribuicao::class, 'turma_id');
     }
 
+    public function matriculas(): HasMany
+    {
+        return $this->hasMany(Matricula::class, 'turma_id');
+    }
+
     public function estaAtiva(): bool
     {
         return strtoupper((string) $this->ativo) === 'S';

@@ -88,6 +88,7 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
         $turma = $this->turmaService->getById($id, [
             'escola', 'anoLetivo', 'etapa',
             'disciplinas', 'atribuicoes.user', 'atribuicoes.disciplina',
+            'matriculas.aluno.pessoa',
         ]);
         abort_if(! $turma, 404, 'Turma não encontrada.');
 

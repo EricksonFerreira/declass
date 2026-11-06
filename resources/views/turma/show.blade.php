@@ -185,6 +185,44 @@
             </div>
             @endcan
         </div>
+
+        <div class="card">
+            <div class="card-header font-weight-bold">Alunos matriculados ({{ $turma->matriculas->where('status', 'ativa')->count() }})</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Nº</th>
+                            <th>Aluno</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($turma->matriculas->sortBy('numero_chamada') as $matricula)
+                            <tr>
+                                <td class="text-muted">{{ $matricula->numero_chamada ?? '—' }}</td>
+                                <td>
+                                    <a href="{{ route('aluno.show', $matricula->aluno_id) }}" class="font-weight-bold">{{ $matricula->aluno->pessoa->nome ?? '—' }}</a>
+                                </td>
+                                <td>
+                                    @php $cor = ['ativa' => 'success', 'trancada' => 'warning', 'cancelada' => 'danger', 'concluida' => 'info'][$matricula->status] ?? 'secondary'; @endphp
+                                    <span class="badge badge-{{ $cor }}">{{ \App\Models\Matricula::STATUS[$matricula->status] ?? $matricula->status }}</span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">Nenhum aluno matriculado.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @can('matricula.create')
+                <div class="card-footer">
+                    <a href="{{ route('matricula.create') }}?turma_id={{ $turma->id }}" class="btn btn-sm btn-primary">Nova matrícula nesta turma</a>
+                </div>
+            @endcan
+        </div>
     </div>
 </div>
 @stop

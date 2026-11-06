@@ -39,7 +39,7 @@ class PerfisEscolaresSeeder extends Seeder
             'usuario.filtro', 'usuario.removerFiltro', 'usuario.setPerPage',
             'usuario.buscar', 'usuario.selectOptions',
             'escola.*', 'organizacao.*', 'documentos.*',
-            'ano_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*',
+            'ano_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -51,7 +51,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show', 'escola.filtro', 'escola.removerFiltro', 'escola.setPerPage',
             'organizacao.index', 'organizacao.show',
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
-            'ano_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*',
+            'ano_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -63,7 +63,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show', 'escola.filtro', 'escola.removerFiltro', 'escola.setPerPage',
             'organizacao.index', 'organizacao.show',
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
-            'ano_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*',
+            'ano_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -76,6 +76,7 @@ class PerfisEscolaresSeeder extends Seeder
             'organizacao.index', 'organizacao.show',
             'documentos.index',
             'ano_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*',
+            'matricula.index', 'matricula.filtro', 'matricula.removerFiltro', 'matricula.setPerPage',
             'aluno.index', 'aluno.show', 'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
             'responsavel.index', 'responsavel.show', 'responsavel.filtro', 'responsavel.removerFiltro', 'responsavel.setPerPage',
         ],
@@ -92,6 +93,7 @@ class PerfisEscolaresSeeder extends Seeder
             'etapa.index', 'etapa.filtro', 'etapa.removerFiltro', 'etapa.setPerPage',
             'disciplina.index', 'disciplina.filtro', 'disciplina.removerFiltro', 'disciplina.setPerPage',
             'turma.index', 'turma.show', 'turma.filtro', 'turma.removerFiltro', 'turma.setPerPage',
+            'matricula.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -106,6 +108,8 @@ class PerfisEscolaresSeeder extends Seeder
             'documentos.index', 'documentos.show',
             'ano_letivo.index', 'etapa.index', 'disciplina.index',
             'turma.index', 'turma.show', 'turma.filtro', 'turma.removerFiltro', 'turma.setPerPage',
+            'matricula.index', 'matricula.create', 'matricula.store', 'matricula.edit', 'matricula.update',
+            'matricula.filtro', 'matricula.removerFiltro', 'matricula.setPerPage',
             'aluno.index', 'aluno.show', 'aluno.create', 'aluno.store', 'aluno.edit', 'aluno.update',
             'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
             'aluno.responsavel.store', 'aluno.responsavel.update', 'aluno.responsavel.destroy',
@@ -120,6 +124,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show',
             'ano_letivo.index', 'etapa.index', 'disciplina.index',
             'turma.index', 'turma.show', 'turma.filtro', 'turma.removerFiltro', 'turma.setPerPage',
+            'matricula.index', 'matricula.filtro', 'matricula.removerFiltro', 'matricula.setPerPage',
             'aluno.index', 'aluno.show', 'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
         ],
 
@@ -130,6 +135,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show',
             'ano_letivo.index', 'etapa.index', 'disciplina.index',
             'turma.index', 'turma.show', 'turma.filtro', 'turma.removerFiltro', 'turma.setPerPage',
+            'matricula.index', 'matricula.filtro', 'matricula.removerFiltro', 'matricula.setPerPage',
             'aluno.index', 'aluno.show', 'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
         ],
 
@@ -142,6 +148,7 @@ class PerfisEscolaresSeeder extends Seeder
             'documentos.index', 'documentos.show',
             'ano_letivo.index', 'etapa.index', 'disciplina.index',
             'turma.index', 'turma.show',
+            'matricula.index', 'matricula.filtro', 'matricula.removerFiltro', 'matricula.setPerPage',
             'aluno.index', 'aluno.show',
             'responsavel.index', 'responsavel.show',
         ],
@@ -155,6 +162,7 @@ class PerfisEscolaresSeeder extends Seeder
             'documentos.index', 'documentos.show',
             'ano_letivo.index', 'etapa.index', 'disciplina.index',
             'turma.index', 'turma.show',
+            'matricula.index', 'matricula.filtro', 'matricula.removerFiltro', 'matricula.setPerPage',
             'aluno.index', 'aluno.show',
             'responsavel.index', 'responsavel.show', 'responsavel.filtro', 'responsavel.removerFiltro', 'responsavel.setPerPage',
         ],

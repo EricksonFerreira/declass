@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -80,6 +81,11 @@ class Aluno extends Model
         return $this->belongsToMany(Responsavel::class, 'aluno_responsavel', 'aluno_id', 'responsavel_id')
             ->withPivot(['id', 'tipo', 'principal', 'pode_retirar', 'autoriza_contato', 'restricoes', 'observacoes'])
             ->withTimestamps();
+    }
+
+    public function matriculas(): HasMany
+    {
+        return $this->hasMany(Matricula::class, 'aluno_id');
     }
 
     public function estaAtivo(): bool

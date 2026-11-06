@@ -395,6 +395,12 @@ return [
                     'icon' => 'fas fa-chalkboard-teacher',
                 ],
                 [
+                    'text' => 'Matrículas',
+                    'route' => 'matricula.index',
+                    'can' => 'matricula.index',
+                    'icon' => 'fas fa-id-card',
+                ],
+                [
                     'text' => 'Alunos',
                     'route' => 'aluno.index',
                     'can' => 'aluno.index',
