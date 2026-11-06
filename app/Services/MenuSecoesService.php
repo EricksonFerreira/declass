@@ -82,6 +82,14 @@ class MenuSecoesService
                 ],
             ],
             [
+                'slug' => 'biblioteca',
+                'titulo' => 'Biblioteca',
+                'cards' => [
+                    ['Empréstimos', 'fas fa-book-reader', 'emprestimo.index', 'Circulação do acervo e devoluções', '#b45309'],
+                    ['Acervo', 'fas fa-book', 'livro.index', 'Livros e exemplares das escolas', '#0f766e'],
+                ],
+            ],
+            [
                 'slug' => 'financeiro',
                 'titulo' => 'Financeiro',
                 'cards' => [

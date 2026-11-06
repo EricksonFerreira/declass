@@ -62,6 +62,9 @@ use Illuminate\Support\Facades\Hash;
  *  financeiro@escolademo.test     financeiro     — mensalidades,
  *                                                 planos, baixas e
  *                                                 inadimplencia
+ *  bibliotecario@escolademo.test   bibliotecario  — acervo e
+ *                                                 emprestimos de
+ *                                                 livros
  *
  * Superadmin da plataforma (slug diferente):
  *  slug:   declass
@@ -109,6 +112,9 @@ class DemoEscolarSeeder extends Seeder
 
         // Comunicacao: avisos gerais e por turma para o portal.
         $this->comunicacao($empresa);
+
+        // Biblioteca: acervo e circulacao de emprestimos.
+        $this->biblioteca($empresa);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -235,6 +241,7 @@ class DemoEscolarSeeder extends Seeder
             'responsavel' => $criar('responsavel@escolademo.test', 'Responsável Demo', 'responsavel_legal'),
             'aluno' => $criar('aluno@escolademo.test', 'Aluno Demo Portal', 'aluno'),
             'financeiro' => $criar('financeiro@escolademo.test', 'Financeiro Demo', 'financeiro'),
+            'bibliotecario' => $criar('bibliotecario@escolademo.test', 'Bibliotecário Demo', 'bibliotecario'),
         ];
     }
 
@@ -515,6 +522,82 @@ class DemoEscolarSeeder extends Seeder
      * Planos de mensalidade + cobrancas dos ultimos meses.
      * Idempotente: firstOrCreate por (matricula, competencia).
      */
+    /** Acervo e circulacao de emprestimos da biblioteca. */
+    private function biblioteca(Empresa $empresa): void
+    {
+        $escola = Escola::query()->where('empresa_id', $empresa->id)->first();
+        if (! $escola) {
+            return;
+        }
+
+        $catalogo = [
+            ['titulo' => 'Dom Casmurro', 'autor' => 'Machado de Assis', 'categoria' => 'literatura', 'exemplares' => 3],
+            ['titulo' => 'O Pequeno Príncipe', 'autor' => 'Antoine de Saint-Exupéry', 'categoria' => 'infantil', 'exemplares' => 5],
+            ['titulo' => 'Memórias Póstumas de Brás Cubas', 'autor' => 'Machado de Assis', 'categoria' => 'literatura', 'exemplares' => 2],
+            ['titulo' => 'A Revolução dos Bichos', 'autor' => 'George Orwell', 'categoria' => 'juvenil', 'exemplares' => 4],
+            ['titulo' => 'O Alquimista', 'autor' => 'Paulo Coelho', 'categoria' => 'literatura', 'exemplares' => 3],
+            ['titulo' => 'Cem Anos de Solidão', 'autor' => 'Gabriel García Márquez', 'categoria' => 'literatura', 'exemplares' => 2],
+            ['titulo' => 'Matemática para o Ensino Fundamental', 'autor' => 'Equipe Declass', 'categoria' => 'didatico', 'exemplares' => 10],
+            ['titulo' => 'Gramática Reflexiva', 'autor' => 'Celso Cunha & Lindley Cintra', 'categoria' => 'didatico', 'exemplares' => 8],
+            ['titulo' => 'O Problema das Pessoas', 'autor' => 'Millor Fernandes', 'categoria' => 'literatura', 'exemplares' => 2],
+            ['titulo' => 'História Geral', 'autor' => 'Boris Fausto', 'categoria' => 'referencia', 'exemplares' => 4],
+            ['titulo' => 'Atlas Geográfico Escolar', 'autor' => 'IBGE', 'categoria' => 'referencia', 'exemplares' => 6],
+            ['titulo' => 'Diário de um Banana', 'autor' => 'Jeff Kinney', 'categoria' => 'juvenil', 'exemplares' => 5],
+        ];
+
+        $livros = [];
+        foreach ($catalogo as $dados) {
+            $livros[] = \App\Models\Livro::firstOrCreate(
+                [
+                    'empresa_id' => $empresa->id,
+                    'escola_id' => $escola->id,
+                    'titulo' => $dados['titulo'],
+                ],
+                $dados + ['ativo' => 'S']
+            );
+        }
+
+        $alunos = Aluno::query()->where('empresa_id', $empresa->id)->orderBy('id')->limit(8)->get();
+        if ($alunos->isEmpty() || $livros === []) {
+            return;
+        }
+
+        // Circulacao demo: mix de devolvidos, no prazo e atrasados.
+        // Bloco inteiro idempotente — so cria se nao houver emprestimos.
+        if (\App\Models\EmprestimoLivro::query()->where('empresa_id', $empresa->id)->exists()) {
+            return;
+        }
+
+        foreach (range(0, 9) as $i) {
+            $aluno = $alunos[$i % $alunos->count()];
+            $livro = $livros[$i % count($livros)];
+
+            $dados = [
+                'empresa_id' => $empresa->id,
+                'livro_id' => $livro->id,
+                'aluno_id' => $aluno->id,
+                'data_emprestimo' => now()->subDays(20)->toDateString(),
+                'data_devolucao_prevista' => now()->subDays(5)->toDateString(),
+                'status' => 'ativo',
+            ];
+
+            if ($i % 3 === 0) {
+                // Devolvido no prazo
+                $dados['data_devolucao'] = now()->subDays(6)->toDateString();
+                $dados['status'] = 'devolvido';
+            } elseif ($i % 3 === 1) {
+                // Atrasado: previsto ha 5 dias, sem devolucao
+                $dados['observacoes'] = 'Aluno avisado para regularizar.';
+            } else {
+                // No prazo
+                $dados['data_emprestimo'] = now()->subDays(2)->toDateString();
+                $dados['data_devolucao_prevista'] = now()->addDays(13)->toDateString();
+            }
+
+            \App\Models\EmprestimoLivro::create($dados);
+        }
+    }
+
     private function financeiro(Empresa $empresa): void
     {
         $integral = \App\Models\PlanoMensalidade::firstOrCreate(

@@ -453,6 +453,26 @@ return [
             ],
         ],
 
+        // BIBLIOTECA
+        [
+            'text' => 'Biblioteca',
+            'icon' => 'fas fa-book-open',
+            'submenu' => [
+                [
+                    'text' => 'Empréstimos',
+                    'route' => 'emprestimo.index',
+                    'can' => 'emprestimo.index',
+                    'icon' => 'fas fa-book-reader',
+                ],
+                [
+                    'text' => 'Acervo',
+                    'route' => 'livro.index',
+                    'can' => 'livro.index',
+                    'icon' => 'fas fa-book',
+                ],
+            ],
+        ],
+
         // FINANCEIRO
         [
             'text' => 'Financeiro',
