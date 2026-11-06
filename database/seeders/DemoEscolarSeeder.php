@@ -177,6 +177,7 @@ class DemoEscolarSeeder extends Seeder
         $this->tarefas($empresa, $usuarios);
         $this->agenda($empresa, array_values($escolas), $usuarios);
         $this->pesquisas($empresa, array_values($escolas), $usuarios);
+        $this->saude($empresa);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -1491,6 +1492,55 @@ class DemoEscolarSeeder extends Seeder
                     ],
                 ]
             );
+        }
+    }
+
+    /**
+     * Fichas de saude para ~40% dos alunos ativos de cada
+     * unidade: tipo sanguineo, alertas e contato de
+     * emergencia. Idempotente por aluno_id (unique).
+     */
+    private function saude(Empresa $empresa): void
+    {
+        $sanguineos = array_keys(\App\Models\SaudeAluno::TIPOS_SANGUINEOS);
+        $alergiasOpcoes = [
+            'Amendoim', 'Lactose', 'Poeria', 'Picada de inseto',
+            'Dipirona', 'Corante alimentar', null,
+        ];
+        $condicoesOpcoes = [
+            'Asma', 'Diabetes tipo 1', 'Epilepsia controlada', 'TEA', null,
+        ];
+        $medicamentosOpcoes = [
+            'Bombinha de asma', 'Insulina', 'Antialérgico diário', null,
+        ];
+        $parentescos = ['Mãe', 'Pai', 'Avó', 'Tio(a)', 'Irmão(ã) maior'];
+
+        foreach (Escola::query()->where('empresa_id', $empresa->id)->get() as $escola) {
+            $alunosIds = Matricula::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('status', 'ativa')
+                ->whereHas('turma', fn ($q) => $q->where('escola_id', $escola->id))
+                ->inRandomOrder()
+                ->limit(120)
+                ->pluck('aluno_id');
+
+            foreach ($alunosIds->take((int) ceil($alunosIds->count() * 0.4)) as $i => $alunoId) {
+                \App\Models\SaudeAluno::firstOrCreate(
+                    ['aluno_id' => $alunoId],
+                    [
+                        'empresa_id' => $empresa->id,
+                        'tipo_sanguineo' => fake()->randomElement($sanguineos),
+                        'alergias' => fake()->randomElement($alergiasOpcoes),
+                        'condicoes_cronicas' => fake()->randomElement($condicoesOpcoes),
+                        'medicamentos' => fake()->randomElement($medicamentosOpcoes),
+                        'contato_emergencia_nome' => fake()->name(),
+                        'contato_emergencia_parentesco' => fake()->randomElement($parentescos),
+                        'contato_emergencia_telefone' => fake()->numerify('(11) 9####-####'),
+                        'observacoes' => fake()->optional(0.3)->sentence(10),
+                        'ativo' => 'S',
+                    ]
+                );
+            }
         }
     }
 }

@@ -437,6 +437,12 @@ return [
                     'icon' => 'fas fa-hands-helping',
                 ],
                 [
+                    'text' => 'Saúde dos Alunos',
+                    'route' => 'saude.index',
+                    'can' => 'saude.index',
+                    'icon' => 'fas fa-notes-medical',
+                ],
+                [
                     'text' => 'Tarefas',
                     'route' => 'tarefa.index',
                     'can' => 'tarefa.index',

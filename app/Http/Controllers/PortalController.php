@@ -331,6 +331,29 @@ class PortalController extends Controller
     }
 
     /**
+     * Fichas de saude dos alunos vinculados: alergias,
+     * medicamentos, condicoes e contato de emergencia.
+     */
+    public function saude()
+    {
+        $alunos = $this->alunosDoUsuario(auth()->user());
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $fichas = \App\Models\SaudeAluno::query()
+            ->whereIn('aluno_id', $alunos->pluck('id'))
+            ->with('aluno.pessoa:id,nome')
+            ->get()
+            ->keyBy('aluno_id');
+
+        return view('portal.saude', [
+            'titulo' => 'Saúde dos Alunos',
+            'alunos' => $alunos,
+            'fichas' => $fichas,
+        ]);
+    }
+
+    /**
      * Alunos acessiveis pela conta: filhos de responsaveis vinculados
      * + o proprio aluno quando a conta e de aluno.
      */

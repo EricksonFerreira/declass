@@ -16,4 +16,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/portal/pesquisas', [PortalController::class, 'pesquisas'])->name('portal.pesquisas');
     Route::get('/portal/pesquisa/{id}/responder', [PortalController::class, 'pesquisaResponder'])->name('portal.pesquisa.responder');
     Route::post('/portal/pesquisa/{id}/responder', [PortalController::class, 'pesquisaSalvar'])->name('portal.pesquisa.salvar');
+    Route::get('/portal/saude', [PortalController::class, 'saude'])->name('portal.saude');
 });

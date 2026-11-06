@@ -41,7 +41,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.*', 'organizacao.*', 'documentos.*',
             'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*', 'relatorio_transporte.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
-            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*', 'saude.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -55,7 +55,7 @@ class PerfisEscolaresSeeder extends Seeder
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
             'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*', 'relatorio_transporte.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
-            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*', 'saude.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -69,7 +69,7 @@ class PerfisEscolaresSeeder extends Seeder
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
             'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*', 'relatorio_transporte.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
-            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*', 'saude.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -107,6 +107,8 @@ class PerfisEscolaresSeeder extends Seeder
             'evento.filtro', 'evento.removerFiltro', 'evento.setPerPage',
             'pesquisa.index', 'pesquisa.create', 'pesquisa.store', 'pesquisa.edit', 'pesquisa.update',
             'pesquisa.resultados', 'pesquisa.filtro', 'pesquisa.removerFiltro', 'pesquisa.setPerPage',
+            'saude.index', 'saude.show', 'saude.edit', 'saude.update',
+            'saude.filtro', 'saude.removerFiltro', 'saude.setPerPage',
             'relatorio_frequencia.index', 'relatorio_transporte.index',
         ],
 
@@ -124,7 +126,7 @@ class PerfisEscolaresSeeder extends Seeder
             'disciplina.index', 'disciplina.filtro', 'disciplina.removerFiltro', 'disciplina.setPerPage',
             'turma.index', 'turma.show', 'turma.filtro', 'turma.removerFiltro', 'turma.setPerPage',
             'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'aviso.*', 'livro.*', 'emprestimo.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*', 'relatorio_transporte.*',
-            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*', 'saude.*',
             'plano_mensalidade.index', 'mensalidade.index',
             'aluno.*', 'responsavel.*',
         ],
@@ -174,6 +176,8 @@ class PerfisEscolaresSeeder extends Seeder
             'evento.filtro', 'evento.removerFiltro', 'evento.setPerPage',
             'pesquisa.index', 'pesquisa.create', 'pesquisa.store', 'pesquisa.edit', 'pesquisa.update',
             'pesquisa.resultados', 'pesquisa.filtro', 'pesquisa.removerFiltro', 'pesquisa.setPerPage',
+            'saude.index', 'saude.show', 'saude.edit', 'saude.update',
+            'saude.filtro', 'saude.removerFiltro', 'saude.setPerPage',
             'ocorrencia.index', 'ocorrencia.create', 'ocorrencia.store', 'ocorrencia.edit', 'ocorrencia.update',
             'ocorrencia.filtro', 'ocorrencia.removerFiltro', 'ocorrencia.setPerPage',
             'relatorio_frequencia.index', 'relatorio_inadimplencia.index', 'relatorio_transporte.index',
@@ -211,6 +215,7 @@ class PerfisEscolaresSeeder extends Seeder
             'cardapio.index', 'cardapio.filtro', 'cardapio.removerFiltro', 'cardapio.setPerPage',
             'evento.index', 'evento.filtro', 'evento.removerFiltro', 'evento.setPerPage',
             'pesquisa.index', 'pesquisa.resultados', 'pesquisa.filtro', 'pesquisa.removerFiltro', 'pesquisa.setPerPage',
+            'saude.index', 'saude.show', 'saude.filtro', 'saude.removerFiltro', 'saude.setPerPage',
         ],
 
         'professor_substituto' => [
@@ -245,6 +250,7 @@ class PerfisEscolaresSeeder extends Seeder
             'cardapio.index', 'cardapio.filtro', 'cardapio.removerFiltro', 'cardapio.setPerPage',
             'evento.index', 'evento.filtro', 'evento.removerFiltro', 'evento.setPerPage',
             'pesquisa.index', 'pesquisa.resultados', 'pesquisa.filtro', 'pesquisa.removerFiltro', 'pesquisa.setPerPage',
+            'saude.index', 'saude.show', 'saude.filtro', 'saude.removerFiltro', 'saude.setPerPage',
         ],
 
         'funcionario_administrativo' => [
@@ -266,6 +272,7 @@ class PerfisEscolaresSeeder extends Seeder
             'aviso.index', 'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
             'evento.index', 'evento.filtro', 'evento.removerFiltro', 'evento.setPerPage',
             'pesquisa.index', 'pesquisa.resultados', 'pesquisa.filtro', 'pesquisa.removerFiltro', 'pesquisa.setPerPage',
+            'saude.index', 'saude.show', 'saude.filtro', 'saude.removerFiltro', 'saude.setPerPage',
         ],
 
         'financeiro' => [
@@ -333,6 +340,8 @@ class PerfisEscolaresSeeder extends Seeder
             'plano_atendimento.index', 'plano_atendimento.create', 'plano_atendimento.store',
             'plano_atendimento.edit', 'plano_atendimento.update', 'plano_atendimento.destroy',
             'plano_atendimento.filtro', 'plano_atendimento.removerFiltro', 'plano_atendimento.setPerPage',
+            'saude.index', 'saude.show', 'saude.edit', 'saude.update',
+            'saude.filtro', 'saude.removerFiltro', 'saude.setPerPage',
             'evento.index', 'evento.filtro', 'evento.removerFiltro', 'evento.setPerPage',
         ],
 

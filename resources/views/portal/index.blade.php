@@ -36,6 +36,7 @@
                     <a href="{{ route('portal.avisos') }}" class="btn btn-outline-info btn-sm">Avisos</a>
                     <a href="{{ route('portal.agenda') }}" class="btn btn-outline-dark btn-sm">Agenda</a>
                     <a href="{{ route('portal.pesquisas') }}" class="btn btn-outline-secondary btn-sm">Pesquisas</a>
+                    <a href="{{ route('portal.saude') }}" class="btn btn-outline-danger btn-sm">Saúde</a>
                 </div>
             </div>
         </div>
