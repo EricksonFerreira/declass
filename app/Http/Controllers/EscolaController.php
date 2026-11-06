@@ -75,7 +75,15 @@ class EscolaController extends BaseController implements FiltroInterface, Resour
 
     public function store(StoreEscolaRequest $request)
     {
-        $this->escolaService->create($request->validated());
+        $data = $request->validated();
+        $logo = $data['logo'] ?? null;
+        unset($data['logo']);
+
+        if ($logo) {
+            $data['logo_path'] = $logo->store('escolas/logo', 'public');
+        }
+
+        $this->escolaService->create($data);
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Escola criada com sucesso.');
     }
@@ -104,7 +112,21 @@ class EscolaController extends BaseController implements FiltroInterface, Resour
 
     public function update(UpdateEscolaRequest $request, $id)
     {
-        $escola = $this->escolaService->update($id, $request->validated());
+        $escola = $this->escolaService->getById($id);
+        abort_if(! $escola, 404, 'Escola não encontrada.');
+
+        $data = $request->validated();
+        $logo = $data['logo'] ?? null;
+        unset($data['logo']);
+
+        if ($logo) {
+            if ($escola->logo_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($escola->logo_path);
+            }
+            $data['logo_path'] = $logo->store('escolas/logo', 'public');
+        }
+
+        $escola = $this->escolaService->update($id, $data);
         abort_if(! $escola, 403, 'Sem acesso para editar esta escola.');
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Escola atualizada com sucesso.');

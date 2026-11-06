@@ -46,6 +46,13 @@
         <div class="card">
             <div class="card-header font-weight-bold">Identidade Visual</div>
             <div class="card-body">
+                <div class="mb-3 text-center">
+                    @if($escola->logo_url)
+                        <img src="{{ $escola->logo_url }}" alt="Logo da escola" style="max-height:64px;max-width:100%;">
+                    @else
+                        <span class="text-muted small">Sem logo cadastrada</span>
+                    @endif
+                </div>
                 <div class="d-flex align-items-center mb-2">
                     <span class="mr-2">Cor primária:</span>
                     <span class="badge" style="background:{{ $escola->cor_primaria ?? '#ccc' }};width:24px;height:24px;border-radius:4px;display:inline-block;"></span>

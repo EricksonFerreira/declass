@@ -28,6 +28,7 @@ class StoreEscolaRequest extends FormRequest
             'turno_padrao' => ['nullable', Rule::in(array_keys(\App\Models\Escola::TURNOS))],
             'cor_primaria' => ['nullable', 'string', 'max:7'],
             'cor_secundaria' => ['nullable', 'string', 'max:7'],
+            'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
             'ativa' => ['nullable', Rule::in(['S', 'N'])],
         ];
     }

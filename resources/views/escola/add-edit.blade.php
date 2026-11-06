@@ -10,7 +10,7 @@
 @section('content')
 <div class="card">
     <div class="card-body">
-        <form method="POST" action="{{ isset($escola) ? route('escola.update', $escola->id) : route('escola.store') }}">
+        <form method="POST" action="{{ isset($escola) ? route('escola.update', $escola->id) : route('escola.store') }}" enctype="multipart/form-data">
             @csrf
             @if(isset($escola))
                 @method('PUT')
@@ -64,6 +64,17 @@
                 </div>
                 <div class="col-md-3">
                     <x-form-input name="cor_secundaria" type="color" label="Cor secundária" :value="old('cor_secundaria', $escola->cor_secundaria ?? '#f59e0b')" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Logo da escola</label>
+                    @if(isset($escola) && $escola->logo_url)
+                        <div class="mb-2">
+                            <img src="{{ $escola->logo_url }}" alt="Logo atual" style="max-height:48px;max-width:160px;">
+                        </div>
+                    @endif
+                    <input type="file" name="logo" class="form-control-file" accept=".png,.jpg,.jpeg,.webp">
+                    <small class="text-muted">PNG, JPG ou WebP — máx. 2 MB. Usada no formulário público de matrícula e documentos.</small>
+                    @error('logo')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
             </div>
 

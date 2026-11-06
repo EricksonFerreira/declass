@@ -5,36 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $titulo }}</title>
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet">
+    @php
+        $corHex = function ($valor, string $padrao): string {
+            $v = is_string($valor) ? strtolower(trim($valor)) : '';
+            if (preg_match('/^#[0-9a-f]{3}$/', $v)) {
+                $v = '#'.implode('', array_map(fn ($c) => $c.$c, str_split(substr($v, 1))));
+            }
+            return preg_match('/^#[0-9a-f]{6}$/', $v) ? $v : $padrao;
+        };
+        $corPrimaria = $corHex($escola->cor_primaria ?? null, '#1e3a8a');
+        $corSecundaria = $corHex($escola->cor_secundaria ?? null, '#312e81');
+        $shade = function (string $hex, float $fator): string {
+            $rgb = array_map('hexdec', str_split(substr($hex, 1), 2));
+            $mix = fn ($c) => max(0, min(255, (int) round($fator > 0 ? $c + (255 - $c) * $fator : $c * (1 + $fator))));
+            return '#'.implode('', array_map(fn ($c) => str_pad(dechex($mix($c)), 2, '0', STR_PAD_LEFT), $rgb));
+        };
+        $corFoco = $shade($corPrimaria, 0.65);
+        $corBtnHover = $shade($corPrimaria, -0.15);
+        $corProtocoloBg = $shade($corPrimaria, 0.92);
+        $logoUrl = $escola->logo_url ?: ($empresa->logo_url ?? null);
+    @endphp
     <style>
+        :root {
+            --cor-primaria: {{ $corPrimaria }};
+            --cor-secundaria: {{ $corSecundaria }};
+            --cor-foco: {{ $corFoco }};
+            --cor-btn-hover: {{ $corBtnHover }};
+            --cor-protocolo-bg: {{ $corProtocoloBg }};
+        }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Figtree',sans-serif; background:#f1f5f9; color:#0f172a; }
-        .topo { background:linear-gradient(135deg,#1e3a8a,#312e81); color:#fff; padding:2rem 1rem; text-align:center; }
+        .topo { background:linear-gradient(135deg,var(--cor-primaria),var(--cor-secundaria)); color:#fff; padding:2rem 1rem 2.5rem; text-align:center; }
+        .topo .logo { max-height:56px; max-width:200px; background:#fff; padding:.45rem .9rem; border-radius:10px; margin-bottom:.9rem; }
+        .topo .logo-inicial { width:56px; height:56px; margin:0 auto .9rem; border-radius:50%; background:rgba(255,255,255,.18); border:2px solid rgba(255,255,255,.5); display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:700; }
         .topo h1 { font-size:1.6rem; font-weight:700; }
         .topo p { opacity:.85; margin-top:.4rem; font-size:.95rem; }
         .card-box { max-width:720px; margin:-1.5rem auto 2rem; padding:0 1rem; }
         .card { background:#fff; border-radius:14px; box-shadow:0 10px 30px rgba(15,23,42,.08); padding:1.75rem; }
-        h2 { font-size:1.15rem; color:#1e3a8a; margin-bottom:1.25rem; }
+        h2 { font-size:1.15rem; color:var(--cor-primaria); margin-bottom:1.25rem; }
         .secao { font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#64748b; margin:1.5rem 0 .75rem; border-bottom:1px solid #e2e8f0; padding-bottom:.4rem; }
         .grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
         .grid .full { grid-column:1/-1; }
         label { display:block; font-size:.82rem; font-weight:600; margin-bottom:.3rem; color:#334155; }
         label .req { color:#dc2626; }
         input, select, textarea { width:100%; padding:.6rem .75rem; border:1px solid #cbd5e1; border-radius:8px; font-size:.9rem; font-family:inherit; background:#fff; }
-        input:focus, select:focus, textarea:focus { outline:2px solid #93c5fd; border-color:#3b82f6; }
+        input:focus, select:focus, textarea:focus { outline:2px solid var(--cor-foco); border-color:var(--cor-primaria); }
         .erro { color:#dc2626; font-size:.78rem; margin-top:.25rem; }
-        .btn { display:inline-block; width:100%; padding:.8rem; border:none; border-radius:10px; background:#1e3a8a; color:#fff; font-weight:600; font-size:.95rem; cursor:pointer; margin-top:1.25rem; }
-        .btn:hover { background:#1d4ed8; }
+        .btn { display:inline-block; width:100%; padding:.8rem; border:none; border-radius:10px; background:var(--cor-primaria); color:#fff; font-weight:600; font-size:.95rem; cursor:pointer; margin-top:1.25rem; }
+        .btn:hover { background:var(--cor-btn-hover); }
         .sucesso { text-align:center; padding:2rem 1rem; }
         .sucesso .ico { font-size:3rem; margin-bottom:1rem; }
         .sucesso h2 { margin-bottom:.75rem; }
         .sucesso p { color:#64748b; font-size:.9rem; line-height:1.6; }
-        .protocolo { display:inline-block; background:#eff6ff; color:#1d4ed8; font-weight:700; padding:.4rem 1rem; border-radius:8px; margin:.75rem 0; }
+        .protocolo { display:inline-block; background:var(--cor-protocolo-bg); color:var(--cor-primaria); font-weight:700; padding:.4rem 1rem; border-radius:8px; margin:.75rem 0; }
         footer { text-align:center; padding:1.5rem; color:#94a3b8; font-size:.78rem; }
         @media (max-width:640px) { .grid { grid-template-columns:1fr; } }
     </style>
 </head>
 <body>
     <div class="topo">
+        @if($logoUrl)
+            <img src="{{ $logoUrl }}" alt="Logo {{ $escola->nome }}" class="logo">
+        @else
+            <div class="logo-inicial">{{ mb_strtoupper(mb_substr($escola->nome, 0, 1)) }}</div>
+        @endif
         <h1>{{ $empresa->nome }}</h1>
         <p>{{ $escola->nome }} — Solicitação de matrícula {{ now()->format('Y') }}</p>
     </div>
