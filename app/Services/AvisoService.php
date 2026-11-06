@@ -60,6 +60,7 @@ class AvisoService extends AbstractBaseService
         return Aviso::query()
             ->with(['escola', 'turma'])
             ->where('ativo', 'S')
+            ->where('destino', 'familias')
             ->whereDate('data_publicacao', '<=', now()->toDateString())
             ->whereIn('escola_id', $escolaIds)
             ->where(fn ($q) => $q->whereNull('turma_id')->orWhereIn('turma_id', $turmaIds))

@@ -807,6 +807,25 @@ class DemoEscolarSeeder extends Seeder
                     ]
                 );
             }
+
+            // Mural interno: avisos para a equipe (nao vao ao portal)
+            $internos = [
+                ['titulo' => 'Reunião pedagógica interna', 'tipo' => 'info',
+                    'mensagem' => 'Reunião pedagógica na sala dos professores em '.now()->addDays(4)->format('d/m/Y').' às 14h. Trazer planejamentos do bimestre.'],
+                ['titulo' => 'Reciclagem em avaliação diagnóstica', 'tipo' => 'evento',
+                    'mensagem' => 'Oficina de formação em correção de avaliações diagnósticas. Inscrições com a coordenação pedagógica.'],
+            ];
+            foreach ($internos as $avisoInterno) {
+                Aviso::firstOrCreate(
+                    ['empresa_id' => $empresa->id, 'escola_id' => $escola->id, 'titulo' => $avisoInterno['titulo']],
+                    $avisoInterno + [
+                        'turma_id' => null,
+                        'destino' => 'staff',
+                        'data_publicacao' => now()->subDays(random_int(1, 4))->toDateString(),
+                        'ativo' => 'S',
+                    ]
+                );
+            }
         }
     }
 

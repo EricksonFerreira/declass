@@ -43,6 +43,9 @@
                                     $badgeTipo = ['info' => 'primary', 'urgente' => 'danger', 'evento' => 'success'][$aviso->tipo] ?? 'secondary';
                                 @endphp
                                 <span class="badge badge-{{ $badgeTipo }}">{{ \App\Models\Aviso::TIPOS[$aviso->tipo] ?? $aviso->tipo }}</span>
+                                @if(($aviso->destino ?? 'familias') === 'staff')
+                                    <span class="badge badge-dark" title="Mural interno — não aparece no portal das famílias"><i class="fa fa-users"></i> Equipe</span>
+                                @endif
                             </td>
                             <td>{{ $aviso->escola->nome ?? '—' }}</td>
                             <td>

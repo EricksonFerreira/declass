@@ -17,14 +17,17 @@
             @endif
 
             <div class="row">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <x-form-select name="escola_id" label="Escola" :options="$escolas ?? []" :selected="old('escola_id', $aviso->escola_id ?? '')" required />
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <x-form-select name="turma_id" label="Turma (opcional)" :options="['' => 'Escola toda'] + ($turmas ?? [])" :selected="old('turma_id', $aviso->turma_id ?? '')" />
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <x-form-select name="tipo" label="Tipo" :options="$tipos ?? []" :selected="old('tipo', $aviso->tipo ?? 'info')" required />
+                </div>
+                <div class="col-md-3">
+                    <x-form-select name="destino" label="Público" :options="$destinos ?? []" :selected="old('destino', $aviso->destino ?? 'familias')" required />
                 </div>
             </div>
 

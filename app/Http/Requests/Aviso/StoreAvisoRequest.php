@@ -29,6 +29,7 @@ class StoreAvisoRequest extends FormRequest
             'titulo' => ['required', 'string', 'max:160'],
             'mensagem' => ['required', 'string', 'max:5000'],
             'tipo' => ['nullable', Rule::in(array_keys(Aviso::TIPOS))],
+            'destino' => ['nullable', Rule::in(array_keys(Aviso::DESTINOS))],
             'data_publicacao' => ['required', 'date'],
             'ativo' => ['nullable', Rule::in(['S', 'N'])],
         ];

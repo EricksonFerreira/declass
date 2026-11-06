@@ -172,6 +172,73 @@ test('aviso de outro tenant nao vaza no portal', function () {
         ->assertDontSee('Aviso tenant A');
 });
 
+test('aviso do mural interno nao aparece no portal das familias', function () {
+    $empresa = tenant();
+    $ids = setupAvisos($empresa);
+    $ids['empresa'] = $empresa;
+
+    avisoDemo($ids, ['titulo' => 'Aviso para familias']);
+    avisoDemo($ids, ['titulo' => 'Comunicado da equipe', 'destino' => 'staff']);
+
+    $user = usuarioTenant($empresa, 'responsavel_legal');
+    $ids['responsavel']->update(['user_id' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('portal.avisos'))
+        ->assertOk()
+        ->assertSee('Aviso para familias')
+        ->assertDontSee('Comunicado da equipe');
+
+    // A equipe ve os dois na listagem interna
+    $this->actingAs(usuarioTenant($empresa, 'secretario'))
+        ->get(route('aviso.index'))
+        ->assertOk()
+        ->assertSee('Aviso para familias')
+        ->assertSee('Comunicado da equipe');
+});
+
+test('aviso aceita destino staff e rejeita destino invalido', function () {
+    $empresa = tenant();
+    $ids = setupAvisos($empresa);
+    $ids['empresa'] = $empresa;
+
+    $user = usuarioTenant($empresa, 'secretario');
+
+    $this->actingAs($user)->post(route('aviso.store'), [
+        'escola_id' => $ids['escola']->id,
+        'titulo' => 'Aviso interno',
+        'mensagem' => 'Somente a equipe.',
+        'tipo' => 'info',
+        'destino' => 'staff',
+        'data_publicacao' => now()->toDateString(),
+        'ativo' => 'S',
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('avisos', ['titulo' => 'Aviso interno', 'destino' => 'staff']);
+
+    // sem destino informado, assume familias
+    $this->actingAs($user)->post(route('aviso.store'), [
+        'escola_id' => $ids['escola']->id,
+        'titulo' => 'Aviso padrao',
+        'mensagem' => 'Para as familias.',
+        'tipo' => 'info',
+        'data_publicacao' => now()->toDateString(),
+        'ativo' => 'S',
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('avisos', ['titulo' => 'Aviso padrao', 'destino' => 'familias']);
+
+    $this->actingAs($user)->post(route('aviso.store'), [
+        'escola_id' => $ids['escola']->id,
+        'titulo' => 'Destino ruim',
+        'mensagem' => 'Invalido.',
+        'tipo' => 'info',
+        'destino' => 'inexistente',
+        'data_publicacao' => now()->toDateString(),
+        'ativo' => 'S',
+    ])->assertSessionHasErrors('destino');
+});
+
 test('professor le avisos mas nao cria', function () {
     $empresa = tenant();
     $ids = setupAvisos($empresa);

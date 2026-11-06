@@ -23,6 +23,7 @@ class Aviso extends Model
         'titulo',
         'mensagem',
         'tipo',
+        'destino',
         'data_publicacao',
         'ativo',
     ];
@@ -35,6 +36,12 @@ class Aviso extends Model
         'info' => 'Informativo',
         'urgente' => 'Urgente',
         'evento' => 'Evento',
+    ];
+
+    /** Publico do aviso: familias (portal) ou equipe (mural interno). */
+    public const DESTINOS = [
+        'familias' => 'Famílias (portal)',
+        'staff' => 'Equipe (mural interno)',
     ];
 
     public function escola(): BelongsTo

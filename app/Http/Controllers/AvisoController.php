@@ -160,6 +160,11 @@ class AvisoController extends BaseController implements FiltroInterface, Resourc
                 'options' => Aviso::TIPOS,
             ],
             [
+                'name' => 'destino', 'label' => 'Público', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => Aviso::DESTINOS,
+            ],
+            [
                 'name' => 'ativo', 'label' => 'Status', 'type' => 'select',
                 'typeWhere' => 'where',
                 'options' => ['S' => 'Ativo', 'N' => 'Inativo'],
@@ -173,6 +178,7 @@ class AvisoController extends BaseController implements FiltroInterface, Resourc
             'escolas' => $this->escolasOpcoes(),
             'turmas' => $this->turmasOpcoes(),
             'tipos' => Aviso::TIPOS,
+            'destinos' => Aviso::DESTINOS,
         ];
     }
 
