@@ -173,3 +173,38 @@ test('boletim tem escopo de tenant', function () {
         ->and(Nota::count())->toBe(0)
         ->and(Matricula::count())->toBe(0);
 });
+
+test('boletim da turma pode ser baixado em pdf', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $ids = setupBoletim($empresa);
+
+    avaliarComNota($ids, $admin, 8);
+
+    $response = $this->actingAs($admin)->get(route('boletim.turma.pdf', $ids['turma']->id));
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('application/pdf');
+});
+
+test('boletim individual pode ser baixado em pdf', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $ids = setupBoletim($empresa);
+
+    avaliarComNota($ids, $admin, 9);
+
+    $this->actingAs($admin)
+        ->get(route('boletim.aluno.pdf', $ids['aluno']->id))
+        ->assertOk()
+        ->assertHeader('content-type', 'application/pdf');
+});
+
+test('professor sem atribuicao nao baixa pdf da turma', function () {
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+    $ids = setupBoletim($empresa);
+
+    $this->actingAs($professor)
+        ->get(route('boletim.turma.pdf', $ids['turma']->id))
+        ->assertForbidden();
+});

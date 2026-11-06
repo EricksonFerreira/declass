@@ -11,7 +11,10 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span class="font-weight-bold">Médias por disciplina ({{ $disciplinas->count() }}) · {{ $total_aulas }} aula(s) registrada(s)</span>
-        <a href="{{ route('boletim.index') }}" class="btn btn-sm btn-secondary">Voltar</a>
+        <div>
+            <a href="{{ route('boletim.turma.pdf', $turma->id) }}" class="btn btn-sm btn-danger" target="_blank"><i class="fa fa-file-pdf"></i> PDF</a>
+            <a href="{{ route('boletim.index') }}" class="btn btn-sm btn-secondary">Voltar</a>
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">

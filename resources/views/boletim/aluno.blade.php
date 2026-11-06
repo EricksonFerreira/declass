@@ -32,6 +32,7 @@
                 </dl>
             </div>
             <div class="card-footer">
+                <a href="{{ route('boletim.aluno.pdf', array_merge(['aluno' => $aluno->id], $anoLetivoId ? ['ano_letivo_id' => $anoLetivoId] : [])) }}" class="btn btn-danger btn-sm" target="_blank"><i class="fa fa-file-pdf"></i> PDF</a>
                 <a href="{{ route('boletim.turma', $turma->id) }}" class="btn btn-info btn-sm">Boletim da turma</a>
                 <a href="{{ route('boletim.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
             </div>
