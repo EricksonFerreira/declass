@@ -41,6 +41,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.*', 'organizacao.*', 'documentos.*',
             'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -54,6 +55,7 @@ class PerfisEscolaresSeeder extends Seeder
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
             'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -67,6 +69,7 @@ class PerfisEscolaresSeeder extends Seeder
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
             'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -90,6 +93,9 @@ class PerfisEscolaresSeeder extends Seeder
             'aviso.index', 'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
             'livro.index', 'livro.filtro', 'livro.removerFiltro', 'livro.setPerPage',
             'emprestimo.index', 'emprestimo.filtro', 'emprestimo.removerFiltro', 'emprestimo.setPerPage',
+            'veiculo.index', 'veiculo.filtro', 'veiculo.removerFiltro', 'veiculo.setPerPage',
+            'rota_transporte.index', 'rota_transporte.filtro', 'rota_transporte.removerFiltro', 'rota_transporte.setPerPage',
+            'transporte_aluno.index', 'transporte_aluno.filtro', 'transporte_aluno.removerFiltro', 'transporte_aluno.setPerPage',
         ],
 
         'secretario' => [
@@ -106,6 +112,7 @@ class PerfisEscolaresSeeder extends Seeder
             'disciplina.index', 'disciplina.filtro', 'disciplina.removerFiltro', 'disciplina.setPerPage',
             'turma.index', 'turma.show', 'turma.filtro', 'turma.removerFiltro', 'turma.setPerPage',
             'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'aviso.*', 'livro.*', 'emprestimo.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*',
             'plano_mensalidade.index', 'mensalidade.index',
             'aluno.*', 'responsavel.*',
         ],
@@ -143,6 +150,12 @@ class PerfisEscolaresSeeder extends Seeder
             'livro.filtro', 'livro.removerFiltro', 'livro.setPerPage',
             'emprestimo.index', 'emprestimo.create', 'emprestimo.store', 'emprestimo.devolver',
             'emprestimo.filtro', 'emprestimo.removerFiltro', 'emprestimo.setPerPage',
+            'veiculo.index', 'veiculo.create', 'veiculo.store', 'veiculo.edit', 'veiculo.update',
+            'veiculo.filtro', 'veiculo.removerFiltro', 'veiculo.setPerPage',
+            'rota_transporte.index', 'rota_transporte.create', 'rota_transporte.store', 'rota_transporte.edit', 'rota_transporte.update',
+            'rota_transporte.filtro', 'rota_transporte.removerFiltro', 'rota_transporte.setPerPage',
+            'transporte_aluno.index', 'transporte_aluno.create', 'transporte_aluno.store', 'transporte_aluno.edit', 'transporte_aluno.update',
+            'transporte_aluno.filtro', 'transporte_aluno.removerFiltro', 'transporte_aluno.setPerPage',
         ],
 
         'professor' => [
@@ -166,6 +179,9 @@ class PerfisEscolaresSeeder extends Seeder
             'aviso.index', 'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
             'livro.index', 'livro.filtro', 'livro.removerFiltro', 'livro.setPerPage',
             'emprestimo.index', 'emprestimo.filtro', 'emprestimo.removerFiltro', 'emprestimo.setPerPage',
+            'veiculo.index', 'veiculo.filtro', 'veiculo.removerFiltro', 'veiculo.setPerPage',
+            'rota_transporte.index', 'rota_transporte.filtro', 'rota_transporte.removerFiltro', 'rota_transporte.setPerPage',
+            'transporte_aluno.index', 'transporte_aluno.filtro', 'transporte_aluno.removerFiltro', 'transporte_aluno.setPerPage',
         ],
 
         'professor_substituto' => [
@@ -189,6 +205,9 @@ class PerfisEscolaresSeeder extends Seeder
             'aviso.index', 'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
             'livro.index', 'livro.filtro', 'livro.removerFiltro', 'livro.setPerPage',
             'emprestimo.index', 'emprestimo.filtro', 'emprestimo.removerFiltro', 'emprestimo.setPerPage',
+            'veiculo.index', 'veiculo.filtro', 'veiculo.removerFiltro', 'veiculo.setPerPage',
+            'rota_transporte.index', 'rota_transporte.filtro', 'rota_transporte.removerFiltro', 'rota_transporte.setPerPage',
+            'transporte_aluno.index', 'transporte_aluno.filtro', 'transporte_aluno.removerFiltro', 'transporte_aluno.setPerPage',
         ],
 
         'funcionario_administrativo' => [
@@ -242,6 +261,7 @@ class PerfisEscolaresSeeder extends Seeder
             'menu.*', 'perfil.*',
             'escola.index', 'escola.show',
             'aluno.index', 'aluno.show',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*',
         ],
 
         'responsavel_alimentacao' => [

@@ -106,6 +106,30 @@ class PortalController extends Controller
     }
 
     /**
+     * Transporte dos alunos vinculados: rota, parada e veiculo
+     * de cada um, quando houver vinculo ativo.
+     */
+    public function transporte()
+    {
+        $alunos = $this->alunosDoUsuario(auth()->user());
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $vinculos = \App\Models\TransporteAluno::query()
+            ->where('ativo', 'S')
+            ->whereIn('aluno_id', $alunos->pluck('id'))
+            ->with(['aluno.pessoa', 'rota.escola', 'rota.veiculo', 'parada'])
+            ->get()
+            ->keyBy('aluno_id');
+
+        return view('portal.transporte', [
+            'titulo' => 'Transporte Escolar',
+            'alunos' => $alunos,
+            'vinculos' => $vinculos,
+        ]);
+    }
+
+    /**
      * Alunos acessiveis pela conta: filhos de responsaveis vinculados
      * + o proprio aluno quando a conta e de aluno.
      */

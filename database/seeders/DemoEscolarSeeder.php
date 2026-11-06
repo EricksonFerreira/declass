@@ -13,11 +13,15 @@ use App\Models\Escola;
 use App\Models\Etapa;
 use App\Models\Frequencia;
 use App\Models\Matricula;
+use App\Models\ParadaTransporte;
 use App\Models\PeriodoLetivo;
 use App\Models\Pessoa;
 use App\Models\Responsavel;
+use App\Models\RotaTransporte;
+use App\Models\TransporteAluno;
 use App\Models\Turma;
 use App\Models\User;
+use App\Models\Veiculo;
 use App\Support\EmpresaContext;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -161,6 +165,7 @@ class DemoEscolarSeeder extends Seeder
         $this->financeiro($empresa);
         $this->comunicacao($empresa);
         $this->biblioteca($empresa);
+        $this->transporte($empresa, array_values($escolas));
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -940,6 +945,110 @@ class DemoEscolarSeeder extends Seeder
 
         foreach (array_chunk($rows, 500) as $chunk) {
             DB::table('mensalidades')->insert($chunk);
+        }
+    }
+
+    /**
+     * Transporte escolar por unidade: frota, rotas com paradas
+     * e ~12% dos alunos ativos vinculados como passageiros.
+     * Idempotente — firstOrCreate + guarda por escola.
+     */
+    private function transporte(Empresa $empresa, array $escolas): void
+    {
+        foreach ($escolas as $escola) {
+            $veiculos = Veiculo::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('escola_id', $escola->id)
+                ->get();
+
+            if ($veiculos->isEmpty()) {
+                $modelos = [
+                    ['ABC1D23', 'Mercedes Sprinter 2020', 2020, 20, 'Carlos Souza', '(11) 98811-2233'],
+                    ['XYZ9K87', 'Volare W8 2019', 2019, 32, 'José Lima', '(11) 97722-4455'],
+                    ['QWE4R56', 'Fiat Ducato 2021', 2021, 16, 'Ana Pereira', '(11) 96633-7788'],
+                ];
+                foreach ($modelos as [$placa, $modelo, $ano, $cap, $motorista, $tel]) {
+                    $veiculos->push(Veiculo::firstOrCreate(
+                        ['empresa_id' => $empresa->id, 'escola_id' => $escola->id, 'placa' => $placa],
+                        [
+                            'modelo' => $modelo,
+                            'ano' => $ano,
+                            'capacidade' => $cap,
+                            'motorista_nome' => $motorista,
+                            'motorista_telefone' => $tel,
+                            'ativo' => 'S',
+                        ]
+                    ));
+                }
+            }
+
+            $rotas = [];
+            $rotasDef = [
+                ['Rota Centro — Manhã', '06:30', '17:00'],
+                ['Rota Norte — Tarde', '12:30', '18:30'],
+            ];
+            foreach ($rotasDef as $i => [$nome, $ida, $volta]) {
+                $rota = RotaTransporte::firstOrCreate(
+                    ['empresa_id' => $empresa->id, 'escola_id' => $escola->id, 'nome' => $nome],
+                    [
+                        'veiculo_id' => $veiculos[$i % $veiculos->count()]->id,
+                        'horario_ida' => $ida,
+                        'horario_volta' => $volta,
+                        'ativo' => 'S',
+                    ]
+                );
+
+                if ($rota->paradas()->count() === 0) {
+                    $bairros = ['Jardim Paulista', 'Vila Mariana', 'Moema', 'Pinheiros', 'Santana'];
+                    foreach ($bairros as $ordem => $bairro) {
+                        ParadaTransporte::create([
+                            'empresa_id' => $empresa->id,
+                            'rota_id' => $rota->id,
+                            'nome' => 'Parada '.$bairro,
+                            'ordem' => $ordem + 1,
+                            'horario_previsto' => $ida,
+                        ]);
+                    }
+                }
+
+                $rotas[] = $rota->load('paradas');
+            }
+
+            // ~12% dos alunos ativos do ano atual viram passageiros.
+            $alunosIds = Matricula::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('status', 'ativa')
+                ->whereHas('turma', fn ($q) => $q->where('escola_id', $escola->id))
+                ->inRandomOrder()
+                ->limit(350)
+                ->pluck('aluno_id');
+
+            $jaVinculados = TransporteAluno::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('ativo', 'S')
+                ->pluck('aluno_id')
+                ->all();
+
+            $count = 0;
+            foreach ($alunosIds as $alunoId) {
+                if (in_array($alunoId, $jaVinculados, true)) {
+                    continue;
+                }
+                $rota = $rotas[$count % count($rotas)];
+                $parada = $rota->paradas->random();
+
+                TransporteAluno::create([
+                    'empresa_id' => $empresa->id,
+                    'aluno_id' => $alunoId,
+                    'rota_id' => $rota->id,
+                    'parada_id' => $parada->id,
+                    'ativo' => 'S',
+                ]);
+
+                if (++$count >= 180) {
+                    break;
+                }
+            }
         }
     }
 }

@@ -479,6 +479,32 @@ return [
             ],
         ],
 
+        // TRANSPORTE
+        [
+            'text' => 'Transporte',
+            'icon' => 'fas fa-bus',
+            'submenu' => [
+                [
+                    'text' => 'Passageiros',
+                    'route' => 'transporte_aluno.index',
+                    'can' => 'transporte_aluno.index',
+                    'icon' => 'fas fa-user-friends',
+                ],
+                [
+                    'text' => 'Rotas',
+                    'route' => 'rota_transporte.index',
+                    'can' => 'rota_transporte.index',
+                    'icon' => 'fas fa-route',
+                ],
+                [
+                    'text' => 'Veículos',
+                    'route' => 'veiculo.index',
+                    'can' => 'veiculo.index',
+                    'icon' => 'fas fa-truck',
+                ],
+            ],
+        ],
+
         // FINANCEIRO
         [
             'text' => 'Financeiro',

@@ -91,6 +91,15 @@ class MenuSecoesService
                 ],
             ],
             [
+                'slug' => 'transporte',
+                'titulo' => 'Transporte',
+                'cards' => [
+                    ['Passageiros', 'fas fa-user-friends', 'transporte_aluno.index', 'Alunos vinculados às rotas', '#2563eb'],
+                    ['Rotas', 'fas fa-route', 'rota_transporte.index', 'Linhas, horários e paradas', '#7c3aed'],
+                    ['Veículos', 'fas fa-bus', 'veiculo.index', 'Frota e motoristas das unidades', '#ea580c'],
+                ],
+            ],
+            [
                 'slug' => 'financeiro',
                 'titulo' => 'Financeiro',
                 'cards' => [
