@@ -210,24 +210,40 @@ class DemoEscolarSeeder extends Seeder
         $this->disciplinas($empresa);
 
         foreach ($escolas as $escola) {
-            if (Aluno::query()->where('empresa_id', $empresa->id)
-                ->where('escola_id', $escola->id)->exists()) {
+            // Considera populada so quando ha matriculas ativas no
+            // ano atual — coortes criadas sem operacao nao contam,
+            // entao uma execucao interrompida pode ser retomada.
+            $populada = Matricula::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('status', 'ativa')
+                ->whereHas('anoLetivo', fn ($q) => $q->where('ano', self::ANO_ATUAL))
+                ->whereHas('turma', fn ($q) => $q->where('escola_id', $escola->id))
+                ->exists();
+
+            if ($populada) {
                 $this->command->info("Escola {$escola->nome} ja populada — pulando.");
 
                 continue;
             }
 
             $this->command->info("Populando {$escola->nome}...");
-            $semestres = $escola->slug === 'unidade-sul';
-            $coortes = $this->criarCoortes($empresa, $escola);
-            $rows = $this->matriculasDaEscola($empresa, $escola, $semestres, $coortes);
 
-            foreach (array_chunk($rows, 500) as $chunk) {
-                DB::table('matriculas')->insert($chunk);
-            }
+            // Transacao por escola: se o processo morrer no meio
+            // (ex.: timeout), o rollback deixa a escola intacta
+            // para a proxima execucao recomecar do zero.
+            DB::transaction(function () use ($empresa, $escola, $usuarios) {
+                $semestres = $escola->slug === 'unidade-sul';
+                $coortes = $this->criarCoortes($empresa, $escola);
+                $rows = $this->matriculasDaEscola($empresa, $escola, $semestres, $coortes);
 
-            $this->operacaoEscola($empresa, $escola, $usuarios);
-            $this->command->info("  {$escola->nome}: ".count($rows).' matriculas.');
+                foreach (array_chunk($rows, 500) as $chunk) {
+                    DB::table('matriculas')->insert($chunk);
+                }
+
+                $this->operacaoEscola($empresa, $escola, $usuarios);
+            });
+
+            $this->command->info("  {$escola->nome}: populada.");
         }
     }
 
