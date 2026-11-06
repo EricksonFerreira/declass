@@ -506,6 +506,12 @@ return [
                     'can' => 'evento.index',
                     'icon' => 'fas fa-calendar-alt',
                 ],
+                [
+                    'text' => 'Pesquisas',
+                    'route' => 'pesquisa.index',
+                    'can' => 'pesquisa.index',
+                    'icon' => 'fas fa-clipboard-question',
+                ],
             ],
         ],
 

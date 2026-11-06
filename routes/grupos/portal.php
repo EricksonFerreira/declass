@@ -13,4 +13,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/portal/tarefas', [PortalController::class, 'tarefas'])->name('portal.tarefas');
     Route::get('/portal/emprestimos', [PortalController::class, 'emprestimos'])->name('portal.emprestimos');
     Route::get('/portal/agenda', [PortalController::class, 'agenda'])->name('portal.agenda');
+    Route::get('/portal/pesquisas', [PortalController::class, 'pesquisas'])->name('portal.pesquisas');
+    Route::get('/portal/pesquisa/{id}/responder', [PortalController::class, 'pesquisaResponder'])->name('portal.pesquisa.responder');
+    Route::post('/portal/pesquisa/{id}/responder', [PortalController::class, 'pesquisaSalvar'])->name('portal.pesquisa.salvar');
 });

@@ -255,6 +255,82 @@ class PortalController extends Controller
     }
 
     /**
+     * Pesquisas abertas para as familias: pesquisa da escola
+     * dos alunos vinculados (ou da rede toda) dentro do periodo
+     * e ainda nao respondida pelo usuario.
+     */
+    public function pesquisas()
+    {
+        $user = auth()->user();
+        $alunos = $this->alunosDoUsuario($user);
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $pesquisas = app(\App\Services\PesquisaService::class)
+            ->pesquisasParaUsuario($user, $alunos);
+
+        return view('portal.pesquisas', [
+            'titulo' => 'Pesquisas',
+            'alunos' => $alunos,
+            'pesquisas' => $pesquisas,
+        ]);
+    }
+
+    /** Formulario de resposta de uma pesquisa aberta. */
+    public function pesquisaResponder($id)
+    {
+        $user = auth()->user();
+        $alunos = $this->alunosDoUsuario($user);
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $pesquisa = \App\Models\Pesquisa::query()
+            ->with('perguntas')
+            ->where('status', 'aberta')
+            ->findOrFail($id);
+
+        // So responde pesquisa da escola dos alunos (ou rede toda)
+        $escolaIds = $alunos->pluck('escola_id')->filter()->unique();
+        abort_if($pesquisa->escola_id && ! $escolaIds->contains($pesquisa->escola_id), 403);
+        abort_unless($pesquisa->estaAberta(), 403, 'Esta pesquisa não está aberta.');
+        abort_if(
+            \App\Models\PesquisaResposta::where('pesquisa_id', $pesquisa->id)->where('user_id', $user->id)->exists(),
+            403, 'Você já respondeu esta pesquisa.'
+        );
+
+        return view('portal.pesquisa-responder', [
+            'titulo' => 'Responder Pesquisa',
+            'alunos' => $alunos,
+            'pesquisa' => $pesquisa,
+        ]);
+    }
+
+    /** Salva a resposta da pesquisa. */
+    public function pesquisaSalvar(\Illuminate\Http\Request $request, $id)
+    {
+        $user = auth()->user();
+        $alunos = $this->alunosDoUsuario($user);
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $pesquisa = \App\Models\Pesquisa::query()->findOrFail($id);
+
+        $escolaIds = $alunos->pluck('escola_id')->filter()->unique();
+        abort_if($pesquisa->escola_id && ! $escolaIds->contains($pesquisa->escola_id), 403);
+
+        // aluno_id opcional: o primeiro aluno vinculado como contexto
+        $alunoId = $request->filled('aluno_id') && $alunos->contains('id', (int) $request->input('aluno_id'))
+            ? (int) $request->input('aluno_id')
+            : $alunos->first()?->id;
+
+        app(\App\Services\PesquisaService::class)->responder(
+            $pesquisa, $user, $request->input('respostas', []), $alunoId
+        );
+
+        return redirect()->route('portal.pesquisas')->with('success', 'Resposta enviada com sucesso!');
+    }
+
+    /**
      * Alunos acessiveis pela conta: filhos de responsaveis vinculados
      * + o proprio aluno quando a conta e de aluno.
      */

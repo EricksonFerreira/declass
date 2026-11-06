@@ -41,7 +41,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.*', 'organizacao.*', 'documentos.*',
             'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*', 'relatorio_transporte.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
-            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -55,7 +55,7 @@ class PerfisEscolaresSeeder extends Seeder
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
             'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*', 'relatorio_transporte.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
-            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -69,7 +69,7 @@ class PerfisEscolaresSeeder extends Seeder
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
             'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*', 'relatorio_transporte.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
-            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -105,6 +105,8 @@ class PerfisEscolaresSeeder extends Seeder
             'cardapio.index', 'cardapio.filtro', 'cardapio.removerFiltro', 'cardapio.setPerPage',
             'evento.index', 'evento.create', 'evento.store', 'evento.edit', 'evento.update',
             'evento.filtro', 'evento.removerFiltro', 'evento.setPerPage',
+            'pesquisa.index', 'pesquisa.create', 'pesquisa.store', 'pesquisa.edit', 'pesquisa.update',
+            'pesquisa.resultados', 'pesquisa.filtro', 'pesquisa.removerFiltro', 'pesquisa.setPerPage',
             'relatorio_frequencia.index', 'relatorio_transporte.index',
         ],
 
@@ -122,7 +124,7 @@ class PerfisEscolaresSeeder extends Seeder
             'disciplina.index', 'disciplina.filtro', 'disciplina.removerFiltro', 'disciplina.setPerPage',
             'turma.index', 'turma.show', 'turma.filtro', 'turma.removerFiltro', 'turma.setPerPage',
             'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'aviso.*', 'livro.*', 'emprestimo.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*', 'relatorio_transporte.*',
-            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*',
+            'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*', 'evento.*', 'pesquisa.*',
             'plano_mensalidade.index', 'mensalidade.index',
             'aluno.*', 'responsavel.*',
         ],
@@ -170,6 +172,8 @@ class PerfisEscolaresSeeder extends Seeder
             'cardapio.filtro', 'cardapio.removerFiltro', 'cardapio.setPerPage',
             'evento.index', 'evento.create', 'evento.store', 'evento.edit', 'evento.update',
             'evento.filtro', 'evento.removerFiltro', 'evento.setPerPage',
+            'pesquisa.index', 'pesquisa.create', 'pesquisa.store', 'pesquisa.edit', 'pesquisa.update',
+            'pesquisa.resultados', 'pesquisa.filtro', 'pesquisa.removerFiltro', 'pesquisa.setPerPage',
             'ocorrencia.index', 'ocorrencia.create', 'ocorrencia.store', 'ocorrencia.edit', 'ocorrencia.update',
             'ocorrencia.filtro', 'ocorrencia.removerFiltro', 'ocorrencia.setPerPage',
             'relatorio_frequencia.index', 'relatorio_inadimplencia.index', 'relatorio_transporte.index',
@@ -206,6 +210,7 @@ class PerfisEscolaresSeeder extends Seeder
             'transporte_aluno.index', 'transporte_aluno.filtro', 'transporte_aluno.removerFiltro', 'transporte_aluno.setPerPage',
             'cardapio.index', 'cardapio.filtro', 'cardapio.removerFiltro', 'cardapio.setPerPage',
             'evento.index', 'evento.filtro', 'evento.removerFiltro', 'evento.setPerPage',
+            'pesquisa.index', 'pesquisa.resultados', 'pesquisa.filtro', 'pesquisa.removerFiltro', 'pesquisa.setPerPage',
         ],
 
         'professor_substituto' => [
@@ -239,6 +244,7 @@ class PerfisEscolaresSeeder extends Seeder
             'transporte_aluno.index', 'transporte_aluno.filtro', 'transporte_aluno.removerFiltro', 'transporte_aluno.setPerPage',
             'cardapio.index', 'cardapio.filtro', 'cardapio.removerFiltro', 'cardapio.setPerPage',
             'evento.index', 'evento.filtro', 'evento.removerFiltro', 'evento.setPerPage',
+            'pesquisa.index', 'pesquisa.resultados', 'pesquisa.filtro', 'pesquisa.removerFiltro', 'pesquisa.setPerPage',
         ],
 
         'funcionario_administrativo' => [
@@ -259,6 +265,7 @@ class PerfisEscolaresSeeder extends Seeder
             'boletim.index', 'boletim.turma', 'boletim.aluno',
             'aviso.index', 'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
             'evento.index', 'evento.filtro', 'evento.removerFiltro', 'evento.setPerPage',
+            'pesquisa.index', 'pesquisa.resultados', 'pesquisa.filtro', 'pesquisa.removerFiltro', 'pesquisa.setPerPage',
         ],
 
         'financeiro' => [

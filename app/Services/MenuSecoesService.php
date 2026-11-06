@@ -93,6 +93,7 @@ class MenuSecoesService
                 'cards' => [
                     ['Avisos', 'fas fa-bullhorn', 'aviso.index', 'Comunicados da escola para as famílias', '#dc2626'],
                     ['Agenda', 'fas fa-calendar-alt', 'evento.index', 'Eventos, reuniões e compromissos', '#2563eb'],
+                    ['Pesquisas', 'fas fa-clipboard-question', 'pesquisa.index', 'Questionários de satisfação para as famílias', '#7c3aed'],
                 ],
             ],
             [

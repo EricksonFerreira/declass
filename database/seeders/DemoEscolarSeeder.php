@@ -176,6 +176,7 @@ class DemoEscolarSeeder extends Seeder
         $this->planosAtendimento($empresa);
         $this->tarefas($empresa, $usuarios);
         $this->agenda($empresa, array_values($escolas), $usuarios);
+        $this->pesquisas($empresa, array_values($escolas), $usuarios);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -1406,6 +1407,88 @@ class DemoEscolarSeeder extends Seeder
                     'tipo' => $tipo,
                     'publico' => $publico,
                     'status' => 'agendado',
+                ]
+            );
+        }
+    }
+
+    /**
+     * Pesquisas de satisfacao: uma aberta por unidade (visivel no
+     * portal das familias) + uma encerrada da rede com respostas
+     * dos usuarios demo. Idempotente via firstOrCreate.
+     */
+    private function pesquisas(Empresa $empresa, array $escolas, array $usuarios): void
+    {
+        $perguntas = [
+            ['Como você avalia o atendimento da secretaria?', 'nota', 'S'],
+            ['Como você avalia a organização e a limpeza da escola?', 'nota', 'S'],
+            ['Recomendaria a escola para outras famílias?', 'sim_nao', 'S'],
+            ['Você sente falta de alguma informação da escola?', 'sim_nao', 'N'],
+            ['Como você avalia o desempenho do seu(a) filho(a) neste semestre?', 'nota', 'S'],
+            ['Sugestões ou elogios para a gestão', 'texto', 'N'],
+        ];
+
+        $criarPerguntas = function (\App\Models\Pesquisa $pesquisa) use ($perguntas) {
+            foreach ($perguntas as $i => [$texto, $tipo, $obrigatoria]) {
+                \App\Models\PesquisaPergunta::firstOrCreate(
+                    ['pesquisa_id' => $pesquisa->id, 'pergunta' => $texto],
+                    ['ordem' => $i + 1, 'tipo' => $tipo, 'obrigatoria' => $obrigatoria]
+                );
+            }
+        };
+
+        foreach ($escolas as $escola) {
+            $pesquisa = \App\Models\Pesquisa::firstOrCreate(
+                [
+                    'empresa_id' => $empresa->id,
+                    'escola_id' => $escola->id,
+                    'titulo' => 'Pesquisa de satisfação — '.$escola->nome,
+                ],
+                [
+                    'descricao' => 'Queremos ouvir as famílias! Responda o questionário rápido sobre a escola.',
+                    'data_inicio' => now()->subDays(3)->toDateString(),
+                    'data_fim' => now()->addDays(12)->toDateString(),
+                    'status' => 'aberta',
+                ]
+            );
+            $criarPerguntas($pesquisa);
+        }
+
+        // Pesquisa encerrada da rede, com respostas dos usuarios demo
+        $encerrada = \App\Models\Pesquisa::firstOrCreate(
+            [
+                'empresa_id' => $empresa->id,
+                'escola_id' => null,
+                'titulo' => 'Pesquisa de satisfação — Rede (encerrada)',
+            ],
+            [
+                'descricao' => 'Avaliação geral da rede no semestre anterior.',
+                'data_inicio' => now()->subDays(40)->toDateString(),
+                'data_fim' => now()->subDays(25)->toDateString(),
+                'status' => 'encerrada',
+            ]
+        );
+        $criarPerguntas($encerrada);
+
+        // Respostas demo na pesquisa encerrada (usuarios portal)
+        $perguntasIds = $encerrada->perguntas()->pluck('id')->all();
+        foreach (['responsavel', 'aluno'] as $chave) {
+            $user = $usuarios[$chave] ?? null;
+            if (! $user || count($perguntasIds) < 6) {
+                continue;
+            }
+            \App\Models\PesquisaResposta::firstOrCreate(
+                ['pesquisa_id' => $encerrada->id, 'user_id' => $user->id],
+                [
+                    'empresa_id' => $empresa->id,
+                    'aluno_id' => null,
+                    'respostas' => [
+                        (string) $perguntasIds[0] => (string) random_int(3, 5),
+                        (string) $perguntasIds[1] => (string) random_int(3, 5),
+                        (string) $perguntasIds[2] => random_int(0, 1) ? 'S' : 'N',
+                        (string) $perguntasIds[3] => random_int(0, 1) ? 'S' : 'N',
+                        (string) $perguntasIds[4] => (string) random_int(3, 5),
+                    ],
                 ]
             );
         }
