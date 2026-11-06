@@ -50,6 +50,7 @@
                             </td>
                             <td class="text-right">
                                 <a href="{{ route('aluno.show', $aluno->id) }}" class="btn btn-xs btn-info" title="Ver"><i class="fa fa-eye"></i></a>
+                                <a href="{{ route('aluno.historico', $aluno->id) }}" class="btn btn-xs btn-dark" title="Histórico completo"><i class="fa fa-history"></i></a>
                                 @can('aluno.edit')
                                     <a href="{{ route('aluno.edit', $aluno->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                                 @endcan

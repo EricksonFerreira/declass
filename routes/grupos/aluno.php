@@ -9,6 +9,10 @@ Route::prefix('aluno')->name('aluno.')->group(function () {
     Route::get('removerfiltro', [AlunoController::class, 'removerFiltro'])->name('removerFiltro');
     Route::get('filtro', [AlunoController::class, 'filtro'])->name('filtro');
 
+    // Historico completo do aluno (tela + PDF)
+    Route::get('{aluno}/historico/pdf', [AlunoController::class, 'historicoPdf'])->name('historico.pdf');
+    Route::get('{aluno}/historico', [AlunoController::class, 'historico'])->name('historico');
+
     // Declaracao de matricula em PDF
     Route::get('{aluno}/declaracao', [AlunoController::class, 'declaracao'])->name('declaracao');
 

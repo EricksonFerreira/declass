@@ -30,7 +30,7 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
         $this->nomeFiltro = 'aluno';
 
         $this->middleware('can:aluno.index')->only('index');
-        $this->middleware('can:aluno.show')->only(['show', 'declaracao', 'certificado']);
+        $this->middleware('can:aluno.show')->only(['show', 'declaracao', 'certificado', 'historico', 'historicoPdf']);
         $this->middleware('can:aluno.create')->only('create');
         $this->middleware('can:aluno.store')->only('store');
         $this->middleware('can:aluno.edit')->only('edit');
@@ -101,6 +101,45 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
 
         return view('aluno.show', compact('aluno', 'vinculos', 'responsaveisOpcoes', 'tiposResponsavel', 'tiposDocumento', 'breadcrumb'))
             ->with('titulo', $aluno->nome ?? 'Aluno');
+    }
+
+    /**
+     * Historico completo do aluno em uma unica tela (Student 360):
+     * matriculas por ano letivo, desempenho, financeiro, saude,
+     * transporte e linha do tempo de eventos.
+     */
+    public function historico($id)
+    {
+        $aluno = $this->alunoService->getById($id, ['pessoa', 'escola', 'documentos']);
+        abort_if(! $aluno, 404, 'Aluno não encontrado.');
+
+        $dados = app(\App\Services\AlunoHistoricoService::class)->montar($aluno);
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow(
+            'Alunos', 'aluno.index', 'Histórico: '.($aluno->nome ?? 'Aluno')
+        );
+
+        return view('aluno.historico', array_merge(compact('aluno', 'breadcrumb'), $dados))
+            ->with('titulo', 'Histórico — '.($aluno->nome ?? 'Aluno'));
+    }
+
+    /**
+     * Mesmo historico em PDF para impressao/arquivo (prontuario
+     * cumulativo, util para rematricula, transferencia e TC).
+     */
+    public function historicoPdf($id)
+    {
+        $aluno = $this->alunoService->getById($id, ['pessoa', 'escola', 'documentos']);
+        abort_if(! $aluno, 404, 'Aluno não encontrado.');
+
+        $dados = app(\App\Services\AlunoHistoricoService::class)->montar($aluno);
+
+        return app(\App\Services\PdfService::class)->download(
+            'aluno.historico-pdf',
+            array_merge(compact('aluno'), $dados),
+            'historico-'.\Illuminate\Support\Str::slug($aluno->nome ?? 'aluno').'.pdf',
+            'a4', 'landscape'
+        );
     }
 
     /**

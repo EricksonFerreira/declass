@@ -59,6 +59,7 @@
             <div class="card-footer">
                 <a href="{{ route('aluno.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
                 @can('aluno.show')
+                    <a href="{{ route('aluno.historico', $aluno->id) }}" class="btn btn-info btn-sm"><i class="fa fa-history"></i> Histórico</a>
                     <a href="{{ route('aluno.declaracao', $aluno->id) }}" class="btn btn-danger btn-sm" target="_blank"><i class="fa fa-file-pdf"></i> Declaração</a>
                     @if($aluno->matriculas->contains('status', 'concluida'))
                         <a href="{{ route('aluno.certificado', $aluno->id) }}" class="btn btn-success btn-sm" target="_blank"><i class="fa fa-certificate"></i> Certificado</a>
