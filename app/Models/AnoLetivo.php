@@ -25,6 +25,7 @@ class AnoLetivo extends Model
         'data_inicio',
         'data_fim',
         'status',
+        'periodicidade',
         'ativo',
     ];
 
@@ -40,6 +41,19 @@ class AnoLetivo extends Model
         'planejamento' => 'Planejamento',
     ];
 
+    /**
+     * Periodicidade: quantidade e nomes dos periodos letivos gerados
+     * automaticamente. 'personalizado' nao gera — os periodos sao
+     * criados manualmente em Periodos Letivos.
+     */
+    public const PERIODICIDADES = [
+        'bimestral' => 'Bimestral (4 períodos)',
+        'trimestral' => 'Trimestral (3 períodos)',
+        'semestral' => 'Semestral (2 períodos)',
+        'anual' => 'Anual (1 período)',
+        'personalizado' => 'Personalizado (gerar manualmente)',
+    ];
+
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class, 'empresa_id');
@@ -53,6 +67,11 @@ class AnoLetivo extends Model
     public function turmas(): HasMany
     {
         return $this->hasMany(Turma::class, 'ano_letivo_id');
+    }
+
+    public function periodos(): HasMany
+    {
+        return $this->hasMany(PeriodoLetivo::class, 'ano_letivo_id');
     }
 
     public function estaAtivo(): bool

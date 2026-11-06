@@ -26,6 +26,7 @@
                         <th>Início</th>
                         <th>Fim</th>
                         <th>Status</th>
+                        <th>Periodicidade</th>
                         <th>Situação</th>
                         <th class="text-right">Ações</th>
                     </tr>
@@ -38,6 +39,7 @@
                             <td>{{ optional($anoLetivo->data_inicio)->format('d/m/Y') ?? '—' }}</td>
                             <td>{{ optional($anoLetivo->data_fim)->format('d/m/Y') ?? '—' }}</td>
                             <td>{{ \App\Models\AnoLetivo::STATUS[$anoLetivo->status] ?? $anoLetivo->status }}</td>
+                            <td>{{ \App\Models\AnoLetivo::PERIODICIDADES[$anoLetivo->periodicidade] ?? '—' }}</td>
                             <td>
                                 @if($anoLetivo->estaAtivo())
                                     <span class="badge badge-success">Ativo</span>
@@ -56,7 +58,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="8" class="text-center text-muted py-4">
                                 <i class="fas fa-calendar-alt fa-2x mb-2 d-block"></i>
                                 Nenhum ano letivo encontrado.
                             </td>

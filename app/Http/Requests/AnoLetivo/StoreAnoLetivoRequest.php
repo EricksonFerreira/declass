@@ -30,6 +30,7 @@ class StoreAnoLetivoRequest extends FormRequest
             'data_inicio' => ['nullable', 'date'],
             'data_fim' => ['nullable', 'date', 'after_or_equal:data_inicio'],
             'status' => ['nullable', Rule::in(array_keys(\App\Models\AnoLetivo::STATUS))],
+            'periodicidade' => ['nullable', Rule::in(array_keys(\App\Models\AnoLetivo::PERIODICIDADES))],
             'ativo' => ['nullable', Rule::in(['S', 'N'])],
         ];
     }

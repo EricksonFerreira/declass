@@ -10,6 +10,7 @@ use App\Models\AnoLetivo;
 use App\Models\Escola;
 use App\Services\AnoLetivoService;
 use App\Services\BreadcrumbService;
+use App\Services\PeriodoLetivoService;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
 
     public function __construct(
         protected AnoLetivoService $anoLetivoService,
+        protected PeriodoLetivoService $periodoLetivoService,
         protected BreadcrumbService $breadcrumbService,
     ) {
         $this->titulo = 'Anos Letivos';
@@ -30,7 +32,7 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
         $this->middleware('can:ano_letivo.create')->only('create');
         $this->middleware('can:ano_letivo.store')->only('store');
         $this->middleware('can:ano_letivo.edit')->only('edit');
-        $this->middleware('can:ano_letivo.update')->only('update');
+        $this->middleware('can:ano_letivo.update')->only(['update', 'gerarPeriodos']);
         $this->middleware('can:ano_letivo.destroy')->only('destroy');
         $this->middleware('can:ano_letivo.filtro')->only('filtro');
         $this->middleware('can:ano_letivo.removerFiltro')->only('removerFiltro');
@@ -74,9 +76,37 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
 
     public function store(StoreAnoLetivoRequest $request)
     {
-        $this->anoLetivoService->create($request->validated());
+        $anoLetivo = $this->anoLetivoService->create($request->validated());
 
-        return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Ano letivo criado com sucesso.');
+        $periodos = $this->periodoLetivoService->gerarAutomaticos($anoLetivo);
+
+        $mensagem = 'Ano letivo criado com sucesso.';
+        if ($periodos > 0) {
+            $mensagem .= " {$periodos} períodos letivos gerados automaticamente.";
+        }
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro, $mensagem);
+    }
+
+    /**
+     * Gera os periodos letivos de um ano existente que ainda nao
+     * possui nenhum (ex.: criado antes da periodicidade ou com
+     * "personalizado"). Nao duplica nem sobrescreve periodos.
+     */
+    public function gerarPeriodos($id)
+    {
+        $anoLetivo = $this->anoLetivoService->getById($id);
+        abort_if(! $anoLetivo, 404, 'Ano letivo não encontrado.');
+
+        $periodos = $this->periodoLetivoService->gerarAutomaticos($anoLetivo);
+
+        if ($periodos === 0) {
+            return redirect()->route('ano_letivo.edit', $anoLetivo->id)
+                ->with('error', 'Nenhum período gerado: o ano já possui períodos ou a periodicidade é personalizada.');
+        }
+
+        return redirect()->route('ano_letivo.edit', $anoLetivo->id)
+            ->with('success', "{$periodos} períodos letivos gerados com sucesso.");
     }
 
     public function edit($id)
@@ -84,9 +114,11 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
         $anoLetivo = $this->anoLetivoService->getById($id);
         abort_if(! $anoLetivo, 404, 'Ano letivo não encontrado.');
 
+        $totalPeriodos = $anoLetivo->periodos()->count();
+
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Anos Letivos', 'ano_letivo.index', "Editar: {$anoLetivo->ano}", 'Vida Acadêmica');
 
-        return view('ano_letivo.add-edit', array_merge(compact('anoLetivo', 'breadcrumb'), $this->opcoesFormulario()))
+        return view('ano_letivo.add-edit', array_merge(compact('anoLetivo', 'breadcrumb', 'totalPeriodos'), $this->opcoesFormulario()))
             ->with('titulo', $this->titulo);
     }
 
@@ -167,6 +199,7 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
         return [
             'escolas' => Escola::query()->orderBy('nome')->pluck('nome', 'id')->all(),
             'status' => AnoLetivo::STATUS,
+            'periodicidades' => AnoLetivo::PERIODICIDADES,
         ];
     }
 }

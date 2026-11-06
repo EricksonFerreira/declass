@@ -26,6 +26,10 @@
                 <div class="col-md-4">
                     <x-form-select name="status" label="Status" :options="$status ?? []" :selected="old('status', $anoLetivo->status ?? 'letivo')" />
                 </div>
+                <div class="col-md-4">
+                    <x-form-select name="periodicidade" label="Periodicidade" :options="['' => 'Selecionar'] + ($periodicidades ?? [])" :selected="old('periodicidade', $anoLetivo->periodicidade ?? '')" />
+                    <small class="text-muted">Gera os períodos letivos automaticamente na criação.</small>
+                </div>
             </div>
 
             <div class="row">
@@ -40,11 +44,25 @@
                 </div>
             </div>
 
-            <div class="mt-3">
+            <div class="mt-3 d-flex align-items-center" style="gap: 8px;">
                 <a href="{{ route('ano_letivo.index') }}" class="btn btn-secondary">Cancelar</a>
                 <button type="submit" class="btn btn-primary">Salvar</button>
+
+                @if(isset($anoLetivo) && ($totalPeriodos ?? 0) === 0 && ! in_array($anoLetivo->periodicidade, [null, '', 'personalizado'], true))
+                    <span class="text-muted mx-2">|</span>
+                    <button type="submit" form="form-gerar-periodos" class="btn btn-info"
+                        onclick="return confirm('Gerar {{ \App\Models\AnoLetivo::PERIODICIDADES[$anoLetivo->periodicidade] ?? 'os' }} períodos letivos para este ano?')">
+                        <i class="fa fa-calendar-plus"></i> Gerar períodos letivos
+                    </button>
+                @endif
             </div>
         </form>
+
+        @if(isset($anoLetivo) && ($totalPeriodos ?? 0) === 0 && ! in_array($anoLetivo->periodicidade, [null, '', 'personalizado'], true))
+            <form id="form-gerar-periodos" method="POST" action="{{ route('ano_letivo.gerar_periodos', $anoLetivo->id) }}" class="d-none">
+                @csrf
+            </form>
+        @endif
     </div>
 </div>
 @stop

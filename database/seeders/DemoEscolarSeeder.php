@@ -410,6 +410,7 @@ class DemoEscolarSeeder extends Seeder
                     'data_inicio' => $ano.'-02-01',
                     'data_fim' => $ano.'-12-15',
                     'status' => $ano === self::ANO_ATUAL ? 'letivo' : 'encerrado',
+                    'periodicidade' => $semestres ? 'semestral' : 'bimestral',
                     'ativo' => 'S',
                 ]
             );
