@@ -371,6 +371,30 @@ return [
             'icon' => 'fas fa-graduation-cap',
             'submenu' => [
                 [
+                    'text' => 'Anos Letivos',
+                    'route' => 'ano_letivo.index',
+                    'can' => 'ano_letivo.index',
+                    'icon' => 'fas fa-calendar-alt',
+                ],
+                [
+                    'text' => 'Etapas',
+                    'route' => 'etapa.index',
+                    'can' => 'etapa.index',
+                    'icon' => 'fas fa-layer-group',
+                ],
+                [
+                    'text' => 'Disciplinas',
+                    'route' => 'disciplina.index',
+                    'can' => 'disciplina.index',
+                    'icon' => 'fas fa-book',
+                ],
+                [
+                    'text' => 'Turmas',
+                    'route' => 'turma.index',
+                    'can' => 'turma.index',
+                    'icon' => 'fas fa-chalkboard-teacher',
+                ],
+                [
                     'text' => 'Alunos',
                     'route' => 'aluno.index',
                     'can' => 'aluno.index',
