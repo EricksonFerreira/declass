@@ -223,3 +223,44 @@ test('professor consulta acervo mas nao registra emprestimo', function () {
         ->get(route('emprestimo.create'))
         ->assertForbidden();
 });
+
+test('portal mostra emprestimos apenas dos alunos vinculados', function () {
+    $empresa = tenant();
+    $ids = setupBiblioteca($empresa);
+    $ids['empresa'] = $empresa;
+    $livro = livroDemo($ids, ['titulo' => 'Capitães da Areia']);
+    emprestimoDemo($ids, $livro, [
+        'data_devolucao_prevista' => now()->subDays(3)->toDateString(),
+    ]);
+
+    // aluno de outro responsavel tem emprestimo que nao deve vazar
+    $pessoa2 = Pessoa::create(['nome' => 'Outro Aluno', 'empresa_id' => $empresa->id]);
+    $aluno2 = Aluno::create([
+        'pessoa_id' => $pessoa2->id, 'escola_id' => $ids['escola']->id,
+        'registro_academico' => 'RA-0002', 'empresa_id' => $empresa->id,
+    ]);
+    $livro2 = livroDemo($ids, ['titulo' => 'Livro Secreto B']);
+    EmprestimoLivro::create([
+        'empresa_id' => $empresa->id, 'livro_id' => $livro2->id,
+        'aluno_id' => $aluno2->id, 'data_emprestimo' => now()->subDay()->toDateString(),
+        'data_devolucao_prevista' => now()->addDays(10)->toDateString(),
+        'status' => 'ativo',
+    ]);
+
+    // vincula o primeiro aluno a conta do responsavel
+    $responsavel = usuarioTenant($empresa, 'responsavel_legal');
+    $ids['aluno']->update(['user_id' => $responsavel->id]);
+
+    $this->actingAs($responsavel)
+        ->get(route('portal.emprestimos'))
+        ->assertOk()
+        ->assertSee('Capitães da Areia')
+        ->assertSee('Atrasado')
+        ->assertDontSee('Livro Secreto B');
+
+    // conta sem aluno vinculado -> 403
+    $semVinculo = usuarioTenant($empresa, 'responsavel_legal');
+    $this->actingAs($semVinculo)
+        ->get(route('portal.emprestimos'))
+        ->assertForbidden();
+});

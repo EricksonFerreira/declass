@@ -210,6 +210,32 @@ class PortalController extends Controller
     }
 
     /**
+     * Emprestimos de livros dos alunos vinculados a conta:
+     * ativos primeiro (com atraso derivado), depois historico.
+     */
+    public function emprestimos()
+    {
+        $alunos = $this->alunosDoUsuario(auth()->user());
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $emprestimos = \App\Models\EmprestimoLivro::query()
+            ->whereIn('aluno_id', $alunos->pluck('id'))
+            ->with(['livro:id,titulo,autor', 'aluno.pessoa:id,nome'])
+            ->orderByRaw("CASE WHEN status = 'ativo' THEN 0 ELSE 1 END")
+            ->orderBy('data_devolucao_prevista')
+            ->limit(100)
+            ->get()
+            ->groupBy('aluno_id');
+
+        return view('portal.emprestimos', [
+            'titulo' => 'Meus Empréstimos',
+            'alunos' => $alunos,
+            'emprestimos' => $emprestimos,
+        ]);
+    }
+
+    /**
      * Alunos acessiveis pela conta: filhos de responsaveis vinculados
      * + o proprio aluno quando a conta e de aluno.
      */

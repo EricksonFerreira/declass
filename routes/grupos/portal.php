@@ -11,4 +11,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/portal/transporte', [PortalController::class, 'transporte'])->name('portal.transporte');
     Route::get('/portal/cardapio', [PortalController::class, 'cardapio'])->name('portal.cardapio');
     Route::get('/portal/tarefas', [PortalController::class, 'tarefas'])->name('portal.tarefas');
+    Route::get('/portal/emprestimos', [PortalController::class, 'emprestimos'])->name('portal.emprestimos');
 });
