@@ -129,4 +129,45 @@ class TurmaService extends AbstractBaseService
 
         return ['criadas' => $criadas, 'puladas' => $puladas];
     }
+
+    /**
+     * Replica as disciplinas ofertadas da turma de origem para as
+     * turmas de destino: mesmas disciplinas e mesma carga horaria.
+     * Disciplinas que o destino ja tem tem a carga atualizada —
+     * nunca remove ofertas existentes do destino.
+     *
+     * @return array{disciplinas: int, turmas: int, puladas: int}
+     */
+    public function replicarDisciplinas(int $turmaOrigemId, array $turmaDestinoIds): array
+    {
+        $origem = $this->model->newQuery()->with('disciplinas')->findOrFail($turmaOrigemId);
+
+        $destinos = $this->model->newQuery()
+            ->whereIn('id', $turmaDestinoIds)
+            ->where('id', '!=', $turmaOrigemId)
+            ->get();
+
+        $ofertas = $origem->disciplinas->mapWithKeys(
+            fn ($d) => [$d->id => ['carga_horaria_semanal' => $d->pivot->carga_horaria_semanal]]
+        )->all();
+
+        $puladas = 0;
+        foreach ($destinos as $destino) {
+            foreach ($ofertas as $disciplinaId => $pivot) {
+                if ($destino->disciplinas()->where('disciplinas.id', $disciplinaId)->exists()) {
+                    $destino->disciplinas()->updateExistingPivot($disciplinaId, $pivot);
+                    $puladas++;
+                } else {
+                    $destino->disciplinas()->attach($disciplinaId, $pivot);
+                }
+            }
+        }
+
+        return [
+            'disciplinas' => count($ofertas),
+            'turmas' => $destinos->count(),
+            'puladas' => $puladas,
+            'ano_letivo_id' => $origem->ano_letivo_id,
+        ];
+    }
 }

@@ -48,6 +48,9 @@
                                 @endif
                             </td>
                             <td class="text-right">
+                                @can('ano_letivo.show')
+                                    <a href="{{ route('ano_letivo.show', $anoLetivo->id) }}" class="btn btn-xs btn-info" title="Planejamento do ano"><i class="fa fa-eye"></i></a>
+                                @endcan
                                 @can('ano_letivo.edit')
                                     <a href="{{ route('ano_letivo.edit', $anoLetivo->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                                 @endcan

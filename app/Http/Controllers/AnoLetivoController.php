@@ -29,6 +29,7 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
         $this->nomeFiltro = 'ano_letivo';
 
         $this->middleware('can:ano_letivo.index')->only('index');
+        $this->middleware('can:ano_letivo.show')->only('show');
         $this->middleware('can:ano_letivo.create')->only('create');
         $this->middleware('can:ano_letivo.store')->only('store');
         $this->middleware('can:ano_letivo.edit')->only('edit');
@@ -107,6 +108,43 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
 
         return redirect()->route('ano_letivo.edit', $anoLetivo->id)
             ->with('success', "{$periodos} períodos letivos gerados com sucesso.");
+    }
+
+    /**
+     * Planejador do ano letivo: periodos, turmas e a matriz de
+     * disciplinas com replicacao entre turmas irmas (A, B, C...).
+     */
+    public function show($id)
+    {
+        $anoLetivo = $this->anoLetivoService->getById($id, [
+            'escola', 'periodos',
+        ]);
+        abort_if(! $anoLetivo, 404, 'Ano letivo não encontrado.');
+
+        $turmas = \App\Models\Turma::query()
+            ->where('ano_letivo_id', $anoLetivo->id)
+            ->with(['etapa', 'disciplinas:id,nome'])
+            ->withCount('matriculas')
+            ->orderBy('nome')
+            ->get();
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow(
+            'Anos Letivos', 'ano_letivo.index', (string) $anoLetivo->ano, 'Vida Acadêmica'
+        );
+
+        $user = auth()->user();
+
+        return view('ano_letivo.show', [
+            'anoLetivo' => $anoLetivo,
+            'turmas' => $turmas,
+            'breadcrumb' => $breadcrumb,
+            'etapasOpcoes' => \App\Models\Etapa::query()->where('ativo', 'S')
+                ->orderBy('ordem')->orderBy('nome')->get(['id', 'nome']),
+            'turnosOpcoes' => \App\Models\Turma::TURNOS,
+            'nomesExistentes' => $turmas->pluck('nome')->map(fn ($n) => mb_strtolower($n))->all(),
+            'podeGerar' => $user->hasPermissao('turma.gerar_lote'),
+            'podeReplicar' => $user->hasPermissao('turma.replicar_disciplinas'),
+        ])->with('titulo', "Ano letivo {$anoLetivo->ano}");
     }
 
     public function edit($id)

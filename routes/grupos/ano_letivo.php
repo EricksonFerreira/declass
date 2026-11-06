@@ -10,5 +10,5 @@ Route::prefix('ano-letivo')->name('ano_letivo.')->group(function () {
     Route::post('{id}/gerar-periodos', [AnoLetivoController::class, 'gerarPeriodos'])->name('gerar_periodos');
 });
 Route::resource('ano-letivo', AnoLetivoController::class)
-    ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
+    ->only(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy'])
     ->names('ano_letivo');
