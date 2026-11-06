@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ContaReceber;
 use App\Models\Despesa;
 use App\Models\Mensalidade;
 
@@ -11,6 +12,7 @@ use App\Models\Mensalidade;
  * - receitas: mensalidades pagas agrupadas pela competencia cobrada;
  *   receita bruta = valor do plano, deducoes = bolsa/desconto
  *   (diferenca plano x valor cobrado), receita liquida = valor pago;
+ *   demais receitas = contas a receber recebidas por mes de vencimento;
  * - despesas: contas a pagar por categoria, pelo mes de vencimento,
  *   exceto canceladas;
  * - resultado = receita liquida - despesas do mes.
@@ -20,15 +22,17 @@ class DreService
     /**
      * Cada serie tem os meses 1-12 + chave 'total'.
      *
-     * @return array{bruta: array, descontos: array, liquida: array, despesas: array, despesasTotais: array, resultado: array}
+     * @return array{bruta: array, descontos: array, outras: array, liquida: array, despesas: array, despesasTotais: array, resultado: array}
      */
     public function demonstrativo(int $ano, ?int $escolaId, int $empresaId): array
     {
         $mensal = $this->agregarReceitas($ano, $escolaId, $empresaId);
+        $outrasReceitas = $this->agregarOutrasReceitas($ano, $escolaId, $empresaId);
         $despesasCat = $this->agregarDespesas($ano, $escolaId, $empresaId);
 
         $bruta = $this->serieVazia();
         $descontos = $this->serieVazia();
+        $outras = $this->serieVazia();
         $liquida = $this->serieVazia();
         $resultado = $this->serieVazia();
         $despesasTotais = $this->serieVazia();
@@ -36,7 +40,8 @@ class DreService
         foreach (range(1, 12) as $mes) {
             $m = $mensal[$mes] ?? ['bruta' => 0.0, 'liquida' => 0.0];
             $bruta[$mes] = $m['bruta'];
-            $liquida[$mes] = $m['liquida'];
+            $outras[$mes] = $outrasReceitas[$mes] ?? 0.0;
+            $liquida[$mes] = $m['liquida'] + $outras[$mes];
             $descontos[$mes] = max(0.0, $m['bruta'] - $m['liquida']);
         }
 
@@ -50,7 +55,7 @@ class DreService
             $resultado[$mes] = $liquida[$mes] - $despesasTotais[$mes];
         }
 
-        foreach (['bruta', 'descontos', 'liquida', 'resultado', 'despesasTotais'] as $k) {
+        foreach (['bruta', 'descontos', 'outras', 'liquida', 'resultado', 'despesasTotais'] as $k) {
             $$k = $this->comTotal($$k);
         }
 
@@ -62,6 +67,7 @@ class DreService
         return [
             'bruta' => $bruta,
             'descontos' => $descontos,
+            'outras' => $outras,
             'liquida' => $liquida,
             'despesas' => $despesasComTotal,
             'despesasTotais' => $despesasTotais,
@@ -96,6 +102,31 @@ class DreService
                 'bruta' => (float) $row->bruta,
                 'liquida' => (float) $row->liquida,
             ];
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Outras receitas: contas a receber recebidas, agrupadas pelo
+     * mes de vencimento (competencia da cobranca).
+     *
+     * @return array<int, float>
+     */
+    private function agregarOutrasReceitas(int $ano, ?int $escolaId, int $empresaId): array
+    {
+        $rows = ContaReceber::query()
+            ->where('empresa_id', $empresaId)
+            ->where('status', 'recebida')
+            ->whereYear('data_vencimento', $ano)
+            ->when($escolaId, fn ($q) => $q->where('escola_id', $escolaId))
+            ->selectRaw('(SUBSTR(data_vencimento, 6, 2) + 0) as mes, SUM(valor) as total')
+            ->groupBy('mes')
+            ->pluck('total', 'mes');
+
+        $resultado = [];
+        foreach ($rows as $mes => $total) {
+            $resultado[(int) $mes] = (float) $total;
         }
 
         return $resultado;

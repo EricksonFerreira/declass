@@ -679,6 +679,12 @@ return [
                     'icon' => 'fas fa-file-invoice',
                 ],
                 [
+                    'text' => 'Contas a Receber',
+                    'route' => 'conta_receber.index',
+                    'can' => 'conta_receber.index',
+                    'icon' => 'fas fa-hand-holding-usd',
+                ],
+                [
                     'text' => 'Análises',
                     'icon' => 'fas fa-chart-pie',
                     'submenu' => [

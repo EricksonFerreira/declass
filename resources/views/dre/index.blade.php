@@ -60,6 +60,13 @@
                         @endforeach
                         <td class="text-right text-danger">− {{ $fmt($dados['descontos']['total']) }}</td>
                     </tr>
+                    <tr>
+                        <td class="pl-4 text-success">(+) Outras receitas (contas a receber)</td>
+                        @foreach(range(1, 12) as $m)
+                            <td class="text-right text-success">{{ $dados['outras'][$m] > 0 ? '+ '.$fmt($dados['outras'][$m]) : '—' }}</td>
+                        @endforeach
+                        <td class="text-right text-success">{{ $dados['outras']['total'] > 0 ? '+ '.$fmt($dados['outras']['total']) : '—' }}</td>
+                    </tr>
                     <tr class="font-weight-bold bg-light">
                         <td>(=) Receita líquida</td>
                         @foreach(range(1, 12) as $m)

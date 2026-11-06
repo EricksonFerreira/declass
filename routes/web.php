@@ -143,6 +143,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'saude',
         'material',
         'despesa',
+        'conta_receber',
         'fluxo_caixa',
         'dre',
     ];
