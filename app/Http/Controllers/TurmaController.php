@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
+use App\Http\Requests\Turma\GerarTurmasRequest;
 use App\Http\Requests\Turma\StoreTurmaRequest;
 use App\Http\Requests\Turma\UpdateTurmaRequest;
 use App\Models\AnoLetivo;
@@ -34,7 +35,7 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
         $this->middleware('can:turma.index')->only('index');
         $this->middleware('can:turma.show')->only('show');
         $this->middleware('can:turma.create')->only('create');
-        $this->middleware('can:turma.store')->only('store');
+        $this->middleware('can:turma.store')->only(['store', 'gerarLote']);
         $this->middleware('can:turma.edit')->only('edit');
         $this->middleware('can:turma.update')->only('update');
         $this->middleware('can:turma.destroy')->only('destroy');
@@ -81,6 +82,27 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
         $this->turmaService->create($request->validated());
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Turma criada com sucesso.');
+    }
+
+    /**
+     * Geracao em lote: etapas x sufixos x turnos a partir de um
+     * ano letivo. Nomes repetidos no ano sao pulados e reportados.
+     */
+    public function gerarLote(GerarTurmasRequest $request)
+    {
+        $data = $request->validated();
+
+        $anoLetivo = AnoLetivo::query()->findOrFail($data['ano_letivo_id']);
+        $data['escola_id'] = $anoLetivo->escola_id;
+
+        $resultado = $this->turmaService->gerarLote($data);
+
+        $mensagem = "{$resultado['criadas']} turma(s) criada(s).";
+        if ($resultado['puladas'] !== []) {
+            $mensagem .= ' '.count($resultado['puladas']).' já existiam e foram puladas: '.implode(', ', array_slice($resultado['puladas'], 0, 10)).(count($resultado['puladas']) > 10 ? '…' : '');
+        }
+
+        return redirect()->back()->with('success', $mensagem);
     }
 
     public function show($id)

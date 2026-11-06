@@ -29,6 +29,7 @@ class PeriodoLetivoController extends BaseController implements FiltroInterface,
         $this->middleware('can:periodo_letivo.index')->only('index');
         $this->middleware('can:periodo_letivo.create')->only('create');
         $this->middleware('can:periodo_letivo.store')->only('store');
+        $this->middleware('can:periodo_letivo.show')->only('show');
         $this->middleware('can:periodo_letivo.edit')->only('edit');
         $this->middleware('can:periodo_letivo.update')->only('update');
         $this->middleware('can:periodo_letivo.destroy')->only('destroy');
@@ -77,6 +78,26 @@ class PeriodoLetivoController extends BaseController implements FiltroInterface,
         $this->periodoService->create($request->validated());
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Período letivo criado com sucesso.');
+    }
+
+    public function show($id)
+    {
+        $periodo = $this->periodoService->getById($id, ['escola', 'anoLetivo.escola', 'anoLetivo.periodos']);
+        abort_if(! $periodo, 404, 'Período letivo não encontrado.');
+
+        $turmas = \App\Models\Turma::query()
+            ->where('ano_letivo_id', $periodo->ano_letivo_id)
+            ->with('etapa')
+            ->withCount('matriculas')
+            ->orderBy('nome')
+            ->get();
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow(
+            'Períodos Letivos', 'periodo_letivo.index', $periodo->nome, 'Vida Acadêmica'
+        );
+
+        return view('periodo_letivo.show', array_merge(compact('periodo', 'turmas', 'breadcrumb'), $this->opcoesGerador()))
+            ->with('titulo', $periodo->nome);
     }
 
     public function edit($id)
@@ -165,6 +186,20 @@ class PeriodoLetivoController extends BaseController implements FiltroInterface,
     {
         return [
             'anosLetivos' => $this->anosLetivosOpcoes(),
+        ];
+    }
+
+    /**
+     * Opcoes do gerador de turmas em lote exibido no show do periodo:
+     * etapas ativas e turnos possiveis. O ano letivo vem do periodo.
+     */
+    private function opcoesGerador(): array
+    {
+        return [
+            'etapasOpcoes' => \App\Models\Etapa::query()->where('ativo', 'S')
+                ->orderBy('ordem')->orderBy('nome')
+                ->get(['id', 'nome']),
+            'turnosOpcoes' => \App\Models\Turma::TURNOS,
         ];
     }
 

@@ -48,6 +48,9 @@
                                 @endif
                             </td>
                             <td class="text-right">
+                                @can('periodo_letivo.show')
+                                    <a href="{{ route('periodo_letivo.show', $periodo->id) }}" class="btn btn-xs btn-info" title="Detalhes"><i class="fa fa-eye"></i></a>
+                                @endcan
                                 @can('periodo_letivo.edit')
                                     <a href="{{ route('periodo_letivo.edit', $periodo->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                                 @endcan

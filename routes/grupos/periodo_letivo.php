@@ -9,5 +9,5 @@ Route::prefix('periodo-letivo')->name('periodo_letivo.')->group(function () {
     Route::get('filtro', [PeriodoLetivoController::class, 'filtro'])->name('filtro');
 });
 Route::resource('periodo-letivo', PeriodoLetivoController::class)
-    ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
+    ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
     ->names('periodo_letivo');

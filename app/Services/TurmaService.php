@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Etapa;
 use App\Models\Turma;
 use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Model;
@@ -70,5 +71,62 @@ class TurmaService extends AbstractBaseService
         }
 
         return $query->orderBy('nome')->orderBy('id')->paginate($perPage);
+    }
+
+    /**
+     * Gera turmas em lote: etapas x sufixos x turnos.
+     * Nomes existentes no mesmo ano letivo sao pulados (nunca
+     * duplica nem sobrescreve). Quando mais de um turno e
+     * selecionado, o nome recebe o sufixo do turno para evitar
+     * colisao ("1º Ano A — Matutino").
+     *
+     * @return array{criadas: int, puladas: array<int, string>}
+     */
+    public function gerarLote(array $data): array
+    {
+        $anoLetivoId = (int) $data['ano_letivo_id'];
+        $etapas = Etapa::query()->whereIn('id', $data['etapas'])->get()->keyBy('id');
+        $sufixos = $data['sufixos'];
+        $turnos = $data['turnos'] ?? [];
+        $rotuloTurno = count($turnos) > 1;
+
+        $existentes = $this->model->newQuery()
+            ->where('ano_letivo_id', $anoLetivoId)
+            ->pluck('nome')
+            ->map(fn ($n) => mb_strtolower((string) $n))
+            ->all();
+
+        $criadas = 0;
+        $puladas = [];
+
+        foreach ($etapas as $etapa) {
+            foreach ($sufixos as $sufixo) {
+                foreach ($turnos === [] ? [null] : $turnos as $turno) {
+                    $nome = trim($etapa->nome.' '.$sufixo.($rotuloTurno && $turno ? ' — '.(Turma::TURNOS[$turno] ?? $turno) : ''));
+
+                    if (in_array(mb_strtolower($nome), $existentes, true)) {
+                        $puladas[] = $nome;
+
+                        continue;
+                    }
+
+                    $this->create([
+                        'escola_id' => $data['escola_id'],
+                        'ano_letivo_id' => $anoLetivoId,
+                        'etapa_id' => $etapa->id,
+                        'nome' => $nome,
+                        'turno' => $turno,
+                        'sala' => $data['sala'] ?? null,
+                        'capacidade_maxima' => $data['capacidade_maxima'] ?? null,
+                        'ativo' => $data['ativo'] ?? 'S',
+                    ]);
+
+                    $existentes[] = mb_strtolower($nome);
+                    $criadas++;
+                }
+            }
+        }
+
+        return ['criadas' => $criadas, 'puladas' => $puladas];
     }
 }

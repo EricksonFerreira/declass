@@ -9,6 +9,7 @@ Route::prefix('turma')->name('turma.')->group(function () {
     Route::post('setperpage', [TurmaController::class, 'setPerPage'])->name('setPerPage');
     Route::get('removerfiltro', [TurmaController::class, 'removerFiltro'])->name('removerFiltro');
     Route::get('filtro', [TurmaController::class, 'filtro'])->name('filtro');
+    Route::post('gerar-lote', [TurmaController::class, 'gerarLote'])->name('gerar_lote');
 
     // Disciplinas ofertadas pela turma
     Route::post('{turma}/disciplinas', [TurmaDisciplinaController::class, 'store'])->name('disciplina.store');
