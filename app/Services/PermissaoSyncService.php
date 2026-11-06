@@ -103,6 +103,7 @@ class PermissaoSyncService
             'ignition.',
             'debugbar.',
             'generated::',
+            'matricula_publica.',
         ];
 
         foreach (Route::getRoutes() as $route) {

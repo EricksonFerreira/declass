@@ -61,6 +61,30 @@
         </div>
 
         <div class="card">
+            <div class="card-header font-weight-bold">Matrícula online</div>
+            <div class="card-body">
+                @if($escola->estaAtiva())
+                    <p class="small text-muted mb-2">Link público do formulário de solicitação de matrícula:</p>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="link-matricula" readonly
+                               value="{{ url('/matricula/'.$escola->empresa->slug.'/'.$escola->slug) }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" title="Copiar"
+                                    onclick="navigator.clipboard.writeText(document.getElementById('link-matricula').value)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <a href="{{ url('/matricula/'.$escola->empresa->slug.'/'.$escola->slug) }}" target="_blank" class="btn btn-sm btn-primary mt-2">
+                        Abrir formulário
+                    </a>
+                @else
+                    <p class="small text-muted mb-0">Escola inativa — o formulário público está desabilitado.</p>
+                @endif
+            </div>
+        </div>
+
+        <div class="card">
             <div class="card-header font-weight-bold">Usuários vinculados ({{ $escola->usuarios->count() }})</div>
             <div class="card-body p-0">
                 <ul class="list-group list-group-flush">

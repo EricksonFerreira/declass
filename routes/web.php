@@ -25,6 +25,9 @@ Route::get('/sobre', function () {
     return view('sobre');
 })->name('site.sobre');
 
+// Formulario publico de solicitacao de matricula (visitante, sem login).
+require __DIR__.'/publicas.php';
+
 Route::get('/sitemap.xml', function (Request $request) {
     $baseUrl = rtrim($request->getSchemeAndHttpHost(), '/');
     $lastMod = now()->toAtomString();

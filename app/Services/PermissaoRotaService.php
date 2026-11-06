@@ -33,6 +33,7 @@ class PermissaoRotaService
         'notificacoes.',
         'menu.',
         'cron.',
+        'matricula_publica.',
     ];
 
     /**
