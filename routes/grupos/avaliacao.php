@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('avaliacoes/filtro', [AvaliacaoController::class, 'filtro'])->name('avaliacao.filtro');
-    Route::post('avaliacoes/filtro/remover', [AvaliacaoController::class, 'removerFiltro'])->name('avaliacao.removerFiltro');
+    Route::match(['get', 'post'], 'avaliacoes/filtro/remover', [AvaliacaoController::class, 'removerFiltro'])->name('avaliacao.removerFiltro');
     Route::post('avaliacoes/per-page', [AvaliacaoController::class, 'setPerPage'])->name('avaliacao.setPerPage');
 
     Route::get('avaliacoes/{avaliacao}/notas', [AvaliacaoController::class, 'notas'])->name('avaliacao.notas');

@@ -125,10 +125,7 @@
                 <div class="card-header">
                     <h3 class="card-title text-bold text-sm">Registros <span class="badge badge-primary">{{ $regras->total() }}</span></h3>
                     <div class="card-tools d-flex align-items-center" style="gap: 10px;">
-                        <form action="{{ route('regra.setPerPage') }}" method="POST" class="mb-0">
-                            @csrf
-                            <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
-                        </form>
+                        <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                         @include('partials.ux-view-toggle', ['viewKey' => 'regra_index_view'])
                         <a href="{{ route('regra.create') }}" class="btn btn-sm btn-primary">
                             <i class="fas fa-plus mr-1"></i> Novo Perfil

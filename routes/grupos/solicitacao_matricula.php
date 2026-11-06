@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('solicitacao-matricula')->name('solicitacao_matricula.')->group(function () {
     Route::get('filtro', [SolicitacaoMatriculaController::class, 'filtro'])->name('filtro');
-    Route::post('filtro/remover', [SolicitacaoMatriculaController::class, 'removerFiltro'])->name('removerFiltro');
+    Route::match(['get', 'post'], 'filtro/remover', [SolicitacaoMatriculaController::class, 'removerFiltro'])->name('removerFiltro');
     Route::post('per-page', [SolicitacaoMatriculaController::class, 'setPerPage'])->name('setPerPage');
     Route::get('create', [SolicitacaoMatriculaController::class, 'create'])->name('create');
     Route::post('/', [SolicitacaoMatriculaController::class, 'store'])->name('store');

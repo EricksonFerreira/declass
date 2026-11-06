@@ -24,12 +24,14 @@ class Filter extends Component
         $filters,
         $additionalFilters = [],
         $itensFiltered = [],
-        $statusList = []
+        $statusList = [],
+        $nomeFiltro = null
     ) {
         $this->filters = $filters;
         $this->additionalFilters = $additionalFilters;
         $this->itensFiltered = $itensFiltered;
         $this->statusList = $statusList;
+        $this->nomeFiltro = $nomeFiltro;
     }
 
     public function render()

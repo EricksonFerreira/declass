@@ -1,8 +1,12 @@
 @props(['additionalFilters' => [], 'filters' => [], 'itensFiltered' => [], 'nomeFiltro' => null, 'statusList' => []])
 
 @php
-    $filtroUrl      = $nomeFiltro ? route($nomeFiltro . '.filtro')         : (url()->current() . '/filtro');
-    $removerTudoUrl = $nomeFiltro ? route($nomeFiltro . '.removerFiltro')  : (url()->current() . '/removerfiltro');
+    $filtroUrl      = $nomeFiltro && \Illuminate\Support\Facades\Route::has($nomeFiltro . '.filtro')
+        ? route($nomeFiltro . '.filtro')
+        : (url()->current() . '/filtro');
+    $removerTudoUrl = $nomeFiltro && \Illuminate\Support\Facades\Route::has($nomeFiltro . '.removerFiltro')
+        ? route($nomeFiltro . '.removerFiltro')
+        : (url()->current() . '/removerfiltro');
     $usesSelect2 = false;
     $filters = is_iterable($filters) ? $filters : [];
     $additionalFilters = is_iterable($additionalFilters) ? $additionalFilters : [];
@@ -17,9 +21,11 @@
             return [];
         }
 
+        $optionsArray = is_array($options) ? $options : iterator_to_array($options);
+        $isList = array_is_list($optionsArray);
         $normalized = [];
 
-        foreach ($options as $key => $option) {
+        foreach ($optionsArray as $key => $option) {
             if (is_array($option)) {
                 $normalized[] = [
                     'value' => $option['value'] ?? $option['id'] ?? $key,
@@ -30,7 +36,7 @@
             }
 
             $normalized[] = [
-                'value' => is_int($key) ? $option : $key,
+                'value' => $isList ? $option : $key,
                 'label' => (string) $option,
                 'selected' => false,
             ];
