@@ -13,6 +13,7 @@ class BoletimController extends BaseController
     public function __construct(
         protected BoletimService $boletimService,
         protected BreadcrumbService $breadcrumbService,
+        protected \App\Services\PdfService $pdfService,
     ) {
         $this->middleware('can:boletim.index')->only(['index', 'turma', 'aluno', 'turmaPdf', 'alunoPdf']);
     }
@@ -53,10 +54,13 @@ class BoletimController extends BaseController
 
         $dados = $this->boletimService->dadosTurma($turma);
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('boletim.pdf-turma', array_merge($dados, ['turma' => $turma]))
-            ->setPaper('a4', 'landscape');
-
-        return $pdf->download('boletim-turma-'.$turma->nome.'.pdf');
+        return $this->pdfService->download(
+            'boletim.pdf-turma',
+            array_merge($dados, ['turma' => $turma]),
+            'boletim-turma-'.$turma->nome.'.pdf',
+            'a4',
+            'landscape'
+        );
     }
 
     /** Boletim individual do aluno (matricula ativa mais recente). */
@@ -102,11 +106,10 @@ class BoletimController extends BaseController
             );
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('boletim.pdf-aluno', array_merge($dados, [
-            'aluno' => $aluno,
-            'anoLetivoId' => $anoLetivoId,
-        ]))->setPaper('a4');
-
-        return $pdf->download('boletim-'.\Illuminate\Support\Str::slug($aluno->pessoa->nome ?? 'aluno').'.pdf');
+        return $this->pdfService->download(
+            'boletim.pdf-aluno',
+            array_merge($dados, ['aluno' => $aluno, 'anoLetivoId' => $anoLetivoId]),
+            'boletim-'.\Illuminate\Support\Str::slug($aluno->pessoa->nome ?? 'aluno').'.pdf'
+        );
     }
 }

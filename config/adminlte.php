@@ -463,6 +463,20 @@ return [
             ],
         ],
 
+        // RELATÓRIOS
+        [
+            'text' => 'Relatórios',
+            'icon' => 'fas fa-chart-bar',
+            'submenu' => [
+                [
+                    'text' => 'Frequência',
+                    'route' => 'relatorio_frequencia.index',
+                    'can' => 'relatorio_frequencia.index',
+                    'icon' => 'fas fa-clipboard-check',
+                ],
+            ],
+        ],
+
         // COMUNICAÇÃO
         [
             'text' => 'Comunicação',

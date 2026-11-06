@@ -79,6 +79,13 @@ class MenuSecoesService
                 ],
             ],
             [
+                'slug' => 'relatorios',
+                'titulo' => 'Relatórios',
+                'cards' => [
+                    ['Frequência', 'fas fa-clipboard-check', 'relatorio_frequencia.index', 'Faltas e assiduidade por aluno', '#dc2626'],
+                ],
+            ],
+            [
                 'slug' => 'comunicacao',
                 'titulo' => 'Comunicação',
                 'cards' => [
