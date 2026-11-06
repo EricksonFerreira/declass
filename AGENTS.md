@@ -47,7 +47,20 @@ php artisan tinker
 ./vendor/bin/pint --test
 ```
 
-## Deploy (Hostinger — declock.app)
+## Deploy (Hostinger)
+
+### Producao atual — declass.ericksondev.online (sistema escolar)
+
+- Site criado em 2026-11-06; docroot `/home/u735272302/domains/declass.ericksondev.online/public_html`.
+- Banco: `u735272302_declass` (user igual), host interno `127.0.0.1:3306`.
+- Deploy e manual via `hosting_deploy` com pacote local: o docroot e o root do projeto; `.env` e `vendor/` vao DENTRO do pacote (API nao edita .env; nao ha SSH/composer remoto — `system/exec` desabilitados).
+- `vendor/` de producao = `composer install --no-dev` + `fakerphp/faker` (seeders usam `fake()`); limpar `vendor/almasaeed2010/adminlte` de docs/plugins/build/src/pages antes de empacotar (~95MB a menos).
+- Sessao/cache em `file` no .env de producao (drivers `database` exigem tabelas que nao existem antes do primeiro migrate).
+- Setup remoto: `GET /migrations/setup-producao?token={APP_MIGRATION_ROUTE_TOKEN}&demo=1` roda optimize:clear + storage:link + migrate --force + db:seed (+DemoEscolarSeeder com `demo=1`) + tenant/superadmins. Idempotente.
+- Cron `schedule:run` criado via API (uid em `.hostinger/site.json`).
+- Metadados do deploy em `.hostinger/site.json`.
+
+### Legado — declock.ericksondev.online (sistema antigo de locacao)
 
 - Auto-deploy Git ativo: push na `main` (repo `David-e-Erickson/declock`) clona no docroot `public_html` e roda `composer install` automaticamente.
 - O docroot serve `public/` via o `.htaccess` da raiz (rastreado no git — nao remover).

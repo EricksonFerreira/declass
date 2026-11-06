@@ -92,6 +92,7 @@ class SetupProducaoCommand extends Command
 
         if (! $existente) {
             DB::table('users')->insert(array_filter([
+                'name' => $nome,
                 'nome' => $nome,
                 'email' => $email,
                 'usuario' => $temColunaUsuario ? $usuario : null,
