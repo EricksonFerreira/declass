@@ -26,6 +26,7 @@ class Avaliacao extends Model
         'tipo',
         'nome',
         'periodo',
+        'periodo_letivo_id',
         'data',
         'nota_maxima',
         'descricao',
@@ -65,6 +66,11 @@ class Avaliacao extends Model
     public function professor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function periodoLetivo(): BelongsTo
+    {
+        return $this->belongsTo(PeriodoLetivo::class, 'periodo_letivo_id');
     }
 
     public function notas(): HasMany

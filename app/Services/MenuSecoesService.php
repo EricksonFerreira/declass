@@ -63,6 +63,7 @@ class MenuSecoesService
                 'titulo' => 'Vida Acadêmica',
                 'cards' => [
                     ['Anos Letivos', 'fas fa-calendar-alt', 'ano_letivo.index', 'Períodos letivos por escola', '#0ea5e9'],
+                    ['Períodos Letivos', 'fas fa-calendar-week', 'periodo_letivo.index', 'Bimestres, trimestres ou semestres', '#0284c7'],
                     ['Etapas', 'fas fa-layer-group', 'etapa.index', 'Estágios de ensino configuráveis', '#8b5cf6'],
                     ['Disciplinas', 'fas fa-book', 'disciplina.index', 'Componentes curriculares', '#f59e0b'],
                     ['Turmas', 'fas fa-chalkboard-teacher', 'turma.index', 'Turmas, disciplinas e professores', '#10b981'],

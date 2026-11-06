@@ -88,6 +88,7 @@ class AvaliacaoService extends AbstractBaseService
         }
 
         $data['user_id'] = $user?->id;
+        $this->sincronizarPeriodo($data);
 
         return parent::create($data);
     }
@@ -112,7 +113,25 @@ class AvaliacaoService extends AbstractBaseService
         $avaliacao = $this->getById($id);
         abort_if(! $avaliacao || ! $this->podeGerenciar($avaliacao), 403, 'Sem acesso a esta avaliação.');
 
+        $this->sincronizarPeriodo($data);
+
         return parent::update($id, $data);
+    }
+
+    /**
+     * O rotulo texto 'periodo' e mantido em sincronia com o
+     * periodo letivo vinculado (fonte da verdade e o FK).
+     */
+    private function sincronizarPeriodo(array &$data): void
+    {
+        if (! empty($data['periodo_letivo_id'])) {
+            $nome = \App\Models\PeriodoLetivo::query()
+                ->whereKey($data['periodo_letivo_id'])
+                ->value('nome');
+            if ($nome) {
+                $data['periodo'] = $nome;
+            }
+        }
     }
 
     public function delete($id)

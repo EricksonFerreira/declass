@@ -214,7 +214,40 @@ class AvaliacaoController extends BaseController implements FiltroInterface, Res
             'disciplinas' => Disciplina::query()->where('ativo', 'S')->orderBy('nome')
                 ->pluck('nome', 'id')->all(),
             'tipos' => Avaliacao::TIPOS,
+            'periodosJson' => $this->periodosPorTurmaJson(),
         ];
+    }
+
+    /**
+     * Mapa turma_id => periodos letivos do ano letivo da turma,
+     * usado pelo select dependente no formulario (JSON no Blade).
+     */
+    private function periodosPorTurmaJson(): string
+    {
+        $query = Turma::query()->select('id', 'ano_letivo_id');
+
+        $user = auth()->user();
+        if ($user && $user->isProfessor()) {
+            $query->whereHas('atribuicoes', fn ($q) => $q->where('user_id', $user->id)->where('ativo', 'S'));
+        }
+
+        $turmas = $query->get();
+        $periodos = \App\Models\PeriodoLetivo::query()
+            ->whereIn('ano_letivo_id', $turmas->pluck('ano_letivo_id')->unique())
+            ->where('ativo', 'S')
+            ->orderBy('ordem')
+            ->get(['id', 'ano_letivo_id', 'nome']);
+
+        $map = [];
+        foreach ($turmas as $turma) {
+            $map[$turma->id] = $periodos
+                ->where('ano_letivo_id', $turma->ano_letivo_id)
+                ->map(fn ($p) => ['id' => $p->id, 'nome' => $p->nome])
+                ->values()
+                ->all();
+        }
+
+        return json_encode($map);
     }
 
     /** Professores so veem turmas onde tem atribuicao ativa. */

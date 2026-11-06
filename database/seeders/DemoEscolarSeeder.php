@@ -13,7 +13,7 @@ use App\Models\Escola;
 use App\Models\Etapa;
 use App\Models\Frequencia;
 use App\Models\Matricula;
-use App\Models\Nota;
+use App\Models\PeriodoLetivo;
 use App\Models\Pessoa;
 use App\Models\Responsavel;
 use App\Models\Turma;
@@ -24,12 +24,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Massa de demonstracao do ciclo academico completo.
+ * Massa de demonstracao da REDE escolar completa.
  *
  * Pressupoe a empresa 'escola-demo' (criada pelo DatabaseSeeder).
- * Popula estrutura, pessoas, matriculas, diario, frequencia,
- * avaliacoes, notas e contas de portal — tudo idempotente:
- * se o tenant ja tiver alunos, o seeder nao duplica nada.
+ * Popula 3 escolas, 5 anos letivos (2022-2026), todas as etapas
+ * com turmas A/B (~20-30 alunos por turma, coortes que progridem
+ * de ano), periodos letivos configuraveis (4 bimestres na Central
+ * e Norte; 2 semestres na Sul — ex. modelo de faculdade), diario,
+ * frequencia, avaliacoes, notas, financeiro, avisos e biblioteca.
+ * Tudo idempotente: se o tenant ja tiver alunos, a massa academica
+ * nao e duplicada.
  *
  * Execute: php artisan db:seed --class=DemoEscolarSeeder
  *
@@ -55,8 +59,9 @@ use Illuminate\Support\Facades\Hash;
  *                                                 (sem escrita em
  *                                                 diarios/notas)
  *  responsavel@escolademo.test    responsavel    — PORTAL: ve o
- *                                                 boletim dos 2
- *                                                 primeiros alunos
+ *                                                 boletim e o
+ *                                                 financeiro dos
+ *                                                 filhos vinculados
  *  aluno@escolademo.test          aluno          — PORTAL: ve o
  *                                                 proprio boletim
  *  financeiro@escolademo.test     financeiro     — mensalidades,
@@ -76,14 +81,62 @@ use Illuminate\Support\Facades\Hash;
  *  - responsavel/aluno caem direto no "Portal Familiar"
  *  - professor so ve as proprias turmas no diario/avaliacoes
  *  - boletim mostra medias, frequencia e notas por disciplina
+ *  - periodo-letivo mostra 4 bimestres (Central/Norte) e
+ *    2 semestres (Unidade Sul)
+ *  - escolas, anos letivos e turmas das 3 unidades em
+ *    Vida Academica > Escolas / Anos Letivos / Turmas
  * ─────────────────────────────────────────────────────────────
  */
 class DemoEscolarSeeder extends Seeder
 {
     private const SENHA = 'password';
 
+    private const ANO_INICIAL = 2022;
+
+    private const ANO_ATUAL = 2026;
+
+    /**
+     * Trilhas por segmento: posicoes = "anos" que viram nome de
+     * turma ("1º Ano A"). A coorte que entra na posicao 0 avanca
+     * uma posicao por ano letivo.
+     */
+    private const TRILHAS = [
+        'infantil' => [
+            'etapa' => 'Educação Infantil',
+            'segmento' => 'infantil',
+            'ordem' => 1,
+            'posicoes' => ['Pré I', 'Pré II'],
+        ],
+        'fundamental1' => [
+            'etapa' => 'Fundamental I',
+            'segmento' => 'fundamental',
+            'ordem' => 2,
+            'posicoes' => ['1º Ano', '2º Ano', '3º Ano', '4º Ano', '5º Ano'],
+        ],
+        'fundamental2' => [
+            'etapa' => 'Fundamental II',
+            'segmento' => 'fundamental',
+            'ordem' => 3,
+            'posicoes' => ['6º Ano', '7º Ano', '8º Ano', '9º Ano'],
+        ],
+        'medio' => [
+            'etapa' => 'Ensino Médio',
+            'segmento' => 'medio',
+            'ordem' => 4,
+            'posicoes' => ['1º Médio', '2º Médio', '3º Médio'],
+        ],
+    ];
+
+    private const LETRAS = ['A', 'B'];
+
+    /** Cache de etapa_id por trilha (o tenant e unico neste seeder). */
+    private array $etapaCache = [];
+
     public function run(): void
     {
+        // A massa e grande (~15 mil registros); garante tempo de execucao.
+        @set_time_limit(0);
+
         $empresa = Empresa::query()->where('slug', 'escola-demo')->first();
 
         if (! $empresa) {
@@ -96,97 +149,412 @@ class DemoEscolarSeeder extends Seeder
 
         $this->call(PerfisEscolaresSeeder::class);
 
-        $escola = Escola::query()->where('empresa_id', $empresa->id)->first();
         $usuarios = $this->usuarios($empresa);
+        $escolas = $this->escolas($empresa);
 
-        // Massa academica: so popula se o tenant ainda nao tem alunos.
-        if (! Aluno::query()->where('empresa_id', $empresa->id)->exists()) {
-            $this->estruturar($empresa, $escola);
-            [$alunos] = $this->pessoas($empresa, $escola, $usuarios);
-            $this->operacao($empresa, $usuarios, $alunos);
-        }
+        // Massa academica: processada por escola — se a execucao
+        // for interrompida, uma nova rodada retoma so o que falta.
+        $this->massaAcademica($empresa, $escolas, $usuarios);
+        $this->vincularPortalContas($empresa, $usuarios);
 
-        // Financeiro: idempotente — pode ser reexecutado sobre a
-        // massa existente para gerar planos e mensalidades.
+        // Modulos complementares: idempotentes, reexecutaveis.
         $this->financeiro($empresa);
-
-        // Comunicacao: avisos gerais e por turma para o portal.
         $this->comunicacao($empresa);
-
-        // Biblioteca: acervo e circulacao de emprestimos.
         $this->biblioteca($empresa);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
 
-    /** Anos letivos, etapas, disciplinas, turmas e atribuicoes. */
-    private function estruturar(Empresa $empresa, Escola $escola): void
+    /** Unidades da rede: reaproveita a Unidade Central do DatabaseSeeder. */
+    private function escolas(Empresa $empresa): array
     {
-        $anoLetivo = \App\Models\AnoLetivo::firstOrCreate(
-            ['escola_id' => $escola->id, 'ano' => 2026],
-            ['empresa_id' => $empresa->id, 'status' => 'ativo']
-        );
+        $organizacaoId = DB::table('organizacoes')
+            ->where('empresa_id', $empresa->id)
+            ->where('nome', 'Rede Escola Demo')
+            ->value('id');
 
-        $etapas = [];
-        foreach ([
-            ['Educação Infantil', 'infantil', 1],
-            ['Fundamental I', 'fundamental', 2],
-            ['Fundamental II', 'fundamental', 3],
-            ['Ensino Médio', 'medio', 4],
-        ] as [$nome, $segmento, $ordem]) {
-            $etapas[$segmento.$ordem] = Etapa::firstOrCreate(
-                ['empresa_id' => $empresa->id, 'nome' => $nome],
-                ['segmento' => $segmento, 'ordem' => $ordem]
+        $defs = [
+            'unidade-central' => ['nome' => 'Unidade Central', 'cidade' => 'São Paulo', 'capacidade' => 1200],
+            'unidade-norte' => ['nome' => 'Unidade Norte', 'cidade' => 'São Paulo', 'capacidade' => 900],
+            'unidade-sul' => ['nome' => 'Campus Sul', 'cidade' => 'São Paulo', 'capacidade' => 800],
+        ];
+
+        $escolas = [];
+        foreach ($defs as $slug => $d) {
+            $escolas[$slug] = Escola::query()->firstOrCreate(
+                ['empresa_id' => $empresa->id, 'slug' => $slug],
+                [
+                    'organizacao_id' => $organizacaoId,
+                    'nome' => $d['nome'],
+                    'email' => $slug.'@escolademo.test',
+                    'cidade' => $d['cidade'],
+                    'estado' => 'SP',
+                    'capacidade_alunos' => $d['capacidade'],
+                    'turno_padrao' => 'integral',
+                    'ativa' => 'S',
+                ]
             );
         }
 
-        $disciplinas = [];
+        return $escolas;
+    }
+
+    /**
+     * Estrutura academica completa por escola: anos letivos,
+     * periodos, etapas, turmas, coortes de alunos, matriculas e
+     * a operacao completa do ano atual. Idempotente por escola.
+     */
+    private function massaAcademica(Empresa $empresa, array $escolas, array $usuarios): void
+    {
+        $this->etapas($empresa);
+        $this->disciplinas($empresa);
+
+        foreach ($escolas as $escola) {
+            if (Aluno::query()->where('empresa_id', $empresa->id)
+                ->where('escola_id', $escola->id)->exists()) {
+                $this->command->info("Escola {$escola->nome} ja populada — pulando.");
+
+                continue;
+            }
+
+            $this->command->info("Populando {$escola->nome}...");
+            $semestres = $escola->slug === 'unidade-sul';
+            $coortes = $this->criarCoortes($empresa, $escola);
+            $rows = $this->matriculasDaEscola($empresa, $escola, $semestres, $coortes);
+
+            foreach (array_chunk($rows, 500) as $chunk) {
+                DB::table('matriculas')->insert($chunk);
+            }
+
+            $this->operacaoEscola($empresa, $escola, $usuarios);
+            $this->command->info("  {$escola->nome}: ".count($rows).' matriculas.');
+        }
+    }
+
+    /** Etapas (segmentos) compartilhadas pelo tenant. */
+    private function etapas(Empresa $empresa): array
+    {
+        $etapas = [];
+        foreach (self::TRILHAS as $key => $trilha) {
+            $etapas[$key] = Etapa::firstOrCreate(
+                ['empresa_id' => $empresa->id, 'nome' => $trilha['etapa']],
+                [
+                    'segmento' => $trilha['segmento'],
+                    'ordem' => $trilha['ordem'],
+                    'ativo' => 'S',
+                ]
+            );
+        }
+
+        return $etapas;
+    }
+
+    /** Disciplinas base compartilhadas pelo tenant. */
+    private function disciplinas(Empresa $empresa)
+    {
+        $disciplinas = collect();
         foreach ([
             ['Matemática', 'MAT'], ['Português', 'POR'], ['Ciências', 'CIE'],
             ['História', 'HIS'], ['Geografia', 'GEO'], ['Inglês', 'ING'],
             ['Educação Física', 'EDF'], ['Artes', 'ART'],
         ] as [$nome, $sigla]) {
-            $disciplinas[$sigla] = Disciplina::firstOrCreate(
+            $disciplinas->push(Disciplina::firstOrCreate(
                 ['empresa_id' => $empresa->id, 'nome' => $nome],
                 ['sigla' => $sigla]
-            );
+            ));
         }
 
-        $turmas = [];
-        foreach ([
-            ['1º Ano A', 'matutino', $etapas['fundamental2'], ['MAT', 'POR', 'CIE']],
-            ['5º Ano A', 'vespertino', $etapas['fundamental3'], ['MAT', 'POR', 'CIE', 'HIS', 'GEO', 'ING']],
-        ] as [$nome, $turno, $etapa, $siglas]) {
-            $turma = Turma::firstOrCreate(
-                ['empresa_id' => $empresa->id, 'nome' => $nome, 'ano_letivo_id' => $anoLetivo->id],
-                [
-                    'escola_id' => $escola->id,
-                    'etapa_id' => $etapa->id,
-                    'turno' => $turno,
-                    'sala' => 'Sala '.fake()->unique()->numberBetween(1, 20),
-                    'capacidade_maxima' => 35,
-                    'ativo' => 'S',
-                ]
-            );
-            $turmas[$nome] = $turma;
+        return $disciplinas;
+    }
 
-            foreach ($siglas as $sigla) {
-                DB::table('turma_disciplina')->updateOrInsert(
-                    ['turma_id' => $turma->id, 'disciplina_id' => $disciplinas[$sigla]->id],
-                    ['carga_horaria_semanal' => 5, 'created_at' => now(), 'updated_at' => now()]
-                );
+    /**
+     * Coortes de alunos por trilha: entram no inicio da trilha e
+     * avancam uma posicao por ano. Entradas anteriores a 2022
+     * garantem que TODA posicao esteja preenchida em todos os
+     * anos da janela — ex.: Fundamental I entra desde 2018.
+     *
+     * @return array<string, array<int, array{entrada:int,letra:string,alunos:array<int,int>}>>
+     */
+    private function criarCoortes(Empresa $empresa, Escola $escola): array
+    {
+        $coortes = [];
+        $contador = 0;
+
+        foreach (self::TRILHAS as $key => $trilha) {
+            $tamanhoTrilha = count($trilha['posicoes']);
+            $primeiraEntrada = self::ANO_INICIAL - ($tamanhoTrilha - 1);
+
+            foreach (range($primeiraEntrada, self::ANO_ATUAL) as $entrada) {
+                foreach (self::LETRAS as $letra) {
+                    $alunosIds = [];
+                    $total = random_int(20, 30);
+
+                    for ($i = 0; $i < $total; $i++) {
+                        $contador++;
+                        [$aluno] = $this->criarAlunoComResponsavel(
+                            $empresa, $escola, $contador, $entrada
+                        );
+                        $alunosIds[] = $aluno->id;
+                    }
+
+                    $coortes[$key][] = [
+                        'entrada' => $entrada,
+                        'letra' => $letra,
+                        'alunos' => $alunosIds,
+                    ];
+                }
             }
         }
 
-        // Atribuicoes: professor titular por turma+disciplina
-        $professores = User::query()
+        return $coortes;
+    }
+
+    /** Pessoa + aluno + responsavel legal + vinculo (1 coorte). */
+    private function criarAlunoComResponsavel(Empresa $empresa, Escola $escola, int $seq, int $anoEntrada): array
+    {
+        $pessoa = Pessoa::create([
+            'empresa_id' => $empresa->id,
+            'nome' => fake()->name(),
+            'cpf' => fake()->unique()->numerify('###.###.###-##'),
+            'data_nascimento' => fake()->dateTimeBetween('-17 years', '-6 years')->format('Y-m-d'),
+            'sexo' => fake()->randomElement(['M', 'F']),
+            'email' => fake()->unique()->safeEmail(),
+            'telefone' => fake()->numerify('119########'),
+        ]);
+
+        $aluno = Aluno::create([
+            'empresa_id' => $empresa->id,
+            'pessoa_id' => $pessoa->id,
+            'escola_id' => $escola->id,
+            'registro_academico' => 'RA-'.$escola->id.'-'.str_pad($seq, 5, '0', STR_PAD_LEFT),
+            'data_ingresso' => $anoEntrada.'-02-05',
+            'turno_preferencial' => fake()->randomElement(['matutino', 'vespertino', 'integral']),
+            'ativo' => 'S',
+        ]);
+
+        $respPessoa = Pessoa::create([
+            'empresa_id' => $empresa->id,
+            'nome' => fake()->name(),
+            'cpf' => fake()->unique()->numerify('###.###.###-##'),
+            'data_nascimento' => fake()->dateTimeBetween('-50 years', '-25 years')->format('Y-m-d'),
+            'sexo' => fake()->randomElement(['M', 'F']),
+            'email' => fake()->unique()->safeEmail(),
+            'celular' => fake()->numerify('119########'),
+        ]);
+
+        $responsavel = Responsavel::create([
+            'empresa_id' => $empresa->id,
+            'pessoa_id' => $respPessoa->id,
+            'profissao' => fake()->randomElement(['Comerciante', 'Professor', 'Enfermeiro', 'Advogado', 'Autônomo', 'Funcionário público']),
+            'local_trabalho' => fake()->company(),
+            'ativo' => 'S',
+        ]);
+
+        $aluno->responsaveis()->attach($responsavel->id, [
+            'tipo' => 'legal',
+            'principal' => true,
+            'pode_retirar' => true,
+            'autoriza_contato' => true,
+        ]);
+
+        return [$aluno, $responsavel];
+    }
+
+    /**
+     * Anos letivos, periodos, turmas e matriculas de uma escola.
+     * Retorna as linhas de matricula para insert em lote.
+     */
+    private function matriculasDaEscola(
+        Empresa $empresa,
+        Escola $escola,
+        bool $semestres,
+        array $coortes
+    ): array {
+        $rows = [];
+        $agora = now();
+        $anos = range(self::ANO_INICIAL, self::ANO_ATUAL);
+
+        foreach ($anos as $ano) {
+            $anoLetivo = \App\Models\AnoLetivo::firstOrCreate(
+                ['empresa_id' => $empresa->id, 'escola_id' => $escola->id, 'ano' => $ano],
+                [
+                    'data_inicio' => $ano.'-02-01',
+                    'data_fim' => $ano.'-12-15',
+                    'status' => $ano === self::ANO_ATUAL ? 'letivo' : 'encerrado',
+                    'ativo' => 'S',
+                ]
+            );
+
+            $this->criarPeriodos($empresa, $escola, $anoLetivo, $semestres);
+
+            // Turmas do ano: toda posicao A/B de cada trilha.
+            $turmasAno = [];
+            foreach (self::TRILHAS as $key => $trilha) {
+                $etapaId = $this->etapaId($empresa, $key);
+                foreach ($trilha['posicoes'] as $pos => $nomePosicao) {
+                    foreach (self::LETRAS as $letra) {
+                        $nome = $nomePosicao.' '.$letra;
+                        $turma = Turma::firstOrCreate(
+                            ['empresa_id' => $empresa->id, 'nome' => $nome, 'ano_letivo_id' => $anoLetivo->id],
+                            [
+                                'escola_id' => $escola->id,
+                                'etapa_id' => $etapaId,
+                                'turno' => fake()->randomElement(['matutino', 'vespertino']),
+                                'sala' => 'Sala '.fake()->numberBetween(1, 30),
+                                'capacidade_maxima' => 35,
+                                'ativo' => 'S',
+                            ]
+                        );
+                        $turmasAno["$key|$pos|$letra"] = $turma;
+                    }
+                }
+            }
+
+            // Disciplinas ofertadas em todas as turmas do ano.
+            $disciplinas = Disciplina::query()->where('empresa_id', $empresa->id)->get();
+            foreach ($turmasAno as $turma) {
+                foreach ($disciplinas as $disciplina) {
+                    DB::table('turma_disciplina')->updateOrInsert(
+                        ['turma_id' => $turma->id, 'disciplina_id' => $disciplina->id],
+                        ['carga_horaria_semanal' => fake()->numberBetween(3, 6), 'created_at' => $agora, 'updated_at' => $agora]
+                    );
+                }
+            }
+
+            // Matriculas: cada coorte ocupa a posicao (ano - entrada).
+            foreach (self::TRILHAS as $key => $trilha) {
+                $tamanho = count($trilha['posicoes']);
+                foreach ($coortes[$key] as $coorte) {
+                    $pos = $ano - $coorte['entrada'];
+                    if ($pos < 0 || $pos >= $tamanho) {
+                        continue;
+                    }
+
+                    $turma = $turmasAno["$key|$pos|{$coorte['letra']}"];
+                    $status = $ano === self::ANO_ATUAL ? 'ativa' : 'concluida';
+
+                    foreach ($coorte['alunos'] as $i => $alunoId) {
+                        $rows[] = [
+                            'empresa_id' => $empresa->id,
+                            'aluno_id' => $alunoId,
+                            'turma_id' => $turma->id,
+                            'ano_letivo_id' => $anoLetivo->id,
+                            'status' => $status,
+                            'numero_chamada' => $i + 1,
+                            'data_matricula' => $ano.'-02-05',
+                            'data_saida' => $status === 'concluida' ? $ano.'-12-10' : null,
+                            'created_at' => $agora,
+                            'updated_at' => $agora,
+                        ];
+                    }
+                }
+            }
+
+        }
+
+        return $rows;
+    }
+
+    /** Cache simples de etapa_id por trilha dentro do tenant. */
+    private function etapaId(Empresa $empresa, string $key): int
+    {
+        if (! isset($this->etapaCache[$key])) {
+            $this->etapaCache[$key] = Etapa::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('nome', self::TRILHAS[$key]['etapa'])
+                ->value('id');
+        }
+
+        return $this->etapaCache[$key];
+    }
+
+    /**
+     * Periodos letivos do ano: 4 bimestres nas unidades regulares
+     * e 2 semestres de ~6 meses no Campus Sul (modelo faculdade) —
+     * demonstrando que a quantidade/nome sao configuraveis.
+     */
+    private function criarPeriodos(Empresa $empresa, Escola $escola, \App\Models\AnoLetivo $anoLetivo, bool $semestres): void
+    {
+        $periodos = $semestres
+            ? [
+                [1, '1º Semestre', '02-01', '07-15'],
+                [2, '2º Semestre', '07-20', '12-10'],
+            ]
+            : [
+                [1, '1º Bimestre', '02-01', '04-15'],
+                [2, '2º Bimestre', '04-20', '06-30'],
+                [3, '3º Bimestre', '07-01', '09-15'],
+                [4, '4º Bimestre', '09-20', '12-10'],
+            ];
+
+        foreach ($periodos as [$ordem, $nome, $ini, $fim]) {
+            PeriodoLetivo::firstOrCreate(
+                ['empresa_id' => $empresa->id, 'ano_letivo_id' => $anoLetivo->id, 'ordem' => $ordem],
+                [
+                    'escola_id' => $escola->id,
+                    'nome' => $nome,
+                    'data_inicio' => $anoLetivo->ano.'-'.$ini,
+                    'data_fim' => $anoLetivo->ano.'-'.$fim,
+                    'ativo' => 'S',
+                ]
+            );
+        }
+    }
+
+    /**
+     * Operacao completa do ano atual de UMA escola: atribuicoes
+     * de professor, diarios, frequencias, avaliacoes e notas.
+     * Anos anteriores ficam com estrutura + matriculas.
+     */
+    private function operacaoEscola(Empresa $empresa, Escola $escola, array $usuarios): void
+    {
+        $anoLetivo = \App\Models\AnoLetivo::query()
             ->where('empresa_id', $empresa->id)
-            ->whereIn('email', ['prof1@escolademo.test', 'prof2@escolademo.test'])
+            ->where('escola_id', $escola->id)
+            ->where('ano', self::ANO_ATUAL)
+            ->first();
+        if (! $anoLetivo) {
+            return;
+        }
+
+        $professores = collect([$usuarios['prof1'], $usuarios['prof2']])->filter();
+
+        $turmas = Turma::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('escola_id', $escola->id)
+            ->where('ano_letivo_id', $anoLetivo->id)
+            ->with('disciplinas')
             ->get();
 
+        $periodosPorAno = PeriodoLetivo::query()
+            ->where('ano_letivo_id', $anoLetivo->id)
+            ->where('ativo', 'S')
+            ->orderBy('ordem')
+            ->get()
+            ->keyBy('ordem');
+
+        $matriculasPorTurma = Matricula::query()
+            ->whereIn('turma_id', $turmas->pluck('id'))
+            ->where('status', 'ativa')
+            ->get()
+            ->groupBy('turma_id');
+
+        $periodo1 = $periodosPorAno->get(1);
+        $periodo2 = $periodosPorAno->get(2) ?? $periodosPorAno->get(1);
         $i = 0;
+
         foreach ($turmas as $turma) {
+            $matriculas = $matriculasPorTurma->get($turma->id, collect());
+            if ($matriculas->isEmpty()) {
+                continue;
+            }
+
             foreach ($turma->disciplinas as $disciplina) {
+                // Atribuicao titular professor (so ano atual).
+                $prof = $professores->isNotEmpty()
+                    ? $professores[$i++ % $professores->count()]
+                    : null;
+
                 Atribuicao::firstOrCreate(
                     [
                         'empresa_id' => $empresa->id,
@@ -194,13 +562,129 @@ class DemoEscolarSeeder extends Seeder
                         'disciplina_id' => $disciplina->id,
                     ],
                     [
-                        'user_id' => $professores[$i % max(1, $professores->count())]->id ?? null,
+                        'user_id' => $prof?->id,
                         'papel' => 'titular',
                         'ativo' => 'S',
                     ]
                 );
-                $i++;
+
+                // Diarios + frequencias: 3 aulas recentes do ano.
+                foreach (['2026-03-10', '2026-03-12', '2026-03-17'] as $data) {
+                    $diario = Diario::firstOrCreate(
+                        [
+                            'empresa_id' => $empresa->id,
+                            'turma_id' => $turma->id,
+                            'disciplina_id' => $disciplina->id,
+                            'data' => $data,
+                        ],
+                        [
+                            'user_id' => $prof?->id ?? $usuarios['prof1']->id,
+                            'conteudo' => fake()->randomElement([
+                                'Revisão de conteúdo', 'Exercícios práticos', 'Leitura e interpretação',
+                                'Apresentação de projeto', 'Dinâmica em grupo', 'Correção de atividade',
+                            ]),
+                        ]
+                    );
+
+                    $freqRows = [];
+                    foreach ($matriculas as $matricula) {
+                        $freqRows[] = [
+                            'empresa_id' => $empresa->id,
+                            'diario_id' => $diario->id,
+                            'matricula_id' => $matricula->id,
+                            'status' => fake()->randomElement(
+                                ['presente', 'presente', 'presente', 'presente', 'presente', 'falta', 'justificada']
+                            ),
+                            'justificativa' => null,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+                    foreach ($matriculas as $j => $matricula) {
+                        if ($freqRows[$j]['status'] === 'justificada') {
+                            $freqRows[$j]['justificativa'] = 'Atestado médico';
+                        }
+                    }
+                    foreach (array_chunk($freqRows, 400) as $chunk) {
+                        DB::table('frequencias')->insert($chunk);
+                    }
+                }
+
+                // Avaliacoes ligadas aos periodos letivos + notas.
+                foreach ([
+                    ['prova', 'Avaliação 1', $periodo1],
+                    ['trabalho', 'Trabalho Prático', $periodo2],
+                ] as [$tipo, $nome, $periodo]) {
+                    $avaliacao = Avaliacao::firstOrCreate(
+                        [
+                            'empresa_id' => $empresa->id,
+                            'turma_id' => $turma->id,
+                            'disciplina_id' => $disciplina->id,
+                            'nome' => $nome,
+                        ],
+                        [
+                            'user_id' => $prof?->id ?? $usuarios['prof1']->id,
+                            'tipo' => $tipo,
+                            'periodo' => $periodo?->nome ?? '1º Período',
+                            'periodo_letivo_id' => $periodo?->id,
+                            'data' => '2026-04-08',
+                            'nota_maxima' => 10,
+                        ]
+                    );
+
+                    $notaRows = [];
+                    foreach ($matriculas as $matricula) {
+                        $nota = fake()->boolean(75)
+                            ? fake()->randomFloat(1, 5, 10)
+                            : fake()->randomFloat(1, 0, 4.9);
+                        $notaRows[] = [
+                            'empresa_id' => $empresa->id,
+                            'avaliacao_id' => $avaliacao->id,
+                            'matricula_id' => $matricula->id,
+                            'nota' => $nota,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+                    foreach (array_chunk($notaRows, 400) as $chunk) {
+                        DB::table('notas')->insert($chunk);
+                    }
+                }
             }
+        }
+    }
+
+    /**
+     * Vincula as contas de portal demo: o responsavel passa a ver
+     * o boletim/financeiro dos primeiros filhos e o aluno demo ve
+     * o proprio boletim. Idempotente — so preenche user_id vazio.
+     */
+    private function vincularPortalContas(Empresa $empresa, array $usuarios): void
+    {
+        $alunos = Aluno::query()->where('empresa_id', $empresa->id)
+            ->orderBy('id')->limit(10)->get();
+        if ($alunos->isEmpty()) {
+            return;
+        }
+
+        // responsavel@ ve os primeiros 5 alunos vinculados
+        $vinculados = 0;
+        foreach ($alunos as $aluno) {
+            foreach ($aluno->responsaveis as $resp) {
+                if ($vinculados >= 5) {
+                    break 2;
+                }
+                if (! $resp->user_id) {
+                    $resp->update(['user_id' => $usuarios['responsavel']->id]);
+                    $vinculados++;
+                }
+            }
+        }
+
+        // aluno@ ve a si mesmo
+        $primeiro = $alunos->first();
+        if ($primeiro && ! $primeiro->user_id) {
+            $primeiro->update(['user_id' => $usuarios['aluno']->id]);
         }
     }
 
@@ -245,287 +729,62 @@ class DemoEscolarSeeder extends Seeder
         ];
     }
 
-    /** Alunos, responsaveis e vinculos. */
-    private function pessoas(Empresa $empresa, Escola $escola, array $usuarios): array
-    {
-        $alunos = [];
-        $nomes = [
-            ['Ana Beatriz Oliveira', 'F', '2015-03-12'],
-            ['Bruno Henrique Santos', 'M', '2014-07-25'],
-            ['Carla Eduarda Lima', 'F', '2013-11-02'],
-            ['Diego Fernandes Rocha', 'M', '2015-01-30'],
-            ['Elisa Martins Costa', 'F', '2014-09-18'],
-            ['Felipe Augusto Alves', 'M', '2013-05-05'],
-            ['Gabriela Nunes Pereira', 'F', '2015-08-22'],
-            ['Heitor Ramos Barbosa', 'M', '2014-02-14'],
-        ];
-
-        $turma1 = Turma::query()->where('nome', '1º Ano A')->first();
-        $turma2 = Turma::query()->where('nome', '5º Ano A')->first();
-        $anoLetivo = \App\Models\AnoLetivo::query()->where('escola_id', $escola->id)->first();
-
-        foreach ($nomes as $i => [$nome, $sexo, $nasc]) {
-            $pessoa = Pessoa::create([
-                'empresa_id' => $empresa->id,
-                'nome' => $nome,
-                'cpf' => fake()->unique()->numerify('###.###.###-##'),
-                'data_nascimento' => $nasc,
-                'sexo' => $sexo,
-                'email' => fake()->unique()->safeEmail(),
-                'telefone' => fake()->numerify('119########'),
-            ]);
-
-            $aluno = Aluno::create([
-                'empresa_id' => $empresa->id,
-                'pessoa_id' => $pessoa->id,
-                'escola_id' => $escola->id,
-                'registro_academico' => 'RA-'.str_pad($i + 1, 4, '0', STR_PAD_LEFT),
-                'data_ingresso' => '2025-02-01',
-                'turno_preferencial' => $i < 4 ? 'matutino' : 'vespertino',
-                'ativo' => 'S',
-            ]);
-            $alunos[] = $aluno;
-
-            $turma = $i < 4 ? $turma1 : $turma2;
-            Matricula::create([
-                'empresa_id' => $empresa->id,
-                'aluno_id' => $aluno->id,
-                'turma_id' => $turma->id,
-                'ano_letivo_id' => $anoLetivo->id,
-                'status' => 'ativa',
-                'numero_chamada' => $i + 1,
-                'data_matricula' => '2025-02-01',
-            ]);
-        }
-
-        // Responsaveis: um principal por aluno + um financeiro compartilhado
-        $responsaveis = [];
-        foreach ($alunos as $i => $aluno) {
-            $pessoa = Pessoa::create([
-                'empresa_id' => $empresa->id,
-                'nome' => 'Responsável de '.$aluno->pessoa->nome,
-                'cpf' => fake()->unique()->numerify('###.###.###-##'),
-                'data_nascimento' => fake()->dateTimeBetween('-45 years', '-25 years')->format('Y-m-d'),
-                'sexo' => fake()->randomElement(['M', 'F']),
-                'email' => fake()->unique()->safeEmail(),
-                'celular' => fake()->numerify('119########'),
-            ]);
-
-            $responsavel = Responsavel::create([
-                'empresa_id' => $empresa->id,
-                'pessoa_id' => $pessoa->id,
-                'profissao' => fake()->randomElement(['Comerciante', 'Professor', 'Enfermeiro', 'Advogado', 'Autônomo']),
-                'local_trabalho' => fake()->company(),
-                'ativo' => 'S',
-            ]);
-            $responsaveis[] = $responsavel;
-
-            $aluno->responsaveis()->attach($responsavel->id, [
-                'tipo' => 'legal',
-                'principal' => true,
-                'pode_retirar' => true,
-                'autoriza_contato' => true,
-            ]);
-        }
-
-        // Responsavel financeiro compartilhado (vinculado a todos)
-        $pessoaFin = Pessoa::create([
-            'empresa_id' => $empresa->id,
-            'nome' => 'Financeiro Demo',
-            'cpf' => fake()->unique()->numerify('###.###.###-##'),
-            'data_nascimento' => '1985-04-10',
-            'sexo' => 'F',
-            'email' => 'financeiro@escolademo.test',
-        ]);
-        $respFin = Responsavel::create([
-            'empresa_id' => $empresa->id,
-            'pessoa_id' => $pessoaFin->id,
-            'profissao' => 'Contadora',
-            'ativo' => 'S',
-        ]);
-        foreach ($alunos as $aluno) {
-            $aluno->responsaveis()->attach($respFin->id, [
-                'tipo' => 'financeiro',
-                'principal' => false,
-                'pode_retirar' => false,
-                'autoriza_contato' => true,
-            ]);
-        }
-
-        // Contas de portal: responsavel ve os 2 primeiros filhos;
-        // aluno demo ve a si mesmo
-        $responsaveis[0]->update(['user_id' => $usuarios['responsavel']->id]);
-        $responsaveis[1]->update(['user_id' => $usuarios['responsavel']->id]);
-
-        $alunos[2]->update(['user_id' => $usuarios['aluno']->id]);
-
-        return [$alunos, $responsaveis];
-    }
-
-    /** Diarios, frequencias, avaliacoes e notas. */
-    private function operacao(Empresa $empresa, array $usuarios, array $alunos): void
-    {
-        $turmas = Turma::query()->with('disciplinas')->get();
-        $matriculasPorTurma = Matricula::query()
-            ->whereIn('turma_id', $turmas->pluck('id'))
-            ->where('status', 'ativa')
-            ->get()
-            ->groupBy('turma_id');
-
-        $professorPorTurma = [];
-        foreach (Turma::query()->with('atribuicoes')->get() as $turma) {
-            $professorPorTurma[$turma->id] = $turma->atribuicoes->first()?->user_id
-                ?? $usuarios['prof1']->id;
-        }
-
-        // Diarios: 3 aulas por disciplina nas ultimas semanas
-        foreach ($turmas as $turma) {
-            $matriculas = $matriculasPorTurma->get($turma->id, collect());
-            if ($matriculas->isEmpty()) {
-                continue;
-            }
-
-            foreach ($turma->disciplinas as $disciplina) {
-                $atribuicao = Atribuicao::query()
-                    ->where('turma_id', $turma->id)
-                    ->where('disciplina_id', $disciplina->id)
-                    ->first();
-
-                foreach ([3, 2, 1] as $diasAtras) {
-                    $data = now()->subDays($diasAtras)->toDateString();
-
-                    $diario = Diario::firstOrCreate(
-                        [
-                            'empresa_id' => $empresa->id,
-                            'turma_id' => $turma->id,
-                            'disciplina_id' => $disciplina->id,
-                            'data' => $data,
-                        ],
-                        [
-                            'user_id' => $atribuicao?->user_id ?? $professorPorTurma[$turma->id],
-                            'conteudo' => fake()->randomElement([
-                                'Revisão de conteúdo', 'Exercícios práticos', 'Leitura e interpretação',
-                                'Apresentação de projeto', 'Dinâmica em grupo', 'Correção de atividade',
-                            ]),
-                        ]
-                    );
-
-                    foreach ($matriculas as $matricula) {
-                        $status = fake()->randomElement(
-                            ['presente', 'presente', 'presente', 'presente', 'falta', 'justificada']
-                        );
-                        Frequencia::firstOrCreate(
-                            [
-                                'empresa_id' => $empresa->id,
-                                'diario_id' => $diario->id,
-                                'matricula_id' => $matricula->id,
-                            ],
-                            [
-                                'status' => $status,
-                                'justificativa' => $status === 'justificada' ? 'Atestado médico' : null,
-                            ]
-                        );
-                    }
-                }
-
-                // Avaliacoes: prova + trabalho por disciplina
-                foreach ([
-                    ['prova', 'Avaliação 1', 10],
-                    ['trabalho', 'Trabalho Prático', 10],
-                ] as [$tipo, $nome, $max]) {
-                    $avaliacao = Avaliacao::firstOrCreate(
-                        [
-                            'empresa_id' => $empresa->id,
-                            'turma_id' => $turma->id,
-                            'disciplina_id' => $disciplina->id,
-                            'nome' => $nome,
-                        ],
-                        [
-                            'user_id' => $atribuicao?->user_id ?? $professorPorTurma[$turma->id],
-                            'tipo' => $tipo,
-                            'periodo' => '1º Bimestre',
-                            'nota_maxima' => $max,
-                        ]
-                    );
-
-                    foreach ($matriculas as $matricula) {
-                        Nota::firstOrCreate(
-                            [
-                                'empresa_id' => $empresa->id,
-                                'avaliacao_id' => $avaliacao->id,
-                                'matricula_id' => $matricula->id,
-                            ],
-                            ['nota' => fake()->randomFloat(1, 4, 10)]
-                        );
-                    }
-                }
-            }
-        }
-    }
-
     /**
-     * Avisos de comunicacao: gerais da escola + um por turma.
+     * Avisos de comunicacao por unidade: gerais + um por turma.
      * Idempotente: firstOrCreate por (empresa, escola, titulo).
      */
     private function comunicacao(Empresa $empresa): void
     {
-        $escola = Escola::query()->where('empresa_id', $empresa->id)->first();
-        if (! $escola) {
+        $escolas = Escola::query()->where('empresa_id', $empresa->id)->get();
+        if ($escolas->isEmpty()) {
             return;
         }
 
-        $turma = Turma::query()->where('escola_id', $escola->id)->first();
-
-        $avisos = [
-            [
-                'escola_id' => $escola->id, 'turma_id' => null,
-                'titulo' => 'Reunião de pais e mestres',
-                'mensagem' => 'A reunião de pais e mestres acontecerá no dia '.now()->addDays(10)->format('d/m/Y').' às 19h, no auditório da escola. A presença de todos os responsáveis é muito importante.',
-                'tipo' => 'evento', 'data_publicacao' => now()->subDays(2)->toDateString(),
-            ],
-            [
-                'escola_id' => $escola->id, 'turma_id' => null,
-                'titulo' => 'Calendário de provas do bimestre',
-                'mensagem' => 'O calendário de avaliações foi publicado no portal. Fiquem atentos aos horários de cada disciplina e tragam os materiais solicitados.',
-                'tipo' => 'info', 'data_publicacao' => now()->subDay()->toDateString(),
-            ],
-            [
-                'escola_id' => $escola->id, 'turma_id' => null,
-                'titulo' => 'Atualize os dados cadastrais',
-                'mensagem' => 'Responsáveis, verifiquem se seus dados de contato e dos alunos estão atualizados na secretaria. Contato desatualizado dificulta a comunicação em emergências.',
-                'tipo' => 'urgente', 'data_publicacao' => now()->subDays(4)->toDateString(),
-            ],
+        $genericos = [
+            ['titulo' => 'Reunião de pais e mestres', 'tipo' => 'evento',
+                'mensagem' => 'A reunião de pais e mestres acontecerá no dia '.now()->addDays(10)->format('d/m/Y').' às 19h, no auditório da escola. A presença de todos os responsáveis é muito importante.'],
+            ['titulo' => 'Calendário de avaliações', 'tipo' => 'info',
+                'mensagem' => 'O calendário de avaliações foi publicado no portal. Fiquem atentos aos horários de cada disciplina e tragam os materiais solicitados.'],
+            ['titulo' => 'Atualize os dados cadastrais', 'tipo' => 'urgente',
+                'mensagem' => 'Responsáveis, verifiquem se seus dados de contato e dos alunos estão atualizados na secretaria. Contato desatualizado dificulta a comunicação em emergências.'],
         ];
 
-        if ($turma) {
-            $avisos[] = [
-                'escola_id' => $escola->id, 'turma_id' => $turma->id,
-                'titulo' => 'Passeio educativo da turma',
-                'mensagem' => "A turma {$turma->nome} participará de um passeio educativo. O termo de autorização deve ser entregue na secretaria até ".now()->addDays(5)->format('d/m/Y').'.',
-                'tipo' => 'evento', 'data_publicacao' => now()->subDay()->toDateString(),
-            ];
-        }
+        foreach ($escolas as $escola) {
+            foreach ($genericos as $g) {
+                Aviso::firstOrCreate(
+                    ['empresa_id' => $empresa->id, 'escola_id' => $escola->id, 'titulo' => $g['titulo']],
+                    $g + [
+                        'turma_id' => null,
+                        'data_publicacao' => now()->subDays(random_int(1, 5))->toDateString(),
+                        'ativo' => 'S',
+                    ]
+                );
+            }
 
-        foreach ($avisos as $dados) {
-            Aviso::firstOrCreate(
-                [
-                    'empresa_id' => $empresa->id,
-                    'escola_id' => $dados['escola_id'],
-                    'titulo' => $dados['titulo'],
-                ],
-                $dados + ['ativo' => 'S']
-            );
+            $turma = Turma::query()->where('escola_id', $escola->id)
+                ->whereHas('anoLetivo', fn ($q) => $q->where('ano', self::ANO_ATUAL))
+                ->first();
+            if ($turma) {
+                Aviso::firstOrCreate(
+                    ['empresa_id' => $empresa->id, 'escola_id' => $escola->id, 'titulo' => 'Passeio educativo da turma '.$turma->nome],
+                    [
+                        'turma_id' => $turma->id,
+                        'mensagem' => "A turma {$turma->nome} participará de um passeio educativo. O termo de autorização deve ser entregue na secretaria até ".now()->addDays(5)->format('d/m/Y').'.',
+                        'tipo' => 'evento',
+                        'data_publicacao' => now()->subDay()->toDateString(),
+                        'ativo' => 'S',
+                    ]
+                );
+            }
         }
     }
 
-    /**
-     * Planos de mensalidade + cobrancas dos ultimos meses.
-     * Idempotente: firstOrCreate por (matricula, competencia).
-     */
-    /** Acervo e circulacao de emprestimos da biblioteca. */
+    /** Acervo e circulacao de emprestimos da biblioteca (Unidade Central). */
     private function biblioteca(Empresa $empresa): void
     {
-        $escola = Escola::query()->where('empresa_id', $empresa->id)->first();
+        $escola = Escola::query()->where('empresa_id', $empresa->id)
+            ->where('slug', 'unidade-central')->first()
+            ?? Escola::query()->where('empresa_id', $empresa->id)->first();
         if (! $escola) {
             return;
         }
@@ -548,22 +807,17 @@ class DemoEscolarSeeder extends Seeder
         $livros = [];
         foreach ($catalogo as $dados) {
             $livros[] = \App\Models\Livro::firstOrCreate(
-                [
-                    'empresa_id' => $empresa->id,
-                    'escola_id' => $escola->id,
-                    'titulo' => $dados['titulo'],
-                ],
+                ['empresa_id' => $empresa->id, 'escola_id' => $escola->id, 'titulo' => $dados['titulo']],
                 $dados + ['ativo' => 'S']
             );
         }
 
-        $alunos = Aluno::query()->where('empresa_id', $empresa->id)->orderBy('id')->limit(8)->get();
+        $alunos = Aluno::query()->where('empresa_id', $empresa->id)
+            ->where('escola_id', $escola->id)->orderBy('id')->limit(8)->get();
         if ($alunos->isEmpty() || $livros === []) {
             return;
         }
 
-        // Circulacao demo: mix de devolvidos, no prazo e atrasados.
-        // Bloco inteiro idempotente — so cria se nao houver emprestimos.
         if (\App\Models\EmprestimoLivro::query()->where('empresa_id', $empresa->id)->exists()) {
             return;
         }
@@ -582,14 +836,11 @@ class DemoEscolarSeeder extends Seeder
             ];
 
             if ($i % 3 === 0) {
-                // Devolvido no prazo
                 $dados['data_devolucao'] = now()->subDays(6)->toDateString();
                 $dados['status'] = 'devolvido';
             } elseif ($i % 3 === 1) {
-                // Atrasado: previsto ha 5 dias, sem devolucao
                 $dados['observacoes'] = 'Aluno avisado para regularizar.';
             } else {
-                // No prazo
                 $dados['data_emprestimo'] = now()->subDays(2)->toDateString();
                 $dados['data_devolucao_prevista'] = now()->addDays(13)->toDateString();
             }
@@ -598,6 +849,11 @@ class DemoEscolarSeeder extends Seeder
         }
     }
 
+    /**
+     * Planos de mensalidade + cobrancas das competencias recentes.
+     * Idempotente: compara pares (matricula, competencia) ja
+     * existentes antes do insert em lote.
+     */
     private function financeiro(Empresa $empresa): void
     {
         $integral = \App\Models\PlanoMensalidade::firstOrCreate(
@@ -609,12 +865,13 @@ class DemoEscolarSeeder extends Seeder
             ['valor' => 550.00, 'descricao' => 'Meio periodo', 'ativo' => 'S']
         );
 
-        // Atribui plano as matriculas ativas que ainda nao tem
+        // Apenas matriculas ativas (ano atual) recebem plano/cobranca.
         $matriculas = Matricula::query()
             ->where('empresa_id', $empresa->id)
             ->where('status', 'ativa')
             ->get();
 
+        $agora = now();
         foreach ($matriculas as $i => $matricula) {
             if (! $matricula->plano_mensalidade_id) {
                 $matricula->update(['plano_mensalidade_id' => ($i % 2 === 0 ? $integral : $parcial)->id]);
@@ -622,40 +879,51 @@ class DemoEscolarSeeder extends Seeder
             }
         }
 
-        // Competencias: mes anterior (metade paga, metade vencida)
-        // e mes atual (todas pendentes)
         $competencias = [
             now()->subMonth()->format('Y-m') => now()->subMonth()->startOfMonth()->addDays(9)->toDateString(),
             now()->format('Y-m') => now()->addDays(5)->toDateString(),
         ];
 
-        foreach ($competencias as $competencia => $vencimento) {
-            $ehMesAnterior = $competencia === now()->subMonth()->format('Y-m');
+        $existentes = DB::table('mensalidades')
+            ->where('empresa_id', $empresa->id)
+            ->get(['matricula_id', 'competencia'])
+            ->mapWithKeys(fn ($m) => ["$m->matricula_id|$m->competencia" => true])
+            ->all();
 
-            foreach ($matriculas as $i => $matricula) {
-                $plano = $matricula->planoMensalidade;
-                if (! $plano) {
+        $ehMesAnterior = now()->subMonth()->format('Y-m');
+        $rows = [];
+
+        foreach ($matriculas as $i => $matricula) {
+            $plano = $matricula->planoMensalidade;
+            if (! $plano) {
+                continue;
+            }
+
+            foreach ($competencias as $competencia => $vencimento) {
+                if (isset($existentes["$matricula->id|$competencia"])) {
                     continue;
                 }
 
-                $paga = $ehMesAnterior && $i % 2 === 0;
+                $paga = $competencia === $ehMesAnterior && $i % 2 === 0;
 
-                \App\Models\Mensalidade::firstOrCreate(
-                    [
-                        'empresa_id' => $empresa->id,
-                        'matricula_id' => $matricula->id,
-                        'competencia' => $competencia,
-                    ],
-                    [
-                        'plano_mensalidade_id' => $plano->id,
-                        'valor' => $plano->valor,
-                        'vencimento' => $vencimento,
-                        'status' => $paga ? 'paga' : 'pendente',
-                        'data_pagamento' => $paga ? \Illuminate\Support\Carbon::parse($vencimento)->addDays(2)->toDateString() : null,
-                        'forma_pagamento' => $paga ? fake()->randomElement(['pix', 'boleto', 'cartao_credito']) : null,
-                    ]
-                );
+                $rows[] = [
+                    'empresa_id' => $empresa->id,
+                    'matricula_id' => $matricula->id,
+                    'plano_mensalidade_id' => $plano->id,
+                    'competencia' => $competencia,
+                    'valor' => $plano->valor,
+                    'vencimento' => $vencimento,
+                    'status' => $paga ? 'paga' : 'pendente',
+                    'data_pagamento' => $paga ? \Illuminate\Support\Carbon::parse($vencimento)->addDays(2)->toDateString() : null,
+                    'forma_pagamento' => $paga ? fake()->randomElement(['pix', 'boleto', 'cartao_credito']) : null,
+                    'created_at' => $agora,
+                    'updated_at' => $agora,
+                ];
             }
+        }
+
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table('mensalidades')->insert($chunk);
         }
     }
 }

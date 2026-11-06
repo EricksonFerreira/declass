@@ -377,6 +377,12 @@ return [
                     'icon' => 'fas fa-calendar-alt',
                 ],
                 [
+                    'text' => 'Períodos Letivos',
+                    'route' => 'periodo_letivo.index',
+                    'can' => 'periodo_letivo.index',
+                    'icon' => 'fas fa-calendar-week',
+                ],
+                [
                     'text' => 'Etapas',
                     'route' => 'etapa.index',
                     'can' => 'etapa.index',

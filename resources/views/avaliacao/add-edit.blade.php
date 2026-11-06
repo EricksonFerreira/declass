@@ -43,10 +43,20 @@
                 <div class="col-md-3">
                     <x-form-select name="tipo" label="Tipo" :options="$tipos ?? []" :selected="old('tipo', $avaliacao->tipo ?? 'prova')" required />
                 </div>
-                <div class="col-md-2">
-                    <x-form-input name="periodo" label="Período" :value="old('periodo', $avaliacao->periodo ?? '')" maxlength="30" placeholder="1º bim." />
-                </div>
                 <div class="col-md-3">
+                    @if(isset($avaliacao))
+                        <x-form-input name="periodo" label="Período" :value="$avaliacao->periodo ?? ''" disabled />
+                    @else
+                        <div class="form-group">
+                            <label class="form-label">Período letivo</label>
+                            <select name="periodo_letivo_id" id="periodo_letivo_id" class="form-control">
+                                <option value="">Sem período</option>
+                            </select>
+                            <small class="text-muted">Preenchido conforme os períodos do ano letivo da turma.</small>
+                        </div>
+                    @endif
+                </div>
+                <div class="col-md-2">
                     <x-form-input name="data" type="date" label="Data de aplicação" :value="old('data', isset($avaliacao) && $avaliacao->data ? $avaliacao->data->format('Y-m-d') : '')" />
                 </div>
             </div>
@@ -78,4 +88,30 @@
         </form>
     </div>
 </div>
+@if(! isset($avaliacao))
+<script>
+    const periodosPorTurma = {!! $periodosJson ?? '{}' !!};
+    const oldPeriodo = "{{ old('periodo_letivo_id') }}";
+    const selPeriodo = document.getElementById('periodo_letivo_id');
+    const selTurma = document.querySelector('[name="turma_id"]');
+
+    function preencherPeriodos() {
+        const lista = periodosPorTurma[selTurma.value] || [];
+        selPeriodo.innerHTML = '<option value="">Sem período</option>';
+        lista.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.nome;
+            if (String(p.id) === oldPeriodo) opt.selected = true;
+            selPeriodo.appendChild(opt);
+        });
+        if (oldPeriodo && !selPeriodo.querySelector('option[value="' + oldPeriodo + '"]:checked')) {
+            selPeriodo.value = '';
+        }
+    }
+
+    selTurma.addEventListener('change', preencherPeriodos);
+    preencherPeriodos();
+</script>
+@endif
 @stop

@@ -29,6 +29,10 @@ class StoreAvaliacaoRequest extends FormRequest
             'tipo' => ['required', Rule::in(array_keys(Avaliacao::TIPOS))],
             'nome' => ['required', 'string', 'max:150'],
             'periodo' => ['nullable', 'string', 'max:30'],
+            'periodo_letivo_id' => [
+                'nullable', 'integer',
+                Rule::exists('periodos_letivos', 'id')->where('empresa_id', $empresaId),
+            ],
             'data' => ['nullable', 'date'],
             'nota_maxima' => ['required', 'numeric', 'min:0.1', 'max:1000'],
             'descricao' => ['nullable', 'string', 'max:10000'],
