@@ -95,6 +95,9 @@
                 <div class="col-md-4">
                     <x-form-select name="ativo" label="Status" :options="['S' => 'Ativo', 'N' => 'Inativo']" :selected="old('ativo', $aluno->ativo ?? 'S')" />
                 </div>
+                <div class="col-md-4">
+                    <x-form-select name="user_id" label="Conta de acesso (portal)" :options="$usuariosPortal ?? []" :selected="old('user_id', $aluno->user_id ?? '')" placeholder="Sem acesso ao portal" />
+                </div>
             </div>
 
             <div class="row">

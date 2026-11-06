@@ -15,7 +15,7 @@ class StoreResponsavelRequest extends FormRequest
 
     /** Campos que pertencem a entidade Responsavel. */
     public const RESPONSAVEL_FIELDS = [
-        'profissao', 'local_trabalho', 'observacoes', 'ativo',
+        'profissao', 'local_trabalho', 'observacoes', 'ativo', 'user_id',
     ];
 
     public function authorize(): bool
@@ -51,6 +51,7 @@ class StoreResponsavelRequest extends FormRequest
             'local_trabalho' => ['nullable', 'string', 'max:160'],
             'observacoes' => ['nullable', 'string', 'max:5000'],
             'ativo' => ['nullable', Rule::in(['S', 'N'])],
+            'user_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('empresa_id', $empresaId)],
         ];
     }
 }

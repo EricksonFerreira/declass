@@ -18,7 +18,7 @@ class StoreAlunoRequest extends FormRequest
     public const ALUNO_FIELDS = [
         'registro_academico', 'escola_id', 'data_ingresso', 'turno_preferencial',
         'necessidades_especiais', 'informacoes_saude', 'contatos_emergencia',
-        'restricoes_acesso', 'observacoes', 'ativo',
+        'restricoes_acesso', 'observacoes', 'ativo', 'user_id',
     ];
 
     public function authorize(): bool
@@ -60,6 +60,7 @@ class StoreAlunoRequest extends FormRequest
             'restricoes_acesso' => ['nullable', 'string', 'max:5000'],
             'observacoes' => ['nullable', 'string', 'max:5000'],
             'ativo' => ['nullable', Rule::in(['S', 'N'])],
+            'user_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('empresa_id', $empresaId)],
         ];
     }
 }

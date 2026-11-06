@@ -250,7 +250,26 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
             'escolas' => $this->escolasOpcoes(),
             'turnos' => Aluno::TURNOS,
             'sexos' => \App\Models\Pessoa::SEXOS,
+            'usuariosPortal' => $this->usuariosPortalOpcoes('aluno'),
         ];
+    }
+
+    /** Contas de usuario com o perfil informado (para vinculo de portal). */
+    private function usuariosPortalOpcoes(string $perfil): array
+    {
+        $empresaId = auth()->user()?->empresa_id;
+
+        $roleIds = \Illuminate\Support\Facades\DB::table('roles')
+            ->where('empresa_id', $empresaId)
+            ->where('name', $perfil)
+            ->where('guard_name', 'web')
+            ->pluck('id');
+
+        return \App\Models\User::query()
+            ->whereIn('role_id', $roleIds)
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
     }
 
     private function escolasOpcoes()

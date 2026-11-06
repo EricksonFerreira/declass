@@ -66,8 +66,9 @@ class ResponsavelController extends BaseController implements FiltroInterface, R
     {
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Responsáveis', 'responsavel.index', 'Novo Responsável', 'Acadêmico');
         $sexos = Pessoa::SEXOS;
+        $usuariosPortal = $this->usuariosPortalOpcoes('responsavel_legal');
 
-        return view('responsavel.add-edit', compact('breadcrumb', 'sexos'))
+        return view('responsavel.add-edit', compact('breadcrumb', 'sexos', 'usuariosPortal'))
             ->with('titulo', $this->titulo);
     }
 
@@ -98,8 +99,9 @@ class ResponsavelController extends BaseController implements FiltroInterface, R
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Responsáveis', 'responsavel.index', 'Editar: '.($responsavel->nome ?? 'Responsável'), 'Acadêmico');
         $sexos = Pessoa::SEXOS;
+        $usuariosPortal = $this->usuariosPortalOpcoes('responsavel_legal');
 
-        return view('responsavel.add-edit', compact('responsavel', 'breadcrumb', 'sexos'))
+        return view('responsavel.add-edit', compact('responsavel', 'breadcrumb', 'sexos', 'usuariosPortal'))
             ->with('titulo', $this->titulo);
     }
 
@@ -192,5 +194,23 @@ class ResponsavelController extends BaseController implements FiltroInterface, R
         }
 
         return [$pessoaData, $responsavelData];
+    }
+
+    /** Contas de usuario com o perfil de responsavel (para vinculo de portal). */
+    private function usuariosPortalOpcoes(string $perfil): array
+    {
+        $empresaId = auth()->user()?->empresa_id;
+
+        $roleIds = \Illuminate\Support\Facades\DB::table('roles')
+            ->where('empresa_id', $empresaId)
+            ->where('name', $perfil)
+            ->where('guard_name', 'web')
+            ->pluck('id');
+
+        return \App\Models\User::query()
+            ->whereIn('role_id', $roleIds)
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
     }
 }

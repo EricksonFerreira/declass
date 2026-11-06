@@ -75,6 +75,13 @@ class MenuSecoesService
                 ],
             ],
             [
+                'slug' => 'portal',
+                'titulo' => 'Portal',
+                'cards' => [
+                    ['Portal Familiar', 'fas fa-home', 'portal.index', 'Boletim e frequência dos alunos vinculados', '#0891b2'],
+                ],
+            ],
+            [
                 'slug' => 'documentos',
                 'titulo' => 'Documentos',
                 'cards' => [

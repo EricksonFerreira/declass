@@ -430,6 +430,12 @@ return [
                     'can' => 'responsavel.index',
                     'icon' => 'fas fa-user-friends',
                 ],
+                [
+                    'text' => 'Portal Familiar',
+                    'route' => 'portal.index',
+                    'can' => 'portal.index',
+                    'icon' => 'fas fa-home',
+                ],
             ],
         ],
 

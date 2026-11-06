@@ -243,16 +243,19 @@ class PerfisEscolaresSeeder extends Seeder
         'aluno' => [
             ...self::BASE,
             'menu.*', 'perfil.*',
+            'portal.*',
         ],
 
         'responsavel_legal' => [
             ...self::BASE,
             'menu.*', 'perfil.*',
+            'portal.*',
         ],
 
         'responsavel_financeiro' => [
             ...self::BASE,
             'menu.*', 'perfil.*',
+            'portal.*',
         ],
 
         // Baseline interno: usuario generico com acesso apenas as
