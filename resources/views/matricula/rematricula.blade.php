@@ -134,6 +134,9 @@
                                         <td>
                                             @if($matricula->planoMensalidade)
                                                 <span class="badge badge-info">{{ $matricula->planoMensalidade->nome }}</span>
+                                                @if($matricula->bolsa_percentual)
+                                                    <br><small class="text-success">bolsa {{ rtrim(rtrim(number_format($matricula->bolsa_percentual, 2, ',', ''), '0'), ',') }}%</small>
+                                                @endif
                                             @else
                                                 <span class="text-muted">—</span>
                                             @endif

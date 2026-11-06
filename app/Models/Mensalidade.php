@@ -22,12 +22,16 @@ class Mensalidade extends Model
         'data_pagamento',
         'forma_pagamento',
         'observacoes',
+        'lembrete_a_vencer_em',
+        'lembrete_vencida_em',
     ];
 
     protected $casts = [
         'valor' => 'float',
         'vencimento' => 'date',
         'data_pagamento' => 'date',
+        'lembrete_a_vencer_em' => 'datetime',
+        'lembrete_vencida_em' => 'datetime',
     ];
 
     public const STATUS = [

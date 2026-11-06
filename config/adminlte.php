@@ -636,6 +636,24 @@ return [
                     'can' => 'plano_mensalidade.index',
                     'icon' => 'fas fa-tags',
                 ],
+                [
+                    'text' => 'Contas a Pagar',
+                    'route' => 'despesa.index',
+                    'can' => 'despesa.index',
+                    'icon' => 'fas fa-file-invoice-dollar',
+                ],
+                [
+                    'text' => 'Fluxo de Caixa',
+                    'route' => 'fluxo_caixa.index',
+                    'can' => 'fluxo_caixa.index',
+                    'icon' => 'fas fa-chart-line',
+                ],
+                [
+                    'text' => 'DRE',
+                    'route' => 'dre.index',
+                    'can' => 'dre.index',
+                    'icon' => 'fas fa-balance-scale',
+                ],
             ],
         ],
 

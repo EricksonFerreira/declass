@@ -212,11 +212,17 @@ class MensalidadeService extends AbstractBaseService
                     continue;
                 }
 
+                $valorPlano = (float) ($matricula->planoMensalidade?->valor ?? 0);
+                $desconto = (float) ($matricula->bolsa_percentual ?? 0);
+                $valor = $desconto > 0
+                    ? round($valorPlano * (1 - min($desconto, 100) / 100), 2)
+                    : $valorPlano;
+
                 Mensalidade::create([
                     'matricula_id' => $matricula->id,
                     'plano_mensalidade_id' => $matricula->plano_mensalidade_id,
                     'competencia' => $competencia,
-                    'valor' => $matricula->planoMensalidade?->valor ?? 0,
+                    'valor' => $valor,
                     'vencimento' => $vencimento,
                     'status' => 'pendente',
                 ]);

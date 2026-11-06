@@ -122,6 +122,11 @@
                                         </form>
                                     @endcan
                                 @endif
+                                @if($mensalidade->status === 'paga')
+                                    @can('mensalidade.recibo')
+                                        <a href="{{ route('mensalidade.recibo', $mensalidade->id) }}" class="btn btn-xs btn-outline-primary" title="Recibo de pagamento"><i class="fa fa-file-invoice"></i></a>
+                                    @endcan
+                                @endif
                                 @can('mensalidade.edit')
                                     <a href="{{ route('mensalidade.edit', $mensalidade->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                                 @endcan

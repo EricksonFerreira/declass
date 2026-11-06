@@ -31,6 +31,7 @@ class StoreMatriculaRequest extends FormRequest
                 'nullable', 'integer',
                 Rule::exists('planos_mensalidade', 'id')->where('empresa_id', $empresaId),
             ],
+            'bolsa_percentual' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'numero_chamada' => [
                 'nullable', 'integer', 'min:1', 'max:999',
                 Rule::unique('matriculas', 'numero_chamada')

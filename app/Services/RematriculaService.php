@@ -144,6 +144,7 @@ class RematriculaService
             'numero_chamada' => $numeroChamada,
             'data_matricula' => now()->toDateString(),
             'plano_mensalidade_id' => $origem->plano_mensalidade_id,
+            'bolsa_percentual' => $origem->bolsa_percentual,
             'observacoes' => "Rematrícula — origem: matrícula #{$origem->id} (ano letivo {$origem->ano_letivo_id}).",
         ]);
 

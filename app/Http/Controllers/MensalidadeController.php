@@ -26,6 +26,7 @@ class MensalidadeController extends BaseController
         $this->middleware('can:mensalidade.edit')->only(['edit', 'update', 'baixar']);
         $this->middleware('can:mensalidade.destroy')->only('destroy');
         $this->middleware('can:mensalidade.gerar')->only('gerar');
+        $this->middleware('can:mensalidade.recibo')->only('recibo');
     }
 
     public function index(Request $request)
@@ -111,6 +112,23 @@ class MensalidadeController extends BaseController
         }
 
         return back()->with('success', 'Mensalidade baixada com sucesso.');
+    }
+
+    /** Recibo de pagamento em PDF — somente mensalidades baixadas. */
+    public function recibo($id)
+    {
+        $mensalidade = $this->service->getById($id, [
+            'matricula.aluno.pessoa', 'matricula.turma.escola', 'matricula.turma.anoLetivo',
+            'planoMensalidade',
+        ]);
+        abort_if(! $mensalidade, 404);
+        abort_if($mensalidade->status !== 'paga', 404, 'Recibo disponível apenas para mensalidades pagas.');
+
+        return app(\App\Services\PdfService::class)->download(
+            'mensalidade.recibo-pdf',
+            ['mensalidade' => $mensalidade],
+            'recibo-mensalidade-'.$mensalidade->id.'.pdf'
+        );
     }
 
     /** Gera mensalidades em lote para uma competencia. */

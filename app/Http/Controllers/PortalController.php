@@ -87,6 +87,33 @@ class PortalController extends Controller
     }
 
     /**
+     * Recibo de pagamento da mensalidade: apenas se a cobranca
+     * pertence a um aluno vinculado a conta logada.
+     */
+    public function reciboMensalidade($id)
+    {
+        $alunos = $this->alunosDoUsuario(auth()->user());
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $mensalidade = \App\Models\Mensalidade::query()
+            ->whereHas('matricula', fn ($q) => $q->whereIn('aluno_id', $alunos->pluck('id')))
+            ->with([
+                'matricula.aluno.pessoa', 'matricula.turma.escola',
+                'matricula.turma.anoLetivo', 'planoMensalidade',
+            ])
+            ->findOrFail($id);
+
+        abort_if($mensalidade->status !== 'paga', 404, 'Recibo disponível apenas para mensalidades pagas.');
+
+        return app(\App\Services\PdfService::class)->download(
+            'mensalidade.recibo-pdf',
+            ['mensalidade' => $mensalidade],
+            'recibo-mensalidade-'.$mensalidade->id.'.pdf'
+        );
+    }
+
+    /**
      * Avisos/comunicados das escolas dos alunos vinculados:
      * gerais da escola + direcionados as turmas em que estao.
      */

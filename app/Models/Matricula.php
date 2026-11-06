@@ -25,6 +25,7 @@ class Matricula extends Model
         'ano_letivo_id',
         'status',
         'plano_mensalidade_id',
+        'bolsa_percentual',
         'numero_chamada',
         'data_matricula',
         'data_saida',
@@ -33,6 +34,7 @@ class Matricula extends Model
 
     protected $casts = [
         'numero_chamada' => 'integer',
+        'bolsa_percentual' => 'float',
         'data_matricula' => 'date',
         'data_saida' => 'date',
     ];

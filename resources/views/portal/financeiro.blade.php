@@ -33,6 +33,7 @@
                         <th class="text-right">Valor</th>
                         <th>Vencimento</th>
                         <th>Status</th>
+                        <th class="text-right"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -48,9 +49,14 @@
                                 @php $cor = ['pendente' => 'warning', 'vencida' => 'danger', 'paga' => 'success', 'cancelada' => 'secondary'][$situacao] ?? 'secondary'; @endphp
                                 <span class="badge badge-{{ $cor }}">{{ ucfirst($situacao) }}</span>
                             </td>
+                            <td class="text-right">
+                                @if($c->status === 'paga')
+                                    <a href="{{ route('portal.mensalidade.recibo', $c->id) }}" class="btn btn-xs btn-outline-primary" title="Recibo de pagamento"><i class="fa fa-file-invoice"></i></a>
+                                @endif
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center text-muted">Nenhuma mensalidade registrada.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted">Nenhuma mensalidade registrada.</td></tr>
                     @endforelse
                 </tbody>
             </table>

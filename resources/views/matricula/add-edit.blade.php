@@ -52,6 +52,9 @@
                 <div class="col-md-3">
                     <x-form-select name="plano_mensalidade_id" label="Plano de mensalidade" :options="$planos ?? []" :selected="old('plano_mensalidade_id', $matricula->plano_mensalidade_id ?? '')" placeholder="Sem plano" />
                 </div>
+                <div class="col-md-3">
+                    <x-form-input name="bolsa_percentual" type="number" label="Bolsa / desconto (%)" :value="old('bolsa_percentual', $matricula->bolsa_percentual ?? '')" min="0" max="100" step="0.01" placeholder="0" />
+                </div>
             </div>
 
             <div class="row">
