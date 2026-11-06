@@ -27,6 +27,10 @@ class StoreMatriculaRequest extends FormRequest
                 Rule::exists('turmas', 'id')->where('empresa_id', $empresaId),
             ],
             'status' => ['nullable', Rule::in(array_keys(Matricula::STATUS))],
+            'plano_mensalidade_id' => [
+                'nullable', 'integer',
+                Rule::exists('planos_mensalidade', 'id')->where('empresa_id', $empresaId),
+            ],
             'numero_chamada' => [
                 'nullable', 'integer', 'min:1', 'max:999',
                 Rule::unique('matriculas', 'numero_chamada')

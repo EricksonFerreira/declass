@@ -170,6 +170,11 @@ class MatriculaController extends BaseController implements FiltroInterface, Res
             'alunos' => $this->alunosOpcoes(),
             'turmas' => $this->turmasOpcoes(),
             'status' => Matricula::STATUS,
+            'planos' => \App\Models\PlanoMensalidade::query()
+                ->where('ativo', 'S')
+                ->orderBy('nome')
+                ->pluck('nome', 'id')
+                ->all(),
         ];
     }
 

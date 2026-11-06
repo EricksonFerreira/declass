@@ -439,6 +439,26 @@ return [
             ],
         ],
 
+        // FINANCEIRO
+        [
+            'text' => 'Financeiro',
+            'icon' => 'fas fa-hand-holding-usd',
+            'submenu' => [
+                [
+                    'text' => 'Mensalidades',
+                    'route' => 'mensalidade.index',
+                    'can' => 'mensalidade.index',
+                    'icon' => 'fas fa-file-invoice-dollar',
+                ],
+                [
+                    'text' => 'Planos de Mensalidade',
+                    'route' => 'plano_mensalidade.index',
+                    'can' => 'plano_mensalidade.index',
+                    'icon' => 'fas fa-tags',
+                ],
+            ],
+        ],
+
         // DOCUMENTOS
         [
             'text' => 'Documentos',

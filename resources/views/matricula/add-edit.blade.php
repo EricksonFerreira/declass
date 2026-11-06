@@ -49,6 +49,9 @@
                 <div class="col-md-3">
                     <x-form-input name="data_saida" type="date" label="Data de saída" :value="old('data_saida', isset($matricula) && $matricula->data_saida ? $matricula->data_saida->format('Y-m-d') : '')" />
                 </div>
+                <div class="col-md-3">
+                    <x-form-select name="plano_mensalidade_id" label="Plano de mensalidade" :options="$planos ?? []" :selected="old('plano_mensalidade_id', $matricula->plano_mensalidade_id ?? '')" placeholder="Sem plano" />
+                </div>
             </div>
 
             <div class="row">

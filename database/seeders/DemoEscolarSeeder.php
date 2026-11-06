@@ -58,6 +58,9 @@ use Illuminate\Support\Facades\Hash;
  *                                                 primeiros alunos
  *  aluno@escolademo.test          aluno          — PORTAL: ve o
  *                                                 proprio boletim
+ *  financeiro@escolademo.test     financeiro     — mensalidades,
+ *                                                 planos, baixas e
+ *                                                 inadimplencia
  *
  * Superadmin da plataforma (slug diferente):
  *  slug:   declass
@@ -87,19 +90,21 @@ class DemoEscolarSeeder extends Seeder
 
         app(EmpresaContext::class)->setEmpresaId($empresa->id);
 
-        if (Aluno::query()->where('empresa_id', $empresa->id)->exists()) {
-            $this->command->info('Tenant demo ja possui alunos — nada a fazer.');
-
-            return;
-        }
-
         $this->call(PerfisEscolaresSeeder::class);
 
         $escola = Escola::query()->where('empresa_id', $empresa->id)->first();
         $usuarios = $this->usuarios($empresa);
-        $this->estruturar($empresa, $escola);
-        [$alunos, $responsaveis] = $this->pessoas($empresa, $escola, $usuarios);
-        $this->operacao($empresa, $usuarios, $alunos);
+
+        // Massa academica: so popula se o tenant ainda nao tem alunos.
+        if (! Aluno::query()->where('empresa_id', $empresa->id)->exists()) {
+            $this->estruturar($empresa, $escola);
+            [$alunos] = $this->pessoas($empresa, $escola, $usuarios);
+            $this->operacao($empresa, $usuarios, $alunos);
+        }
+
+        // Financeiro: idempotente — pode ser reexecutado sobre a
+        // massa existente para gerar planos e mensalidades.
+        $this->financeiro($empresa);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -225,6 +230,7 @@ class DemoEscolarSeeder extends Seeder
             'coordenador' => $criar('coordenador@escolademo.test', 'Coordenadora Paula Reis', 'coordenador_pedagogico'),
             'responsavel' => $criar('responsavel@escolademo.test', 'Responsável Demo', 'responsavel_legal'),
             'aluno' => $criar('aluno@escolademo.test', 'Aluno Demo Portal', 'aluno'),
+            'financeiro' => $criar('financeiro@escolademo.test', 'Financeiro Demo', 'financeiro'),
         ];
     }
 
@@ -442,6 +448,71 @@ class DemoEscolarSeeder extends Seeder
                         );
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Planos de mensalidade + cobrancas dos ultimos meses.
+     * Idempotente: firstOrCreate por (matricula, competencia).
+     */
+    private function financeiro(Empresa $empresa): void
+    {
+        $integral = \App\Models\PlanoMensalidade::firstOrCreate(
+            ['empresa_id' => $empresa->id, 'nome' => 'Mensalidade Integral'],
+            ['valor' => 850.00, 'descricao' => 'Turno integral, materiais inclusos', 'ativo' => 'S']
+        );
+        $parcial = \App\Models\PlanoMensalidade::firstOrCreate(
+            ['empresa_id' => $empresa->id, 'nome' => 'Mensalidade Parcial'],
+            ['valor' => 550.00, 'descricao' => 'Meio periodo', 'ativo' => 'S']
+        );
+
+        // Atribui plano as matriculas ativas que ainda nao tem
+        $matriculas = Matricula::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('status', 'ativa')
+            ->get();
+
+        foreach ($matriculas as $i => $matricula) {
+            if (! $matricula->plano_mensalidade_id) {
+                $matricula->update(['plano_mensalidade_id' => ($i % 2 === 0 ? $integral : $parcial)->id]);
+                $matricula->load('planoMensalidade');
+            }
+        }
+
+        // Competencias: mes anterior (metade paga, metade vencida)
+        // e mes atual (todas pendentes)
+        $competencias = [
+            now()->subMonth()->format('Y-m') => now()->subMonth()->startOfMonth()->addDays(9)->toDateString(),
+            now()->format('Y-m') => now()->addDays(5)->toDateString(),
+        ];
+
+        foreach ($competencias as $competencia => $vencimento) {
+            $ehMesAnterior = $competencia === now()->subMonth()->format('Y-m');
+
+            foreach ($matriculas as $i => $matricula) {
+                $plano = $matricula->planoMensalidade;
+                if (! $plano) {
+                    continue;
+                }
+
+                $paga = $ehMesAnterior && $i % 2 === 0;
+
+                \App\Models\Mensalidade::firstOrCreate(
+                    [
+                        'empresa_id' => $empresa->id,
+                        'matricula_id' => $matricula->id,
+                        'competencia' => $competencia,
+                    ],
+                    [
+                        'plano_mensalidade_id' => $plano->id,
+                        'valor' => $plano->valor,
+                        'vencimento' => $vencimento,
+                        'status' => $paga ? 'paga' : 'pendente',
+                        'data_pagamento' => $paga ? \Illuminate\Support\Carbon::parse($vencimento)->addDays(2)->toDateString() : null,
+                        'forma_pagamento' => $paga ? fake()->randomElement(['pix', 'boleto', 'cartao_credito']) : null,
+                    ]
+                );
             }
         }
     }

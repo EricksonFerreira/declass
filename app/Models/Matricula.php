@@ -6,6 +6,7 @@ use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -23,6 +24,7 @@ class Matricula extends Model
         'turma_id',
         'ano_letivo_id',
         'status',
+        'plano_mensalidade_id',
         'numero_chamada',
         'data_matricula',
         'data_saida',
@@ -60,6 +62,16 @@ class Matricula extends Model
     public function anoLetivo(): BelongsTo
     {
         return $this->belongsTo(AnoLetivo::class, 'ano_letivo_id');
+    }
+
+    public function planoMensalidade(): BelongsTo
+    {
+        return $this->belongsTo(PlanoMensalidade::class, 'plano_mensalidade_id');
+    }
+
+    public function mensalidades(): HasMany
+    {
+        return $this->hasMany(Mensalidade::class, 'matricula_id');
     }
 
     public function estaAtiva(): bool

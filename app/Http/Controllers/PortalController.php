@@ -59,6 +59,30 @@ class PortalController extends Controller
     }
 
     /**
+     * Financeiro do portal: mensalidades dos alunos vinculados,
+     * agrupadas por aluno com situacao de cada cobranca.
+     */
+    public function financeiro()
+    {
+        $alunos = $this->alunosDoUsuario(auth()->user());
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $mensalidades = \App\Models\Mensalidade::query()
+            ->whereHas('matricula', fn ($q) => $q->whereIn('aluno_id', $alunos->pluck('id')))
+            ->with(['matricula.aluno.pessoa', 'matricula.turma', 'planoMensalidade'])
+            ->orderBy('competencia', 'desc')
+            ->get()
+            ->groupBy(fn ($m) => $m->matricula->aluno_id);
+
+        return view('portal.financeiro', [
+            'titulo' => 'Financeiro',
+            'alunos' => $alunos,
+            'mensalidades' => $mensalidades,
+        ]);
+    }
+
+    /**
      * Alunos acessiveis pela conta: filhos de responsaveis vinculados
      * + o proprio aluno quando a conta e de aluno.
      */

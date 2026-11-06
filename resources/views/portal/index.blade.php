@@ -24,10 +24,11 @@
                         <p class="text-muted mb-0">Sem matrícula ativa no momento.</p>
                     @endif
                 </div>
-                <div class="card-footer">
+                <div class="card-footer d-flex" style="gap:.4rem;">
                     @if($matricula)
                         <a href="{{ route('portal.aluno', $aluno->id) }}" class="btn btn-primary btn-sm">Ver boletim</a>
                     @endif
+                    <a href="{{ route('portal.financeiro') }}" class="btn btn-outline-secondary btn-sm">Financeiro</a>
                 </div>
             </div>
         </div>

@@ -75,6 +75,14 @@ class MenuSecoesService
                 ],
             ],
             [
+                'slug' => 'financeiro',
+                'titulo' => 'Financeiro',
+                'cards' => [
+                    ['Mensalidades', 'fas fa-file-invoice-dollar', 'mensalidade.index', 'Cobranças, baixas e inadimplência', '#059669'],
+                    ['Planos de Mensalidade', 'fas fa-tags', 'plano_mensalidade.index', 'Tabelas de valores por perfil', '#d97706'],
+                ],
+            ],
+            [
                 'slug' => 'portal',
                 'titulo' => 'Portal',
                 'cards' => [
