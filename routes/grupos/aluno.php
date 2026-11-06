@@ -13,6 +13,10 @@ Route::prefix('aluno')->name('aluno.')->group(function () {
     Route::get('{aluno}/historico/pdf', [AlunoController::class, 'historicoPdf'])->name('historico.pdf');
     Route::get('{aluno}/historico', [AlunoController::class, 'historico'])->name('historico');
 
+    // Historico escolar formal: grade por ano + PDF cumulativo
+    Route::get('{aluno}/historico/escolar/pdf', [AlunoController::class, 'historicoEscolarPdf'])->name('historico.escolar.pdf');
+    Route::get('{aluno}/historico/escolar/{matricula}', [AlunoController::class, 'historicoEscolar'])->name('historico.escolar');
+
     // Declaracao de matricula em PDF
     Route::get('{aluno}/declaracao', [AlunoController::class, 'declaracao'])->name('declaracao');
 

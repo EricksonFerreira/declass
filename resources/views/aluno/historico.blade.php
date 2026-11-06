@@ -47,6 +47,7 @@
             </div>
             <div class="card-footer">
                 <a href="{{ route('aluno.show', $aluno->id) }}" class="btn btn-secondary btn-sm">Cadastro</a>
+                <a href="{{ route('aluno.historico.escolar.pdf', $aluno->id) }}" class="btn btn-primary btn-sm" target="_blank"><i class="fa fa-graduation-cap"></i> Histórico escolar (PDF)</a>
                 <a href="{{ route('aluno.historico.pdf', $aluno->id) }}" class="btn btn-danger btn-sm" target="_blank"><i class="fa fa-file-pdf"></i> Exportar PDF</a>
             </div>
         </div>
@@ -125,6 +126,7 @@
                             <th>Ingresso</th>
                             <th>Frequência</th>
                             <th>Média</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -158,10 +160,15 @@
                                         <span class="text-muted">—</span>
                                     @endif
                                 </td>
+                                <td class="text-nowrap">
+                                    <a href="{{ route('aluno.historico.escolar', [$aluno->id, $m->id]) }}" class="btn btn-outline-primary btn-sm" title="Ver grade de notas do ano">
+                                        <i class="fa fa-list-alt"></i> Ano
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">
+                                <td colspan="9" class="text-center text-muted py-4">
                                     <i class="fas fa-graduation-cap fa-2x mb-2 d-block"></i>
                                     Nenhuma matrícula registrada para este aluno.
                                 </td>

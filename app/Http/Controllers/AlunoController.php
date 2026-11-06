@@ -30,7 +30,7 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
         $this->nomeFiltro = 'aluno';
 
         $this->middleware('can:aluno.index')->only('index');
-        $this->middleware('can:aluno.show')->only(['show', 'declaracao', 'certificado', 'historico', 'historicoPdf']);
+        $this->middleware('can:aluno.show')->only(['show', 'declaracao', 'certificado', 'historico', 'historicoPdf', 'historicoEscolar', 'historicoEscolarPdf']);
         $this->middleware('can:aluno.create')->only('create');
         $this->middleware('can:aluno.store')->only('store');
         $this->middleware('can:aluno.edit')->only('edit');
@@ -124,6 +124,58 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
 
         return view('aluno.historico', array_merge(compact('aluno', 'breadcrumb'), $dados))
             ->with('titulo', 'Histórico — '.($aluno->nome ?? 'Aluno'));
+    }
+
+    /**
+     * Historico escolar de UM ano letivo: grade de disciplinas
+     * x periodos com medias e frequencia da matricula.
+     */
+    public function historicoEscolar($id, $matriculaId)
+    {
+        $aluno = $this->alunoService->getById($id, ['pessoa', 'escola']);
+        abort_if(! $aluno, 404, 'Aluno não encontrado.');
+
+        $matricula = $aluno->matriculas()->whereKey($matriculaId)->first();
+        abort_if(! $matricula, 404, 'Matrícula não encontrada para este aluno.');
+
+        $dados = app(\App\Services\HistoricoEscolarService::class)->dadosMatricula($matricula);
+
+        $ano = $dados['ano_letivo']?->ano ?? '—';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCustom([
+            ['Home', route('home')],
+            ['Alunos', route('aluno.index')],
+            [$aluno->nome ?? 'Aluno', route('aluno.show', $aluno->id)],
+            ['Histórico', route('aluno.historico', $aluno->id)],
+            ["Ano {$ano}", null],
+        ]);
+
+        return view('aluno.historico-escolar', array_merge(compact('aluno', 'breadcrumb'), $dados))
+            ->with('titulo', "Histórico {$ano} — ".($aluno->nome ?? 'Aluno'));
+    }
+
+    /**
+     * Historico escolar completo (todas as matriculas) em PDF —
+     * documento formal acumulado. ?matricula= restringe a um ano.
+     */
+    public function historicoEscolarPdf($id, \Illuminate\Http\Request $request)
+    {
+        $aluno = $this->alunoService->getById($id, ['pessoa', 'escola']);
+        abort_if(! $aluno, 404, 'Aluno não encontrado.');
+
+        $dados = app(\App\Services\HistoricoEscolarService::class)->dadosAluno($aluno);
+
+        $matriculaId = $request->integer('matricula') ?: null;
+        if ($matriculaId) {
+            $dados['anos'] = $dados['anos']->where('matricula.id', $matriculaId)->values();
+            abort_if($dados['anos']->isEmpty(), 404, 'Matrícula não encontrada para este aluno.');
+        }
+
+        return app(\App\Services\PdfService::class)->download(
+            'aluno.historico-escolar-pdf',
+            $dados,
+            'historico-escolar-'.\Illuminate\Support\Str::slug($aluno->nome ?? 'aluno').'.pdf',
+            'a4', 'landscape'
+        );
     }
 
     /**
