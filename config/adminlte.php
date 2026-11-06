@@ -494,6 +494,12 @@ return [
                     'can' => 'aviso.index',
                     'icon' => 'fas fa-bullhorn',
                 ],
+                [
+                    'text' => 'Agenda',
+                    'route' => 'evento.index',
+                    'can' => 'evento.index',
+                    'icon' => 'fas fa-calendar-alt',
+                ],
             ],
         ],
 

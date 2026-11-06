@@ -34,6 +34,7 @@
                     <a href="{{ route('portal.tarefas') }}" class="btn btn-outline-primary btn-sm">Tarefas</a>
                     <a href="{{ route('portal.emprestimos') }}" class="btn btn-outline-warning btn-sm">Empréstimos</a>
                     <a href="{{ route('portal.avisos') }}" class="btn btn-outline-info btn-sm">Avisos</a>
+                    <a href="{{ route('portal.agenda') }}" class="btn btn-outline-dark btn-sm">Agenda</a>
                 </div>
             </div>
         </div>

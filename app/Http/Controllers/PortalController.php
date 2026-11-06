@@ -236,6 +236,25 @@ class PortalController extends Controller
     }
 
     /**
+     * Agenda escolar: eventos com publico "todos" das escolas
+     * onde os alunos vinculados estudam (ou da rede toda).
+     */
+    public function agenda()
+    {
+        $alunos = $this->alunosDoUsuario(auth()->user());
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $eventos = app(\App\Services\EventoService::class)->eventosParaAlunos($alunos);
+
+        return view('portal.agenda', [
+            'titulo' => 'Agenda Escolar',
+            'alunos' => $alunos,
+            'eventos' => $eventos,
+        ]);
+    }
+
+    /**
      * Alunos acessiveis pela conta: filhos de responsaveis vinculados
      * + o proprio aluno quando a conta e de aluno.
      */

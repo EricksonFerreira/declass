@@ -175,6 +175,7 @@ class DemoEscolarSeeder extends Seeder
         $this->ocorrencias($empresa);
         $this->planosAtendimento($empresa);
         $this->tarefas($empresa, $usuarios);
+        $this->agenda($empresa, array_values($escolas), $usuarios);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -1314,6 +1315,80 @@ class DemoEscolarSeeder extends Seeder
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Agenda escolar: eventos das proximas semanas por unidade +
+     * alguns eventos da rede toda. Idempotente por
+     * empresa+escola+titulo+data_inicio.
+     */
+    private function agenda(Empresa $empresa, array $escolas, array $usuarios): void
+    {
+        $autorId = $usuarios['secretaria']->id ?? null;
+
+        $modelos = [
+            ['tipo' => 'reuniao', 'titulo' => 'Reunião de pais e mestres', 'publico' => 'todos', 'hora' => '19:00'],
+            ['tipo' => 'evento', 'titulo' => 'Semana da Leitura', 'publico' => 'todos', 'hora' => '08:00'],
+            ['tipo' => 'evento', 'titulo' => 'Feira de Ciências', 'publico' => 'todos', 'hora' => '09:00'],
+            ['tipo' => 'avaliacao', 'titulo' => 'Provas do bimestre', 'publico' => 'todos', 'hora' => null],
+            ['tipo' => 'feriado', 'titulo' => 'Ponto facultativo', 'publico' => 'todos', 'hora' => null],
+            ['tipo' => 'prazo', 'titulo' => 'Entrega de documentos de matrícula', 'publico' => 'interno', 'hora' => null],
+            ['tipo' => 'evento', 'titulo' => 'Reunião pedagógica interna', 'publico' => 'interno', 'hora' => '14:00'],
+            ['tipo' => 'formatura', 'titulo' => 'Ensaios de formatura', 'publico' => 'todos', 'hora' => '18:00'],
+        ];
+
+        foreach ($escolas as $escola) {
+            foreach (range(0, 11) as $i) {
+                $modelo = $modelos[$i % count($modelos)];
+                // Datas deterministicos (sem random) para idempotencia
+                $data = now()->addDays($i * 4);
+                if ($data->isWeekend()) {
+                    $data->addDays(2);
+                }
+
+                \App\Models\Evento::firstOrCreate(
+                    [
+                        'empresa_id' => $empresa->id,
+                        'escola_id' => $escola->id,
+                        'titulo' => $modelo['titulo'],
+                        'data_inicio' => $data->toDateString(),
+                    ],
+                    [
+                        'user_id' => $autorId,
+                        'descricao' => fake()->optional(0.5)->sentence(12),
+                        'tipo' => $modelo['tipo'],
+                        'data_fim' => $modelo['tipo'] === 'formatura' ? $data->copy()->addDay()->toDateString() : null,
+                        'hora_inicio' => $modelo['hora'],
+                        'hora_fim' => $modelo['hora'] ? \Carbon\Carbon::parse($modelo['hora'])->addHours(2)->format('H:i') : null,
+                        'local' => fake()->randomElement(['Auditório', 'Quadra poliesportiva', 'Sala dos Professores', null]),
+                        'publico' => $modelo['publico'],
+                        'status' => 'agendado',
+                    ]
+                );
+            }
+        }
+
+        // Eventos da rede toda (sem escola)
+        foreach ([
+            ['Congresso de Inovação Educacional', 'evento', 'todos', 20],
+            ['Início do ano letivo', 'evento', 'todos', 5],
+            ['Reunião de diretores', 'reuniao', 'interno', 12],
+        ] as [$titulo, $tipo, $publico, $dias]) {
+            \App\Models\Evento::firstOrCreate(
+                [
+                    'empresa_id' => $empresa->id,
+                    'escola_id' => null,
+                    'titulo' => $titulo,
+                    'data_inicio' => now()->addDays($dias)->toDateString(),
+                ],
+                [
+                    'user_id' => $autorId,
+                    'tipo' => $tipo,
+                    'publico' => $publico,
+                    'status' => 'agendado',
+                ]
+            );
         }
     }
 }
