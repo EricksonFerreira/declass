@@ -24,6 +24,7 @@ class EntregaTarefa extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'tarefa_id',
         'matricula_id',
         'status',

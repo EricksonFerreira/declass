@@ -68,11 +68,8 @@
             </div>
 
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <x-form-select name="escolas[]" label="Escolas / unidades" :options="$escolasOpcoes ?? []" :selected="old('escolas', $escolasSelecionadas ?? [])" multiple />
-                </div>
-                <div class="col-md-6">
-                    <x-form-select name="organizacoes[]" label="Organizações / redes" :options="$organizacoesOpcoes ?? []" :selected="old('organizacoes', $organizacoesSelecionadas ?? [])" multiple />
                 </div>
             </div>
 

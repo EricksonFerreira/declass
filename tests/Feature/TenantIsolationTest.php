@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Escola;
-use App\Models\Organizacao;
 use App\Models\User;
 use App\Support\EmpresaContext;
 
@@ -19,18 +18,19 @@ test('tenant scope isolates escolas between empresas', function () {
         ->and($escolas->first()->nome)->toBe('Escola A');
 });
 
-test('tenant scope isolates organizacoes between empresas', function () {
+test('tenant scope isola escolas entre empresas', function () {
+    // Organizacoes foram removidas do dominio: empresa -> escolas direto.
     $empresaA = tenant();
     $empresaB = tenant();
 
-    Organizacao::create(['empresa_id' => $empresaA->id, 'nome' => 'Rede A', 'tipo' => 'rede']);
-    Organizacao::create(['empresa_id' => $empresaB->id, 'nome' => 'Rede B', 'tipo' => 'rede']);
+    Escola::create(['empresa_id' => $empresaA->id, 'nome' => 'Escola A2']);
+    Escola::create(['empresa_id' => $empresaB->id, 'nome' => 'Escola B2']);
 
     app(EmpresaContext::class)->setEmpresaId($empresaB->id);
 
-    $organizacoes = Organizacao::all();
-    expect($organizacoes)->toHaveCount(1)
-        ->and($organizacoes->first()->nome)->toBe('Rede B');
+    $escolas = Escola::all();
+    expect($escolas)->toHaveCount(1)
+        ->and($escolas->first()->nome)->toBe('Escola B2');
 });
 
 test('tenant scope isolates users between empresas', function () {

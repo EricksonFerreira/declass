@@ -17,6 +17,7 @@ class Nota extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'avaliacao_id',
         'matricula_id',
         'nota',

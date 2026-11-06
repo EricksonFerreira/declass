@@ -34,6 +34,7 @@ class PermissaoRotaService
         'menu.',
         'cron.',
         'matricula_publica.',
+        'escola_context.',
     ];
 
     /**

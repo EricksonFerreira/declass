@@ -187,11 +187,6 @@ class DemoEscolarSeeder extends Seeder
     /** Unidades da rede: reaproveita a Unidade Central do DatabaseSeeder. */
     private function escolas(Empresa $empresa): array
     {
-        $organizacaoId = DB::table('organizacoes')
-            ->where('empresa_id', $empresa->id)
-            ->where('nome', 'Rede Escola Demo')
-            ->value('id');
-
         $defs = [
             'unidade-central' => ['nome' => 'Unidade Central', 'cidade' => 'São Paulo', 'capacidade' => 1200],
             'unidade-norte' => ['nome' => 'Unidade Norte', 'cidade' => 'São Paulo', 'capacidade' => 900],
@@ -203,7 +198,6 @@ class DemoEscolarSeeder extends Seeder
             $escolas[$slug] = Escola::query()->firstOrCreate(
                 ['empresa_id' => $empresa->id, 'slug' => $slug],
                 [
-                    'organizacao_id' => $organizacaoId,
                     'nome' => $d['nome'],
                     'email' => $slug.'@escolademo.test',
                     'cidade' => $d['cidade'],

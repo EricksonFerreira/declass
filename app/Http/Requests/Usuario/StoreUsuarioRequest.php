@@ -77,11 +77,6 @@ class StoreUsuarioRequest extends FormRequest
                 'integer',
                 Rule::exists('escolas', 'id')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
-            'organizacoes' => 'nullable|array',
-            'organizacoes.*' => [
-                'integer',
-                Rule::exists('organizacoes', 'id')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
-            ],
         ];
     }
 
@@ -119,7 +114,6 @@ class StoreUsuarioRequest extends FormRequest
             'role_id' => 'perfil de acesso',
             'ativo' => 'ativo',
             'escolas' => 'escolas',
-            'organizacoes' => 'organizações',
         ];
     }
 }

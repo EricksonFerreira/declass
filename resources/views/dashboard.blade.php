@@ -8,7 +8,7 @@
 
 @section('content')
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div class="small-box bg-info">
             <div class="inner">
                 <h3>{{ \App\Models\Escola::count() }}</h3>
@@ -18,17 +18,7 @@
             <a href="{{ route('escola.index') }}" class="small-box-footer">Gerenciar <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="small-box bg-success">
-            <div class="inner">
-                <h3>{{ \App\Models\Organizacao::count() }}</h3>
-                <p>Organizações</p>
-            </div>
-            <div class="icon"><i class="fas fa-sitemap"></i></div>
-            <a href="{{ route('organizacao.index') }}" class="small-box-footer">Gerenciar <i class="fas fa-arrow-circle-right"></i></a>
-        </div>
-    </div>
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div class="small-box bg-warning">
             <div class="inner">
                 <h3>{{ \App\Models\User::count() }}</h3>

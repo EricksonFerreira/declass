@@ -331,12 +331,6 @@ return [
             'icon' => 'fas fa-school',
             'submenu' => [
                 [
-                    'text' => 'Organizações',
-                    'route' => 'organizacao.index',
-                    'can' => 'organizacao.index',
-                    'icon' => 'fas fa-sitemap',
-                ],
-                [
                     'text' => 'Escolas',
                     'route' => 'escola.index',
                     'can' => 'escola.index',

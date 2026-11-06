@@ -20,6 +20,7 @@ class ParadaTransporte extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'rota_id',
         'nome',
         'ordem',

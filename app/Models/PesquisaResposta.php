@@ -12,6 +12,7 @@ class PesquisaResposta extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'pesquisa_id',
         'user_id',
         'aluno_id',

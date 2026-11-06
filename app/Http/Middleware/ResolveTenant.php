@@ -3,7 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Models\Empresa;
+use App\Models\Escola;
 use App\Support\EmpresaContext;
+use App\Support\EscolaContext;
 use App\Support\SchemaCache;
 use Closure;
 use Illuminate\Http\Request;
@@ -34,6 +36,7 @@ class ResolveTenant
         // via sessao (null = visao consolidada de todos os tenants).
         if ($user->isSuperAdmin()) {
             $empresaContext->setEmpresaId($this->resolveEmpresaIdParaSuperAdmin($request));
+            $this->resolverEscolaContexto($request, $empresaContext->empresaId());
 
             return $next($request);
         }
@@ -51,8 +54,43 @@ class ResolveTenant
         }
 
         $empresaContext->setEmpresaId((int) $empresaId);
+        $this->resolverEscolaContexto($request, (int) $empresaId);
 
         return $next($request);
+    }
+
+    /**
+     * Escola ativa da sessao (seletor do navbar): filtra todos os models
+     * com escola_id. So se aplica dentro de um tenant especifico — na
+     * visao consolidada do superadmin (empresa null) nao ha como saber
+     * a qual tenant a escola pertence.
+     */
+    private function resolverEscolaContexto(Request $request, ?int $empresaId): void
+    {
+        $escolaContext = app(EscolaContext::class);
+        $escolaContext->setEscolaId(null);
+
+        $escolaId = (int) $request->session()->get('escola_contexto_id', 0);
+
+        if ($escolaId <= 0 || $empresaId === null) {
+            return;
+        }
+
+        $existe = Escola::query()
+            ->whereKey($escolaId)
+            ->where('empresa_id', $empresaId)
+            ->exists();
+
+        // Usuario com vinculos em user_escolas so pode operar nas
+        // escolas atribuidas — protege contra sessao defasada.
+        $permitidas = auth()->user()?->escolasContextoIds();
+        if ($permitidas !== null && ! in_array($escolaId, $permitidas, true)) {
+            $existe = false;
+        }
+
+        if ($existe) {
+            $escolaContext->setEscolaId($escolaId);
+        }
     }
 
     /**

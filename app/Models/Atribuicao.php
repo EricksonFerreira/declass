@@ -21,6 +21,7 @@ class Atribuicao extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'turma_id',
         'disciplina_id',
         'user_id',

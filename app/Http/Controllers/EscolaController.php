@@ -7,7 +7,6 @@ use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Escola\StoreEscolaRequest;
 use App\Http\Requests\Escola\UpdateEscolaRequest;
 use App\Models\Escola;
-use App\Models\Organizacao;
 use App\Services\BreadcrumbService;
 use App\Services\EscolaService;
 use App\Traits\AtualizaFiltrosTrait;
@@ -46,7 +45,7 @@ class EscolaController extends BaseController implements FiltroInterface, Resour
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
         $escolas = $this->escolaService->getAllWithFiltersAndPagination(
-            $itensFiltered, $perPage, ['organizacao']
+            $itensFiltered, $perPage, ['empresa']
         );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Escolas', 'Gerenciar');
@@ -68,10 +67,9 @@ class EscolaController extends BaseController implements FiltroInterface, Resour
     public function create()
     {
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Escolas', 'escola.index', 'Criar', 'Gerenciar');
-        $organizacoes = $this->organizacoesOpcoes();
         $turnos = Escola::TURNOS;
 
-        return view('escola.add-edit', compact('breadcrumb', 'organizacoes', 'turnos'))
+        return view('escola.add-edit', compact('breadcrumb', 'turnos'))
             ->with('titulo', $this->titulo);
     }
 
@@ -84,7 +82,7 @@ class EscolaController extends BaseController implements FiltroInterface, Resour
 
     public function show($id)
     {
-        $escola = $this->escolaService->getById($id, ['organizacao', 'empresa', 'usuarios']);
+        $escola = $this->escolaService->getById($id, ['empresa', 'usuarios']);
         abort_if(! $escola, 404, 'Escola não encontrada.');
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Escolas', 'escola.index', $escola->nome);
@@ -98,10 +96,9 @@ class EscolaController extends BaseController implements FiltroInterface, Resour
         abort_if(! $escola, 404, 'Escola não encontrada.');
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Escolas', 'escola.index', "Editar: {$escola->nome}");
-        $organizacoes = $this->organizacoesOpcoes();
         $turnos = Escola::TURNOS;
 
-        return view('escola.add-edit', compact('escola', 'breadcrumb', 'organizacoes', 'turnos'))
+        return view('escola.add-edit', compact('escola', 'breadcrumb', 'turnos'))
             ->with('titulo', $this->titulo);
     }
 
@@ -160,12 +157,5 @@ class EscolaController extends BaseController implements FiltroInterface, Resour
     public function obterFiltrosSecundarios()
     {
         return [];
-    }
-
-    private function organizacoesOpcoes()
-    {
-        return Organizacao::query()
-            ->orderBy('nome')
-            ->pluck('nome', 'id');
     }
 }

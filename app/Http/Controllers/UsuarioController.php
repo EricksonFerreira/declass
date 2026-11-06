@@ -8,7 +8,6 @@ use App\Http\Requests\Usuario\StoreUsuarioRequest;
 use App\Http\Requests\Usuario\UpdatePasswordUsuarioRequest;
 use App\Http\Requests\Usuario\UpdateUsuarioRequest;
 use App\Models\Escola;
-use App\Models\Organizacao;
 use App\Models\User;
 use App\Services\BreadcrumbService;
 use App\Services\RegraService;
@@ -56,7 +55,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $usuarios = $this->usuarioService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['tipoUsuario', 'escolas', 'organizacoes']);
+        $usuarios = $this->usuarioService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['tipoUsuario', 'escolas']);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Usuários', 'Gerenciar');
         $filters = $this->obterFiltrosPrincipais();
@@ -91,7 +90,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     public function store(StoreUsuarioRequest $request)
     {
         try {
-            $data = $request->except(['confirmacao_senha', 'escolas', 'organizacoes']);
+            $data = $request->except(['confirmacao_senha', 'escolas']);
             $data['password'] = self::SENHA_PADRAO_ACESSO;
             $data['forcar_troca_senha'] = true;
             $data['email_verified_at'] = now();
@@ -192,7 +191,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
     public function edit($id)
     {
-        $usuario = $this->usuarioService->getById($id, ['escolas', 'organizacoes']);
+        $usuario = $this->usuarioService->getById($id, ['escolas']);
         abort_if(! $usuario, 403, 'Sem acesso a este usuario.');
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuários', 'usuario.index', "Editar: {$usuario->nome}", 'Gerenciar');
@@ -211,7 +210,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $usuario = $this->usuarioService->getById($id);
         abort_if(! $usuario, 403, 'Sem acesso para editar este usuario.');
 
-        $data = $request->except(['escolas', 'organizacoes']);
+        $data = $request->except(['escolas']);
         $this->usuarioService->updateUser($id, $data);
         $this->sincronizarVinculos($usuario, $request);
 
@@ -308,25 +307,22 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * Opcoes de vinculo (escolas/organizacoes) + ids ja marcados.
+     * Opcoes de vinculo de escolas + ids ja marcados.
      */
     private function opcoesVinculos(?User $usuario = null): array
     {
         return [
             'escolasOpcoes' => Escola::query()->orderBy('nome')->pluck('nome', 'id'),
-            'organizacoesOpcoes' => Organizacao::query()->orderBy('nome')->pluck('nome', 'id'),
             'escolasSelecionadas' => $usuario ? $usuario->escolas->pluck('id')->all() : [],
-            'organizacoesSelecionadas' => $usuario ? $usuario->organizacoes->pluck('id')->all() : [],
         ];
     }
 
     /**
-     * Sincroniza os vinculos N:N usuario <-> escolas/organizacoes.
+     * Sincroniza os vinculos N:N usuario <-> escolas.
      */
     private function sincronizarVinculos(User $usuario, Request $request): void
     {
         $usuario->escolas()->sync($request->input('escolas', []));
-        $usuario->organizacoes()->sync($request->input('organizacoes', []));
     }
 
     private function getFormMethodAndRoute($usuario = null)

@@ -18,7 +18,6 @@ class UpdateEscolaRequest extends FormRequest
         $escolaId = $this->route('escola');
 
         return [
-            'organizacao_id' => ['nullable', 'integer', Rule::exists('organizacoes', 'id')->where('empresa_id', $empresaId)],
             'nome' => ['required', 'string', 'max:255'],
             'cnpj' => ['nullable', 'string', 'max:18'],
             'email' => ['nullable', 'email', 'max:255'],

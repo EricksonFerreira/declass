@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed inicial do sistema escolar:
      *  - empresa/tenant demo
-     *  - organizacao + escola de exemplo
+     *  - escola de exemplo
      *  - superadmin da plataforma
      *  - administrador do tenant demo
      *  - todos os perfis escolares com matriz padrao
@@ -31,26 +31,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $organizacaoExistente = DB::table('organizacoes')
-            ->where('empresa_id', $empresa->id)
-            ->where('nome', 'Rede Escola Demo')
-            ->first();
-
-        if (! $organizacaoExistente) {
-            DB::table('organizacoes')->insert([
-                'empresa_id' => $empresa->id,
-                'nome' => 'Rede Escola Demo',
-                'tipo' => 'rede',
-                'ativo' => 'S',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-        $organizacaoId = DB::table('organizacoes')
-            ->where('empresa_id', $empresa->id)
-            ->where('nome', 'Rede Escola Demo')
-            ->value('id');
-
         $escolaExistente = DB::table('escolas')
             ->where('empresa_id', $empresa->id)
             ->where('slug', 'unidade-central')
@@ -59,7 +39,6 @@ class DatabaseSeeder extends Seeder
         if (! $escolaExistente) {
             DB::table('escolas')->insert([
                 'empresa_id' => $empresa->id,
-                'organizacao_id' => $organizacaoId,
                 'nome' => 'Unidade Central',
                 'slug' => 'unidade-central',
                 'email' => 'central@escolademo.test',

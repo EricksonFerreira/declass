@@ -13,6 +13,7 @@ class Mensalidade extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'matricula_id',
         'plano_mensalidade_id',
         'competencia',

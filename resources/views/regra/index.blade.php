@@ -58,7 +58,6 @@
 @php
     $grupoMeta = [
         'empresa'     => ['label' => 'Tenant / Organização', 'icon' => 'fas fa-building'],
-        'organizacao' => ['label' => 'Organizações',          'icon' => 'fas fa-sitemap'],
         'escola'      => ['label' => 'Escolas',               'icon' => 'fas fa-school'],
         'escopo'      => ['label' => 'Escopo de Visão',       'icon' => 'fas fa-eye'],
         'usuario'     => ['label' => 'Usuários',              'icon' => 'fas fa-users'],
@@ -81,7 +80,6 @@
         'arquivo' => 'Arquivo',
         'usuarios' => 'Usuários',
         'escolas' => 'Escolas',
-        'organizacoes' => 'Organizações',
         'contexto' => 'Contexto',
     ];
 

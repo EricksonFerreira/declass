@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Escola/unidade de ensino. Nivel 3 da arquitetura multi-tenant:
- * pertence a um tenant (empresa) e opcionalmente a uma organizacao.
+ * Escola/unidade de ensino. Nivel 2 da arquitetura multi-tenant:
+ * pertence diretamente a um tenant (empresa).
  */
 class Escola extends Model
 {
@@ -21,7 +21,6 @@ class Escola extends Model
 
     protected $fillable = [
         'empresa_id',
-        'organizacao_id',
         'nome',
         'slug',
         'cnpj',
@@ -80,11 +79,6 @@ class Escola extends Model
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class, 'empresa_id');
-    }
-
-    public function organizacao(): BelongsTo
-    {
-        return $this->belongsTo(Organizacao::class, 'organizacao_id');
     }
 
     public function usuarios(): BelongsToMany

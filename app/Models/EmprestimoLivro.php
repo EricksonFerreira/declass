@@ -21,6 +21,7 @@ class EmprestimoLivro extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'livro_id',
         'aluno_id',
         'data_emprestimo',

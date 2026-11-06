@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Remove alunos, responsaveis, matriculas, estrutura letiva e
  * dados operacionais gerados pelo DemoEscolarSeeder — preservando
- * empresa, escolas, organizacao, usuarios, perfis, etapas,
+ * empresa, escolas, usuarios, perfis, etapas,
  * disciplinas, livros e planos — e roda o DemoEscolarSeeder de
  * novo do zero.
  *

@@ -14,6 +14,7 @@ class MovimentacaoEstoque extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'material_id',
         'tipo',
         'quantidade',

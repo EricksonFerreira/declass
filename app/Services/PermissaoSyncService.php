@@ -104,6 +104,7 @@ class PermissaoSyncService
             'debugbar.',
             'generated::',
             'matricula_publica.',
+            'escola_context.',
         ];
 
         foreach (Route::getRoutes() as $route) {

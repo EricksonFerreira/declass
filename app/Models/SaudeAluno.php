@@ -15,6 +15,7 @@ class SaudeAluno extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'aluno_id',
         'tipo_sanguineo',
         'alergias',

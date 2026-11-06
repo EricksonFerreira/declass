@@ -41,22 +41,6 @@
 
     <div class="col-md-4">
         <div class="card">
-            <div class="card-header font-weight-bold">Organizações ({{ $empresa->organizacoes->count() }})</div>
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    @forelse($empresa->organizacoes as $organizacao)
-                        <li class="list-group-item py-2">
-                            <a href="{{ route('organizacao.show', $organizacao->id) }}" class="font-weight-bold">{{ $organizacao->nome }}</a>
-                            <div class="text-muted" style="font-size:.75rem;">{{ \App\Models\Organizacao::TIPOS[$organizacao->tipo] ?? $organizacao->tipo }}</div>
-                        </li>
-                    @empty
-                        <li class="list-group-item text-muted text-center py-3">Nenhuma organização.</li>
-                    @endforelse
-                </ul>
-            </div>
-        </div>
-
-        <div class="card">
             <div class="card-header font-weight-bold">Escolas ({{ $empresa->escolas->count() }})</div>
             <div class="card-body p-0">
                 <ul class="list-group list-group-flush">

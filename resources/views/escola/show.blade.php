@@ -16,7 +16,6 @@
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Nome</dt><dd class="col-sm-8">{{ $escola->nome }}</dd>
                     <dt class="col-sm-4">Slug</dt><dd class="col-sm-8">{{ $escola->slug }}</dd>
-                    <dt class="col-sm-4">Organização</dt><dd class="col-sm-8">{{ $escola->organizacao->nome ?? '—' }}</dd>
                     <dt class="col-sm-4">CNPJ</dt><dd class="col-sm-8">{{ $escola->cnpj ?? '—' }}</dd>
                     <dt class="col-sm-4">E-mail</dt><dd class="col-sm-8">{{ $escola->email ?? '—' }}</dd>
                     <dt class="col-sm-4">Telefone</dt><dd class="col-sm-8">{{ $escola->telefone ?? '—' }}</dd>

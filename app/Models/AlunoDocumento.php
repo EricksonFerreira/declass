@@ -19,6 +19,7 @@ class AlunoDocumento extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'aluno_id',
         'tipo',
         'titulo',

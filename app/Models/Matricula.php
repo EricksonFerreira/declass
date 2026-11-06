@@ -20,6 +20,7 @@ class Matricula extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'aluno_id',
         'turma_id',
         'ano_letivo_id',

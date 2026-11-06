@@ -17,7 +17,6 @@ class StoreEscolaRequest extends FormRequest
         $empresaId = $this->user()?->empresa_id;
 
         return [
-            'organizacao_id' => ['nullable', 'integer', Rule::exists('organizacoes', 'id')->where('empresa_id', $empresaId)],
             'nome' => ['required', 'string', 'max:255'],
             'cnpj' => ['nullable', 'string', 'max:18'],
             'email' => ['nullable', 'email', 'max:255'],

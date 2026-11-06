@@ -185,12 +185,17 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Organizacoes (redes/mantenedoras) onde o usuario atua.
+     * Escolas que o usuario pode selecionar no contexto da sessao.
+     * Retorna null quando o usuario nao tem vinculos — nesse caso
+     * ele pode alternar entre todas as escolas do tenant.
+     *
+     * @return array<int, int>|null
      */
-    public function organizacoes(): BelongsToMany
+    public function escolasContextoIds(): ?array
     {
-        return $this->belongsToMany(Organizacao::class, 'user_organizacoes', 'user_id', 'organizacao_id')
-            ->withTimestamps();
+        $ids = $this->escolas()->pluck('escolas.id')->map(fn ($id) => (int) $id)->all();
+
+        return $ids === [] ? null : $ids;
     }
 
     /**

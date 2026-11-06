@@ -7,7 +7,6 @@ test('administrador can access school management routes', function () {
     $user = usuarioTenant($empresa, 'administrador');
 
     $this->actingAs($user)->get('/admin/escola')->assertOk();
-    $this->actingAs($user)->get('/admin/organizacao')->assertOk();
     $this->actingAs($user)->get('/admin/usuario')->assertOk();
     $this->actingAs($user)->get('/admin/regra')->assertOk();
 });

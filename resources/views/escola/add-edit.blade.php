@@ -17,11 +17,8 @@
             @endif
 
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-12">
                     <x-form-input name="nome" label="Nome" :value="old('nome', $escola->nome ?? '')" required maxlength="255" />
-                </div>
-                <div class="col-md-4">
-                    <x-form-select name="organizacao_id" label="Organização" :options="$organizacoes ?? []" :selected="old('organizacao_id', $escola->organizacao_id ?? '')" placeholder="Sem organização" />
                 </div>
             </div>
 

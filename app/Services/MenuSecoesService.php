@@ -46,7 +46,6 @@ class MenuSecoesService
                 'slug' => 'institucional',
                 'titulo' => 'Institucional',
                 'cards' => [
-                    ['Organizações', 'fas fa-sitemap', 'organizacao.index', 'Redes e mantenedoras do tenant', '#7c3aed'],
                     ['Escolas', 'fas fa-school', 'escola.index', 'Unidades e escolas do tenant', '#1d4ed8'],
                 ],
             ],

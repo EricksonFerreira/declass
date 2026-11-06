@@ -22,7 +22,7 @@
             'icone' => 'fas fa-school',
             'url' => route('menu.index', 'institucional'),
             'slug' => 'institucional',
-            'prefixos' => ['organizacao.', 'escola.', 'empresa.'],
+            'prefixos' => ['escola.', 'empresa.'],
         ],
         [
             'label' => 'Pessoas',

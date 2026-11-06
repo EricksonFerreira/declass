@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Storage;
  * Tenant da plataforma SaaS escolar.
  *
  * Nivel 1 da arquitetura multi-tenant: o cliente independente da
- * plataforma. Uma empresa pode ter uma organizacao/rede e varias
- * escolas/unidades. Todo registro de negocio carrega empresa_id
+ * plataforma. Uma empresa pode ter varias escolas/unidades.
+ * Todo registro de negocio carrega empresa_id
  * e e isolado pelo escopo global 'empresa' + EmpresaContext.
  */
 class Empresa extends Model
@@ -58,11 +58,6 @@ class Empresa extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class, 'empresa_id');
-    }
-
-    public function organizacoes(): HasMany
-    {
-        return $this->hasMany(Organizacao::class, 'empresa_id');
     }
 
     public function escolas(): HasMany

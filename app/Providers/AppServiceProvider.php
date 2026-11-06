@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Menu\CustomAdminLte;
 use App\Models\User;
 use App\Support\EmpresaContext;
+use App\Support\EscolaContext;
 use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
@@ -25,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFour();
         $this->app->scoped(EmpresaContext::class, fn () => new EmpresaContext());
+        $this->app->scoped(EscolaContext::class, fn () => new EscolaContext());
     }
 
     /**
@@ -157,6 +159,66 @@ class AppServiceProvider extends ServiceProvider
                     $instance->empresa_id = $empresaId;
                 }
             });
+            // Escopo de escola da sessao: quando o usuario escolhe uma
+            // unidade no seletor do navbar, todas as consultas de tabelas
+            // com escola_id sao filtradas por ela. escola_id nulo = registro
+            // da rede toda, visivel em qualquer unidade.
+            $class::addGlobalScope('escola', function (Builder $builder) use ($table) {
+                if (! SchemaCache::hasColumn($table, 'escola_id')) {
+                    return;
+                }
+
+                $escolaId = app(EscolaContext::class)->escolaId();
+
+                if ($escolaId === null) {
+                    return;
+                }
+
+                $builder->where(function ($query) use ($table, $escolaId) {
+                    $query->where($table.'.escola_id', $escolaId)
+                        ->orWhereNull($table.'.escola_id');
+                });
+            });
+
+            // Auto-preenche escola_id desnormalizado nas tabelas
+            // transacionais, resolvendo pela relacao pai (turma/aluno/etc).
+            $class::creating(function ($instance) use ($table) {
+                if (! SchemaCache::hasColumn($table, 'escola_id') || ! empty($instance->escola_id)) {
+                    return;
+                }
+
+                $resolver = self::escolaResolvers()[$table] ?? null;
+
+                if ($resolver !== null) {
+                    $instance->escola_id = $resolver($instance);
+                }
+            });
         }
+    }
+
+    /**
+     * Resolve escola_id no insert das tabelas transacionais que guardam a
+     * coluna desnormalizada, a partir das relacoes do proprio model.
+     */
+    private static function escolaResolvers(): array
+    {
+        return [
+            'matriculas' => fn ($m) => $m->turma?->escola_id,
+            'mensalidades' => fn ($m) => $m->matricula?->turma?->escola_id,
+            'diarios' => fn ($m) => $m->turma?->escola_id,
+            'frequencias' => fn ($m) => $m->diario?->turma?->escola_id ?? $m->matricula?->turma?->escola_id,
+            'avaliacoes' => fn ($m) => $m->turma?->escola_id,
+            'notas' => fn ($m) => $m->matricula?->turma?->escola_id ?? $m->avaliacao?->turma?->escola_id,
+            'emprestimos_livros' => fn ($m) => $m->aluno?->escola_id,
+            'tarefas' => fn ($m) => $m->turma?->escola_id,
+            'entregas_tarefa' => fn ($m) => $m->tarefa?->turma?->escola_id ?? $m->matricula?->turma?->escola_id,
+            'saude_alunos' => fn ($m) => $m->aluno?->escola_id,
+            'aluno_documentos' => fn ($m) => $m->aluno?->escola_id,
+            'transporte_alunos' => fn ($m) => $m->aluno?->escola_id ?? $m->rota?->escola_id,
+            'paradas_transporte' => fn ($m) => $m->rota?->escola_id,
+            'atribuicoes' => fn ($m) => $m->turma?->escola_id,
+            'pesquisa_respostas' => fn ($m) => $m->pesquisa?->escola_id,
+            'movimentacoes_estoque' => fn ($m) => $m->material?->escola_id,
+        ];
     }
 }

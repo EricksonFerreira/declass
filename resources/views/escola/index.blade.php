@@ -22,7 +22,6 @@
                 <thead class="thead-light">
                     <tr>
                         <th>Nome</th>
-                        <th>Organização</th>
                         <th>Cidade/UF</th>
                         <th>Capacidade</th>
                         <th>Status</th>
@@ -36,7 +35,6 @@
                                 <a href="{{ route('escola.show', $escola->id) }}" class="font-weight-bold">{{ $escola->nome }}</a>
                                 <div class="text-muted" style="font-size:.75rem;">{{ $escola->slug }}</div>
                             </td>
-                            <td>{{ $escola->organizacao->nome ?? '—' }}</td>
                             <td>{{ trim(($escola->cidade ?? '').($escola->estado ? '/'.$escola->estado : '')) ?: '—' }}</td>
                             <td>{{ $escola->capacidade_alunos ?? '—' }}</td>
                             <td>

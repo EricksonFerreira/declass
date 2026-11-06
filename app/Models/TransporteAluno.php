@@ -19,6 +19,7 @@ class TransporteAluno extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'aluno_id',
         'rota_id',
         'parada_id',

@@ -96,7 +96,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     public function show($id)
     {
-        $empresa = $this->empresaService->getById($id, ['organizacoes', 'escolas', 'users']);
+        $empresa = $this->empresaService->getById($id, ['escolas', 'users']);
         if (! $empresa) {
             return redirect()->route('empresa.index')->with('error', 'Tenant nao encontrado.');
         }
@@ -235,7 +235,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $empresa->update($data);
 
         return redirect()->route('empresa.minha')
-            ->with('success', 'Organizacao atualizada com sucesso.');
+            ->with('success', 'Empresa atualizada com sucesso.');
     }
 
     public function filtro(Request $request)

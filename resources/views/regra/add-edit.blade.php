@@ -14,7 +14,6 @@
     $grupoMeta = [
         'empresa'                         => ['label' => 'Tenant / Organização',    'icon' => 'fas fa-building',            'color' => '#343a40'],
         'empresa_context'                 => ['label' => 'Contexto de Tenant',      'icon' => 'fas fa-building',            'color' => '#343a40'],
-        'organizacao'                     => ['label' => 'Organizações',            'icon' => 'fas fa-sitemap',             'color' => '#4b80ff'],
         'escola'                          => ['label' => 'Escolas',                 'icon' => 'fas fa-school',               'color' => '#17a2b8'],
         'usuario'                         => ['label' => 'Usuários',                'icon' => 'fas fa-users',                'color' => '#17a2b8'],
         'regra'                           => ['label' => 'Perfis de Acesso',        'icon' => 'fas fa-user-shield',          'color' => '#7c3aed'],
@@ -51,7 +50,7 @@
         'minha' => 'Minha Organização', 'atualizar' => 'Atualizar',
         'alterar-senha' => 'Alterar Senha', 'select' => 'Seleção',
         'documentos' => 'Documentos', 'arquivo' => 'Arquivo',
-        'usuarios' => 'Usuários', 'escolas' => 'Escolas', 'organizacoes' => 'Organizações',
+        'usuarios' => 'Usuários', 'escolas' => 'Escolas',
         'contexto' => 'Contexto', 'sucesso' => 'Sucesso',
         'darkmode' => 'Modo Escuro', 'cores' => 'Cores',
     ];

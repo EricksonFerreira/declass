@@ -192,6 +192,24 @@
     .user-menu .empresa-context-link:hover {
         text-decoration: underline;
     }
+
+    .main-header.navbar .escola-context-select {
+        min-width: 170px;
+        max-width: 220px;
+        height: 32px;
+        padding: 4px 10px;
+        font-size: 12.5px;
+        font-weight: 600;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--empresa-cor-primaria) 45%, transparent 55%);
+        background: color-mix(in srgb, var(--empresa-cor-primaria) 82%, #fff 18%);
+        color: var(--empresa-cor-primaria-contraste, #fff);
+    }
+
+    .main-header.navbar .escola-context-select option {
+        color: #0f172a;
+        background: #fff;
+    }
 </style>
 
 @if($empresaTemaAtual)
@@ -325,6 +343,50 @@
                     @endif
                 </span>
             </li>
+        @endif
+
+        {{-- Seletor de escola da sessao: filtra todos os dados do tenant --}}
+        @if(Auth::check() && ! Auth::user()->isSuperAdmin())
+            @php
+                $escolasContexto = collect();
+                $escolaContextoId = 0;
+                $empresaContextoId = app(\App\Support\EmpresaContext::class)->empresaId();
+
+                // So faz sentido com tenant ativo: na visao consolidada do
+                // superadmin nao ha como saber a qual escola o dado pertence.
+                if ($empresaContextoId !== null && \Illuminate\Support\Facades\Schema::hasTable('escolas')) {
+                    $permitidas = auth()->user()?->escolasContextoIds();
+
+                    $queryEscolas = \App\Models\Escola::query()->orderBy('nome');
+                    if ($permitidas !== null) {
+                        $queryEscolas->whereIn('id', $permitidas);
+                    }
+
+                    $escolasContexto = $queryEscolas->get(['id', 'nome']);
+                    $escolaContextoId = (int) app(\App\Support\EscolaContext::class)->escolaId() ?? 0;
+                }
+            @endphp
+
+            @if($escolasContexto->count() > 1)
+                <li class="nav-item d-flex align-items-center mr-2">
+                    <form method="POST" action="{{ route('escola_context.update') }}" class="mb-0">
+                        @csrf
+                        <select
+                            name="escola_id"
+                            class="form-control form-control-sm escola-context-select"
+                            onchange="this.form.submit()"
+                            title="Escola da sessão — filtra todos os dados"
+                        >
+                            <option value="0" {{ $escolaContextoId === 0 ? 'selected' : '' }}>Todas as escolas</option>
+                            @foreach($escolasContexto as $escolaCtx)
+                                <option value="{{ $escolaCtx->id }}" {{ $escolaContextoId === (int) $escolaCtx->id ? 'selected' : '' }}>
+                                    {{ $escolaCtx->nome }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                </li>
+            @endif
         @endif
 
         {{-- Custom right links --}}

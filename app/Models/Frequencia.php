@@ -23,6 +23,7 @@ class Frequencia extends Model
 
     protected $fillable = [
         'empresa_id',
+        'escola_id',
         'diario_id',
         'matricula_id',
         'status',

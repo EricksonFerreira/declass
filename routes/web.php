@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CadastroEmpresaController;
 use App\Http\Controllers\EmpresaContextController;
+use App\Http\Controllers\EscolaContextController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\NotificacaoController;
@@ -105,7 +106,6 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'empresa',
         'documentos',
         'escola',
-        'organizacao',
         'aluno',
         'responsavel',
         'ano_letivo',
@@ -157,6 +157,10 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
     Route::middleware(['auth', 'can:gerenciar-empresa'])->group(function (): void {
         Route::get('empresa-contexto', [EmpresaContextController::class, 'edit'])->name('empresa_context.edit');
         Route::post('empresa-contexto', [EmpresaContextController::class, 'update'])->name('empresa_context.update');
+    });
+
+    Route::middleware('auth')->group(function (): void {
+        Route::post('escola-contexto', [EscolaContextController::class, 'update'])->name('escola_context.update');
     });
 });
 
