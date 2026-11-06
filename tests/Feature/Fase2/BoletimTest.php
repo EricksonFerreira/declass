@@ -121,6 +121,45 @@ test('boletim individual exibe avaliacoes e notas do aluno', function () {
     expect($medias[$ids['disciplina']->id])->toBe(9.0);
 });
 
+test('boletim individual exibe ocorrencias disciplinares do aluno', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $ids = setupBoletim($empresa);
+
+    \App\Models\Ocorrencia::create([
+        'empresa_id' => $empresa->id,
+        'aluno_id' => $ids['aluno']->id,
+        'escola_id' => $ids['escola']->id,
+        'data' => now()->subDays(3)->toDateString(),
+        'tipo' => 'advertencia',
+        'gravidade' => 'media',
+        'descricao' => 'Atrapalhou a aula de matemática',
+        'medida_adotada' => 'Conversa com a coordenação',
+    ]);
+    \App\Models\Ocorrencia::create([
+        'empresa_id' => $empresa->id,
+        'aluno_id' => $ids['aluno']->id,
+        'escola_id' => $ids['escola']->id,
+        'data' => now()->subDays(1)->toDateString(),
+        'tipo' => 'elogio',
+        'gravidade' => 'leve',
+        'descricao' => 'Participação exemplar',
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('boletim.aluno', $ids['aluno']->id));
+    $response->assertOk()
+        ->assertSee('Ocorrências disciplinares')
+        ->assertSee('Atrapalhou a aula de matemática')
+        ->assertSee('Participação exemplar');
+
+    $ocorrencias = $response->viewData('ocorrencias');
+    expect($ocorrencias)->toHaveCount(2);
+
+    $resumo = $response->viewData('ocorrencias_resumo');
+    expect($resumo['advertencia'])->toBe(1)
+        ->and($resumo['elogio'])->toBe(1);
+});
+
 test('aluno sem matricula ativa retorna 404 no boletim', function () {
     $empresa = tenant();
     $admin = usuarioTenant($empresa, 'administrador');

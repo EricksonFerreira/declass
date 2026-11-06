@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Aluno;
 use App\Models\Avaliacao;
 use App\Models\Matricula;
+use App\Models\Ocorrencia;
 use App\Models\Turma;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -174,6 +175,19 @@ class BoletimService
         $falta = (int) ($freq['falta'] ?? 0);
         $freqTotal = $presente + $justificada + $falta;
 
+        // ocorrencias disciplinares do aluno no periodo do ano letivo
+        $anoLetivo = $turma->anoLetivo;
+        $ocorrencias = Ocorrencia::query()
+            ->where('aluno_id', $aluno->id)
+            ->when($anoLetivo?->data_inicio, fn ($q) => $q->whereDate('data', '>=', $anoLetivo->data_inicio))
+            ->when($anoLetivo?->data_fim, fn ($q) => $q->whereDate('data', '<=', $anoLetivo->data_fim))
+            ->orderByDesc('data')
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get();
+
+        $ocorrenciasResumo = $ocorrencias->countBy('tipo')->all();
+
         return [
             'matricula' => $matricula,
             'turma' => $turma,
@@ -188,6 +202,8 @@ class BoletimService
                 'pct' => $freqTotal > 0 ? round((($presente + $justificada) / $freqTotal) * 100, 1) : null,
             ],
             'total_aulas' => DB::table('diarios')->where('turma_id', $turma->id)->whereNull('deleted_at')->count(),
+            'ocorrencias' => $ocorrencias,
+            'ocorrencias_resumo' => $ocorrenciasResumo,
         ];
     }
 

@@ -81,6 +81,51 @@
                 </div>
             </div>
         @endforeach
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="font-weight-bold">Ocorrências disciplinares</span>
+                <span>
+                    @foreach(\App\Models\Ocorrencia::TIPOS as $tipo => $label)
+                        @if(($ocorrencias_resumo[$tipo] ?? 0) > 0)
+                            <span class="badge badge-light border mr-1">{{ $label }}: {{ $ocorrencias_resumo[$tipo] }}</span>
+                        @endif
+                    @endforeach
+                    @if($ocorrencias->isEmpty())
+                        <span class="text-muted small">Nenhuma no período</span>
+                    @endif
+                </span>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Gravidade</th>
+                            <th>Descrição</th>
+                            <th>Medida adotada</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($ocorrencias as $oc)
+                            @php
+                                $corGrav = ['leve' => 'success', 'media' => 'warning', 'grave' => 'danger'][$oc->gravidade] ?? 'secondary';
+                            @endphp
+                            <tr>
+                                <td class="text-nowrap">{{ $oc->data?->format('d/m/Y') }}</td>
+                                <td><span class="badge badge-info">{{ $oc->tipoLabel() }}</span></td>
+                                <td><span class="badge badge-{{ $corGrav }}">{{ $oc->gravidadeLabel() }}</span></td>
+                                <td><small>{{ \Illuminate\Support\Str::limit($oc->descricao, 120) }}</small></td>
+                                <td><small class="text-muted">{{ \Illuminate\Support\Str::limit($oc->medida_adotada, 80) ?: '—' }}</small></td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="5" class="text-center text-muted py-3">Nenhuma ocorrência registrada no período.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 @stop

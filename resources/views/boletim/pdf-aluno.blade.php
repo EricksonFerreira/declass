@@ -88,6 +88,40 @@
         </table>
     @endforeach
 
+    <div class="disc">
+        Ocorrências disciplinares
+        <span>
+            @foreach(\App\Models\Ocorrencia::TIPOS as $tipo => $label)
+                @if(($ocorrencias_resumo[$tipo] ?? 0) > 0) {{ $label }}: {{ $ocorrencias_resumo[$tipo] }} · @endif
+            @endforeach
+            @if($ocorrencias->isEmpty()) Nenhuma no período @endif
+        </span>
+    </div>
+    <table class="notas">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Tipo</th>
+                <th>Gravidade</th>
+                <th>Descrição</th>
+                <th>Medida adotada</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($ocorrencias as $oc)
+                <tr>
+                    <td>{{ $oc->data?->format('d/m/Y') }}</td>
+                    <td>{{ $oc->tipoLabel() }}</td>
+                    <td>{{ $oc->gravidadeLabel() }}</td>
+                    <td>{{ \Illuminate\Support\Str::limit($oc->descricao, 100) }}</td>
+                    <td>{{ \Illuminate\Support\Str::limit($oc->medida_adotada, 60) ?: '—' }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="5" style="text-align:center;color:#777;">Nenhuma ocorrência registrada no período.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+
     <div class="footer">
         Emitido em {{ now()->format('d/m/Y H:i') }} · {{ $turma->escola->nome ?? '' }}
     </div>
