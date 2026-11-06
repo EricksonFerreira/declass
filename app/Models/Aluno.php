@@ -88,6 +88,11 @@ class Aluno extends Model
         return $this->hasMany(Matricula::class, 'aluno_id');
     }
 
+    public function documentos(): HasMany
+    {
+        return $this->hasMany(AlunoDocumento::class, 'aluno_id');
+    }
+
     public function estaAtivo(): bool
     {
         return strtoupper((string) $this->ativo) === 'S';

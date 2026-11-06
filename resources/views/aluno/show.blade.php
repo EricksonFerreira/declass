@@ -165,6 +165,92 @@
             </div>
             @endcan
         </div>
+
+        <div class="card">
+            <div class="card-header font-weight-bold">Documentos ({{ $aluno->documentos->count() }})</div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    @forelse($aluno->documentos->sortByDesc('id') as $doc)
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span class="font-weight-bold">{{ $doc->titulo }}</span>
+                                    <div>
+                                        <span class="badge badge-secondary">{{ $tiposDocumento[$doc->tipo] ?? $doc->tipo }}</span>
+                                        @if($doc->arquivo_path)
+                                            <span class="badge badge-success">Anexado</span>
+                                        @else
+                                            <span class="badge badge-warning">Sem arquivo</span>
+                                        @endif
+                                    </div>
+                                    @if($doc->descricao)<small class="text-muted d-block">{{ $doc->descricao }}</small>@endif
+                                </div>
+                                <div class="text-right text-nowrap">
+                                    @if($doc->arquivo_path)
+                                        @can('aluno.documento.arquivo')
+                                            <a href="{{ route('aluno.documento.arquivo', [$aluno->id, $doc->id]) }}" class="btn btn-xs btn-outline-primary" title="Download"><i class="fa fa-download"></i></a>
+                                        @endcan
+                                    @endif
+                                    @can('aluno.documento.update')
+                                    <details class="d-inline-block ml-1">
+                                        <summary class="btn btn-xs btn-outline-secondary" style="cursor:pointer;list-style:none;">Editar</summary>
+                                        <form method="POST" action="{{ route('aluno.documento.update', [$aluno->id, $doc->id]) }}" enctype="multipart/form-data" class="mt-2 text-left" style="min-width:240px;">
+                                            @csrf @method('PUT')
+                                            <select name="tipo" class="form-control form-control-sm mb-1">
+                                                @foreach($tiposDocumento as $tk => $tl)
+                                                    <option value="{{ $tk }}" @selected($doc->tipo === $tk)>{{ $tl }}</option>
+                                                @endforeach
+                                            </select>
+                                            <input name="titulo" class="form-control form-control-sm mb-1" value="{{ $doc->titulo }}" required maxlength="150">
+                                            <input name="descricao" class="form-control form-control-sm mb-1" placeholder="Descrição" value="{{ $doc->descricao }}" maxlength="2000">
+                                            <input type="file" name="arquivo" class="form-control-file form-control-sm mb-1" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                            <button class="btn btn-xs btn-primary btn-block">Salvar</button>
+                                        </form>
+                                    </details>
+                                    @endcan
+                                </div>
+                            </div>
+                            @can('aluno.documento.destroy')
+                                <form method="POST" action="{{ route('aluno.documento.destroy', [$aluno->id, $doc->id]) }}" onsubmit="return confirm('Excluir este documento? O arquivo também será removido.');" class="mt-1">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-xs btn-outline-danger">Excluir documento</button>
+                                </form>
+                            @endcan
+                        </li>
+                    @empty
+                        <li class="list-group-item text-muted text-center py-3">Nenhum documento anexado.</li>
+                    @endforelse
+                </ul>
+            </div>
+
+            @can('aluno.documento.store')
+            <div class="card-footer">
+                <form method="POST" action="{{ route('aluno.documento.store', $aluno->id) }}" enctype="multipart/form-data">
+                    @csrf
+                    <div class="form-group mb-2">
+                        <label class="form-label">Anexar documento</label>
+                        <select name="tipo" class="form-control form-control-sm" required>
+                            <option value="">Tipo do documento...</option>
+                            @foreach($tiposDocumento as $tk => $tl)
+                                <option value="{{ $tk }}">{{ $tl }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group mb-2">
+                        <input name="titulo" class="form-control form-control-sm" placeholder="Título (ex.: RG frente)" required maxlength="150">
+                    </div>
+                    <div class="form-group mb-2">
+                        <input name="descricao" class="form-control form-control-sm" placeholder="Descrição (opcional)" maxlength="2000">
+                    </div>
+                    <div class="form-group mb-2">
+                        <input type="file" name="arquivo" class="form-control-file form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                        <small class="text-muted">PDF, imagem ou Word — máx. 10 MB</small>
+                    </div>
+                    <button class="btn btn-sm btn-primary btn-block">Anexar</button>
+                </form>
+            </div>
+            @endcan
+        </div>
     </div>
 </div>
 @stop

@@ -79,7 +79,9 @@ class PerfisEscolaresSeeder extends Seeder
             'matricula.index', 'matricula.filtro', 'matricula.removerFiltro', 'matricula.setPerPage',
             'diario.index', 'diario.filtro', 'diario.removerFiltro', 'diario.setPerPage',
             'avaliacao.index', 'avaliacao.filtro', 'avaliacao.removerFiltro', 'avaliacao.setPerPage',
-            'aluno.index', 'aluno.show', 'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
+            'aluno.index', 'aluno.show', 'aluno.filtro',
+            'aluno.documento.arquivo',
+            'aluno.removerFiltro', 'aluno.setPerPage',
             'responsavel.index', 'responsavel.show', 'responsavel.filtro', 'responsavel.removerFiltro', 'responsavel.setPerPage',
         ],
 
@@ -121,6 +123,7 @@ class PerfisEscolaresSeeder extends Seeder
             'aluno.index', 'aluno.show', 'aluno.create', 'aluno.store', 'aluno.edit', 'aluno.update',
             'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
             'aluno.responsavel.store', 'aluno.responsavel.update', 'aluno.responsavel.destroy',
+            'aluno.documento.store', 'aluno.documento.update', 'aluno.documento.destroy', 'aluno.documento.arquivo',
             'responsavel.index', 'responsavel.show', 'responsavel.create', 'responsavel.store',
             'responsavel.filtro', 'responsavel.removerFiltro', 'responsavel.setPerPage',
         ],
@@ -139,7 +142,9 @@ class PerfisEscolaresSeeder extends Seeder
             'avaliacao.notas', 'avaliacao.notas.salvar',
             'diario.filtro', 'diario.removerFiltro', 'diario.setPerPage',
             'avaliacao.filtro', 'avaliacao.removerFiltro', 'avaliacao.setPerPage',
-            'aluno.index', 'aluno.show', 'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
+            'aluno.index', 'aluno.show', 'aluno.filtro',
+            'aluno.documento.arquivo',
+            'aluno.removerFiltro', 'aluno.setPerPage',
         ],
 
         'professor_substituto' => [
@@ -156,7 +161,9 @@ class PerfisEscolaresSeeder extends Seeder
             'avaliacao.notas', 'avaliacao.notas.salvar',
             'diario.filtro', 'diario.removerFiltro', 'diario.setPerPage',
             'avaliacao.filtro', 'avaliacao.removerFiltro', 'avaliacao.setPerPage',
-            'aluno.index', 'aluno.show', 'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
+            'aluno.index', 'aluno.show', 'aluno.filtro',
+            'aluno.documento.arquivo',
+            'aluno.removerFiltro', 'aluno.setPerPage',
         ],
 
         'funcionario_administrativo' => [
@@ -172,6 +179,7 @@ class PerfisEscolaresSeeder extends Seeder
             'diario.index', 'diario.filtro', 'diario.removerFiltro', 'diario.setPerPage',
             'avaliacao.index', 'avaliacao.filtro', 'avaliacao.removerFiltro', 'avaliacao.setPerPage',
             'aluno.index', 'aluno.show',
+            'aluno.documento.arquivo',
             'responsavel.index', 'responsavel.show',
         ],
 
@@ -220,7 +228,9 @@ class PerfisEscolaresSeeder extends Seeder
             'documentos.index', 'documentos.show',
             'ano_letivo.index', 'etapa.index', 'disciplina.index',
             'turma.index', 'turma.show',
-            'aluno.index', 'aluno.show', 'aluno.edit', 'aluno.update',
+            'aluno.index', 'aluno.show', 'aluno.edit',
+            'aluno.documento.arquivo',
+            'aluno.update',
             'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
         ],
 

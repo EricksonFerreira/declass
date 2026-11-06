@@ -89,16 +89,17 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
 
     public function show($id)
     {
-        $aluno = $this->alunoService->getById($id, ['pessoa', 'escola', 'responsaveis.pessoa']);
+        $aluno = $this->alunoService->getById($id, ['pessoa', 'escola', 'responsaveis.pessoa', 'documentos']);
         abort_if(! $aluno, 404, 'Aluno não encontrado.');
 
         $vinculos = $this->alunoService->vinculosDoAluno($aluno);
         $responsaveisOpcoes = $this->responsaveisOpcoes();
         $tiposResponsavel = Aluno::TIPOS_RESPONSAVEL;
+        $tiposDocumento = \App\Models\AlunoDocumento::TIPOS;
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Alunos', 'aluno.index', $aluno->nome ?? 'Aluno');
 
-        return view('aluno.show', compact('aluno', 'vinculos', 'responsaveisOpcoes', 'tiposResponsavel', 'breadcrumb'))
+        return view('aluno.show', compact('aluno', 'vinculos', 'responsaveisOpcoes', 'tiposResponsavel', 'tiposDocumento', 'breadcrumb'))
             ->with('titulo', $aluno->nome ?? 'Aluno');
     }
 
