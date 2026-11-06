@@ -29,6 +29,7 @@
                         <a href="{{ route('portal.aluno', $aluno->id) }}" class="btn btn-primary btn-sm">Ver boletim</a>
                     @endif
                     <a href="{{ route('portal.financeiro') }}" class="btn btn-outline-secondary btn-sm">Financeiro</a>
+                    <a href="{{ route('portal.avisos') }}" class="btn btn-outline-info btn-sm">Avisos</a>
                 </div>
             </div>
         </div>

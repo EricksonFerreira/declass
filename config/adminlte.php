@@ -439,6 +439,20 @@ return [
             ],
         ],
 
+        // COMUNICAÇÃO
+        [
+            'text' => 'Comunicação',
+            'icon' => 'fas fa-bullhorn',
+            'submenu' => [
+                [
+                    'text' => 'Avisos',
+                    'route' => 'aviso.index',
+                    'can' => 'aviso.index',
+                    'icon' => 'fas fa-bullhorn',
+                ],
+            ],
+        ],
+
         // FINANCEIRO
         [
             'text' => 'Financeiro',

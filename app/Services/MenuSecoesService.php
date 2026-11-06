@@ -75,6 +75,13 @@ class MenuSecoesService
                 ],
             ],
             [
+                'slug' => 'comunicacao',
+                'titulo' => 'Comunicação',
+                'cards' => [
+                    ['Avisos', 'fas fa-bullhorn', 'aviso.index', 'Comunicados da escola para as famílias', '#dc2626'],
+                ],
+            ],
+            [
                 'slug' => 'financeiro',
                 'titulo' => 'Financeiro',
                 'cards' => [

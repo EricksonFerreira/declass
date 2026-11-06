@@ -5,12 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Aluno;
 use App\Models\Matricula;
 use App\Models\Responsavel;
+use App\Services\AvisoService;
 use App\Services\BoletimService;
 use Illuminate\Support\Collection;
 
 class PortalController extends Controller
 {
-    public function __construct(private BoletimService $boletimService) {}
+    public function __construct(
+        private BoletimService $boletimService,
+        private AvisoService $avisoService,
+    ) {}
 
     /**
      * Home do portal: lista os alunos vinculados ao usuario logado
@@ -79,6 +83,25 @@ class PortalController extends Controller
             'titulo' => 'Financeiro',
             'alunos' => $alunos,
             'mensalidades' => $mensalidades,
+        ]);
+    }
+
+    /**
+     * Avisos/comunicados das escolas dos alunos vinculados:
+     * gerais da escola + direcionados as turmas em que estao.
+     */
+    public function avisos()
+    {
+        $alunos = $this->alunosDoUsuario(auth()->user());
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $avisos = $this->avisoService->avisosParaAlunos($alunos);
+
+        return view('portal.avisos', [
+            'titulo' => 'Avisos',
+            'alunos' => $alunos,
+            'avisos' => $avisos,
         ]);
     }
 

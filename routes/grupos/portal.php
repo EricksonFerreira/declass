@@ -7,4 +7,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/portal', [PortalController::class, 'index'])->name('portal.index');
     Route::get('/portal/aluno/{aluno}', [PortalController::class, 'aluno'])->name('portal.aluno');
     Route::get('/portal/financeiro', [PortalController::class, 'financeiro'])->name('portal.financeiro');
+    Route::get('/portal/avisos', [PortalController::class, 'avisos'])->name('portal.avisos');
 });

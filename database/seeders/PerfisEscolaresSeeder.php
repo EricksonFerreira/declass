@@ -40,7 +40,7 @@ class PerfisEscolaresSeeder extends Seeder
             'usuario.buscar', 'usuario.selectOptions',
             'escola.*', 'organizacao.*', 'documentos.*',
             'ano_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*',
-            'plano_mensalidade.*', 'mensalidade.*',
+            'plano_mensalidade.*', 'mensalidade.*', 'aviso.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -53,7 +53,7 @@ class PerfisEscolaresSeeder extends Seeder
             'organizacao.index', 'organizacao.show',
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
             'ano_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*',
-            'plano_mensalidade.*', 'mensalidade.*',
+            'plano_mensalidade.*', 'mensalidade.*', 'aviso.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -66,7 +66,7 @@ class PerfisEscolaresSeeder extends Seeder
             'organizacao.index', 'organizacao.show',
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
             'ano_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*',
-            'plano_mensalidade.*', 'mensalidade.*',
+            'plano_mensalidade.*', 'mensalidade.*', 'aviso.*',
             'aluno.*', 'responsavel.*',
         ],
 
@@ -87,6 +87,7 @@ class PerfisEscolaresSeeder extends Seeder
             'aluno.removerFiltro', 'aluno.setPerPage',
             'responsavel.index', 'responsavel.show', 'responsavel.filtro', 'responsavel.removerFiltro', 'responsavel.setPerPage',
             'boletim.index', 'boletim.turma', 'boletim.aluno',
+            'aviso.index', 'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
         ],
 
         'secretario' => [
@@ -101,7 +102,7 @@ class PerfisEscolaresSeeder extends Seeder
             'etapa.index', 'etapa.filtro', 'etapa.removerFiltro', 'etapa.setPerPage',
             'disciplina.index', 'disciplina.filtro', 'disciplina.removerFiltro', 'disciplina.setPerPage',
             'turma.index', 'turma.show', 'turma.filtro', 'turma.removerFiltro', 'turma.setPerPage',
-            'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*',
+            'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'aviso.*',
             'plano_mensalidade.index', 'mensalidade.index',
             'aluno.*', 'responsavel.*',
         ],
@@ -133,6 +134,8 @@ class PerfisEscolaresSeeder extends Seeder
             'responsavel.filtro', 'responsavel.removerFiltro', 'responsavel.setPerPage',
             'boletim.index', 'boletim.turma', 'boletim.aluno',
             'plano_mensalidade.index', 'mensalidade.index',
+            'aviso.index', 'aviso.create', 'aviso.store', 'aviso.edit', 'aviso.update',
+            'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
         ],
 
         'professor' => [
@@ -153,6 +156,7 @@ class PerfisEscolaresSeeder extends Seeder
             'aluno.documento.arquivo',
             'aluno.removerFiltro', 'aluno.setPerPage',
             'boletim.index', 'boletim.turma', 'boletim.aluno',
+            'aviso.index', 'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
         ],
 
         'professor_substituto' => [
@@ -173,6 +177,7 @@ class PerfisEscolaresSeeder extends Seeder
             'aluno.documento.arquivo',
             'aluno.removerFiltro', 'aluno.setPerPage',
             'boletim.index', 'boletim.turma', 'boletim.aluno',
+            'aviso.index', 'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
         ],
 
         'funcionario_administrativo' => [
@@ -191,6 +196,7 @@ class PerfisEscolaresSeeder extends Seeder
             'aluno.documento.arquivo',
             'responsavel.index', 'responsavel.show',
             'boletim.index', 'boletim.turma', 'boletim.aluno',
+            'aviso.index', 'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
         ],
 
         'financeiro' => [
@@ -209,6 +215,7 @@ class PerfisEscolaresSeeder extends Seeder
             'responsavel.index', 'responsavel.show', 'responsavel.filtro', 'responsavel.removerFiltro', 'responsavel.setPerPage',
             'boletim.index', 'boletim.turma', 'boletim.aluno',
             'plano_mensalidade.*', 'mensalidade.*',
+            'aviso.index', 'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
         ],
 
         'bibliotecario' => [

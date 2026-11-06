@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Aluno;
 use App\Models\Atribuicao;
 use App\Models\Avaliacao;
+use App\Models\Aviso;
 use App\Models\Diario;
 use App\Models\Disciplina;
 use App\Models\Empresa;
@@ -105,6 +106,9 @@ class DemoEscolarSeeder extends Seeder
         // Financeiro: idempotente — pode ser reexecutado sobre a
         // massa existente para gerar planos e mensalidades.
         $this->financeiro($empresa);
+
+        // Comunicacao: avisos gerais e por turma para o portal.
+        $this->comunicacao($empresa);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -449,6 +453,61 @@ class DemoEscolarSeeder extends Seeder
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Avisos de comunicacao: gerais da escola + um por turma.
+     * Idempotente: firstOrCreate por (empresa, escola, titulo).
+     */
+    private function comunicacao(Empresa $empresa): void
+    {
+        $escola = Escola::query()->where('empresa_id', $empresa->id)->first();
+        if (! $escola) {
+            return;
+        }
+
+        $turma = Turma::query()->where('escola_id', $escola->id)->first();
+
+        $avisos = [
+            [
+                'escola_id' => $escola->id, 'turma_id' => null,
+                'titulo' => 'Reunião de pais e mestres',
+                'mensagem' => 'A reunião de pais e mestres acontecerá no dia '.now()->addDays(10)->format('d/m/Y').' às 19h, no auditório da escola. A presença de todos os responsáveis é muito importante.',
+                'tipo' => 'evento', 'data_publicacao' => now()->subDays(2)->toDateString(),
+            ],
+            [
+                'escola_id' => $escola->id, 'turma_id' => null,
+                'titulo' => 'Calendário de provas do bimestre',
+                'mensagem' => 'O calendário de avaliações foi publicado no portal. Fiquem atentos aos horários de cada disciplina e tragam os materiais solicitados.',
+                'tipo' => 'info', 'data_publicacao' => now()->subDay()->toDateString(),
+            ],
+            [
+                'escola_id' => $escola->id, 'turma_id' => null,
+                'titulo' => 'Atualize os dados cadastrais',
+                'mensagem' => 'Responsáveis, verifiquem se seus dados de contato e dos alunos estão atualizados na secretaria. Contato desatualizado dificulta a comunicação em emergências.',
+                'tipo' => 'urgente', 'data_publicacao' => now()->subDays(4)->toDateString(),
+            ],
+        ];
+
+        if ($turma) {
+            $avisos[] = [
+                'escola_id' => $escola->id, 'turma_id' => $turma->id,
+                'titulo' => 'Passeio educativo da turma',
+                'mensagem' => "A turma {$turma->nome} participará de um passeio educativo. O termo de autorização deve ser entregue na secretaria até ".now()->addDays(5)->format('d/m/Y').'.',
+                'tipo' => 'evento', 'data_publicacao' => now()->subDay()->toDateString(),
+            ];
+        }
+
+        foreach ($avisos as $dados) {
+            Aviso::firstOrCreate(
+                [
+                    'empresa_id' => $empresa->id,
+                    'escola_id' => $dados['escola_id'],
+                    'titulo' => $dados['titulo'],
+                ],
+                $dados + ['ativo' => 'S']
+            );
         }
     }
 
