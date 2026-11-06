@@ -70,6 +70,7 @@ class MenuSecoesService
                     ['Matrículas', 'fas fa-id-card', 'matricula.index', 'Inscrições de alunos em turmas', '#f97316'],
                     ['Diário de Classe', 'fas fa-clipboard-list', 'diario.index', 'Registro de aulas e chamada', '#0d9488'],
                     ['Avaliações', 'fas fa-star-half-alt', 'avaliacao.index', 'Provas, trabalhos e lançamento de notas', '#e11d48'],
+                    ['Agenda de Avaliações', 'fas fa-calendar-check', 'avaliacao.agenda', 'Calendário mensal de provas e trabalhos', '#7c3aed'],
                     ['Boletim', 'fas fa-file-alt', 'boletim.index', 'Médias e frequência consolidadas', '#6366f1'],
                     ['Ocorrências', 'fas fa-exclamation-circle', 'ocorrencia.index', 'Registros disciplinares e pedagógicos', '#dc2626'],
                     ['Planos de Atendimento', 'fas fa-hands-helping', 'plano_atendimento.index', 'PEI, PDI e atendimento especializado', '#7c3aed'],

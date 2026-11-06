@@ -419,6 +419,12 @@ return [
                     'icon' => 'fas fa-star-half-alt',
                 ],
                 [
+                    'text' => 'Agenda de Avaliações',
+                    'route' => 'avaliacao.agenda',
+                    'can' => 'avaliacao.index',
+                    'icon' => 'fas fa-calendar-check',
+                ],
+                [
                     'text' => 'Boletim',
                     'route' => 'boletim.index',
                     'can' => 'boletim.index',
