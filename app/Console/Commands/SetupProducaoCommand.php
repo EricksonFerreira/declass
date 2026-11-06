@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Hash;
 
 class SetupProducaoCommand extends Command
 {
-    protected $signature = 'declass:setup-producao';
+    protected $signature = 'declass:setup-producao {--demo : Popula tambem os dados de demonstracao escolar}';
 
     protected $description = 'Sobe a producao: optimize:clear + migrate + seed, tenant declass e superadmins com troca de senha no primeiro acesso';
 
@@ -40,6 +40,15 @@ class SetupProducaoCommand extends Command
         $this->info('=== db:seed ===');
         Artisan::call('db:seed', ['--force' => true]);
         $this->line(Artisan::output());
+
+        if ($this->option('demo')) {
+            $this->info('=== db:seed --class=DemoEscolarSeeder ===');
+            Artisan::call('db:seed', [
+                '--force' => true,
+                '--class' => \Database\Seeders\DemoEscolarSeeder::class,
+            ]);
+            $this->line(Artisan::output());
+        }
 
         $empresa = $this->garantirEmpresaDeclock();
         $this->info("Tenant declass: id {$empresa->id}");

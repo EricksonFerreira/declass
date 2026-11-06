@@ -91,7 +91,9 @@ class MigrationController extends Controller
         $this->checkToken($request);
 
         try {
-            Artisan::call('declass:setup-producao');
+            Artisan::call('declass:setup-producao', [
+                '--demo' => (bool) $request->query('demo'),
+            ]);
             $output = Artisan::output();
 
             return response('<h2>Setup de producao</h2><pre style="white-space:pre-wrap;max-height:80vh;overflow:auto;border:1px solid #ddd;padding:8px">'.e($output).'</pre>');
