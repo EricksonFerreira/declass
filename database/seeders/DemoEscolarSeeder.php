@@ -179,6 +179,7 @@ class DemoEscolarSeeder extends Seeder
         $this->pesquisas($empresa, array_values($escolas), $usuarios);
         $this->saude($empresa);
         $this->estoque($empresa, array_values($escolas));
+        $this->solicitacoesMatricula($empresa, array_values($escolas), $usuarios);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -1632,5 +1633,90 @@ class DemoEscolarSeeder extends Seeder
                 }
             }
         }
+    }
+
+    /**
+     * Fila de solicitacoes de matricula: 3 por unidade (pendentes
+     * e em analise) + 1 aprovada de verdade na primeira escola,
+     * gerando aluno/matricula/responsavel reais. Idempotente por
+     * (empresa, escola, nome_aluno).
+     */
+    private function solicitacoesMatricula(Empresa $empresa, array $escolas, array $usuarios): void
+    {
+        $secretaria = $usuarios['secretaria'] ?? null;
+        $statusOpcoes = ['pendente', 'pendente', 'em_analise', 'pendente'];
+
+        foreach ($escolas as $escola) {
+            $anoLetivo = \App\Models\AnoLetivo::query()
+                ->where('escola_id', $escola->id)->orderByDesc('ano')->first();
+            $etapas = \App\Models\Etapa::query()->where('empresa_id', $empresa->id)->get();
+            $turmas = \App\Models\Turma::query()->where('escola_id', $escola->id)->get();
+
+            foreach ($statusOpcoes as $i => $status) {
+                $nome = "Solicitante Demo {$escola->id}-{$i}";
+                $existe = \App\Models\SolicitacaoMatricula::query()
+                    ->where('empresa_id', $empresa->id)
+                    ->where('escola_id', $escola->id)
+                    ->where('nome_aluno', $nome)
+                    ->exists();
+                if ($existe) {
+                    continue;
+                }
+
+                \App\Models\SolicitacaoMatricula::create([
+                    'empresa_id' => $empresa->id,
+                    'escola_id' => $escola->id,
+                    'ano_letivo_id' => $anoLetivo?->id,
+                    'etapa_id' => $etapas->isNotEmpty() ? $etapas->random()->id : null,
+                    'nome_aluno' => $nome,
+                    'data_nascimento_aluno' => fake()->dateTimeBetween('-12 years', '-5 years')->format('Y-m-d'),
+                    'sexo_aluno' => fake()->randomElement(['masculino', 'feminino']),
+                    'nome_responsavel' => fake()->name().' (Responsável)',
+                    'parentesco' => fake()->randomElement(array_keys(\App\Models\SolicitacaoMatricula::PARENTESCOS)),
+                    'telefone_responsavel' => fake()->numerify('(11) 9####-####'),
+                    'email_responsavel' => 'resp.'.$escola->id.'.'.$i.'@escolademo.test',
+                    'origem' => 'interno',
+                    'status' => $status,
+                    'observacoes' => fake()->optional(0.4)->sentence(8),
+                ]);
+            }
+        }
+
+        // Uma solicitacao aprovada de verdade na primeira unidade:
+        // gera aluno, matricula e responsavel reais via service.
+        $escola = $escolas[0] ?? null;
+        $turma = $escola ? \App\Models\Turma::query()->where('escola_id', $escola->id)->first() : null;
+        if (! $escola || ! $turma || ! $secretaria) {
+            return;
+        }
+
+        $nome = "Aprovado Demo {$escola->id}";
+        $existe = \App\Models\SolicitacaoMatricula::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('escola_id', $escola->id)
+            ->where('nome_aluno', $nome)
+            ->exists();
+        if ($existe) {
+            return;
+        }
+
+        $solicitacao = \App\Models\SolicitacaoMatricula::create([
+            'empresa_id' => $empresa->id,
+            'escola_id' => $escola->id,
+            'ano_letivo_id' => $turma->ano_letivo_id,
+            'etapa_id' => $turma->etapa_id,
+            'nome_aluno' => $nome,
+            'data_nascimento_aluno' => fake()->dateTimeBetween('-10 years', '-6 years')->format('Y-m-d'),
+            'sexo_aluno' => fake()->randomElement(['masculino', 'feminino']),
+            'nome_responsavel' => 'Responsável do Aprovado Demo',
+            'parentesco' => 'mae',
+            'telefone_responsavel' => '(11) 98888-0000',
+            'email_responsavel' => 'aprovado.demo@escolademo.test',
+            'origem' => 'interno',
+            'status' => 'pendente',
+        ]);
+
+        app(\App\Services\SolicitacaoMatriculaService::class)
+            ->aprovar($solicitacao, ['turma_id' => $turma->id], $secretaria);
     }
 }

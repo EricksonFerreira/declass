@@ -68,6 +68,7 @@ class MenuSecoesService
                     ['Disciplinas', 'fas fa-book', 'disciplina.index', 'Componentes curriculares', '#f59e0b'],
                     ['Turmas', 'fas fa-chalkboard-teacher', 'turma.index', 'Turmas, disciplinas e professores', '#10b981'],
                     ['Matrículas', 'fas fa-id-card', 'matricula.index', 'Inscrições de alunos em turmas', '#f97316'],
+                    ['Solicitações de Matrícula', 'fas fa-user-plus', 'solicitacao_matricula.index', 'Fila de análise e aprovação de pedidos de vaga', '#16a34a'],
                     ['Diário de Classe', 'fas fa-clipboard-list', 'diario.index', 'Registro de aulas e chamada', '#0d9488'],
                     ['Avaliações', 'fas fa-star-half-alt', 'avaliacao.index', 'Provas, trabalhos e lançamento de notas', '#e11d48'],
                     ['Agenda de Avaliações', 'fas fa-calendar-check', 'avaliacao.agenda', 'Calendário mensal de provas e trabalhos', '#7c3aed'],

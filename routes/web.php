@@ -132,6 +132,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'relatorio_transporte',
         'relatorio_aproveitamento',
         'agenda_avaliacao',
+        'solicitacao_matricula',
         'evento',
         'pesquisa',
         'saude',

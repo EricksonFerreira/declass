@@ -407,6 +407,12 @@ return [
                     'icon' => 'fas fa-id-card',
                 ],
                 [
+                    'text' => 'Solicitações de Matrícula',
+                    'route' => 'solicitacao_matricula.index',
+                    'can' => 'solicitacao_matricula.index',
+                    'icon' => 'fas fa-user-plus',
+                ],
+                [
                     'text' => 'Diário de Classe',
                     'route' => 'diario.index',
                     'can' => 'diario.index',
