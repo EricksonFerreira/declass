@@ -480,6 +480,12 @@ return [
                     'can' => 'relatorio_inadimplencia.index',
                     'icon' => 'fas fa-money-bill-wave',
                 ],
+                [
+                    'text' => 'Transporte',
+                    'route' => 'relatorio_transporte.index',
+                    'can' => 'relatorio_transporte.index',
+                    'icon' => 'fas fa-route',
+                ],
             ],
         ],
 

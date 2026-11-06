@@ -84,6 +84,7 @@ class MenuSecoesService
                 'cards' => [
                     ['Frequência', 'fas fa-clipboard-check', 'relatorio_frequencia.index', 'Faltas e assiduidade por aluno', '#dc2626'],
                     ['Inadimplência', 'fas fa-money-bill-wave', 'relatorio_inadimplencia.index', 'Cobranças vencidas e em aberto', '#b45309'],
+                    ['Transporte', 'fas fa-route', 'relatorio_transporte.index', 'Ocupação de rotas e veículos', '#0d9488'],
                 ],
             ],
             [
