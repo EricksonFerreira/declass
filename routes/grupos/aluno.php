@@ -9,6 +9,9 @@ Route::prefix('aluno')->name('aluno.')->group(function () {
     Route::get('removerfiltro', [AlunoController::class, 'removerFiltro'])->name('removerFiltro');
     Route::get('filtro', [AlunoController::class, 'filtro'])->name('filtro');
 
+    // Declaracao de matricula em PDF
+    Route::get('{aluno}/declaracao', [AlunoController::class, 'declaracao'])->name('declaracao');
+
     // Documentos do aluno (anexos digitais)
     Route::post('{aluno}/documentos', [AlunoDocumentoController::class, 'store'])->name('documento.store');
     Route::put('{aluno}/documentos/{documento}', [AlunoDocumentoController::class, 'update'])->name('documento.update');

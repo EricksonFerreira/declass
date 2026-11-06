@@ -58,6 +58,9 @@
             </div>
             <div class="card-footer">
                 <a href="{{ route('aluno.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
+                @can('aluno.show')
+                    <a href="{{ route('aluno.declaracao', $aluno->id) }}" class="btn btn-danger btn-sm" target="_blank"><i class="fa fa-file-pdf"></i> Declaração</a>
+                @endcan
                 @can('aluno.edit')
                     <a href="{{ route('aluno.edit', $aluno->id) }}" class="btn btn-warning btn-sm">Editar</a>
                 @endcan

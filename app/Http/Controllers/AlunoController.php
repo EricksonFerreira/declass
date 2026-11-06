@@ -30,7 +30,7 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
         $this->nomeFiltro = 'aluno';
 
         $this->middleware('can:aluno.index')->only('index');
-        $this->middleware('can:aluno.show')->only('show');
+        $this->middleware('can:aluno.show')->only(['show', 'declaracao']);
         $this->middleware('can:aluno.create')->only('create');
         $this->middleware('can:aluno.store')->only('store');
         $this->middleware('can:aluno.edit')->only('edit');
@@ -101,6 +101,32 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
 
         return view('aluno.show', compact('aluno', 'vinculos', 'responsaveisOpcoes', 'tiposResponsavel', 'tiposDocumento', 'breadcrumb'))
             ->with('titulo', $aluno->nome ?? 'Aluno');
+    }
+
+    /**
+     * Declaracao de matricula em PDF: documento formal com dados
+     * do aluno, turma atual, escola e responsavel legal.
+     */
+    public function declaracao($id)
+    {
+        $aluno = $this->alunoService->getById($id, [
+            'pessoa', 'escola',
+            'matriculas' => fn ($q) => $q->where('status', 'ativa')
+                ->with(['turma.escola', 'turma.anoLetivo', 'turma.etapa']),
+            'responsaveis.pessoa',
+        ]);
+        abort_if(! $aluno, 404, 'Aluno não encontrado.');
+
+        $matricula = $aluno->matriculas->sortByDesc('id')->first();
+        $responsavel = $aluno->responsaveis
+            ->sortByDesc(fn ($r) => ($r->pivot->principal ? 2 : 0) + ($r->pivot->tipo === 'legal' ? 1 : 0))
+            ->first();
+
+        return app(\App\Services\PdfService::class)->download(
+            'aluno.declaracao-pdf',
+            compact('aluno', 'matricula', 'responsavel'),
+            'declaracao-matricula-'.\Illuminate\Support\Str::slug($aluno->nome ?? 'aluno').'.pdf'
+        );
     }
 
     public function edit($id)
