@@ -18,6 +18,7 @@ use App\Models\Ocorrencia;
 use App\Models\ParadaTransporte;
 use App\Models\PeriodoLetivo;
 use App\Models\Pessoa;
+use App\Models\PlanoAtendimento;
 use App\Models\Responsavel;
 use App\Models\RotaTransporte;
 use App\Models\TransporteAluno;
@@ -170,6 +171,7 @@ class DemoEscolarSeeder extends Seeder
         $this->transporte($empresa, array_values($escolas));
         $this->alimentacao($empresa, array_values($escolas));
         $this->ocorrencias($empresa);
+        $this->planosAtendimento($empresa);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -1167,6 +1169,60 @@ class DemoEscolarSeeder extends Seeder
                         'Advertência verbal registrada', 'Convocação dos pais', 'Orientação individual',
                     ]),
                     'notifica_responsavel' => $gravidade !== 'leve',
+                    'ativo' => 'S',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Planos de atendimento especializado (PEI/PDI) para uma
+     * fracao dos alunos ativos do ano atual. Idempotente por
+     * escola — pula se ja existem planos.
+     */
+    private function planosAtendimento(Empresa $empresa): void
+    {
+        $necessidades = [
+            'TEA — suporte em rotina e comunicacao',
+            'Deficiencia visual — material em braille/ampliado',
+            'TDAH — tempo estendido e reforco pedagogico',
+            'Altas habilidades — atividades de aprofundamento',
+            'Deficiencia auditiva — recursos visuais e intérprete',
+        ];
+        $objetivos = [
+            'Desenvolver autonomia nas atividades cotidianas',
+            'Garantir acesso ao curriculo com adaptacoes',
+            'Melhorar comunicacao e interacao social',
+            'Manter frequencia e participacao nas avaliacoes',
+        ];
+
+        foreach (Escola::query()->where('empresa_id', $empresa->id)->get() as $escola) {
+            if (PlanoAtendimento::query()->where('escola_id', $escola->id)->exists()) {
+                continue;
+            }
+
+            $alunosIds = Matricula::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('status', 'ativa')
+                ->whereHas('turma', fn ($q) => $q->where('escola_id', $escola->id))
+                ->inRandomOrder()
+                ->limit(30)
+                ->pluck('aluno_id');
+
+            foreach ($alunosIds as $alunoId) {
+                PlanoAtendimento::create([
+                    'empresa_id' => $empresa->id,
+                    'aluno_id' => $alunoId,
+                    'escola_id' => $escola->id,
+                    'tipo' => fake()->randomElement(['pei', 'pei', 'pdi', 'paee']),
+                    'status' => fake()->randomElement(['ativo', 'ativo', 'ativo', 'elaboracao', 'suspenso']),
+                    'data_elaboracao' => now()->subMonths(fake()->numberBetween(1, 10))->toDateString(),
+                    'proxima_revisao' => now()->addMonths(fake()->numberBetween(1, 6))->toDateString(),
+                    'diagnostico' => 'Avaliacao pedagogica e laudos anexados aos documentos do aluno.',
+                    'necessidades' => fake()->randomElement($necessidades),
+                    'objetivos' => fake()->randomElement($objetivos),
+                    'estrategias' => 'Adaptações curriculares, tempo estendido e avaliacoes alternativas.',
+                    'observacoes' => 'Reuniao de acompanhamento com a familia a cada bimestre.',
                     'ativo' => 'S',
                 ]);
             }

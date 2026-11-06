@@ -125,6 +125,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'transporte_aluno',
         'cardapio',
         'ocorrencia',
+        'plano_atendimento',
     ];
 
     foreach ($authGroupFiles as $groupFile) {

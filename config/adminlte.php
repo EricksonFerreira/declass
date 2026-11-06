@@ -431,6 +431,12 @@ return [
                     'icon' => 'fas fa-exclamation-circle',
                 ],
                 [
+                    'text' => 'Planos de Atendimento',
+                    'route' => 'plano_atendimento.index',
+                    'can' => 'plano_atendimento.index',
+                    'icon' => 'fas fa-hands-helping',
+                ],
+                [
                     'text' => 'Alunos',
                     'route' => 'aluno.index',
                     'can' => 'aluno.index',
