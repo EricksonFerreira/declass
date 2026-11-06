@@ -64,7 +64,7 @@
                 <span class="font-weight-bold">Turmas do ano letivo {{ $anoLetivo->ano ?? '' }} ({{ $turmas->count() }})</span>
                 <div>
                     @if($podeGerar)
-                        <a href="#gerador" class="btn btn-info btn-sm"><i class="fa fa-layer-group"></i> Geração em massa</a>
+                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#modal-gerar-lote"><i class="fa fa-layer-group"></i> Geração em massa</button>
                         <a href="{{ route('turma.create') }}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Nova turma</a>
                     @endif
                 </div>
@@ -101,7 +101,7 @@
                                 <td colspan="6" class="text-center text-muted py-4">
                                     <i class="fas fa-chalkboard fa-2x mb-2 d-block"></i>
                                     Nenhuma turma neste ano letivo.
-                                    @if($podeGerar) Use a <strong>geração em massa</strong> abaixo para criar todas de uma vez. @endif
+                                    @if($podeGerar) Use a <strong>geração em massa</strong> acima para criar todas de uma vez. @endif
                                 </td>
                             </tr>
                         @endforelse

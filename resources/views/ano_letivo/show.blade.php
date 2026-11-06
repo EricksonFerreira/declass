@@ -8,9 +8,20 @@
 @stop
 
 @section('content')
+<style>
+    .collapse-toggle { cursor: pointer; }
+    .collapse-toggle .collapse-icon { transition: transform .2s ease; display: inline-block; }
+    .collapse-toggle[aria-expanded="true"] .collapse-icon { transform: rotate(180deg); }
+</style>
 @php
     $periodicidadeLabel = \App\Models\AnoLetivo::PERIODICIDADES[$anoLetivo->periodicidade] ?? '—';
     $totalDisciplinas = $turmas->sum(fn ($t) => $t->disciplinas->count());
+    // Collapse inteligente: abre so o que precisa de acao no momento.
+    $periodosAbertos = $anoLetivo->periodos->isEmpty();
+    $turmasAbertas = $turmas->isEmpty();
+    $temTurmaSemOrg = $turmas->contains(fn ($t) => $t->disciplinas->isEmpty());
+    $temTurmaComOrg = $turmas->contains(fn ($t) => $t->disciplinas->isNotEmpty());
+    $replicarAberto = $turmas->count() >= 2 && $temTurmaSemOrg && $temTurmaComOrg;
     $turmasJson = $turmas->map(fn ($t) => [
         'id' => $t->id,
         'nome' => $t->nome,
@@ -79,7 +90,18 @@
 
     <div class="col-md-8">
         <div class="card">
-            <div class="card-header font-weight-bold">Períodos letivos ({{ $anoLetivo->periodos->count() }})</div>
+            <div class="card-header collapse-toggle d-flex justify-content-between align-items-center"
+                 data-toggle="collapse" data-target="#collapse-periodos" aria-expanded="{{ $periodosAbertos ? 'true' : 'false' }}">
+                <span class="font-weight-bold">
+                    Períodos letivos
+                    <span class="badge badge-secondary">{{ $anoLetivo->periodos->count() }}</span>
+                    <i class="fa fa-chevron-down collapse-icon ml-1"></i>
+                </span>
+                @if($anoLetivo->periodos->isEmpty() && ($anoLetivo->periodicidade ?? null) !== 'personalizado')
+                    <span class="badge badge-warning">pendente</span>
+                @endif
+            </div>
+            <div id="collapse-periodos" class="collapse {{ $periodosAbertos ? 'show' : '' }}">
             <div class="card-body p-0">
                 <table class="table table-sm table-hover mb-0">
                     <thead class="thead-light">
@@ -121,18 +143,24 @@
                     </tbody>
                 </table>
             </div>
+            </div>
         </div>
 
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="font-weight-bold">Turmas ({{ $turmas->count() }})</span>
+                <span class="font-weight-bold collapse-toggle" data-toggle="collapse" data-target="#collapse-turmas" aria-expanded="{{ $turmasAbertas ? 'true' : 'false' }}">
+                    Turmas
+                    <span class="badge badge-secondary">{{ $turmas->count() }}</span>
+                    <i class="fa fa-chevron-down collapse-icon ml-1"></i>
+                </span>
                 <div>
                     @if($podeGerar)
-                        <a href="#gerador" class="btn btn-info btn-sm"><i class="fa fa-layer-group"></i> Geração em massa</a>
+                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#modal-gerar-lote"><i class="fa fa-layer-group"></i> Geração em massa</button>
                         <a href="{{ route('turma.create') }}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Nova turma</a>
                     @endif
                 </div>
             </div>
+            <div id="collapse-turmas" class="collapse {{ $turmasAbertas ? 'show' : '' }}">
             <div class="card-body p-0">
                 <table class="table table-sm table-hover mb-0">
                     <thead class="thead-light">
@@ -172,12 +200,13 @@
                                 <td colspan="6" class="text-center text-muted py-4">
                                     <i class="fas fa-chalkboard fa-2x mb-2 d-block"></i>
                                     Nenhuma turma neste ano letivo.
-                                    @if($podeGerar) Use a <strong>geração em massa</strong> abaixo para criar todas de uma vez. @endif
+                                    @if($podeGerar) Use a <strong>geração em massa</strong> acima para criar todas de uma vez. @endif
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
+            </div>
             </div>
         </div>
 
@@ -191,10 +220,13 @@
 
         @if($podeReplicar && $turmas->count() >= 2)
             <div class="card">
-                <div class="card-header font-weight-bold">
+                <div class="card-header collapse-toggle font-weight-bold"
+                     data-toggle="collapse" data-target="#collapse-replicar" aria-expanded="{{ $replicarAberto ? 'true' : 'false' }}">
                     <i class="fa fa-copy"></i> Replicar organização entre turmas
+                    <i class="fa fa-chevron-down collapse-icon ml-1"></i>
                     <small class="text-muted font-weight-normal">— copie disciplinas e professores da turma modelo para as irmãs (A, B, C...)</small>
                 </div>
+                <div id="collapse-replicar" class="collapse {{ $replicarAberto ? 'show' : '' }}">
                 <div class="card-body">
                     <form method="POST" action="{{ route('turma.replicar_organizacao') }}" id="form-replicar">
                         @csrf
@@ -247,6 +279,7 @@
                             </button>
                         </div>
                     </form>
+                </div>
                 </div>
             </div>
 
