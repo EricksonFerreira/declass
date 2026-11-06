@@ -29,9 +29,12 @@ abstract class AbstractBaseService implements BaseServiceInterface
         return $this->formatArraySelect($query->get(), $key, $value);
     }
 
-    public function getAllWithFiltersAndPagination($filters = [], $perPage = 15, $with = [], $orderBy = 'id', $order = 'asc')
+    public function getAllWithFiltersAndPagination($filters = [], $perPage = 15, $with = [], $orderBy = 'id', $order = 'asc', ?\Closure $scope = null)
     {
         $query = $this->applyEmpresaScope($this->model->newQuery())->with($with);
+        if ($scope) {
+            $scope($query);
+        }
         $filters = $this->sanitizeEmpresaFilter($filters);
         $filters = $this->sanitizeInvalidColumnFilters($filters);
 

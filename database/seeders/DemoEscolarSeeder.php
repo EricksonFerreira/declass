@@ -10,6 +10,7 @@ use App\Models\Cardapio;
 use App\Models\Diario;
 use App\Models\Disciplina;
 use App\Models\Empresa;
+use App\Models\EntregaTarefa;
 use App\Models\Escola;
 use App\Models\Etapa;
 use App\Models\Frequencia;
@@ -21,6 +22,7 @@ use App\Models\Pessoa;
 use App\Models\PlanoAtendimento;
 use App\Models\Responsavel;
 use App\Models\RotaTransporte;
+use App\Models\Tarefa;
 use App\Models\TransporteAluno;
 use App\Models\Turma;
 use App\Models\User;
@@ -172,6 +174,7 @@ class DemoEscolarSeeder extends Seeder
         $this->alimentacao($empresa, array_values($escolas));
         $this->ocorrencias($empresa);
         $this->planosAtendimento($empresa);
+        $this->tarefas($empresa, $usuarios);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -1225,6 +1228,91 @@ class DemoEscolarSeeder extends Seeder
                     'observacoes' => 'Reuniao de acompanhamento com a familia a cada bimestre.',
                     'ativo' => 'S',
                 ]);
+            }
+        }
+    }
+
+    /**
+     * Dever de casa: tarefas por turma do ano atual com controle
+     * de entregas por aluno (idempotente por escola).
+     */
+    private function tarefas(Empresa $empresa, array $usuarios): void
+    {
+        $titulos = [
+            'Exercicios de fixacao da aula',
+            'Leitura do capitulo indicado',
+            'Pesquisa sobre o tema da semana',
+            'Resolucao de problemas',
+            'Redacao de texto dissertativo',
+            'Atividade pratica em grupo',
+            'Revisao para a prova',
+            'Interpretacao de texto',
+        ];
+        $descricoes = [
+            'Fazer os exercicios indicados no caderno.',
+            'Ler o capitulo e responder as questoes.',
+            'Pesquisar na internet e entregar um resumo de uma pagina.',
+            'Resolver os problemas da lista de exercicios.',
+        ];
+
+        foreach (Escola::query()->where('empresa_id', $empresa->id)->get() as $escola) {
+            $anoLetivo = \App\Models\AnoLetivo::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('escola_id', $escola->id)
+                ->where('ano', self::ANO_ATUAL)
+                ->first();
+            if (! $anoLetivo) {
+                continue;
+            }
+            if (Tarefa::query()->where('empresa_id', $empresa->id)
+                ->whereHas('turma', fn ($q) => $q->where('escola_id', $escola->id))->exists()) {
+                continue;
+            }
+
+            $turmas = Turma::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('escola_id', $escola->id)
+                ->where('ano_letivo_id', $anoLetivo->id)
+                ->with(['disciplinas', 'matriculas' => fn ($q) => $q->where('status', 'ativa')])
+                ->inRandomOrder()
+                ->limit(12)
+                ->get();
+
+            $autorId = $usuarios['prof1']->id ?? null;
+
+            foreach ($turmas as $turma) {
+                $disciplinas = $turma->disciplinas;
+                foreach (range(1, 2) as $n) {
+                    $dataEntrega = now()->addDays(fake()->numberBetween(-8, 12));
+                    $tarefa = Tarefa::create([
+                        'empresa_id' => $empresa->id,
+                        'turma_id' => $turma->id,
+                        'disciplina_id' => $disciplinas->isNotEmpty() ? $disciplinas->random()->id : null,
+                        'user_id' => $autorId,
+                        'titulo' => fake()->randomElement($titulos).' '.fake()->numberBetween(1, 30),
+                        'descricao' => fake()->randomElement($descricoes),
+                        'instrucoes' => fake()->optional(0.4)->sentence(),
+                        'data_entrega' => $dataEntrega->toDateString(),
+                        'nota_maxima' => fake()->randomElement([5, 10, 10, 10]),
+                        'ativo' => 'S',
+                    ]);
+
+                    foreach ($turma->matriculas->take(28) as $matricula) {
+                        $vencida = $dataEntrega->isPast();
+                        $status = $vencida
+                            ? fake()->randomElement(['entregue', 'entregue', 'avaliada', 'pendente', 'pendente'])
+                            : 'pendente';
+                        EntregaTarefa::create([
+                            'empresa_id' => $empresa->id,
+                            'tarefa_id' => $tarefa->id,
+                            'matricula_id' => $matricula->id,
+                            'status' => $status,
+                            'nota' => $status === 'avaliada' ? fake()->randomFloat(1, 0, $tarefa->nota_maxima ?? 10) : null,
+                            'data_entrega' => in_array($status, ['entregue', 'avaliada']) ? $dataEntrega->copy()->subDays(fake()->numberBetween(0, 3))->toDateString() : null,
+                            'observacoes' => $status === 'pendente' && $vencida ? 'Entrega em atraso' : null,
+                        ]);
+                    }
+                }
             }
         }
     }

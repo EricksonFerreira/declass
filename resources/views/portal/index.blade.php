@@ -31,6 +31,7 @@
                     <a href="{{ route('portal.financeiro') }}" class="btn btn-outline-secondary btn-sm">Financeiro</a>
                     <a href="{{ route('portal.transporte') }}" class="btn btn-outline-dark btn-sm">Transporte</a>
                     <a href="{{ route('portal.cardapio') }}" class="btn btn-outline-success btn-sm">Cardápio</a>
+                    <a href="{{ route('portal.tarefas') }}" class="btn btn-outline-primary btn-sm">Tarefas</a>
                     <a href="{{ route('portal.avisos') }}" class="btn btn-outline-info btn-sm">Avisos</a>
                 </div>
             </div>

@@ -168,6 +168,48 @@ class PortalController extends Controller
     }
 
     /**
+     * Tarefas das turmas onde os alunos vinculados estao
+     * matriculados, com o status de entrega de cada um.
+     */
+    public function tarefas()
+    {
+        $alunos = $this->alunosDoUsuario(auth()->user());
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $matriculas = Matricula::query()
+            ->whereIn('aluno_id', $alunos->pluck('id'))
+            ->where('status', 'ativa')
+            ->with(['turma:id,escola_id', 'aluno:id,pessoa_id'])
+            ->get();
+
+        $turmaIds = $matriculas->pluck('turma_id')->unique();
+
+        $tarefas = \App\Models\Tarefa::query()
+            ->whereIn('turma_id', $turmaIds)
+            ->where('ativo', 'S')
+            ->with(['turma:id,nome,escola_id', 'disciplina:id,nome', 'entregas' => fn ($q) => $q
+                ->whereIn('matricula_id', $matriculas->pluck('id')),
+                'entregas.tarefa:id,data_entrega'])
+            ->orderBy('data_entrega')
+            ->limit(60)
+            ->get();
+
+        // Entrega de cada aluno por tarefa
+        $entregasPorAluno = $tarefas->flatMap->entregas->keyBy(fn ($e) => $e->tarefa_id.'|'.$e->matricula_id);
+        $matriculaPorAlunoTurma = $matriculas->keyBy(fn ($m) => $m->aluno_id.'|'.$m->turma_id);
+
+        return view('portal.tarefas', [
+            'titulo' => 'Tarefas',
+            'alunos' => $alunos,
+            'tarefas' => $tarefas,
+            'matriculas' => $matriculas,
+            'entregasPorAluno' => $entregasPorAluno,
+            'matriculaPorAlunoTurma' => $matriculaPorAlunoTurma,
+        ]);
+    }
+
+    /**
      * Alunos acessiveis pela conta: filhos de responsaveis vinculados
      * + o proprio aluno quando a conta e de aluno.
      */

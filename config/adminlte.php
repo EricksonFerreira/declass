@@ -437,6 +437,12 @@ return [
                     'icon' => 'fas fa-hands-helping',
                 ],
                 [
+                    'text' => 'Tarefas',
+                    'route' => 'tarefa.index',
+                    'can' => 'tarefa.index',
+                    'icon' => 'fas fa-tasks',
+                ],
+                [
                     'text' => 'Alunos',
                     'route' => 'aluno.index',
                     'can' => 'aluno.index',
