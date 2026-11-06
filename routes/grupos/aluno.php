@@ -12,6 +12,9 @@ Route::prefix('aluno')->name('aluno.')->group(function () {
     // Declaracao de matricula em PDF
     Route::get('{aluno}/declaracao', [AlunoController::class, 'declaracao'])->name('declaracao');
 
+    // Certificado de conclusao em PDF (exige matricula concluida)
+    Route::get('{aluno}/certificado', [AlunoController::class, 'certificado'])->name('certificado');
+
     // Documentos do aluno (anexos digitais)
     Route::post('{aluno}/documentos', [AlunoDocumentoController::class, 'store'])->name('documento.store');
     Route::put('{aluno}/documentos/{documento}', [AlunoDocumentoController::class, 'update'])->name('documento.update');

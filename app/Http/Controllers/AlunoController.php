@@ -30,7 +30,7 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
         $this->nomeFiltro = 'aluno';
 
         $this->middleware('can:aluno.index')->only('index');
-        $this->middleware('can:aluno.show')->only(['show', 'declaracao']);
+        $this->middleware('can:aluno.show')->only(['show', 'declaracao', 'certificado']);
         $this->middleware('can:aluno.create')->only('create');
         $this->middleware('can:aluno.store')->only('store');
         $this->middleware('can:aluno.edit')->only('edit');
@@ -126,6 +126,34 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
             'aluno.declaracao-pdf',
             compact('aluno', 'matricula', 'responsavel'),
             'declaracao-matricula-'.\Illuminate\Support\Str::slug($aluno->nome ?? 'aluno').'.pdf'
+        );
+    }
+
+    /**
+     * Certificado de conclusao em PDF: emitido apenas quando o aluno
+     * possui matricula com status "concluida".
+     */
+    public function certificado($id)
+    {
+        $aluno = $this->alunoService->getById($id, [
+            'pessoa', 'escola',
+            'matriculas' => fn ($q) => $q->where('status', 'concluida')
+                ->with(['turma.escola', 'turma.anoLetivo', 'turma.etapa']),
+            'responsaveis.pessoa',
+        ]);
+        abort_if(! $aluno, 404, 'Aluno não encontrado.');
+
+        $matricula = $aluno->matriculas->sortByDesc('id')->first();
+        abort_if(! $matricula, 404, 'Aluno não possui matrícula concluída.');
+
+        $responsavel = $aluno->responsaveis
+            ->sortByDesc(fn ($r) => ($r->pivot->principal ? 2 : 0) + ($r->pivot->tipo === 'legal' ? 1 : 0))
+            ->first();
+
+        return app(\App\Services\PdfService::class)->download(
+            'aluno.certificado-pdf',
+            compact('aluno', 'matricula', 'responsavel'),
+            'certificado-conclusao-'.\Illuminate\Support\Str::slug($aluno->nome ?? 'aluno').'.pdf'
         );
     }
 
