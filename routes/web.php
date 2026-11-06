@@ -130,6 +130,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'relatorio_frequencia',
         'relatorio_inadimplencia',
         'relatorio_transporte',
+        'relatorio_aproveitamento',
         'evento',
         'pesquisa',
         'saude',

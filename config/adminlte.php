@@ -492,6 +492,12 @@ return [
                     'can' => 'relatorio_transporte.index',
                     'icon' => 'fas fa-route',
                 ],
+                [
+                    'text' => 'Aproveitamento',
+                    'route' => 'relatorio_aproveitamento.index',
+                    'can' => 'relatorio_aproveitamento.index',
+                    'icon' => 'fas fa-chart-line',
+                ],
             ],
         ],
 
