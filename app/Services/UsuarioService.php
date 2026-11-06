@@ -42,10 +42,10 @@ class UsuarioService extends AbstractBaseService
     }
 
     /**
-     * Retorna usuarios para selects no contexto de reserva.
-     * Formato: "Nome - CPF" (numero_identificacao) ou "Nome - email".
+     * Retorna usuarios para selects.
+     * Formato: "Nome - documento" (numero_identificacao) ou "Nome - email".
      */
-    public function getAllForReservaSelect(): array
+    public function getAllForSelect($key = 'id', $value = 'nome'): array
     {
         $query = $this->applyEmpresaScope($this->model->newQuery())
             ->select(['id', 'nome', 'numero_identificacao', 'email'])

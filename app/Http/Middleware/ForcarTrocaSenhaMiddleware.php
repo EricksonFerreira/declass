@@ -17,12 +17,12 @@ class ForcarTrocaSenhaMiddleware
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return $next($request);
         }
 
         $user = $request->user();
-        if (!$user || !$user->forcar_troca_senha) {
+        if (! $user || ! $user->forcar_troca_senha) {
             return $next($request);
         }
 
@@ -36,7 +36,7 @@ class ForcarTrocaSenhaMiddleware
 
     private function isAllowedRoute(?string $routeName): bool
     {
-        if (!$routeName) {
+        if (! $routeName) {
             return false;
         }
 

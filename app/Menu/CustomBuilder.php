@@ -42,7 +42,7 @@ class CustomBuilder extends Builder
             $item = $items[$i];
 
             // Only act on section header items.
-            if (!is_array($item) || !isset($item['header'])) {
+            if (! is_array($item) || ! isset($item['header'])) {
                 continue;
             }
 
@@ -50,7 +50,7 @@ class CustomBuilder extends Builder
             // the next header (or end of list).
             $hasVisible = false;
             for ($j = $i + 1; $j < $count; $j++) {
-                if (!is_array($items[$j])) {
+                if (! is_array($items[$j])) {
                     $hasVisible = true;
                     break;
                 }
@@ -59,7 +59,7 @@ class CustomBuilder extends Builder
                     break;
                 }
                 // Skip items explicitly restricted by a prior filter.
-                if (!empty($items[$j]['restricted'])) {
+                if (! empty($items[$j]['restricted'])) {
                     continue;
                 }
                 // Skip submenu parents whose children were all removed
@@ -74,7 +74,7 @@ class CustomBuilder extends Builder
                 break;
             }
 
-            if (!$hasVisible) {
+            if (! $hasVisible) {
                 $items[$i]['restricted'] = true;
             }
         }

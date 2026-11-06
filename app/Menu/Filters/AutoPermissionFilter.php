@@ -10,15 +10,15 @@ class AutoPermissionFilter implements FilterInterface
 {
     public function transform($item)
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return $item;
         }
 
-        if (!empty($item['url']) && is_string($item['url'])) {
+        if (! empty($item['url']) && is_string($item['url'])) {
             $item['url'] = $this->normalizeAdminUrl($item['url']);
         }
 
-        if (!empty($item['submenu']) && is_array($item['submenu'])) {
+        if (! empty($item['submenu']) && is_array($item['submenu'])) {
             $item['submenu'] = array_map(function ($child) {
                 return is_array($child) ? $this->transform($child) : $child;
             }, $item['submenu']);
@@ -26,7 +26,7 @@ class AutoPermissionFilter implements FilterInterface
 
         // Se a permissao foi definida manualmente no menu, respeita,
         // sem impedir o tratamento automatico dos filhos.
-        if (!empty($item['can'])) {
+        if (! empty($item['can'])) {
             return $item;
         }
 
@@ -41,15 +41,15 @@ class AutoPermissionFilter implements FilterInterface
     private function resolvePermissionFromMenuItem(array $item): ?string
     {
         // Ignora itens de estrutura/auxiliares.
-        if (isset($item['header']) || !empty($item['submenu']) || isset($item['type'])) {
+        if (isset($item['header']) || ! empty($item['submenu']) || isset($item['type'])) {
             return null;
         }
 
-        if (!empty($item['route']) && is_string($item['route'])) {
+        if (! empty($item['route']) && is_string($item['route'])) {
             return $item['route'];
         }
 
-        if (empty($item['url']) || !is_string($item['url'])) {
+        if (empty($item['url']) || ! is_string($item['url'])) {
             return null;
         }
 
@@ -70,13 +70,13 @@ class AutoPermissionFilter implements FilterInterface
             return null;
         }
 
-        return $firstSegment . '.index';
+        return $firstSegment.'.index';
     }
 
     private function matchGetRouteNameByPath(string $path): ?string
     {
         try {
-            $route = Route::getRoutes()->match(request()->create('/' . $path, 'GET'));
+            $route = Route::getRoutes()->match(request()->create('/'.$path, 'GET'));
 
             return $route?->getName();
         } catch (\Throwable $e) {
@@ -97,11 +97,11 @@ class AutoPermissionFilter implements FilterInterface
         }
 
         $normalized = ltrim($value, '/');
-        if ($normalized === $adminPrefix || str_starts_with($normalized, $adminPrefix . '/')) {
+        if ($normalized === $adminPrefix || str_starts_with($normalized, $adminPrefix.'/')) {
             return $normalized;
         }
 
-        return $adminPrefix . '/' . $normalized;
+        return $adminPrefix.'/'.$normalized;
     }
 
     private function stripAdminPrefix(string $path): string
@@ -117,7 +117,7 @@ class AutoPermissionFilter implements FilterInterface
             return '';
         }
 
-        if (str_starts_with($normalized, $adminPrefix . '/')) {
+        if (str_starts_with($normalized, $adminPrefix.'/')) {
             return substr($normalized, strlen($adminPrefix) + 1);
         }
 

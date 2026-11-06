@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Suas credenciais de acesso — DECLOCK</title>
+<title>Suas credenciais de acesso — DECLASS</title>
 <style>
   body { margin:0; padding:0; background:#f4f6f9; font-family: 'Segoe UI', Arial, sans-serif; color:#333; }
   .wrapper { max-width:600px; margin:32px auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.08); }
@@ -32,7 +32,7 @@
     <div class="greeting">Olá, {{ $admin->nome }}!</div>
 
     <p>
-      Sua conta de administrador foi criada na plataforma <strong>DECLOCK</strong>
+      Sua conta de administrador foi criada na plataforma <strong>DECLASS</strong>
       para a empresa <strong>{{ $empresa->nome }}</strong>.
       Use as credenciais abaixo para fazer seu primeiro acesso.
     </p>
@@ -70,7 +70,7 @@
   </div>
 
   <div class="footer">
-    DECLOCK — Sistema de Gestão de Tempo e Projetos<br>
+    DECLASS — Plataforma de Gestão Escolar<br>
     Este é um e-mail automático, por favor não responda diretamente.
   </div>
 </div>

@@ -5,8 +5,6 @@ namespace App\Services;
 use App\Models\Permissao;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
 
 class PermissaoService extends AbstractBaseService
 {
@@ -19,8 +17,8 @@ class PermissaoService extends AbstractBaseService
 
     public function setModel(Model $model): void
     {
-        if (!$model instanceof Permissao) {
-            throw new \InvalidArgumentException("Modelo esperado App\\Models\\Permissao");
+        if (! $model instanceof Permissao) {
+            throw new \InvalidArgumentException('Modelo esperado App\\Models\\Permissao');
         }
         $this->model = $model;
     }
@@ -58,143 +56,41 @@ class PermissaoService extends AbstractBaseService
     }
 
     /**
-     * Prefixos de módulo que são exclusivos do superadmin da plataforma.
-     * Nunca devem aparecer na tela de edição de perfil de usuários de empresa.
+     * Modulos exclusivos da plataforma — nunca aparecem na tela de
+     * edicao de perfil de usuarios de empresa (tenant).
      */
     private array $modulosPlataforma = [
         'empresa',
-        'replicacao_base',
-        'regra',
-        'permissao',
-        'tipo_usuario',
-        'plano',
-        'planos',
-        'assinatura',
         'migrations',
-        'fipe',
-        'job',
+        'comandos',
+        'limpar-cache',
         'sitemap',
-        'pais',
-        'dia_util',
-        'dias_uteis',
-        'horario_diario',
-        'powerbi',
-        'stripe',
-        'cashier',
-        'webhook',
-        'subscription',
-        'profile',
-        'onboarding',
-        'status_movimentacao',
-        'status_veiculo',
-        'status_veiculos',
-        'status_item_checklist',
-        'tipo_movimentacao',
-        'tipotransacao',
-    ];
-
-    /**
-     * Módulos de status: usuários de empresa só vêem index/show, não gerenciam.
-     * A tela de tipo de usuário só exibe as ações de leitura para esses módulos.
-     */
-    private array $modulosStatusReadOnly = [
-        'status_veiculo',
-        'status_movimentacao',
-        'status_reserva',
-        'status_veiculos',
-        'status_item_checklist',
-        'tipo_movimentacao',
-        'tipotransacao',
+        'cron',
+        'site',
+        'manifest',
+        'pwa',
+        'log-viewer',
+        'darkmode',
+        'adminlte',
+        'cadastro',
+        'empresa-contexto',
+        'empresa_context',
     ];
 
     public function getAllForUserContext(?User $user)
     {
-        if (!$user || $user->isSuperAdmin()) {
+        if (! $user || $user->isSuperAdmin()) {
             return $this->getAll();
         }
 
-        $query = $user->empresa?->planoAtivo();
-        if (!$query) {
-            return collect();
-        }
-
-        if (SchemaCache::hasTable('plano_permissao')) {
-            $query->with('plano.permissoes');
-        } else {
-            $query->with('plano');
-        }
-
-        $plano = $query->first()?->plano;
-        if (!$plano) {
-            return collect();
-        }
-
-        // Se a tabela plano_permissao existe e o plano tem permissões vinculadas,
-        // usa esse conjunto como base — garantindo que o plano restringe o que é exibido.
-        if (SchemaCache::hasTable('plano_permissao') && $plano->permissoes()->exists()) {
-            $permissoes = $plano->permissoes()
-                ->where('guard_name', 'web')
-                ->orderByRaw("CASE WHEN grupo IS NULL OR grupo = '' THEN 1 ELSE 0 END")
-                ->orderBy('grupo')
-                ->orderBy('name')
-                ->get();
-        } else {
-            // Fallback: todas as permissões, mas filtra módulos pelo plano contratado.
-            $permissoes = Permissao::query()
-                ->where('guard_name', 'web')
-                ->orderBy('grupo')
-                ->orderBy('name')
-                ->get();
-
-            $permissoes = $permissoes->filter(function (Permissao $p) use ($plano) {
-                return $this->permissaoPermitidaPorPlano($p->name, $plano);
-            })->values();
-        }
-
-        // Remove módulos de plataforma e filtra ações de gestão nos módulos de status.
-        return $permissoes->filter(function (Permissao $p) {
+        // Sem gate de plano: o tenant gerencia todos os modulos
+        // operacionais; apenas os modulos de plataforma ficam de fora.
+        return $this->getAll()->filter(function (Permissao $p) {
             $prefixo = strtolower(explode('.', $p->name)[0]);
-            if (in_array($prefixo, $this->modulosPlataforma, true)) {
-                return false;
-            }
-            // Para módulos de status: só permite ações de leitura
-            if (in_array($prefixo, $this->modulosStatusReadOnly, true)) {
-                $acao = (string) str($p->name)->afterLast('.');
-                return in_array($acao, ['index', 'show', 'filtro', 'setPerPage', 'removerFiltro'], true);
-            }
-            return true;
+
+            return ! in_array($prefixo, $this->modulosPlataforma, true)
+                && ! Permissao::isNomeInterno($p->name);
         })->values();
-    }
-
-    /**
-     * Verifica se uma permissão deve ser exibida considerando os módulos do plano.
-     */
-    private function permissaoPermitidaPorPlano(string $permissionName, $plano): bool
-    {
-        $prefixo = strtolower(explode('.', $permissionName)[0]);
-
-        if (in_array($prefixo, $this->modulosPlataforma, true)) {
-            return false;
-        }
-
-        // Módulos opcionais: só exibe se o plano inclui.
-        if (in_array($prefixo, ['multa'], true) && !$plano->modulo_multas) {
-            return false;
-        }
-        if (in_array($prefixo, ['nfse'], true) && !$plano->modulo_nfse) {
-            return false;
-        }
-        if (str_starts_with($permissionName, 'empresa.site-apresentacao') && !$plano->site_vendas) {
-            return false;
-        }
-        if (str_starts_with($permissionName, 'site.') && !$plano->site_vendas) {
-            return false;
-        }
-        if (in_array($prefixo, ['api', 'webhook'], true) && !$plano->api_integracao) {
-            return false;
-        }
-
-        return true;
     }
 
     public function getAllWithCheckedForUserContext($regraPermissoes, ?User $user)

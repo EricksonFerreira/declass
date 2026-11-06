@@ -7,6 +7,7 @@ use Illuminate\View\Component;
 class FormErrors extends Component
 {
     public $name;
+
     public $message;
 
     public function __construct($name)
@@ -17,6 +18,6 @@ class FormErrors extends Component
 
     public function render()
     {
-        return view('components.form-errors',['message' => $this->message]);
+        return view('components.form-errors', ['message' => $this->message]);
     }
 }

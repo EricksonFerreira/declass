@@ -7,12 +7,17 @@ use Illuminate\View\Component;
 class Filter extends Component
 {
     public $filters;
+
     public $additionalFilters;
+
     public $itensFiltered;
+
     public $statusList;
 
     public $nomeFiltro;
+
     public $urlPadrao;
+
     public $routeRedirect;
 
     public function __construct(

@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'title' => 'DECLOCK',
+    'title' => 'DECLASS',
     'title_prefix' => '',
     'title_postfix' => '',
 
@@ -63,12 +63,12 @@ return [
     |
     */
 
-    'logo' => '<b>DECLOCK</b>',
+    'logo' => '<b>DECLASS</b>',
     'logo_img' => 'assets/imgs/logo-sem-texto.png',
     'logo_img_class' => 'brand-image',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
-    'logo_img_alt' => 'Logo DECLOCK',
+    'logo_img_alt' => 'Logo DECLASS',
 
     /*
     |--------------------------------------------------------------------------
@@ -114,7 +114,7 @@ return [
         'mode' => 'cwrapper',
         'img' => [
             'path' => 'assets/imgs/logo-sem-texto.png',
-            'alt' => 'Imagem de Pré-carregamento DECLOCK',
+            'alt' => 'Imagem de Pré-carregamento DECLASS',
             'effect' => 'animation__shake',
             'width' => 160,
             'height' => 160,
@@ -325,140 +325,36 @@ return [
             'icon' => 'fas fa-home',
         ],
 
-        // REGISTRAR TEMPO
+        // INSTITUCIONAL
         [
-            'text' => 'Registrar Tempo',
-            'icon' => 'fas fa-stopwatch',
+            'text' => 'Institucional',
+            'icon' => 'fas fa-school',
             'submenu' => [
                 [
-                    'text' => 'Rastreador',
-                    'route' => 'operacao.tracker.index',
-                    'can' => 'operacao.tracker.index',
-                    'icon' => 'fas fa-stopwatch',
+                    'text' => 'Organizações',
+                    'route' => 'organizacao.index',
+                    'can' => 'organizacao.index',
+                    'icon' => 'fas fa-sitemap',
                 ],
                 [
-                    'text' => 'Planilha de Horas',
-                    'route' => 'operacao.timesheet',
-                    'can' => 'operacao.timesheet',
-                    'icon' => 'fas fa-table',
-                ],
-                [
-                    'text' => 'Calendário',
-                    'route' => 'operacao.calendario.index',
-                    'can' => 'operacao.calendario.index',
-                    'icon' => 'fas fa-calendar-alt',
+                    'text' => 'Escolas',
+                    'route' => 'escola.index',
+                    'can' => 'escola.index',
+                    'icon' => 'fas fa-school',
                 ],
             ],
         ],
 
-        // ANÁLISE
+        // PESSOAS
         [
-            'text' => 'Painel',
-            'icon' => 'fas fa-chart-pie',
+            'text' => 'Pessoas',
+            'icon' => 'fas fa-users',
             'submenu' => [
                 [
-                    'text' => 'Visão Geral',
-                    'route' => 'dashboard',
-                    'can' => 'dashboard',
-                    'icon' => 'fas fa-tachometer-alt',
-                ],
-                [
-                    'text' => 'Produtividade',
-                    'route' => 'home.produtividade',
-                    'can' => 'home.produtividade',
-                    'icon' => 'fas fa-chart-line',
-                ],
-                [
-                    'text' => 'Equipe',
-                    'route' => 'home.equipe',
-                    'can' => 'home.equipe',
-                    'icon' => 'fas fa-users',
-                ],
-                [
-                    'text' => 'Projetos',
-                    'route' => 'home.projetos',
-                    'can' => 'home.projetos',
-                    'icon' => 'fas fa-project-diagram',
-                ],
-            ],
-        ],
-        [
-            'text' => 'Relatórios',
-            'icon' => 'fas fa-file-alt',
-            'submenu' => [
-                [
-                    'text' => 'Visão geral',
-                    'route' => 'relatorios.index',
-                    'can' => 'relatorios.index',
-                    'icon' => 'fas fa-file-alt',
-                ],
-                [
-                    'text' => 'Horas trabalhadas',
-                    'route' => 'relatorios.horas-trabalhadas',
-                    'can' => 'relatorios.horas-trabalhadas',
-                    'icon' => 'fas fa-clock',
-                ],
-                [
-                    'text' => 'Consumo × Estimado',
-                    'route' => 'relatorios.consumo',
-                    'can' => 'relatorios.consumo',
-                    'icon' => 'fas fa-chart-bar',
-                ],
-                [
-                    'text' => 'Matriz de Horas',
-                    'route' => 'relatorios.matriz',
-                    'can' => 'relatorios.matriz',
-                    'icon' => 'fas fa-th',
-                ],
-                [
-                    'text' => 'Exportar CSV',
-                    'route' => 'relatorios.export',
-                    'can' => 'relatorios.export',
-                    'icon' => 'fas fa-file-export',
-                ],
-            ],
-        ],
-
-        // GERENCIAR
-        [
-            'text' => 'Gerenciar',
-            'icon' => 'fas fa-folder-open',
-            'submenu' => [
-                [
-                    'text' => 'Clientes',
-                    'route' => 'operacao.clientes.index',
-                    'can' => 'operacao.clientes.index',
-                    'icon' => 'fas fa-user-friends',
-                ],
-                [
-                    'text' => 'Documentos da Empresa',
-                    'route' => 'documentos.index',
-                    'icon' => 'fas fa-folder-open',
-                    'can' => 'documentos.index',
-                ],
-                [
-                    'text' => 'Equipe',
-                    'route' => 'operacao.times.index',
-                    'can' => 'operacao.times.index',
-                    'icon' => 'fas fa-users',
-                ],
-                [
-                    'text' => 'Folgas e Férias',
-                    'route' => 'operacao.timeoff.index',
-                    'can' => 'operacao.timeoff.index',
-                    'icon' => 'fas fa-plane',
-                ],
-                [
-                    'text' => 'Funções',
-                    'route' => 'operacao.funcoes.index',
-                    'can' => 'operacao.funcoes.index',
-                    'icon' => 'fas fa-briefcase',
-                ],
-                [
-                    'text' => 'Importar CSV',
-                    'route' => 'importacao.index',
-                    'icon' => 'fas fa-file-import',
-                    'can' => 'importacao.index',
+                    'text' => 'Usuários',
+                    'route' => 'usuario.index',
+                    'can' => 'usuario.index',
+                    'icon' => 'fas fa-user-cog',
                 ],
                 [
                     'text' => 'Perfis de Acesso',
@@ -466,49 +362,31 @@ return [
                     'icon' => 'fas fa-user-shield',
                     'can' => 'regra.index',
                 ],
+            ],
+        ],
+
+        // DOCUMENTOS
+        [
+            'text' => 'Documentos',
+            'icon' => 'fas fa-folder-open',
+            'submenu' => [
                 [
-                    'text' => 'Projetos',
-                    'route' => 'operacao.projetos.index',
-                    'can' => 'operacao.projetos.index',
-                    'icon' => 'fas fa-project-diagram',
-                ],
-                [
-                    'text' => 'Tags',
-                    'route' => 'operacao.tags.index',
-                    'can' => 'operacao.tags.index',
-                    'icon' => 'fas fa-tags',
-                ],
-                [
-                    'text' => 'Uso de IA',
-                    'route' => 'configuracao-ia.edit',
-                    'icon' => 'fas fa-chart-line',
-                    'can' => 'acessar-superadmin',
-                ],
-                [
-                    'text' => 'Usuários',
-                    'route' => 'usuario.index',
-                    'can' => 'usuario.index',
-                    'icon' => 'fas fa-user-cog',
+                    'text' => 'Documentos da Empresa',
+                    'route' => 'documentos.index',
+                    'icon' => 'fas fa-folder-open',
+                    'can' => 'documentos.index',
                 ],
             ],
         ],
 
-        // LICITAÇÕES — módulo opcional por empresa (flag licitacoes_ativo)
-        [
-            'text' => 'Licitações',
-            'route' => 'licitacoes.index',
-            'icon' => 'fas fa-gavel',
-            'can' => 'licitacoes.acessar',
-        ],
-
-        // SISTEMA (somente superadmin — 'can' não funciona em header, por isso é submenu)
+        // SISTEMA (somente superadmin)
         [
             'text' => 'Configurações',
             'icon' => 'fas fa-cogs',
             'can' => 'acessar-superadmin',
             'submenu' => [
                 [
-                    'text' => 'Empresas',
+                    'text' => 'Tenants',
                     'route' => 'empresa.index',
                     'icon' => 'fas fa-building',
                 ],
@@ -518,48 +396,11 @@ return [
                     'icon' => 'fas fa-terminal',
                 ],
                 [
-                    'text' => 'Integração com IA',
-                    'route' => 'ia-global.edit',
-                    'icon' => 'fas fa-robot',
-                ],
-                [
-                    'text' => 'Uso de IA',
-                    'route' => 'ia-uso.index',
-                    'icon' => 'fas fa-chart-line',
-                ],
-                [
                     'text' => 'Logs',
                     'route' => 'log-viewer.index',
                     'icon' => 'fas fa-file-alt',
                 ],
-                [
-                    'text' => 'Tutoriais',
-                    'route' => 'tutoriais.gerenciar',
-                    'icon' => 'fas fa-video',
-                ],
             ],
-        ],
-
-        // ASSINATURA — gestao de planos/assinaturas, somente superadmin.
-        // O usuario comum acessa o proprio plano por "meu-plano" quando
-        // redirecionado pelo middleware de trial/plano.
-        [
-            'text' => 'Assinatura',
-            'route' => 'assinatura.index',
-            'icon' => 'fas fa-credit-card',
-            'can' => 'acessar-superadmin',
-        ],
-
-        // AJUDA
-        [
-            'text' => 'Tutoriais',
-            'route' => 'tutoriais.index',
-            'icon' => 'fas fa-play-circle',
-        ],
-        [
-            'text' => 'Central de Ajuda (FAQ)',
-            'route' => 'assinatura.ajuda',
-            'icon' => 'fas fa-question-circle',
         ],
     ],
     /*

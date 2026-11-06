@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Traits;
 
 trait AtualizaFiltrosTrait
@@ -7,7 +8,7 @@ trait AtualizaFiltrosTrait
     {
         foreach ($itensFiltrados as $key => &$item) {
             foreach ($filtros as &$filtro) {
-                if (!isset($item['name']) || !isset($filtro['name']) || $filtro['name'] !== $item['name']) {
+                if (! isset($item['name']) || ! isset($filtro['name']) || $filtro['name'] !== $item['name']) {
                     continue;
                 }
 
@@ -17,18 +18,18 @@ trait AtualizaFiltrosTrait
                     }
                 } elseif (isset($filtro['type']) && $filtro['type'] === 'select' && isset($filtro['options'])) {
                     foreach ($filtro['options'] as &$opcao) {
-                            if (isset($opcao['value']) && array_key_exists('valor', $item)) {
-                                $val = $item['valor'];
-                                if (is_array($val)) {
-                                    if (in_array($opcao['value'], $val)) {
-                                        $opcao['selected'] = true;
-                                    }
-                                } else {
-                                    if ($opcao['value'] == $val) {
-                                        $opcao['selected'] = true;
-                                    }
+                        if (isset($opcao['value']) && array_key_exists('valor', $item)) {
+                            $val = $item['valor'];
+                            if (is_array($val)) {
+                                if (in_array($opcao['value'], $val)) {
+                                    $opcao['selected'] = true;
+                                }
+                            } else {
+                                if ($opcao['value'] == $val) {
+                                    $opcao['selected'] = true;
                                 }
                             }
+                        }
                     }
                     unset($opcao); // Remove a referencia para evitar problemas potenciais
                 }

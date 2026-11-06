@@ -5,6 +5,7 @@ namespace App\DTO;
 class BreadCrumbItem
 {
     private $name;
+
     private $url;
 
     public function __construct(string $name, ?string $url = null)

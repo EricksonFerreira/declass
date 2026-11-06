@@ -1,4 +1,5 @@
 <?php
+
 namespace App\View\Components;
 
 use Illuminate\View\Component;
@@ -6,12 +7,19 @@ use Illuminate\View\Component;
 class FormSelect extends Component
 {
     public $name;
+
     public $label;
+
     public $options;
+
     public $placeholder;
+
     public $selected;
+
     public $multiple;
+
     public $floating;
+
     public $help;
 
     public function __construct(
@@ -39,6 +47,7 @@ class FormSelect extends Component
         if (is_array($this->selected)) {
             return in_array($key, $this->selected);
         }
+
         return $this->selected == $key;
     }
 
@@ -49,7 +58,7 @@ class FormSelect extends Component
 
     public function id()
     {
-        return $this->name . '-' . uniqid();
+        return $this->name.'-'.uniqid();
     }
 
     public function render()

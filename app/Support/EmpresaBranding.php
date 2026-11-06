@@ -58,14 +58,14 @@ class EmpresaBranding
             $disk = Storage::disk('public');
             $mimeType = $disk->mimeType($logoPath) ?: 'image/png';
 
-            return 'data:' . $mimeType . ';base64,' . base64_encode($disk->get($logoPath));
+            return 'data:'.$mimeType.';base64,'.base64_encode($disk->get($logoPath));
         }
 
         $fallbackPath = public_path('assets/imgs/logo-sem-texto.png');
         if (is_file($fallbackPath)) {
             $mimeType = mime_content_type($fallbackPath) ?: 'image/png';
 
-            return 'data:' . $mimeType . ';base64,' . base64_encode((string) file_get_contents($fallbackPath));
+            return 'data:'.$mimeType.';base64,'.base64_encode((string) file_get_contents($fallbackPath));
         }
 
         return null;

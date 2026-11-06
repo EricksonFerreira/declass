@@ -21,69 +21,58 @@ class ResolveTenant
             return $next($request);
         }
 
-        if (auth()->check()) {
-            $user = auth()->user();
-            if (! SchemaCache::hasColumn($user->getTable(), 'empresa_id')) {
-                return $next($request);
-            }
-
-            if ($user->isAdministrador()) {
-                $empresaId = $this->resolveEmpresaIdForAdministrador($request, $user->empresa_id);
-                if ($empresaId === null) {
-                    throw new AccessDeniedHttpException('Nenhuma empresa disponivel para administracao.');
-                }
-
-                if ((int) $empresaId === 0) {
-                    $empresaContext->setEmpresaId(null);
-
-                    return $next($request);
-                }
-
-                $empresaContext->setEmpresaId((int) $empresaId);
-
-                return $next($request);
-            }
-
-            $empresaId = $user->empresa_id;
-
-            if (! $empresaId) {
-                throw new AccessDeniedHttpException('Usuario sem empresa vinculada.');
-            }
-
-            if (! $this->empresaExiste($empresaId)) {
-                throw new AccessDeniedHttpException('Empresa vinculada nao encontrada.');
-            }
-
-            $empresaContext->setEmpresaId((int) $empresaId);
+        if (! auth()->check()) {
+            return $next($request);
         }
+
+        $user = auth()->user();
+        if (! SchemaCache::hasColumn($user->getTable(), 'empresa_id')) {
+            return $next($request);
+        }
+
+        // Superadmin da plataforma pode alternar o tenant de contexto
+        // via sessao (null = visao consolidada de todos os tenants).
+        if ($user->isSuperAdmin()) {
+            $empresaContext->setEmpresaId($this->resolveEmpresaIdParaSuperAdmin($request));
+
+            return $next($request);
+        }
+
+        // Usuarios de tenant sao sempre vinculados a propria empresa —
+        // nunca podem trocar de tenant pelo contexto de sessao.
+        $empresaId = $user->empresa_id;
+
+        if (! $empresaId) {
+            throw new AccessDeniedHttpException('Usuario sem empresa vinculada.');
+        }
+
+        if (! $this->empresaExiste($empresaId)) {
+            throw new AccessDeniedHttpException('Empresa vinculada nao encontrada.');
+        }
+
+        $empresaContext->setEmpresaId((int) $empresaId);
 
         return $next($request);
     }
 
-    private function resolveEmpresaIdForAdministrador(Request $request, $fallbackEmpresaId = null): ?int
+    /**
+     * Contexto de tenant do superadmin: valor da sessao quando existe
+     * (0 = consolidado), caso contrario null.
+     */
+    private function resolveEmpresaIdParaSuperAdmin(Request $request): ?int
     {
-        if ($request->session()->has('empresa_context_id')) {
-            $sessionEmpresaId = (int) $request->session()->get('empresa_context_id', 0);
-            if ($sessionEmpresaId === 0) {
-                return 0;
-            }
-
-            if ($sessionEmpresaId > 0 && $this->empresaExiste($sessionEmpresaId)) {
-                return $sessionEmpresaId;
-            }
+        if (! $request->session()->has('empresa_context_id')) {
+            return null;
         }
 
-        if ($fallbackEmpresaId && $this->empresaExiste($fallbackEmpresaId)) {
-            $request->session()->put('empresa_context_id', (int) $fallbackEmpresaId);
+        $sessionEmpresaId = (int) $request->session()->get('empresa_context_id', 0);
 
-            return (int) $fallbackEmpresaId;
+        if ($sessionEmpresaId === 0) {
+            return null;
         }
 
-        $firstEmpresaId = $this->empresaQuery()->orderBy('id')->value('id');
-        if ($firstEmpresaId) {
-            $request->session()->put('empresa_context_id', (int) $firstEmpresaId);
-
-            return (int) $firstEmpresaId;
+        if ($sessionEmpresaId > 0 && $this->empresaExiste($sessionEmpresaId)) {
+            return $sessionEmpresaId;
         }
 
         return null;

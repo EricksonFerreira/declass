@@ -1,17 +1,49 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
+@extends('adminlte::page')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{ __("You're logged in!") }}
-                </div>
+@section('title', 'Dashboard')
+
+@section('content_header')
+    <x-page-title :title="'Dashboard'" subtitle="Visão geral da sua escola" />
+@stop
+
+@section('content')
+<div class="row">
+    <div class="col-md-4">
+        <div class="small-box bg-info">
+            <div class="inner">
+                <h3>{{ \App\Models\Escola::count() }}</h3>
+                <p>Escolas / unidades</p>
             </div>
+            <div class="icon"><i class="fas fa-school"></i></div>
+            <a href="{{ route('escola.index') }}" class="small-box-footer">Gerenciar <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
-</x-app-layout>
+    <div class="col-md-4">
+        <div class="small-box bg-success">
+            <div class="inner">
+                <h3>{{ \App\Models\Organizacao::count() }}</h3>
+                <p>Organizações</p>
+            </div>
+            <div class="icon"><i class="fas fa-sitemap"></i></div>
+            <a href="{{ route('organizacao.index') }}" class="small-box-footer">Gerenciar <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="small-box bg-warning">
+            <div class="inner">
+                <h3>{{ \App\Models\User::count() }}</h3>
+                <p>Usuários</p>
+            </div>
+            <div class="icon"><i class="fas fa-users"></i></div>
+            <a href="{{ route('usuario.index') }}" class="small-box-footer">Gerenciar <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header font-weight-bold">Acesso rápido</div>
+    <div class="card-body">
+        <a href="{{ route('home') }}" class="btn btn-primary btn-sm">Ir para o início</a>
+    </div>
+</div>
+@stop

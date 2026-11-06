@@ -13,7 +13,7 @@
                 <div class="form-group">
                     <x-form-select
                         name="empresa_id"
-                        label="Empresa ativa"
+                        label="Tenant ativo"
                         :options="$empresas"
                         placeholder="Selecione uma empresa"
                         :selected="old('empresa_id', $empresaAtual)"
@@ -25,7 +25,7 @@
 
             <div class="col-12">
                 <button type="submit" class="btn btn-primary btn-xs col-12">
-                    Alterar empresa
+                    Alterar tenant
                 </button>
             </div>
         </x-form>

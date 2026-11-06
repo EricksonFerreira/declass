@@ -3,10 +3,9 @@
 namespace App\Services;
 
 use App\Models\Regra;
+use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class RegraService extends AbstractBaseService
@@ -25,8 +24,8 @@ class RegraService extends AbstractBaseService
 
     public function setModel(Model $model): void
     {
-        if (!$model instanceof Regra) {
-            throw new \InvalidArgumentException("Modelo esperado App\\Models\\Regra");
+        if (! $model instanceof Regra) {
+            throw new \InvalidArgumentException('Modelo esperado App\\Models\\Regra');
         }
         $this->model = $model;
     }
@@ -42,7 +41,7 @@ class RegraService extends AbstractBaseService
      */
     protected function applyEmpresaScope($query)
     {
-        if (!$this->shouldApplyEmpresaScope()) {
+        if (! $this->shouldApplyEmpresaScope()) {
             return $query;
         }
 
@@ -59,7 +58,7 @@ class RegraService extends AbstractBaseService
             throw new AccessDeniedHttpException('Empresa nao identificada para a operacao.');
         }
 
-        return $query->where($this->model->getTable() . '.empresa_id', $empresaId);
+        return $query->where($this->model->getTable().'.empresa_id', $empresaId);
     }
 
     public function getAllTiposUsuarios()
@@ -75,13 +74,5 @@ class RegraService extends AbstractBaseService
             ->get();
 
         return $this->formatArraySelect($data);
-    }
-
-    public function getClienteRoleId(): ?int
-    {
-        return $this->model->newQuery()
-            ->whereNull('empresa_id')
-            ->whereRaw('LOWER(name) = ?', ['cliente'])
-            ->value('id');
     }
 }

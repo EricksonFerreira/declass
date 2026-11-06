@@ -15,22 +15,22 @@ class MenuSecoesService
 {
     public function secoes(User $user, bool $incluirConfiguracoes = false): array
     {
-        $planoPermissao = app(PlanoPermissaoService::class);
+        $rotaPermissao = app(PermissaoRotaService::class);
 
-        $secoes = collect($this->definicoes())->map(function ($secao) use ($planoPermissao, $user) {
-            $secao['cards'] = array_values(array_filter($secao['cards'], function ($card) use ($planoPermissao, $user) {
-                return $planoPermissao->usuarioPodeAcessarRota($user, $card[2]);
+        $secoes = collect($this->definicoes())->map(function ($secao) use ($rotaPermissao, $user) {
+            $secao['cards'] = array_values(array_filter($secao['cards'], function ($card) use ($rotaPermissao, $user) {
+                return $rotaPermissao->usuarioPodeAcessarRota($user, $card[2]);
             }));
 
             return $secao;
         })->filter(fn ($secao) => count($secao['cards']) > 0)->values()->all();
 
-        if ($incluirConfiguracoes && $user->can('acessar-superadmin')) {
+        if ($incluirConfiguracoes && $user->isSuperAdmin()) {
             $secoes[] = [
                 'slug' => 'configuracoes',
                 'titulo' => 'Configurações',
                 'cards' => [
-                    ['Empresas', 'fas fa-building', 'empresa.index', 'Tenants cadastrados na plataforma', '#dc2626'],
+                    ['Tenants', 'fas fa-building', 'empresa.index', 'Tenants (escolas/redes) cadastrados na plataforma', '#dc2626'],
                     ['Comandos', 'fas fa-terminal', 'comandos.index', 'Manutenção e comandos do sistema', '#0f172a'],
                 ],
             ];
@@ -43,53 +43,26 @@ class MenuSecoesService
     {
         return [
             [
-                'slug' => 'registrar-tempo',
-                'titulo' => 'Registrar tempo',
+                'slug' => 'institucional',
+                'titulo' => 'Institucional',
                 'cards' => [
-                    ['Rastreador', 'fas fa-stopwatch', 'operacao.tracker.index', 'Cronometre ou lance horas manualmente', '#0d9488'],
-                    ['Planilha de Horas', 'fas fa-table', 'operacao.timesheet', 'Sua grade semanal de apontamentos', '#0891b2'],
-                    ['Calendário', 'fas fa-calendar-alt', 'operacao.calendario.index', 'Apontamentos e alocações por dia', '#2563eb'],
+                    ['Organizações', 'fas fa-sitemap', 'organizacao.index', 'Redes e mantenedoras do tenant', '#7c3aed'],
+                    ['Escolas', 'fas fa-school', 'escola.index', 'Unidades e escolas do tenant', '#1d4ed8'],
                 ],
             ],
             [
-                'slug' => 'painel',
-                'titulo' => 'Painel',
+                'slug' => 'pessoas',
+                'titulo' => 'Pessoas',
                 'cards' => [
-                    ['Visão Geral', 'fas fa-tachometer-alt', 'dashboard', 'Visão geral com gráficos e KPIs', '#2563eb'],
-                    ['Produtividade', 'fas fa-chart-line', 'home.produtividade', 'Horas e evolução da equipe', '#0d9488'],
-                    ['Equipe', 'fas fa-users', 'home.equipe', 'Quem está rastreando, status e alertas', '#16a34a'],
-                    ['Projetos', 'fas fa-project-diagram', 'home.projetos', 'Saúde e horas por projeto', '#0284c7'],
+                    ['Usuários', 'fas fa-users', 'usuario.index', 'Colaboradores e contas de acesso', '#0891b2'],
+                    ['Perfis de Acesso', 'fas fa-user-shield', 'regra.index', 'Perfis e permissões do tenant', '#0d9488'],
                 ],
             ],
             [
-                'slug' => 'relatorios',
-                'titulo' => 'Relatórios',
+                'slug' => 'documentos',
+                'titulo' => 'Documentos',
                 'cards' => [
-                    ['Relatórios', 'fas fa-file-alt', 'relatorios.index', 'Resumos e visões de horas', '#7c3aed'],
-                    ['Consumo × Estimado', 'fas fa-chart-bar', 'relatorios.consumo', 'Horas consumidas vs estimadas', '#b45309'],
-                    ['Matriz de Horas', 'fas fa-th', 'relatorios.matriz', 'Horas de cada colaborador por projeto', '#7c3aed'],
-                    ['Exportar CSV', 'fas fa-file-export', 'relatorios.export', 'Baixe os dados em planilha', '#475569'],
-                ],
-            ],
-            [
-                'slug' => 'gerenciar',
-                'titulo' => 'Gerenciar',
-                'cards' => [
-                    ['Projetos', 'fas fa-project-diagram', 'operacao.projetos.index', 'Cadastro e status dos projetos', '#0284c7'],
-                    ['Planejar Equipe', 'fas fa-users-cog', 'operacao.projetos.planejar-equipe-geral', 'Distribua a equipe nos projetos', '#4f46e5'],
-                    ['Clientes', 'fas fa-user-friends', 'operacao.clientes.index', 'Carteira de clientes', '#0891b2'],
-                    ['Equipe', 'fas fa-users', 'operacao.times.index', 'Times e membros', '#16a34a'],
-                    ['Folgas e Férias', 'fas fa-plane', 'operacao.timeoff.index', 'Férias e folgas da equipe', '#7c3aed'],
-                    ['Funções', 'fas fa-briefcase', 'operacao.funcoes.index', 'Funções e custo por hora', '#b45309'],
-                    ['Tags', 'fas fa-tags', 'operacao.tags.index', 'Etiquetas de classificação', '#db2777'],
-                    ['Usuários', 'fas fa-user-cog', 'usuario.index', 'Colaboradores e permissões', '#475569'],
-                ],
-            ],
-            [
-                'slug' => 'ajuda',
-                'titulo' => 'Ajuda',
-                'cards' => [
-                    ['Central de Ajuda', 'fas fa-question-circle', 'assinatura.ajuda', 'Dúvidas frequentes e guias', '#0891b2'],
+                    ['Documentos', 'fas fa-folder-open', 'documentos.index', 'Documentos institucionais do tenant', '#b45309'],
                 ],
             ],
         ];

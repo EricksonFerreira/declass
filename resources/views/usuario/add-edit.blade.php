@@ -1,140 +1,86 @@
 @extends('adminlte::page')
 
-@section('title', 'Usuários')
+@section('title', $titulo)
 
 @section('content_header')
-    <h1>{{ isset($usuario) ? 'Editar Usuário' : 'Cadastrar Usuário' }}</h1>
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    <x-page-title :title="isset($usuario) ? 'Editar Usuário' : 'Novo Usuário'" subtitle="Conta de acesso do tenant" />
 @stop
 
 @section('content')
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-        <div class="card card-primary card-outline">
-            <div class="card-header font-weight-bold">
-                {{ isset($usuario) ? 'Editar Informações do Usuário' : 'Novo Usuário' }}
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ $formRota ?? $rota ?? (isset($usuario) ? route('usuario.update', $usuario->id) : route('usuario.store')) }}">
+            @csrf
+            @if(($metodo ?? 'POST') !== 'POST')
+                @method($metodo)
+            @endif
+
+            <h6 class="font-weight-bold">Dados pessoais</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <x-form-input name="nome" label="Nome" :value="old('nome', $usuario->nome ?? '')" required maxlength="255" />
+                </div>
+                <div class="col-md-3">
+                    <x-form-input name="email" type="email" label="E-mail" :value="old('email', $usuario->email ?? '')" required maxlength="150" />
+                </div>
+                <div class="col-md-3">
+                    <x-form-input name="usuario" label="Login alternativo" :value="old('usuario', $usuario->usuario ?? '')" maxlength="60" placeholder="ex.: joao.silva" />
+                </div>
             </div>
-            
-            <form action="{{ $rota }}" method="POST">
-                @csrf
-                @if(isset($metodo) && $metodo !== 'POST')
-                    @method($metodo)
-                @endif
-                
-                <div class="card-body">
-                    <div class="form-row">
-                        <div class="col-md-4 form-group">
-                            <label for="nome">Nome <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('nome') is-invalid @enderror" id="nome" name="nome" value="{{ old('nome', $usuario->nome ?? '') }}" required>
-                            @error('nome')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
 
-                        <div class="col-md-4 form-group">
-                            <label for="email">E-mail <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', $usuario->email ?? '') }}" required>
-                            @error('email')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-4 form-group">
-                            <label for="usuario">Usuário de acesso</label>
-                            <input type="text" class="form-control @error('usuario') is-invalid @enderror" id="usuario" name="usuario" value="{{ old('usuario', $usuario->usuario ?? '') }}" placeholder="ex.: joao.silva">
-                            <small class="form-text text-muted">Opcional. Permite entrar na tela de login sem usar o e-mail.</small>
-                            @error('usuario')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="col-md-6 form-group">
-                            <label for="celular">Celular <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('celular') is-invalid @enderror" id="celular" name="celular" value="{{ old('celular', $usuario->celular ?? '') }}" placeholder="(99) 99999-9999" required>
-                            @error('celular')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-6 form-group">
-                            <label for="role_id">Perfil de acesso <span class="text-danger">*</span></label>
-                            <select class="form-control @error('role_id') is-invalid @enderror" id="role_id" name="role_id" required>
-                                <option value="">Selecione o perfil</option>
-                                @foreach(($tiposUsuario ?? []) as $id => $nome)
-                                    <option value="{{ $id }}" {{ (string) old('role_id', $usuario->role_id ?? '') === (string) $id ? 'selected' : '' }}>
-                                        {{ ucfirst(str_replace('_', ' ', $nome)) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('role_id')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="col-md-6 form-group">
-                            <label for="funcao_id">Função</label>
-                            <select class="form-control @error('funcao_id') is-invalid @enderror" id="funcao_id" name="funcao_id">
-                                <option value="">Nenhuma</option>
-                                @foreach(($funcoes ?? []) as $id => $nome)
-                                    <option value="{{ $id }}" {{ (string) old('funcao_id', $usuario->funcao_id ?? '') === (string) $id ? 'selected' : '' }}>
-                                        {{ $nome }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <small class="form-text text-muted">Usada no relatório "Consumo × Estimado" por projeto. O custo/hora é definido na função.</small>
-                            @error('funcao_id')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-
-                    @if(!isset($usuario))
-                        <div class="form-row">
-                            <div class="col-md-6 form-group">
-                                <label for="password">Senha <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required>
-                                @error('password')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-6 form-group">
-                                <label for="confirmacao_senha">Confirmar Senha <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control @error('confirmacao_senha') is-invalid @enderror" id="confirmacao_senha" name="confirmacao_senha" required>
-                                @error('confirmacao_senha')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-                    @endif
+            <div class="row">
+                <div class="col-md-3">
+                    <x-form-input name="numero_identificacao" label="CPF / documento" :value="old('numero_identificacao', $usuario->numero_identificacao ?? '')" maxlength="30" />
                 </div>
-
-                <div class="card-footer text-right">
-                    <a href="{{ route('usuario.index') }}" class="btn btn-secondary mr-2">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                <div class="col-md-3">
+                    <x-form-input name="data_nascimento" type="date" label="Data de nascimento" :value="old('data_nascimento', optional($usuario->data_nascimento)->format('Y-m-d') ?? '')" />
                 </div>
-            </form>
-        </div>
+                <div class="col-md-3">
+                    <x-form-select name="sexo" label="Sexo" :options="['M' => 'Masculino', 'F' => 'Feminino', 'NI' => 'Não informado']" :selected="old('sexo', $usuario->sexo ?? '')" placeholder="Selecionar" />
+                </div>
+                <div class="col-md-3">
+                    <x-form-input name="cargo" label="Cargo / função" :value="old('cargo', $usuario->cargo ?? '')" maxlength="120" placeholder="ex.: Professor de Matemática" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <x-form-input name="telefone" label="Telefone" :value="old('telefone', $usuario->telefone ?? '')" maxlength="20" placeholder="(00) 0000-0000" />
+                </div>
+                <div class="col-md-4">
+                    <x-form-input name="celular" label="Celular" :value="old('celular', $usuario->celular ?? '')" maxlength="20" placeholder="(00) 00000-0000" />
+                </div>
+                <div class="col-md-4">
+                    <x-form-input name="cidade" label="Cidade" :value="old('cidade', $usuario->cidade ?? '')" maxlength="100" />
+                </div>
+            </div>
+
+            <hr>
+            <h6 class="font-weight-bold">Acesso e vínculos</h6>
+            <div class="row">
+                <div class="col-md-4">
+                    <x-form-select name="role_id" label="Perfil de acesso" :options="$tiposUsuario ?? []" :selected="old('role_id', $usuario->role_id ?? '')" required />
+                </div>
+                <div class="col-md-4">
+                    <x-form-select name="ativo" label="Status" :options="['1' => 'Ativo', '0' => 'Inativo']" :selected="old('ativo', isset($usuario) ? ($usuario->ativo ? '1' : '0') : '1')" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <x-form-select name="escolas[]" label="Escolas / unidades" :options="$escolasOpcoes ?? []" :selected="old('escolas', $escolasSelecionadas ?? [])" multiple />
+                </div>
+                <div class="col-md-6">
+                    <x-form-select name="organizacoes[]" label="Organizações / redes" :options="$organizacoesOpcoes ?? []" :selected="old('organizacoes', $organizacoesSelecionadas ?? [])" multiple />
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <a href="{{ route('usuario.index') }}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </form>
     </div>
 </div>
-@stop
-
-@section('js')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-<script>
-    $(document).ready(function() {
-        var foneMask = function (val) {
-            return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
-        };
-        var foneOpts = {
-            onKeyPress: function (val, e, field, options) {
-                field.mask(foneMask.apply({}, arguments), options);
-            }
-        };
-        $('#celular').mask(foneMask, foneOpts);
-    });
-</script>
 @stop

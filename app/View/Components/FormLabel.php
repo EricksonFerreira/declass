@@ -7,6 +7,7 @@ use Illuminate\View\Component;
 class FormLabel extends Component
 {
     public $label;
+
     public $required;
 
     public function __construct($label = null, $required = false)

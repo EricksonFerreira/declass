@@ -18,8 +18,8 @@ class DomainNormalizer
         $value = preg_replace('#^https?://#', '', $value) ?? $value;
         $value = trim($value, '/');
 
-        $parsedHost = parse_url('http://' . $value, PHP_URL_HOST);
-        if (!is_string($parsedHost) || $parsedHost === '') {
+        $parsedHost = parse_url('http://'.$value, PHP_URL_HOST);
+        if (! is_string($parsedHost) || $parsedHost === '') {
             return null;
         }
 

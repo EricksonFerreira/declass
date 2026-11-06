@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Interfaces;
 
 interface FiltroInterface
 {
+    public function configurarSessao();
 
-    function configurarSessao();
-    function obterFiltrosPrincipais();
-    function obterFiltrosSecundarios();
+    public function obterFiltrosPrincipais();
 
+    public function obterFiltrosSecundarios();
 }

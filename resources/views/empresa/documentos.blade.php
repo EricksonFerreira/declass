@@ -120,21 +120,21 @@
         <div class="row">
             <div class="col-md-6 form-group">
                 <label>Número / registro</label>
-                <input type="text" name="numero" class="form-control form-control-sm" value="{{ old('numero') }}" placeholder="Ex: CREA 0601.234.567">
+                <input type="text" name="numero" class="form-control form-control-sm" value="{{ old('numero') }}" placeholder="Ex: Alvará 123/2025">
             </div>
             <div class="col-md-6 form-group">
                 <label>Órgão emissor</label>
-                <input type="text" name="orgao_emissor" class="form-control form-control-sm" value="{{ old('orgao_emissor') }}" placeholder="Ex: CREA-SP, Receita Federal">
+                <input type="text" name="orgao_emissor" class="form-control form-control-sm" value="{{ old('orgao_emissor') }}" placeholder="Ex: Secretaria de Educação, Receita Federal">
             </div>
         </div>
         <div class="form-group">
             <label>Descrição / escopo</label>
-            <textarea name="descricao" rows="2" class="form-control form-control-sm" placeholder="Para atestados: o que o documento comprova (obra, serviços, parcelas relevantes)">{{ old('descricao') }}</textarea>
+            <textarea name="descricao" rows="2" class="form-control form-control-sm" placeholder="O que o documento comprova ou detalha">{{ old('descricao') }}</textarea>
         </div>
         <div class="row">
             <div class="col-md-4 form-group">
                 <label>Valor (R$)</label>
-                <input type="number" step="0.01" min="0" name="valor" class="form-control form-control-sm" value="{{ old('valor') }}" placeholder="Só p/ atestados">
+                <input type="number" step="0.01" min="0" name="valor" class="form-control form-control-sm" value="{{ old('valor') }}" placeholder="Opcional">
             </div>
             <div class="col-md-4 form-group">
                 <label>Emissão</label>

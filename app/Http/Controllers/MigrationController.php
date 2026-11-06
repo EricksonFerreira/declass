@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 
 class MigrationController extends Controller
 {
@@ -92,20 +91,12 @@ class MigrationController extends Controller
         $this->checkToken($request);
 
         try {
-            Artisan::call('declock:setup-producao');
+            Artisan::call('declass:setup-producao');
             $output = Artisan::output();
 
             return response('<h2>Setup de producao</h2><pre style="white-space:pre-wrap;max-height:80vh;overflow:auto;border:1px solid #ddd;padding:8px">'.e($output).'</pre>');
         } catch (\Throwable $e) {
             return response('<h2>Erro no setup de producao</h2><pre>'.e($e->getMessage()).'</pre>', 500);
         }
-    }
-
-    public function fixGatewayCustomer(Request $request)
-    {
-        $affected = DB::table('empresas')->whereNotNull('gateway_customer_id')->count();
-        DB::table('empresas')->update(['gateway_customer_id' => null]);
-
-        return response("<h2>gateway_customer_id limpo</h2><pre>{$affected} empresa(s) atualizadas.</pre>");
     }
 }

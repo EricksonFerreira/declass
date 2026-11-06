@@ -9,8 +9,7 @@ class BreadcrumbHelper
     /**
      * Generate a breadcrumb array.
      *
-     * @param BreadCrumbItem[] $items Array of BreadCrumbItem objects.
-     * @return array
+     * @param  BreadCrumbItem[]  $items  Array of BreadCrumbItem objects.
      */
     public static function generate(array $items): array
     {
@@ -18,9 +17,10 @@ class BreadcrumbHelper
         foreach ($items as $item) {
             $breadcrumb[] = [
                 'name' => $item->getName(),
-                'url' => $item->getUrl()
+                'url' => $item->getUrl(),
             ];
         }
+
         return $breadcrumb;
     }
 }

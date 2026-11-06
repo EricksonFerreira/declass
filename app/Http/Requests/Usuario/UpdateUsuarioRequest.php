@@ -4,7 +4,6 @@ namespace App\Http\Requests\Usuario;
 
 use App\Support\EmpresaContext;
 use App\Support\SchemaCache;
-use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -32,7 +31,7 @@ class UpdateUsuarioRequest extends FormRequest
             if ($roleId <= 0) {
                 $roleId = (int) (\App\Models\Regra::where('guard_name', 'web')
                     ->where('empresa_id', $this->user()?->empresa_id)
-                    ->where('name', 'usuario')
+                    ->where('name', 'membro')
                     ->value('id') ?? 0);
             }
 
@@ -48,14 +47,16 @@ class UpdateUsuarioRequest extends FormRequest
     public function rules(): array
     {
         $empresaId = app(EmpresaContext::class)->empresaId() ?? $this->user()?->empresa_id;
+        $usuarioId = $this->route('usuario');
 
         return [
             'nome' => 'required|string|max:255',
             'email' => [
                 'required',
                 'string',
+                'email',
                 'max:150',
-                Rule::unique('users', 'email')->ignore($this->route('usuario'))->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+                Rule::unique('users', 'email')->ignore($usuarioId)->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
             'usuario' => [
                 'nullable',
@@ -63,37 +64,33 @@ class UpdateUsuarioRequest extends FormRequest
                 'max:60',
                 'regex:/^[a-z0-9._-]+$/',
                 ...(SchemaCache::hasColumn('users', 'usuario')
-                    ? [Rule::unique('users', 'usuario')->ignore($this->route('usuario'))->where(fn ($query) => $query->where('empresa_id', $empresaId))]
+                    ? [Rule::unique('users', 'usuario')->ignore($usuarioId)->where(fn ($query) => $query->where('empresa_id', $empresaId))]
                     : []),
             ],
-            'sexo' => 'nullable|string|max:1',
+            'sexo' => 'nullable|string|max:2',
             'data_nascimento' => 'nullable|date',
-            'local_nascimento' => 'nullable|string|max:100',
             'telefone' => 'nullable|string|max:20',
-            'celular' => ['required', 'string', 'max:20', 'regex:/^\(\d{2}\) \d{4,5}-\d{4}$/'],
-            'pais_sigla' => 'nullable|string|max:2',
-            'zip_code' => 'nullable|string|max:20',
+            'celular' => 'nullable|string|max:20',
             'cidade' => 'nullable|string|max:100',
-            'endereco' => 'nullable|string|max:255',
             'numero_identificacao' => [
                 'nullable',
                 'string',
-                'max:20',
-                Rule::unique('users', 'numero_identificacao')->ignore($this->route('usuario'))->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+                'max:30',
+                Rule::unique('users', 'numero_identificacao')->ignore($usuarioId)->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
-            'role_id' => 'required|integer|exists:roles,id',
-            'funcao_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('funcoes', 'id')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
-            ],
-            'jornada_diaria' => 'nullable|numeric|min:0|max:24',
+            'cargo' => 'nullable|string|max:120',
+            'role_id' => ['required', 'integer', Rule::exists('roles', 'id')->where('empresa_id', $empresaId)],
             'ativo' => 'nullable|boolean',
-            'numero_carta_conducao' => 'nullable|string|max:20',
-            'local_emissao_carta_conducao' => 'nullable|string|max:100',
-            'pais_emissao_carta_conducao' => 'nullable|string|max:2',
-            'data_emissao_carta_conducao' => 'nullable|date|before:'.Carbon::now()->format('Y-m-d'),
-            'data_validade_carta_conducao' => 'nullable|date|after:data_emissao_carta_conducao',
+            'escolas' => 'nullable|array',
+            'escolas.*' => [
+                'integer',
+                Rule::exists('escolas', 'id')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
+            'organizacoes' => 'nullable|array',
+            'organizacoes.*' => [
+                'integer',
+                Rule::exists('organizacoes', 'id')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
         ];
     }
 
@@ -104,8 +101,6 @@ class UpdateUsuarioRequest extends FormRequest
             'string' => 'O campo :attribute deve ser um texto valido.',
             'max.string' => 'O campo :attribute nao pode ter mais de :max caracteres.',
             'date' => 'O campo :attribute deve ser uma data valida.',
-            'before' => 'O campo :attribute deve ser uma data anterior a :date.',
-            'after' => 'A data de validade deve ser posterior à data de emissão.',
             'integer' => 'O campo :attribute deve ser numerico.',
             'exists' => 'O valor informado para :attribute nao existe.',
             'array' => 'O campo :attribute deve ser uma lista.',
@@ -114,7 +109,6 @@ class UpdateUsuarioRequest extends FormRequest
             'usuario.unique' => 'O usuario informado ja esta em uso.',
             'usuario.regex' => 'O usuario pode conter apenas letras minusculas, numeros, ponto, hifen e sublinhado.',
             'numero_identificacao.unique' => 'O numero de identificacao informado ja esta em uso.',
-            'celular.regex' => 'O celular deve estar no formato (XX) XXXX-XXXX ou (XX) XXXXX-XXXX.',
         ];
     }
 
@@ -126,22 +120,15 @@ class UpdateUsuarioRequest extends FormRequest
             'usuario' => 'usuario',
             'sexo' => 'sexo',
             'data_nascimento' => 'data de nascimento',
-            'local_nascimento' => 'local de nascimento',
             'telefone' => 'telefone',
             'celular' => 'celular',
-            'pais_sigla' => 'pais',
-            'zip_code' => 'CPF',
             'cidade' => 'cidade',
-            'endereco' => 'endereco',
-            'numero_identificacao' => 'numero de identificacao',
-            'role_id' => 'regra de usuario',
-            'funcao_id' => 'funcao',
-            'jornada_diaria' => 'jornada diaria',
-            'numero_carta_conducao' => 'numero da carta de conducao',
-            'local_emissao_carta_conducao' => 'local de emissao da carta de conducao',
-            'pais_emissao_carta_conducao' => 'pais de emissao da carta de conducao',
-            'data_emissao_carta_conducao' => 'data de emissao da carta de conducao',
-            'data_validade_carta_conducao' => 'data de validade da carta de conducao',
+            'numero_identificacao' => 'CPF / documento',
+            'cargo' => 'cargo',
+            'role_id' => 'perfil de acesso',
+            'ativo' => 'ativo',
+            'escolas' => 'escolas',
+            'organizacoes' => 'organizações',
         ];
     }
 }

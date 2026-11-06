@@ -1,9 +1,10 @@
 <?php
+
 namespace App\View\Components;
 
-use Illuminate\View\Component;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ViewErrorBag;
+use Illuminate\View\Component;
 
 class Form extends Component
 {
@@ -39,8 +40,7 @@ class Form extends Component
     /**
      * Returns a boolean whether the error bag is not empty.
      *
-     * @param string $bag
-     * @return boolean
+     * @param  string  $bag
      */
     public function hasError($bag = 'default'): bool
     {

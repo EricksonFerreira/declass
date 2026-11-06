@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Helpers\BreadcrumbHelper;
 use App\DTO\BreadCrumbItem;
+use App\Helpers\BreadcrumbHelper;
 
 class BreadcrumbService
 {
@@ -17,8 +17,10 @@ class BreadcrumbService
         $items = $this->buildBreadCrumbItems([
             [$indexName, null],
         ]);
+
         return $this->prepararBreadcrumb($items);
     }
+
     public function prepararBreadcrumbIndex(string $indexName, ?string $grupo = null)
     {
         $items = $this->buildBreadCrumbItems(array_filter([
@@ -26,6 +28,7 @@ class BreadcrumbService
             $grupo ? [$grupo, null] : null,
             [$indexName, null],
         ]));
+
         return $this->prepararBreadcrumb($items);
     }
 
@@ -37,10 +40,11 @@ class BreadcrumbService
             [$indexName, route($routeName)],
             [$createName, null],
         ]));
+
         return $this->prepararBreadcrumb($items);
     }
 
-    public function prepararBreadcrumbEdit( string $indexName,string $routeName, string $editName, ?string $grupo = null)
+    public function prepararBreadcrumbEdit(string $indexName, string $routeName, string $editName, ?string $grupo = null)
     {
         $items = $this->buildBreadCrumbItems(array_filter([
             ['Home', route('home')],
@@ -48,6 +52,7 @@ class BreadcrumbService
             [$indexName, route($routeName)],
             [$editName, null],
         ]));
+
         return $this->prepararBreadcrumb($items);
     }
 
@@ -59,6 +64,7 @@ class BreadcrumbService
             [$indexName, route($routeName)],
             [$showName, null],
         ]));
+
         return $this->prepararBreadcrumb($items);
     }
 
@@ -68,6 +74,7 @@ class BreadcrumbService
         foreach ($itemsData as $itemData) {
             $items[] = new BreadCrumbItem($itemData[0], $itemData[1] ?? null);
         }
+
         return $items;
     }
 }

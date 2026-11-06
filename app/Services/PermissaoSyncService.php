@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Empresa;
 use App\Models\Permissao;
 use App\Models\Regra;
-use Database\Seeders\PapeisPermissoesSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -22,12 +21,7 @@ class PermissaoSyncService
      *
      * @var array<int, string>
      */
-    private const PERMISSOES_EXTRAS = [
-        'escopo.proprio',
-        'escopo.equipe',
-        'escopo.todos',
-        'operacao.timesheet.copiar',
-    ];
+    private const PERMISSOES_EXTRAS = [];
 
     public function sync(): array
     {
@@ -43,9 +37,12 @@ class PermissaoSyncService
         $createdPermissions = $this->syncPermissionsGlobal($permissionNames);
         [$createdRoles, $pivotCount] = $this->syncRolesGlobal($permissionNames);
 
-        app('cache')
-            ->store(config('permission.cache.store') !== 'default' ? config('permission.cache.store') : null)
-            ->forget(config('permission.cache.key'));
+        $cacheKey = config('permission.cache.key');
+        if (is_string($cacheKey) && $cacheKey !== '') {
+            app('cache')
+                ->store(config('permission.cache.store') !== 'default' ? config('permission.cache.store') : null)
+                ->forget($cacheKey);
+        }
 
         return ['permissions' => $createdPermissions, 'roles' => $createdRoles, 'pivots' => $pivotCount];
     }
@@ -66,9 +63,9 @@ class PermissaoSyncService
             ? DB::table('role_has_permissions')->where('role_id', $adminRoleId)->exists()
             : false;
 
-        // Garante tambem as permissoes extras (escopo, copiar timesheet)
-        // mesmo quando o restante ja esta populado — cobre ambientes onde
-        // a migration correspondente ainda nao rodou.
+        // Garante tambem as permissoes extras mesmo quando o restante
+        // ja esta populado — cobre ambientes onde a migration
+        // correspondente ainda nao rodou.
         $faltamExtras = Permissao::query()
             ->where('guard_name', 'web')
             ->whereIn('name', self::PERMISSOES_EXTRAS)
@@ -77,6 +74,17 @@ class PermissaoSyncService
         if (! $hasPermissions || ! $hasAnyPivot || ! $adminHasPivot || $faltamExtras) {
             $this->sync();
         }
+    }
+
+    /**
+     * Padroes de permissao por perfil — definidos em
+     * PerfisEscolaresSeeder::PERFIS (matriz da especificacao).
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function buildRolePermissionFilters(): array
+    {
+        return \Database\Seeders\PerfisEscolaresSeeder::PERFIS;
     }
 
     /**
@@ -125,7 +133,7 @@ class PermissaoSyncService
     }
 
     /**
-     * @param array<int, string> $permissionNames
+     * @param  array<int, string>  $permissionNames
      */
     private function syncPermissionsGlobal(array $permissionNames): int
     {
@@ -142,10 +150,10 @@ class PermissaoSyncService
             }
 
             Permissao::query()->create([
-                'name'       => $permissionName,
+                'name' => $permissionName,
                 'guard_name' => 'web',
-                'descricao'  => null,
-                'grupo'      => $this->grupoFromName($permissionName),
+                'descricao' => null,
+                'grupo' => $this->grupoFromName($permissionName),
             ]);
             $created++;
         }
@@ -154,7 +162,7 @@ class PermissaoSyncService
     }
 
     /**
-     * @param array<int, string> $permissionNames
+     * @param  array<int, string>  $permissionNames
      * @return array{0:int, 1:int}
      */
     private function syncRolesGlobal(array $permissionNames): array
@@ -168,7 +176,7 @@ class PermissaoSyncService
         $pivotCount = 0;
 
         // Perfis sao vinculados a empresa: cada tenant tem seus proprios
-        // 'administrador' e 'usuario' (empresa_id preenchido).
+        // roles (empresa_id preenchido).
         foreach (Empresa::query()->pluck('id') as $empresaId) {
             [$c, $p] = $this->garantirPapeisParaEmpresa((int) $empresaId, $allPermissions);
             $createdRoles += $c;
@@ -181,10 +189,10 @@ class PermissaoSyncService
     }
 
     /**
-     * Garante os papeis padrao (administrador, usuario) de uma empresa e
+     * Garante os papeis padrao de uma empresa e
      * sincroniza a matriz de permissoes de cada um.
      *
-     * @param \Illuminate\Support\Collection<int, Permissao>|null $allPermissions
+     * @param  \Illuminate\Support\Collection<int, Permissao>|null  $allPermissions
      * @return array{0:int, 1:int} [papeis criados, permissoes vinculadas]
      */
     public function garantirPapeisParaEmpresa(int $empresaId, $allPermissions = null): array
@@ -194,7 +202,7 @@ class PermissaoSyncService
         $createdRoles = 0;
         $pivotCount = 0;
 
-        foreach ($this->buildRolePermissionFilters() as $roleName => $filter) {
+        foreach ($this->buildRolePermissionFilters() as $roleName => $padroes) {
             $role = Regra::query()->firstOrCreate(
                 [
                     'name' => $roleName,
@@ -212,8 +220,10 @@ class PermissaoSyncService
 
             // A matriz padrao so e aplicada na criacao do perfil — re-syncs
             // nao sobrescrevem ajustes feitos manualmente na edicao.
+            $nomesRoles = $allPermissions->pluck('name');
+            $nomesPermitidos = \Database\Seeders\PerfisEscolaresSeeder::resolverPadroes($padroes, $nomesRoles);
             $permissionsForRole = $allPermissions
-                ->filter(fn (Permissao $permission) => $filter($permission->name))
+                ->filter(fn (Permissao $permission) => in_array($permission->name, $nomesPermitidos, true))
                 ->pluck('id')
                 ->all();
 
@@ -225,29 +235,9 @@ class PermissaoSyncService
     }
 
     /**
-     * Perfis globais padrao: administrador (acesso total via isAdministrador)
-     * e usuario (membro padrao, permissoes curadas no seeder).
-     *
-     * @return array<string, \Closure(string): bool>
-     */
-    private function buildRolePermissionFilters(): array
-    {
-        return [
-            'administrador' => fn (string $permissionName) =>
-                ! Permissao::isNomeInterno($permissionName)
-                && ! str_starts_with($permissionName, 'licitacoes.')
-                && ! str_starts_with($permissionName, 'documentos.'),
-            'usuario' => fn (string $permissionName) =>
-                in_array($permissionName, PapeisPermissoesSeeder::PERMISSOES_USUARIO, true),
-            'equipe' => fn (string $permissionName) =>
-                in_array($permissionName, PapeisPermissoesSeeder::permissoesEquipe(), true),
-        ];
-    }
-
-    /**
      * Perfis sao vinculados a empresa: remapeia usuarios de QUALQUER papel
      * global (empresa_id nulo) para o papel equivalente da propria empresa
-     * — mesmo nome quando for um papel padrao, senao 'usuario'. Papeis
+     * — mesmo nome quando for um perfil padrao, senao 'membro'. Papeis
      * globais que ficam sem usuarios sao removidos; os que ainda tiverem
      * usuarios sem empresa ficam para revisao manual.
      */
@@ -270,7 +260,7 @@ class PermissaoSyncService
             ->groupBy('empresa_id')
             ->map(fn ($roles) => $roles->keyBy(fn ($r) => mb_strtolower($r->name)));
 
-        $padroes = ['administrador', 'usuario'];
+        $padroes = array_keys(\Database\Seeders\PerfisEscolaresSeeder::PERFIS);
         $globaisPorId = $globais->keyBy('id');
 
         $users = DB::table('users')
@@ -284,7 +274,7 @@ class PermissaoSyncService
             }
 
             $nomeGlobal = mb_strtolower((string) ($globaisPorId[$user->role_id]->name ?? ''));
-            $alvo = in_array($nomeGlobal, $padroes, true) ? $nomeGlobal : 'usuario';
+            $alvo = in_array($nomeGlobal, $padroes, true) ? $nomeGlobal : 'membro';
             $roleId = $porEmpresa[$empresaId][$alvo]->id ?? null;
 
             if ($roleId) {
@@ -306,9 +296,10 @@ class PermissaoSyncService
 
     private function grupoFromName(string $name): string
     {
-        if (!str_contains($name, '.')) {
+        if (! str_contains($name, '.')) {
             return $name;
         }
+
         return (string) str($name)->before('.');
     }
 }

@@ -16,7 +16,15 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
+    /**
+     * Slug reservado da plataforma: nao pode ser registrado como
+     * tenant e da acesso ao superadmin (usuario sem empresa).
+     */
+    public const SLUG_PLATAFORMA = 'declass';
+
     private ?Empresa $resolvedEmpresa = null;
+
+    private ?User $resolvedSuperadmin = null;
 
     /**
      * Determine if the user is authorized to make this request.
@@ -61,6 +69,24 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
+
+        // Slug da plataforma: autentica o superadmin (sem tenant).
+        if ($this->isSlugPlataforma()) {
+            $user = $this->resolveSuperadmin();
+
+            if (! $user || ! Hash::check((string) $this->input('password'), (string) $user->password)) {
+                RateLimiter::hit($this->throttleKey());
+
+                throw ValidationException::withMessages([
+                    'email' => trans('auth.failed'),
+                ]);
+            }
+
+            Auth::login($user, $this->boolean('remember'));
+            RateLimiter::clear($this->throttleKey());
+
+            return;
+        }
 
         $empresa = $this->resolveEmpresa();
         $user = $empresa ? $this->resolveUserForEmpresa($empresa->id) : null;
@@ -185,5 +211,43 @@ class LoginRequest extends FormRequest
     private function slugFromDomain(): ?string
     {
         return $this->resolveEmpresaByDomain()?->slug;
+    }
+
+    private function isSlugPlataforma(): bool
+    {
+        return Str::lower(trim((string) $this->input('slug', ''))) === self::SLUG_PLATAFORMA;
+    }
+
+    /**
+     * Superadmin da plataforma: tipo_usuario_id = 1, sem empresa.
+     * Login por e-mail ou usuario alternativo.
+     */
+    private function resolveSuperadmin(): ?User
+    {
+        if ($this->resolvedSuperadmin !== null) {
+            return $this->resolvedSuperadmin;
+        }
+
+        if (! SchemaCache::hasTable('users')) {
+            return $this->resolvedSuperadmin = null;
+        }
+
+        $login = Str::lower(trim((string) $this->input('email', '')));
+        if ($login === '') {
+            return $this->resolvedSuperadmin = null;
+        }
+
+        $hasUsuario = SchemaCache::hasColumn('users', 'usuario');
+
+        return $this->resolvedSuperadmin = User::query()
+            ->where('tipo_usuario_id', 1)
+            ->where(function ($query) use ($login, $hasUsuario) {
+                $query->where('email', $login);
+
+                if ($hasUsuario) {
+                    $query->orWhere('usuario', $login);
+                }
+            })
+            ->first();
     }
 }

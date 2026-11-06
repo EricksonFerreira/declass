@@ -18,13 +18,17 @@ use Illuminate\Http\Request;
 
 class RegraController extends BaseController implements FiltroInterface, ResourceInterface
 {
-    use FiltroTrait;
     use AtualizaFiltrosTrait;
+    use FiltroTrait;
 
     protected $regraService;
+
     protected $breadcrumbService;
+
     protected $permissaoService;
+
     protected $regraPermissaoService;
+
     protected $permissaoSyncService;
 
     public function __construct(
@@ -79,14 +83,12 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
             ->reject(fn (\App\Models\Permissao $p) => \App\Models\Permissao::isNomeInterno($p->name)
                 || str_starts_with($p->name, 'escopo.'))
             ->values();
-        $plano = auth()->user()?->empresa?->planoAtivo()?->with('plano')->first()?->plano;
-        $limitePermissoesPorRegra = $plano?->limite_permissoes_por_regra;
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Perfis de Acesso', 'regra.index', 'Criar');
         [$metodo, $rota] = $this->getFormMethodAndRoute();
         $escopoAtual = old('escopo', 'proprio');
 
-        return view('regra.add-edit', compact('breadcrumb', 'metodo', 'rota', 'permissoes', 'plano', 'limitePermissoesPorRegra', 'escopoAtual'))->with('titulo', $this->titulo);
+        return view('regra.add-edit', compact('breadcrumb', 'metodo', 'rota', 'permissoes', 'escopoAtual'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreRegraRequest $request)
@@ -119,8 +121,6 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
             ->reject(fn (\App\Models\Permissao $p) => \App\Models\Permissao::isNomeInterno($p->name)
                 || str_starts_with($p->name, 'escopo.'))
             ->values();
-        $plano = auth()->user()?->empresa?->planoAtivo()?->with('plano')->first()?->plano;
-        $limitePermissoesPorRegra = $plano?->limite_permissoes_por_regra;
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Perfis de Acesso', 'regra.index', "Editar: $regra->name");
         [$metodo, $rota] = $this->getFormMethodAndRoute($regra);
@@ -129,7 +129,7 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
         $escopoAtual = old('escopo', $nomes->contains('escopo.todos') ? 'todos'
             : ($nomes->contains('escopo.equipe') ? 'equipe' : 'proprio'));
 
-        return view('regra.add-edit', compact('regra', 'breadcrumb', 'permissoes', 'metodo', 'rota', 'plano', 'limitePermissoesPorRegra', 'escopoAtual'))->with('titulo', $this->titulo);
+        return view('regra.add-edit', compact('regra', 'breadcrumb', 'permissoes', 'metodo', 'rota', 'escopoAtual'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateRegraRequest $request, $id)
@@ -241,8 +241,8 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
 
         $map = [
             'proprio' => ['escopo.proprio'],
-            'equipe'  => ['escopo.proprio', 'escopo.equipe'],
-            'todos'   => ['escopo.todos'],
+            'equipe' => ['escopo.proprio', 'escopo.equipe'],
+            'todos' => ['escopo.todos'],
         ];
         $escopo = $request->input('escopo');
 

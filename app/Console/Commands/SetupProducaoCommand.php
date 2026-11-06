@@ -11,15 +11,15 @@ use Illuminate\Support\Facades\Hash;
 
 class SetupProducaoCommand extends Command
 {
-    protected $signature = 'declock:setup-producao';
+    protected $signature = 'declass:setup-producao';
 
-    protected $description = 'Sobe a producao: optimize:clear + migrate + seed, empresa declock e superadmins com troca de senha no primeiro acesso';
+    protected $description = 'Sobe a producao: optimize:clear + migrate + seed, tenant declass e superadmins com troca de senha no primeiro acesso';
 
     private const SENHA_INICIAL = 'Senh@123';
 
     private const SUPERADMINS = [
-        ['nome' => 'David', 'email' => 'david@declock.app', 'usuario' => 'david'],
-        ['nome' => 'Erickson', 'email' => 'erickson@declock.app', 'usuario' => 'erickson'],
+        ['nome' => 'David', 'email' => 'david@declass.app', 'usuario' => 'david'],
+        ['nome' => 'Erickson', 'email' => 'erickson@declass.app', 'usuario' => 'erickson'],
     ];
 
     public function handle(): int
@@ -42,11 +42,11 @@ class SetupProducaoCommand extends Command
         $this->line(Artisan::output());
 
         $empresa = $this->garantirEmpresaDeclock();
-        $this->info("Empresa declock: id {$empresa->id}");
+        $this->info("Tenant declass: id {$empresa->id}");
 
         foreach (self::SUPERADMINS as $admin) {
-            $criado = $this->garantirSuperAdmin($admin['nome'], $admin['email'], (int) $empresa->id, $admin['usuario']);
-            $this->info("{$admin['email']} (usuario: {$admin['usuario']}): " . ($criado ? 'criado (senha inicial + troca obrigatoria)' : 'atualizado como superadmin'));
+            $criado = $this->garantirSuperAdmin($admin['nome'], $admin['email'], $admin['usuario']);
+            $this->info("{$admin['email']} (usuario: {$admin['usuario']}): ".($criado ? 'criado (senha inicial + troca obrigatoria)' : 'atualizado como superadmin'));
         }
 
         $this->info('Setup de producao concluido.');
@@ -57,18 +57,13 @@ class SetupProducaoCommand extends Command
     private function garantirEmpresaDeclock(): Empresa
     {
         $empresa = Empresa::withTrashed()->firstOrCreate(
-            ['slug' => 'declock'],
-            ['nome' => 'DEClock', 'ativo' => 'S']
+            ['slug' => 'declass'],
+            ['nome' => 'DECLASS', 'ativo' => 'S']
         );
 
         if ($empresa->trashed()) {
             $empresa->restore();
             $empresa->ativo = 'S';
-            $empresa->save();
-        }
-
-        if (SchemaCache::hasColumn('empresas', 'empresa_id') && empty($empresa->empresa_id)) {
-            $empresa->empresa_id = $empresa->id;
             $empresa->save();
         }
 
@@ -81,7 +76,7 @@ class SetupProducaoCommand extends Command
      * feito direto na tabela (DB::table), como a propria docstring do
      * model indica.
      */
-    private function garantirSuperAdmin(string $nome, string $email, int $empresaId, string $usuario): bool
+    private function garantirSuperAdmin(string $nome, string $email, string $usuario): bool
     {
         $existente = DB::table('users')->where('email', $email)->first();
         $temColunaUsuario = SchemaCache::hasColumn('users', 'usuario');
@@ -91,7 +86,7 @@ class SetupProducaoCommand extends Command
                 'nome' => $nome,
                 'email' => $email,
                 'usuario' => $temColunaUsuario ? $usuario : null,
-                'empresa_id' => $empresaId,
+                'empresa_id' => null,
                 'password' => Hash::make(self::SENHA_INICIAL),
                 'ativo' => 1,
                 'forcar_troca_senha' => 1,
@@ -107,7 +102,7 @@ class SetupProducaoCommand extends Command
         DB::table('users')->where('id', $existente->id)->update(array_filter([
             'nome' => $nome,
             'usuario' => $temColunaUsuario ? $usuario : null,
-            'empresa_id' => $empresaId,
+            'empresa_id' => null,
             'ativo' => 1,
             'tipo_usuario_id' => 1,
             'updated_at' => now(),

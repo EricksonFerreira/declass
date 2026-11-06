@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Middleware\CheckPermissaoPorRota;
-use App\Http\Middleware\ExigirPagamentoPlanoMiddleware;
 use App\Http\Middleware\ForcarTrocaSenhaMiddleware;
 use App\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Application;
@@ -18,7 +17,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             ResolveTenant::class,
             ForcarTrocaSenhaMiddleware::class,
-            ExigirPagamentoPlanoMiddleware::class,
             CheckPermissaoPorRota::class,
         ]);
     })

@@ -5,11 +5,9 @@ namespace App\Http\Controllers;
 use App\Mail\BoasVindasAdminMail;
 use App\Mail\BoasVindasEmpresaMail;
 use App\Models\Empresa;
-use App\Models\OnboardingStep;
 use App\Models\Regra;
 use App\Models\User;
 use App\Services\PermissaoSyncService;
-use App\Services\ReplicacaoBaseService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,13 +21,10 @@ class CadastroEmpresaController extends Controller
 {
     public function create(Request $request): View
     {
-        return view('auth.cadastro-empresa', [
-            'planoPreferido' => (string) $request->query('plano', ''),
-            'semSite' => (bool) $request->boolean('sem_site', false),
-        ]);
+        return view('auth.cadastro-empresa');
     }
 
-    public function store(Request $request, ReplicacaoBaseService $replicacaoBaseService, PermissaoSyncService $permissaoSyncService): RedirectResponse
+    public function store(Request $request, PermissaoSyncService $permissaoSyncService): RedirectResponse
     {
         $data = $request->validate([
             'empresa_nome' => 'required|string|max:200',
@@ -38,11 +33,7 @@ class CadastroEmpresaController extends Controller
                     $fail('CNPJ invalido.');
                 }
             }],
-            'empresa_email' => ['nullable', 'email', 'max:200', function ($attr, $value, $fail) {
-                if ($value && ! filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                    $fail('E-mail da empresa invalido.');
-                }
-            }],
+            'empresa_email' => ['nullable', 'email', 'max:200'],
             'empresa_telefone' => ['nullable', 'string', 'max:30', function ($attr, $value, $fail) {
                 if ($value && ! self::validarTelefone($value)) {
                     $fail('Telefone invalido. Use o formato (XX) XXXXX-XXXX.');
@@ -50,10 +41,8 @@ class CadastroEmpresaController extends Controller
             }],
             'admin_nome' => 'required|string|max:200',
             'admin_email' => ['required', 'email', 'max:200', Rule::unique('users', 'email')],
-            'plano' => 'nullable|string|max:50',
-            'sem_site' => 'nullable|boolean',
         ], [
-            'empresa_nome.required' => 'Informe o nome da empresa.',
+            'empresa_nome.required' => 'Informe o nome da escola ou rede.',
             'admin_nome.required' => 'Informe o nome do responsavel.',
             'admin_email.required' => 'Informe o e-mail do responsavel.',
             'admin_email.unique' => 'Este e-mail ja esta em uso.',
@@ -61,20 +50,19 @@ class CadastroEmpresaController extends Controller
 
         $senhaPadrao = 'Senh@123';
 
-        // Garante que permissões existem antes da transação.
+        // Garante que permissoes e perfis existam antes da transacao.
         $permissaoSyncService->syncIfNeeded();
 
-        $payload = DB::transaction(function () use ($data, $replicacaoBaseService, $senhaPadrao, $permissaoSyncService) {
+        $payload = DB::transaction(function () use ($data, $permissaoSyncService, $senhaPadrao) {
             $slugBase = Str::slug((string) $data['empresa_nome']);
             if ($slugBase === '') {
-                $slugBase = 'empresa';
+                $slugBase = 'escola';
             }
-            // Pega o primeiro nome (primeira palavra antes de hifen ou espaco)
             $slugPrimeira = explode('-', $slugBase)[0];
-            // Verifica se o slug ja existe e adiciona numeros incrementais
             $slug = $slugPrimeira;
             $contador = 0;
-            while (Empresa::where('slug', $slug)->exists()) {
+            while ($slug === \App\Http\Requests\Auth\LoginRequest::SLUG_PLATAFORMA
+                || Empresa::withTrashed()->where('slug', $slug)->exists()) {
                 $contador++;
                 $slug = $slugPrimeira.$contador;
             }
@@ -88,29 +76,7 @@ class CadastroEmpresaController extends Controller
                 'telefone' => $data['empresa_telefone'] ?? null,
             ]);
 
-            // Replica cadastros base da empresa 1 para a nova empresa.
-            try {
-                $replicacaoBaseService->replicar(1, [$empresa->id], [
-                    'horarios_diarios',
-                    'dias_uteis',
-                    'status_movimentacao',
-                    'status_reserva',
-                    'status_veiculos',
-                    'tipo_frota',
-                    'grupos_frota',
-                    'catalogo_fipe',
-                    'tipo_opcional',
-                    'opcionais',
-                ]);
-            } catch (\Throwable $e) {
-                Log::warning('Replicacao parcial ao criar empresa.', [
-                    'empresa_id' => $empresa->id,
-                    'erro' => $e->getMessage(),
-                ]);
-            }
-
-            // Perfis sao vinculados a empresa: cria 'administrador' e
-            // 'usuario' ja com empresa_id da empresa recem-criada.
+            // Cria os 19 perfis escolares do tenant com a matriz padrao.
             $permissaoSyncService->garantirPapeisParaEmpresa((int) $empresa->id);
 
             $roleId = Regra::where('name', 'administrador')
@@ -119,6 +85,7 @@ class CadastroEmpresaController extends Controller
                 ->value('id');
 
             $user = User::create([
+                'name' => $data['admin_nome'],
                 'nome' => $data['admin_nome'],
                 'email' => $data['admin_email'],
                 'password' => $senhaPadrao,
@@ -127,38 +94,10 @@ class CadastroEmpresaController extends Controller
                 'forcar_troca_senha' => true,
             ]);
 
-            // Trial de 7 dias: a primeira assinatura libera o acesso completo
-            // (status 'trial' conta como plano ativo). Sem isso a empresa nova
-            // nao tinha plano e todas as rotas ficavam bloqueadas.
-            $planoSlug = trim((string) ($data['plano'] ?? ''));
-            $plano = $planoSlug !== ''
-                ? \App\Models\Plano::where('ativo', true)->where('slug', $planoSlug)->first()
-                : null;
-            // Sem escolha valida, a empresa entra no plano trial gratuito
-            // (seed PlanosDeclockSeeder). Se o seed ainda nao rodou, cai
-            // para o plano mais completo como seguranca.
-            $plano ??= \App\Models\Plano::where('slug', \Database\Seeders\PlanosDeclockSeeder::SLUG_TRIAL)->first()
-                ?? \App\Models\Plano::where('ativo', true)->orderByDesc('ordem')->first();
-
-            if ($plano) {
-                app(\App\Services\EmpresaPlanoService::class)->contratar(
-                    empresa: $empresa,
-                    plano: $plano,
-                    periodicidade: 'mensal',
-                    metodoPagamento: 'manual',
-                    diaVencimento: null,
-                    criadoPorUserId: $user->id,
-                );
-            }
-
-            OnboardingStep::updateOrCreate(
-                ['empresa_id' => $empresa->id],
-                [
-                    'step_empresa_configurada' => true,
-                    'step_usuario_criado' => true,
-                    'concluido' => false,
-                ]
-            );
+            // email_verified_at nao e fillable — atualizacao direta.
+            DB::table('users')->where('id', $user->id)->update([
+                'email_verified_at' => now(),
+            ]);
 
             return [
                 'empresa' => $empresa,

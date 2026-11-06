@@ -17,8 +17,7 @@ class AvisoSistemaNotification extends Notification
         protected string $cor = 'warning',
         protected ?string $chave = null,
         protected string $categoria = 'sistema',
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {

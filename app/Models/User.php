@@ -4,76 +4,53 @@ namespace App\Models;
 
 use App\Notifications\ResetPasswordCustom;
 use App\Notifications\VerifyEmailCustom;
+use App\Services\PermissaoRotaService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
-use Laravel\Cashier\Billable;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use Billable, HasFactory, Notifiable;
+    use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'nome',
+        'name',
         'email',
         'usuario',
-        'sexo',
-        'data_nascimento',
-        'local_nascimento',
         'telefone',
         'celular',
-        'pais_sigla',
-        'zip_code',
         'cidade',
-        'endereco',
         'numero_identificacao',
+        'data_nascimento',
+        'sexo',
+        'foto_perfil',
+        'cargo',
         'role_id',
-        'stripe_id',
-        'password',
-        'numero_carta_conducao',
-        'local_emissao_carta_conducao',
-        'pais_emissao_carta_conducao',
-        'data_emissao_carta_conducao',
-        'data_validade_carta_conducao',
+        'tipo_usuario_id',
         'empresa_id',
         'forcar_troca_senha',
-        'foto_perfil',
-        'saldo_atual',
-        'funcao_id',
-        'jornada_diaria',
         'ativo',
+        'password',
     ];
 
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'data_nascimento' => 'date',
         'password' => 'hashed',
         'forcar_troca_senha' => 'boolean',
-        'saldo_atual' => 'decimal:2',
-        'jornada_diaria' => 'decimal:2',
+        'ativo' => 'boolean',
     ];
 
     public function sendEmailVerificationNotification()
@@ -88,7 +65,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getNameAttribute(): ?string
     {
-        return $this->attributes['nome'] ?? null;
+        return $this->attributes['nome'] ?? $this->attributes['name'] ?? null;
     }
 
     public function getFotoPerfilUrlAttribute(): string
@@ -170,16 +147,15 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->foto_perfil_url;
     }
 
-    public function tipoUsuario()
+    public function tipoUsuario(): BelongsTo
     {
         return $this->belongsTo(Regra::class, 'role_id');
     }
 
     /**
      * Alias historicamente usado em muitos pontos do sistema.
-     * Mantemos `regra()` para compatibilidade com código que usa `$user->regra`.
      */
-    public function regra()
+    public function regra(): BelongsTo
     {
         return $this->belongsTo(Regra::class, 'role_id');
     }
@@ -194,27 +170,27 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->attributes['role_id'] = $value;
     }
 
-    public function payments()
-    {
-        return $this->hasMany(Payment::class);
-    }
-
-    public function empresa()
+    public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class, 'empresa_id');
     }
 
-    public function funcao()
+    /**
+     * Escolas/unidades onde o usuario atua (vinculo N:N).
+     */
+    public function escolas(): BelongsToMany
     {
-        return $this->belongsTo(Funcao::class, 'funcao_id');
+        return $this->belongsToMany(Escola::class, 'user_escolas', 'user_id', 'escola_id')
+            ->withTimestamps();
     }
 
     /**
-     * Custo/hora efetivo do colaborador: sempre o valor definido na função.
+     * Organizacoes (redes/mantenedoras) onde o usuario atua.
      */
-    public function getCustoHoraEfetivoAttribute(): float
+    public function organizacoes(): BelongsToMany
     {
-        return (float) ($this->funcao?->custo_hora ?? 0);
+        return $this->belongsToMany(Organizacao::class, 'user_organizacoes', 'user_id', 'organizacao_id')
+            ->withTimestamps();
     }
 
     public function isAdministrador(): bool
@@ -223,60 +199,15 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        $roleName = strtolower(trim((string) ($this->regra?->name ?? $this->tipoUsuario?->name ?? '')));
+        $roleName = strtolower(trim((string) ($this->regra?->name ?? '')));
 
         return in_array($roleName, ['administrador', 'admin'], true);
     }
 
-    public function times()
-    {
-        return $this->belongsToMany(ClockifyTime::class, 'clockify_time_user', 'user_id', 'clockify_time_id')
-            ->withTimestamps();
-    }
-
-    public function equipesLideradas()
-    {
-        return $this->hasMany(ClockifyTime::class, 'lider_id');
-    }
-
-    public function projetosResponsavel()
-    {
-        return $this->hasMany(ClockifyProjeto::class, 'responsavel_id');
-    }
-
     /**
-     * Lidera ao menos um time ou responde por ao menos um projeto.
-     */
-    public function isLider(): bool
-    {
-        return app(\App\Services\VisibilidadeService::class)->isLider($this);
-    }
-
-    /**
-     * Ids de usuarios cujos registros este usuario pode ver.
-     * null = sem restricao (admin/superadmin).
-     */
-    public function idsVisiveis(): ?array
-    {
-        return app(\App\Services\VisibilidadeService::class)->idsVisiveis($this);
-    }
-
-    /**
-     * Pode gerenciar (aprovar/editar) registros do usuario alvo:
-     * admin sempre; lider somente sobre membros dos times que lidera.
-     */
-    public function podeGerenciarUsuario(?int $targetUserId): bool
-    {
-        return app(\App\Services\VisibilidadeService::class)->podeGerenciarUsuario($this, $targetUserId);
-    }
-
-    /**
-     * Super admin do sistema (global): tipo_usuario_id = 1.
-     * Possui acesso total, independente da empresa.
-     *
-     * Só pode ser definido via UPDATE direto no banco — o mutator
-     * setTipoUsuarioIdAttribute redireciona qualquer escrita Eloquent
-     * para role_id, então nenhum form/fluxo da aplicação cria superadmin.
+     * Super admin da plataforma: tipo_usuario_id = 1.
+     * So pode ser definido via UPDATE direto no banco — o mutator
+     * setTipoUsuarioIdAttribute redireciona escritas Eloquent para role_id.
      */
     public function isSuperAdmin(): bool
     {
@@ -293,9 +224,8 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        // Rotas liberadas para qualquer autenticado (home, assinatura.*,
-        // onboarding.*) nao dependem de plano nem de papel — igual ao middleware.
-        if (app(\App\Services\PlanoPermissaoService::class)->rotaSempreLiberada($permissao)) {
+        // Rotas liberadas para qualquer autenticado nao dependem de perfil.
+        if (app(PermissaoRotaService::class)->rotaSempreLiberada($permissao)) {
             return true;
         }
 
@@ -313,11 +243,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where('roles.id', $this->role_id)
             ->exists();
 
-        if (! $hasPermission) {
-            return false;
-        }
-
-        return app(\App\Services\PlanoPermissaoService::class)->usuarioPodeUsarPermissao($this, $permissao);
+        return $hasPermission;
     }
 
     public function firstPermittedRouteNameForRedirect(): ?string
@@ -367,7 +293,6 @@ class User extends Authenticatable implements MustVerifyEmail
             return null;
         }
 
-        // Prioriza telas de listagem/entrada.
         foreach (['home', 'dashboard'] as $preferred) {
             if ($candidates->contains($preferred)) {
                 return $preferred;

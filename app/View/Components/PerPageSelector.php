@@ -1,4 +1,5 @@
 <?php
+
 namespace App\View\Components;
 
 use Illuminate\View\Component;
@@ -6,6 +7,7 @@ use Illuminate\View\Component;
 class PerPageSelector extends Component
 {
     public $perPages;
+
     public $selectedPerPage;
 
     public function __construct($perPages, $selectedPerPage)

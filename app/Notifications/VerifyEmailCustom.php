@@ -12,10 +12,10 @@ class VerifyEmailCustom extends VerifyEmail
         return (new MailMessage)
             ->subject('Confirmação de e-mail')
             ->greeting('Olá!')
-            ->line('Obrigado por se cadastrar na DECLOCK.')
+            ->line('Obrigado por se cadastrar na DECLASS.')
             ->line('Para ativar sua conta, confirme seu endereço de e-mail clicando no botão abaixo.')
             ->action('Confirmar e-mail', $url)
             ->line('Se você não criou essa conta, pode ignorar este e-mail com segurança.')
-            ->salutation('Atenciosamente, DECLOCK');
+            ->salutation('Atenciosamente, DECLASS');
     }
 }

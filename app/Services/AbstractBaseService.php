@@ -4,10 +4,9 @@ namespace App\Services;
 
 use App\Services\Interfaces\BaseServiceInterface;
 use App\Support\EmpresaContext;
+use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 abstract class AbstractBaseService implements BaseServiceInterface
@@ -35,10 +34,10 @@ abstract class AbstractBaseService implements BaseServiceInterface
         $query = $this->applyEmpresaScope($this->model->newQuery())->with($with);
         $filters = $this->sanitizeEmpresaFilter($filters);
         $filters = $this->sanitizeInvalidColumnFilters($filters);
- 
-        if (!empty($filters)) {
+
+        if (! empty($filters)) {
             foreach ($filters as $field => $value) {
-                if (!is_array($value) || !array_key_exists('valor', $value)) {
+                if (! is_array($value) || ! array_key_exists('valor', $value)) {
                     continue;
                 }
 
@@ -64,9 +63,9 @@ abstract class AbstractBaseService implements BaseServiceInterface
                 } else { // like
                     if (is_array($val)) {
                         // fallback: apply like for first element
-                        $query->where($field, 'like', '%' . (string) ($val[0] ?? '') . '%');
+                        $query->where($field, 'like', '%'.(string) ($val[0] ?? '').'%');
                     } else {
-                        $query->where($field, 'like', '%' . $val . '%');
+                        $query->where($field, 'like', '%'.$val.'%');
                     }
                 }
             }
@@ -97,8 +96,10 @@ abstract class AbstractBaseService implements BaseServiceInterface
         if ($item) {
             $this->injectEmpresaId($data, true);
             $item->update($data);
+
             return $item;
         }
+
         return null;
     }
 
@@ -109,6 +110,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
         if ($item) {
             return $item->delete();
         }
+
         return false;
     }
 
@@ -118,12 +120,13 @@ abstract class AbstractBaseService implements BaseServiceInterface
     public function formatArraySelect($data, string $idField = 'id', string $nameField = 'name'): array
     {
         $arrayData = $data->toArray();
+
         return array_column($arrayData, $nameField, $idField);
     }
 
     public function getAllAtivosForSelectSubText($id = 'id', $nome = 'nome', $subtitle = '', $orderBy = null, $orderDirection = 'asc')
     {
-        if($subtitle == ''){
+        if ($subtitle == '') {
             throw new \Exception('Subtitle não pode ser vazio');
         }
 
@@ -138,7 +141,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
             $query->orderBy($orderBy, $orderDirection);
         }
 
-        if (!$this->shouldApplyEmpresaScope()) {
+        if (! $this->shouldApplyEmpresaScope()) {
             return $query->get();
         }
 
@@ -150,12 +153,15 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
         return $query->where('empresa_id', $empresaId)->get();
     }
+
     public function formatArraySelectSubText($data, string $idField = 'id', string $nameField = 'name'): array
     {
         $arrayData = $data->toArray();
+
         return array_column($arrayData, $nameField, $idField);
     }
-    public function getAllAtivos($id = 'id', $nome = 'nome', $orderBy = null, $orderDirection = 'asc',$attrExtra = [])
+
+    public function getAllAtivos($id = 'id', $nome = 'nome', $orderBy = null, $orderDirection = 'asc', $attrExtra = [])
     {
         $attrExtra = is_array($attrExtra) ? array_values(array_filter($attrExtra, fn ($item) => is_string($item) && trim($item) !== '')) : [];
 
@@ -169,7 +175,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
         if ($orderBy) {
             $query->orderBy($orderBy, $orderDirection);
         }
-        if (!$this->shouldApplyEmpresaScope()) {
+        if (! $this->shouldApplyEmpresaScope()) {
             $data = $query->get();
 
             return $this->formatArraySelect($data, $id, $nome);
@@ -184,6 +190,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
         return $this->formatArraySelect($data, $id, $nome);
     }
+
     public function getAllFormatSelect($id = 'id', $nome = 'nome', $orderBy = null, $orderDirection = 'asc')
     {
         $query = $this->applyEmpresaScope($this->model->newQuery())
@@ -194,7 +201,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
             $query->orderBy($orderBy, $orderDirection);
         }
 
-        if (!$this->shouldApplyEmpresaScope()) {
+        if (! $this->shouldApplyEmpresaScope()) {
             $data = $query->get();
 
             return $this->formatArraySelect($data, $id, $nome);
@@ -206,12 +213,13 @@ abstract class AbstractBaseService implements BaseServiceInterface
         }
 
         $data = $query->where('empresa_id', $empresaId)->get();
+
         return $this->formatArraySelect($data, $id, $nome);
     }
 
     protected function applyEmpresaScope($query)
     {
-        if (!$this->shouldApplyEmpresaScope()) {
+        if (! $this->shouldApplyEmpresaScope()) {
             return $query;
         }
 
@@ -234,12 +242,12 @@ abstract class AbstractBaseService implements BaseServiceInterface
             throw new AccessDeniedHttpException('Empresa nao identificada para a operacao.');
         }
 
-        return $query->where($this->model->getTable() . '.empresa_id', $empresaId);
+        return $query->where($this->model->getTable().'.empresa_id', $empresaId);
     }
 
     protected function injectEmpresaId(array &$data, bool $override = true): void
     {
-        if (!$this->shouldApplyEmpresaScope()) {
+        if (! $this->shouldApplyEmpresaScope()) {
             return;
         }
 
@@ -247,16 +255,17 @@ abstract class AbstractBaseService implements BaseServiceInterface
         if ($empresaId === null) {
             if (Auth::user()?->isSuperAdmin()) {
                 // Super admin: exige empresa_id explícita quando não há contexto selecionado.
-                if (!isset($data['empresa_id']) || $data['empresa_id'] === null || $data['empresa_id'] === '') {
+                if (! isset($data['empresa_id']) || $data['empresa_id'] === null || $data['empresa_id'] === '') {
                     throw new AccessDeniedHttpException('Informe o empresa_id para esta operacao (super admin).');
                 }
+
                 return;
             }
 
             throw new AccessDeniedHttpException('Empresa nao identificada para a operacao.');
         }
 
-        if ($override || !isset($data['empresa_id'])) {
+        if ($override || ! isset($data['empresa_id'])) {
             $data['empresa_id'] = $empresaId;
         }
     }
@@ -268,7 +277,9 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
     protected function currentEmpresaId(): ?int
     {
-        if (Auth::user()?->isAdministrador()) {
+        // Apenas o superadmin da plataforma pode operar com contexto
+        // de tenant selecionavel (inclusive "todas" = null).
+        if (Auth::user()?->isSuperAdmin()) {
             /** @var EmpresaContext $empresaContext */
             $empresaContext = app(EmpresaContext::class);
 
@@ -288,7 +299,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
     protected function sanitizeEmpresaFilter(array $filters): array
     {
-        if (!array_key_exists('empresa_id', $filters)) {
+        if (! array_key_exists('empresa_id', $filters)) {
             return $filters;
         }
 
@@ -315,13 +326,14 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
         foreach ($filters as $field => $value) {
             // Campos complexos/relacionais ficam por conta de quem monta query customizada.
-            if (!is_string($field) || !preg_match('/^[A-Za-z0-9_\.]+$/', $field)) {
+            if (! is_string($field) || ! preg_match('/^[A-Za-z0-9_\.]+$/', $field)) {
                 unset($filters[$field]);
+
                 continue;
             }
 
             $column = str_contains($field, '.') ? (string) str($field)->afterLast('.') : $field;
-            if (!SchemaCache::hasColumn($table, $column)) {
+            if (! SchemaCache::hasColumn($table, $column)) {
                 unset($filters[$field]);
             }
         }
@@ -331,7 +343,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
     protected function ensureEmpresaSelectedForWrite(): void
     {
-        if (!$this->shouldApplyEmpresaScope()) {
+        if (! $this->shouldApplyEmpresaScope()) {
             return;
         }
 

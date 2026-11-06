@@ -8,7 +8,7 @@ class RemoveEmptySubmenuFilter implements FilterInterface
 {
     public function transform($item)
     {
-        if (empty($item['submenu']) || !is_array($item['submenu'])) {
+        if (empty($item['submenu']) || ! is_array($item['submenu'])) {
             return $item;
         }
 
@@ -33,16 +33,23 @@ class RemoveEmptySubmenuFilter implements FilterInterface
     protected function isVisible($item)
     {
         // Non-array items (strings) consider visible
-        if (!is_array($item)) return true;
+        if (! is_array($item)) {
+            return true;
+        }
 
         // If explicitly restricted by prior filters (e.g. GateFilter), hide it
-        if (!empty($item['restricted'])) return false;
+        if (! empty($item['restricted'])) {
+            return false;
+        }
 
         // If item has submenu, it's visible only if any child is visible
-        if (!empty($item['submenu']) && is_array($item['submenu'])) {
+        if (! empty($item['submenu']) && is_array($item['submenu'])) {
             foreach ($item['submenu'] as $child) {
-                if ($this->isVisible($child)) return true;
+                if ($this->isVisible($child)) {
+                    return true;
+                }
             }
+
             return false;
         }
 

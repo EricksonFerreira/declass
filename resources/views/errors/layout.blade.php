@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('code') — @yield('title') | DECLOCK</title>
+    <title>@yield('code') — @yield('title') | DECLASS</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -85,8 +85,8 @@
 <body>
     <div class="error-card">
         <div class="error-logo">
-            <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="DECLOCK">
-            <span>DECLOCK</span>
+            <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="DECLASS">
+            <span>DECLASS</span>
         </div>
 
         <div class="error-code">@yield('code')</div>

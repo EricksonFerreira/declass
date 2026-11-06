@@ -28,7 +28,7 @@ class EmpresaContextController extends Controller
         ]);
 
         $empresaId = (int) $data['empresa_id'];
-        if ($empresaId !== 0 && !Empresa::query()->whereKey($empresaId)->exists()) {
+        if ($empresaId !== 0 && ! Empresa::query()->whereKey($empresaId)->exists()) {
             return redirect()->back()->with('error', 'Empresa selecionada é inválida.');
         }
 

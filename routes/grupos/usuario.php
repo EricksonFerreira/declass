@@ -1,6 +1,7 @@
 <?php
-use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\UsuarioController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('usuario')->name('usuario.')->group(function () {
     Route::post('setperpage', [UsuarioController::class, 'setPerPage'])->name('setPerPage');

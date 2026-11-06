@@ -12,9 +12,9 @@ class EmpresaFactory extends Factory
         $nome = $this->faker->company();
 
         return [
-            'nome'  => $nome,
-            'slug'  => Str::slug($nome) . '-' . $this->faker->unique()->randomNumber(4),
-            'ativo' => true,
+            'nome' => $nome,
+            'slug' => Str::slug($nome).'-'.$this->faker->unique()->randomNumber(4),
+            'ativo' => 'S',
             'email' => $this->faker->companyEmail(),
         ];
     }

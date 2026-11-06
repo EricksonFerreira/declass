@@ -9,8 +9,6 @@ trait FiltroTrait
     /**
      * Cria filtros de sessao de forma dinamica.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param string $nomeFiltro
      * @return void
      */
     private function criarFiltros(Request $request, string $nomeFiltro)
@@ -24,7 +22,7 @@ trait FiltroTrait
             if (preg_match('/^(.*)_(inicio|fim|from|to)$/i', $k, $m)) {
                 $base = $m[1];
                 $side = strtolower($m[2]);
-                if (!isset($ranges[$base])) {
+                if (! isset($ranges[$base])) {
                     $ranges[$base] = ['from' => null, 'to' => null];
                 }
                 if (in_array($side, ['inicio', 'from'])) {
@@ -38,12 +36,12 @@ trait FiltroTrait
 
         // Process remaining inputs normally
         foreach ($inputs as $chave => $valor) {
-            if ($valor !== null && !in_array($chave, ['nomeFiltro', 'urlPadrao', 'routeRedirect'])) {
+            if ($valor !== null && ! in_array($chave, ['nomeFiltro', 'urlPadrao', 'routeRedirect'])) {
                 $nomeExibir = $this->formatarNomeExibir($chave);
                 [$cleanKey, $typeWhere] = $this->determinarTipoFiltro($chave);
 
                 session(["$nomeFiltro.filtro.$cleanKey" => [
-                    'url' => $this->normalizeAdminPath((string) session()->get($nomeFiltro . '.urlPadrao')) . '/removerfiltro?' . $cleanKey . '=1',
+                    'url' => $this->normalizeAdminPath((string) session()->get($nomeFiltro.'.urlPadrao')).'/removerfiltro?'.$cleanKey.'=1',
                     'name' => $cleanKey,
                     'nomeExibir' => $nomeExibir,
                     'valor' => $valor,
@@ -60,7 +58,7 @@ trait FiltroTrait
 
             $nomeExibir = $this->formatarNomeExibir($base);
             session(["$nomeFiltro.filtro.$base" => [
-                'url' => $this->normalizeAdminPath((string) session()->get($nomeFiltro . '.urlPadrao')) . '/removerfiltro?' . $base . '=1',
+                'url' => $this->normalizeAdminPath((string) session()->get($nomeFiltro.'.urlPadrao')).'/removerfiltro?'.$base.'=1',
                 'name' => $base,
                 'nomeExibir' => $nomeExibir,
                 'valor' => ['from' => $vals['from'], 'to' => $vals['to']],
@@ -72,11 +70,9 @@ trait FiltroTrait
     /**
      * Remove filtros de sessao.
      *
-     * @param string $sessao
-     * @param string|null $atributo
      * @return void
      */
-    public function removeSessao(string $sessao, string $atributo = null)
+    public function removeSessao(string $sessao, ?string $atributo = null)
     {
         $atributo = $atributo ? ".$atributo" : '';
         session()->forget("$sessao.filtro$atributo");
@@ -84,8 +80,8 @@ trait FiltroTrait
 
     public function redirecionaRotaRedirect(string $nomeFiltro, string $mensagem = 'Operação realizada com sucesso.', string $tipo = 'success')
     {
-        if (session()->has($nomeFiltro . '.rotaRedirect')) {
-            $redirect = redirect()->route(session($nomeFiltro . '.rotaRedirect'));
+        if (session()->has($nomeFiltro.'.rotaRedirect')) {
+            $redirect = redirect()->route(session($nomeFiltro.'.rotaRedirect'));
 
             return $mensagem !== null
                 ? $redirect->with($tipo, $mensagem)
@@ -98,6 +94,7 @@ trait FiltroTrait
 
         return redirect()->back();
     }
+
     private function determinarTipoFiltro(string $chave): array
     {
         $typeWhere = 'where';
@@ -134,11 +131,11 @@ trait FiltroTrait
             return $normalizedPath;
         }
 
-        if ($normalizedPath === $adminPrefix || str_starts_with($normalizedPath, $adminPrefix . '/')) {
+        if ($normalizedPath === $adminPrefix || str_starts_with($normalizedPath, $adminPrefix.'/')) {
             return $normalizedPath;
         }
 
-        return $adminPrefix . '/' . $normalizedPath;
+        return $adminPrefix.'/'.$normalizedPath;
     }
 
     public static function formatOptions($items, $defaultLabel = 'Selecione uma opcao')
@@ -153,7 +150,3 @@ trait FiltroTrait
         return $options;
     }
 }
-
-
-
-

@@ -9,6 +9,7 @@ class BaseController extends Controller
     use AuthorizesRequests;
 
     protected $nomeFiltro;
+
     protected $titulo;
 
     protected function configurarSessao()

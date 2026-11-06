@@ -2,16 +2,15 @@
 
 namespace App\Menu\Filters;
 
-use App\Services\PlanoPermissaoService;
+use App\Services\PermissaoRotaService;
 use Illuminate\Support\Facades\Route;
 use JeroenNoten\LaravelAdminLte\Menu\Filters\FilterInterface;
 
 class RoutePermissionVisibilityFilter implements FilterInterface
 {
     public function __construct(
-        private readonly PlanoPermissaoService $planoPermissaoService
-    ) {
-    }
+        private readonly PermissaoRotaService $permissaoRotaService
+    ) {}
 
     public function transform($item)
     {
@@ -38,7 +37,7 @@ class RoutePermissionVisibilityFilter implements FilterInterface
             return $item;
         }
 
-        if (! $this->planoPermissaoService->usuarioPodeAcessarRota(auth()->user(), $routeName)) {
+        if (! $this->permissaoRotaService->usuarioPodeAcessarRota(auth()->user(), $routeName)) {
             $item['restricted'] = true;
         }
 

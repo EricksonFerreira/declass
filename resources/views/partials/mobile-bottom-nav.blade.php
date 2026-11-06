@@ -15,35 +15,28 @@
             'icone' => 'fas fa-home',
             'url' => route('home'),
             'slug' => null,
-            'prefixos' => ['home', 'admin.index'],
+            'prefixos' => ['home', 'dashboard', 'admin.index'],
         ],
         [
-            'label' => 'Registrar',
-            'icone' => 'fas fa-stopwatch',
-            'url' => route('menu.index', 'registrar-tempo'),
-            'slug' => 'registrar-tempo',
-            'prefixos' => ['operacao.tracker.', 'operacao.timesheet', 'operacao.calendario.'],
+            'label' => 'Institucional',
+            'icone' => 'fas fa-school',
+            'url' => route('menu.index', 'institucional'),
+            'slug' => 'institucional',
+            'prefixos' => ['organizacao.', 'escola.', 'empresa.'],
         ],
         [
-            'label' => 'Painel',
-            'icone' => 'fas fa-chart-pie',
-            'url' => route('menu.index', 'painel'),
-            'slug' => 'painel',
-            'prefixos' => ['dashboard', 'home.produtividade', 'home.equipe', 'home.projetos'],
+            'label' => 'Pessoas',
+            'icone' => 'fas fa-users',
+            'url' => route('menu.index', 'pessoas'),
+            'slug' => 'pessoas',
+            'prefixos' => ['usuario.', 'regra.'],
         ],
         [
-            'label' => 'Relatórios',
-            'icone' => 'fas fa-file-alt',
-            'url' => route('menu.index', 'relatorios'),
-            'slug' => 'relatorios',
-            'prefixos' => ['relatorios.'],
-        ],
-        [
-            'label' => 'Gerenciar',
+            'label' => 'Documentos',
             'icone' => 'fas fa-folder-open',
-            'url' => route('menu.index', 'gerenciar'),
-            'slug' => 'gerenciar',
-            'prefixos' => ['operacao.projetos.', 'operacao.clientes.', 'operacao.times.', 'operacao.timeoff.', 'operacao.funcoes.', 'operacao.tags.', 'usuario.'],
+            'url' => route('menu.index', 'documentos'),
+            'slug' => 'documentos',
+            'prefixos' => ['documentos.'],
         ],
         [
             'label' => 'Menu',
@@ -56,7 +49,7 @@
 
     $mobileAtivo = function (array $item) use ($mobileRotaAtual, $mobileSecaoParam) {
         if ($item['slug'] === '__menu__') {
-            return $mobileRotaAtual === 'menu.index' && ! in_array($mobileSecaoParam, ['registrar-tempo', 'painel', 'relatorios', 'gerenciar'], true);
+            return $mobileRotaAtual === 'menu.index' && ! in_array($mobileSecaoParam, ['institucional', 'pessoas', 'documentos'], true);
         }
 
         if ($mobileSecaoParam === $item['slug']) {
