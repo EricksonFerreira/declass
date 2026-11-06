@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Services\Interfaces\BaseServiceInterface;
 use App\Support\EmpresaContext;
+use App\Support\EscolaContext;
 use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -36,6 +37,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
             $scope($query);
         }
         $filters = $this->sanitizeEmpresaFilter($filters);
+        $filters = $this->sanitizeEscolaContextFilter($filters);
         $filters = $this->sanitizeInvalidColumnFilters($filters);
 
         if (! empty($filters)) {
@@ -315,6 +317,20 @@ abstract class AbstractBaseService implements BaseServiceInterface
         }
 
         unset($filters['empresa_id']);
+
+        return $filters;
+    }
+
+    /**
+     * Com uma escola selecionada no contexto da sessao, o escopo global ja
+     * filtra escola_id — um filtro de escola divergente e ignorado para
+     * nao esvaziar o resultado nem contornar o contexto.
+     */
+    protected function sanitizeEscolaContextFilter(array $filters): array
+    {
+        if (app(EscolaContext::class)->filtrar()) {
+            unset($filters['escola_id']);
+        }
 
         return $filters;
     }

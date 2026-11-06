@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Support\EscolaContext;
 use Illuminate\Http\Request;
 
 trait FiltroTrait
@@ -34,11 +35,19 @@ trait FiltroTrait
             }
         }
 
+        // Com escola ativa no contexto, filtro de escola e ignorado:
+        // o escopo global ja restringe os dados a unidade selecionada.
+        $escolaBloqueada = app(EscolaContext::class)->filtrar();
+
         // Process remaining inputs normally
         foreach ($inputs as $chave => $valor) {
             if ($valor !== null && ! in_array($chave, ['nomeFiltro', 'urlPadrao', 'routeRedirect'])) {
                 $nomeExibir = $this->formatarNomeExibir($chave);
                 [$cleanKey, $typeWhere] = $this->determinarTipoFiltro($chave);
+
+                if ($escolaBloqueada && $cleanKey === 'escola_id') {
+                    continue;
+                }
 
                 session(["$nomeFiltro.filtro.$cleanKey" => [
                     'url' => $this->normalizeAdminPath((string) session()->get($nomeFiltro.'.urlPadrao')).'/removerfiltro?'.$cleanKey.'=1',
@@ -53,6 +62,10 @@ trait FiltroTrait
         // Store combined range filters
         foreach ($ranges as $base => $vals) {
             if ($vals['from'] === null && $vals['to'] === null) {
+                continue;
+            }
+
+            if ($escolaBloqueada && $base === 'escola_id') {
                 continue;
             }
 

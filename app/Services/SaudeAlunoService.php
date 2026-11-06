@@ -34,6 +34,8 @@ class SaudeAlunoService extends AbstractBaseService
      */
     public function listarComFiltros(array $filtros, int $perPage)
     {
+        $filtros = $this->sanitizeEscolaContextFilter($filtros);
+
         $query = SaudeAluno::query()
             ->with(['aluno.pessoa', 'aluno.escola'])
             ->orderBy('id', 'desc');

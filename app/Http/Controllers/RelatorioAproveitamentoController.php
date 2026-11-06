@@ -8,6 +8,7 @@ use App\Models\Etapa;
 use App\Models\Turma;
 use App\Services\BreadcrumbService;
 use App\Services\RelatorioAproveitamentoService;
+use App\Support\EscolaContext;
 use Illuminate\Http\Request;
 
 class RelatorioAproveitamentoController extends BaseController
@@ -26,6 +27,13 @@ class RelatorioAproveitamentoController extends BaseController
     public function index(Request $request)
     {
         $filtros = $request->only(['escola_id', 'ano_letivo_id', 'etapa_id', 'turma_id']);
+
+        // O service usa DB::table (sem escopo global): com escola ativa no
+        // contexto, forca o filtro para a unidade selecionada.
+        $escolaContexto = app(EscolaContext::class);
+        if ($escolaContexto->filtrar()) {
+            $filtros['escola_id'] = $escolaContexto->escolaId();
+        }
 
         $dados = $this->relatorioService->porTurma($filtros);
 

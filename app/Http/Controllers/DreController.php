@@ -6,6 +6,7 @@ use App\Models\Despesa;
 use App\Models\Escola;
 use App\Services\BreadcrumbService;
 use App\Services\DreService;
+use App\Support\EscolaContext;
 use Illuminate\Http\Request;
 
 class DreController extends BaseController
@@ -22,7 +23,11 @@ class DreController extends BaseController
     public function index(Request $request)
     {
         $ano = (int) $request->query('ano', now()->year);
-        $escolaId = $request->query('escola_id') ? (int) $request->query('escola_id') : null;
+        // Com escola no contexto, o escopo global ja restringe — nao
+        // aplica um escola_id divergente da query string.
+        $escolaId = app(EscolaContext::class)->filtrar()
+            ? null
+            : ($request->query('escola_id') ? (int) $request->query('escola_id') : null);
         $empresaId = (int) $request->user()->empresa_id;
 
         $dados = $this->service->demonstrativo($ano, $escolaId, $empresaId);

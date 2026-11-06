@@ -35,6 +35,8 @@ class MatriculaService extends AbstractBaseService
      */
     public function paginateComFiltros(array $filters, int $perPage): LengthAwarePaginator
     {
+        $filters = $this->sanitizeEscolaContextFilter($filters);
+
         $query = $this->applyEmpresaScope($this->model->newQuery())
             ->with(['aluno.pessoa', 'turma.escola', 'turma.anoLetivo', 'turma.etapa']);
 

@@ -21,12 +21,14 @@
                     <option value="{{ $a }}" {{ $a === $ano ? 'selected' : '' }}>{{ $a }}</option>
                 @endforeach
             </select>
+            @unless(app(\App\Support\EscolaContext::class)->filtrar())
             <select name="escola_id" class="form-control form-control-sm mr-2" onchange="this.form.submit()">
                 <option value="">Todas as escolas</option>
                 @foreach($escolas as $id => $nome)
                     <option value="{{ $id }}" {{ (int) $escolaId === $id ? 'selected' : '' }}>{{ $nome }}</option>
                 @endforeach
             </select>
+            @endunless
         </form>
         <span class="text-muted small ml-auto">
             <i class="fas fa-info-circle"></i> Regime de competência: receitas por competência cobrada, despesas por vencimento.

@@ -7,6 +7,7 @@ use App\Models\Escola;
 use App\Models\Turma;
 use App\Services\BreadcrumbService;
 use App\Services\FrequenciaService;
+use App\Support\EscolaContext;
 use Illuminate\Http\Request;
 
 class RelatorioFrequenciaController extends BaseController
@@ -26,6 +27,10 @@ class RelatorioFrequenciaController extends BaseController
     {
         $filtros = $request->only(['escola_id', 'ano_letivo_id', 'turma_id', 'apenas_risco']);
         $filtros['apenas_risco'] = $request->boolean('apenas_risco');
+
+        if (app(EscolaContext::class)->filtrar()) {
+            unset($filtros['escola_id']);
+        }
 
         $matriculas = $this->frequenciaService->consolidadoFaltas($filtros, 25);
         $resumo = $this->frequenciaService->resumoFaltas($filtros);

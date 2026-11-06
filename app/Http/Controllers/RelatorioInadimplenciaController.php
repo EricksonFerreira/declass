@@ -7,6 +7,7 @@ use App\Models\Mensalidade;
 use App\Models\Turma;
 use App\Services\BreadcrumbService;
 use App\Services\MensalidadeService;
+use App\Support\EscolaContext;
 use Illuminate\Http\Request;
 
 class RelatorioInadimplenciaController extends BaseController
@@ -26,6 +27,10 @@ class RelatorioInadimplenciaController extends BaseController
     public function index(Request $request)
     {
         $filtros = $request->only(['escola_id', 'turma_id', 'competencia', 'situacao']);
+
+        if (app(EscolaContext::class)->filtrar()) {
+            unset($filtros['escola_id']);
+        }
 
         $mensalidades = $this->mensalidadeService->relatorioInadimplencia($filtros, 25);
         $resumo = $this->mensalidadeService->resumoInadimplencia($filtros);

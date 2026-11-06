@@ -6,6 +6,7 @@ use App\Models\Avaliacao;
 use App\Models\Escola;
 use App\Models\Turma;
 use App\Services\BreadcrumbService;
+use App\Support\EscolaContext;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -28,6 +29,12 @@ class AgendaAvaliacaoController extends BaseController
         $mesCarbon = Carbon::parse($mes.'-01')->startOfMonth();
 
         $filtros = $request->only(['escola_id', 'turma_id', 'tipo']);
+
+        // Escola ativa no contexto: o escopo global ja filtra — ignora
+        // um escola_id divergente vindo da query string.
+        if (app(EscolaContext::class)->filtrar()) {
+            unset($filtros['escola_id']);
+        }
 
         $query = Avaliacao::query()
             ->with(['turma.escola', 'turma.anoLetivo', 'turma.etapa', 'disciplina', 'professor'])

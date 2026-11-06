@@ -37,6 +37,8 @@ class ResponsavelService extends AbstractBaseService
      */
     public function paginateComFiltros(array $filters, int $perPage): LengthAwarePaginator
     {
+        $filters = $this->sanitizeEscolaContextFilter($filters);
+
         $query = $this->applyEmpresaScope($this->model->newQuery())
             ->with('pessoa');
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Escola;
 use App\Services\BreadcrumbService;
 use App\Services\RelatorioTransporteService;
+use App\Support\EscolaContext;
 use Illuminate\Http\Request;
 
 class RelatorioTransporteController extends BaseController
@@ -24,6 +25,10 @@ class RelatorioTransporteController extends BaseController
     {
         $filtros = $request->only(['escola_id', 'situacao', 'apenas_ativas']);
         $filtros['apenas_ativas'] = $request->boolean('apenas_ativas');
+
+        if (app(EscolaContext::class)->filtrar()) {
+            unset($filtros['escola_id']);
+        }
 
         $linhas = $this->relatorioService->relatorio($filtros);
         $resumo = $this->relatorioService->resumo($filtros);

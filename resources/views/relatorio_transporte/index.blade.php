@@ -55,12 +55,14 @@
 <div class="card">
     <div class="card-header">
         <form method="GET" action="{{ route('relatorio_transporte.index') }}" class="form-inline flex-wrap" style="gap:.5rem;">
+            @unless(app(\App\Support\EscolaContext::class)->filtrar())
             <select name="escola_id" class="form-control form-control-sm">
                 <option value="">Todas as escolas</option>
                 @foreach($escolas as $escola)
                     <option value="{{ $escola->id }}" {{ ($filtros['escola_id'] ?? '') == $escola->id ? 'selected' : '' }}>{{ $escola->nome }}</option>
                 @endforeach
             </select>
+            @endunless
             <select name="situacao" class="form-control form-control-sm">
                 <option value="">Todas as situações</option>
                 @foreach($situacoes as $val => $label)

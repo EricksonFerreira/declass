@@ -35,6 +35,8 @@ class EventoService extends AbstractBaseService
      */
     public function agendaDoMes(\DateTimeInterface|string $mes, array $filtros = []): Collection
     {
+        $filtros = $this->sanitizeEscolaContextFilter($filtros);
+
         $inicio = \Carbon\Carbon::parse($mes.'-01')->startOfMonth();
         $fim = $inicio->copy()->endOfMonth();
 
