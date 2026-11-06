@@ -37,9 +37,7 @@ class DiarioService extends AbstractBaseService
 
     public static function ehProfessor(User $user): bool
     {
-        $role = strtolower(trim((string) ($user->regra?->name ?? '')));
-
-        return in_array($role, self::PERFIS_PROFESSOR, true);
+        return $user->isProfessor();
     }
 
     public function paginateComFiltros(array $filters, int $perPage): LengthAwarePaginator

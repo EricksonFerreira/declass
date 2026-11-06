@@ -193,6 +193,17 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withTimestamps();
     }
 
+    /**
+     * Perfis de docencia: so enxergam/regem os proprios registros
+     * pedagogicos (diarios, avaliacoes) em vez do escopo completo.
+     */
+    public function isProfessor(): bool
+    {
+        $role = strtolower(trim((string) ($this->regra?->name ?? '')));
+
+        return in_array($role, ['professor', 'professor_substituto'], true);
+    }
+
     public function isAdministrador(): bool
     {
         if ($this->isSuperAdmin()) {

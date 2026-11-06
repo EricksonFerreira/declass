@@ -111,6 +111,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'turma',
         'matricula',
         'diario',
+        'avaliacao',
     ];
 
     foreach ($authGroupFiles as $groupFile) {

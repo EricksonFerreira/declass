@@ -407,6 +407,12 @@ return [
                     'icon' => 'fas fa-clipboard-list',
                 ],
                 [
+                    'text' => 'Avaliações',
+                    'route' => 'avaliacao.index',
+                    'can' => 'avaliacao.index',
+                    'icon' => 'fas fa-star-half-alt',
+                ],
+                [
                     'text' => 'Alunos',
                     'route' => 'aluno.index',
                     'can' => 'aluno.index',
