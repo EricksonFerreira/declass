@@ -91,10 +91,15 @@ class MigrationController extends Controller
         $this->checkToken($request);
 
         try {
+            // Buffer proprio: Artisan::output() devolveria o buffer da
+            // ultima chamada interna (ja esvaziado pelo comando), entao
+            // passamos um BufferedOutput para capturar tudo que o setup
+            // escreve via $this->info/$this->line.
+            $buffer = new \Symfony\Component\Console\Output\BufferedOutput();
             Artisan::call('declass:setup-producao', [
                 '--demo' => (bool) $request->query('demo'),
-            ]);
-            $output = Artisan::output();
+            ], $buffer);
+            $output = $buffer->fetch();
 
             return response('<h2>Setup de producao</h2><pre style="white-space:pre-wrap;max-height:80vh;overflow:auto;border:1px solid #ddd;padding:8px">'.e($output).'</pre>');
         } catch (\Throwable $e) {
