@@ -20,6 +20,11 @@
             'nome' => $d->nome,
             'carga' => $d->pivot->carga_horaria_semanal,
         ])->values()->all(),
+        'atribuicoes' => $t->atribuicoes->filter->estaAtiva()->map(fn ($a) => [
+            'professor' => $a->user->nome ?? '—',
+            'disciplina' => $a->disciplina->nome ?? 'Turma toda',
+            'papel' => \App\Models\Atribuicao::PAPEIS[$a->papel] ?? $a->papel,
+        ])->values()->all(),
     ])->values();
 @endphp
 
@@ -187,44 +192,58 @@
         @if($podeReplicar && $turmas->count() >= 2)
             <div class="card">
                 <div class="card-header font-weight-bold">
-                    <i class="fa fa-copy"></i> Replicar disciplinas entre turmas
-                    <small class="text-muted font-weight-normal">— organize as turmas irmãs (A, B, C...) de uma vez</small>
+                    <i class="fa fa-copy"></i> Replicar organização entre turmas
+                    <small class="text-muted font-weight-normal">— copie disciplinas e professores da turma modelo para as irmãs (A, B, C...)</small>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('turma.replicar_disciplinas') }}" id="form-replicar">
+                    <form method="POST" action="{{ route('turma.replicar_organizacao') }}" id="form-replicar">
                         @csrf
                         <div class="row">
-                            <div class="col-md-5">
+                            <div class="col-md-4">
                                 <label class="font-weight-bold">Turma de origem <span class="text-danger">*</span></label>
                                 <select name="turma_origem_id" id="rep-origem" class="form-control" required>
                                     <option value="">Selecione a turma modelo…</option>
                                     @foreach($turmas as $turma)
-                                        <option value="{{ $turma->id }}">{{ $turma->nome }} ({{ $turma->disciplinas->count() }} disciplina(s))</option>
+                                        <option value="{{ $turma->id }}">{{ $turma->nome }} ({{ $turma->disciplinas->count() }} disc. / {{ $turma->atribuicoes->filter->estaAtiva()->count() }} prof.)</option>
                                     @endforeach
                                 </select>
-                                <small class="text-muted">As disciplinas e cargas horárias desta turma serão copiadas.</small>
+                                <small class="text-muted">Disciplinas, cargas e professores desta turma serão copiados.</small>
                             </div>
-                            <div class="col-md-7">
+                            <div class="col-md-4">
                                 <label class="font-weight-bold">Disciplinas da origem</label>
                                 <div id="rep-disciplinas" class="border rounded p-2 bg-light" style="max-height: 180px; overflow-y: auto; font-size: .9rem;">
                                     <span class="text-muted">Selecione a turma de origem para ver as disciplinas.</span>
                                 </div>
                             </div>
+                            <div class="col-md-4">
+                                <label class="font-weight-bold">Professores da origem</label>
+                                <div id="rep-professores" class="border rounded p-2 bg-light" style="max-height: 180px; overflow-y: auto; font-size: .9rem;">
+                                    <span class="text-muted">Selecione a turma de origem para ver os professores.</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row mt-3">
-                            <div class="col-md-12">
+                            <div class="col-md-8">
                                 <label class="font-weight-bold">Copiar para as turmas <span class="text-danger">*</span></label>
                                 <div id="rep-destinos" class="border rounded p-2" style="max-height: 160px; overflow-y: auto;">
                                     <span class="text-muted">Selecione a turma de origem primeiro — turmas da mesma etapa já vêm marcadas.</span>
                                 </div>
-                                <small class="text-muted">Disciplinas que o destino já tiver terão a carga horária atualizada; nenhuma oferta existente é removida.</small>
+                                <small class="text-muted">Ofertas e atribuições que o destino já tiver serão atualizadas; nada existente é removido.</small>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="incluir_professores" value="1" id="rep-prof-check" checked>
+                                    <label class="form-check-label font-weight-bold" for="rep-prof-check">
+                                        Incluir professores atribuídos
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
                         <div class="mt-3">
                             <button type="submit" class="btn btn-success" id="rep-btn" disabled>
-                                <i class="fa fa-copy"></i> Replicar disciplinas
+                                <i class="fa fa-copy"></i> Replicar organização
                             </button>
                         </div>
                     </form>
@@ -236,6 +255,7 @@
                 var turmas = @json($turmasJson);
                 var selectOrigem = document.getElementById('rep-origem');
                 var boxDisc = document.getElementById('rep-disciplinas');
+                var boxProf = document.getElementById('rep-professores');
                 var boxDest = document.getElementById('rep-destinos');
                 var btn = document.getElementById('rep-btn');
 
@@ -281,6 +301,17 @@
                         }).join('') + '</ul>';
                 }
 
+                function renderProfessores(origem) {
+                    if (!origem.atribuicoes.length) {
+                        boxProf.innerHTML = '<span class="text-muted">Nenhum professor atribuído nesta turma.</span>';
+                        return;
+                    }
+                    boxProf.innerHTML = '<strong>' + origem.atribuicoes.length + ' atribuição(ões)</strong><ul class="mb-0 mt-1 pl-3">' +
+                        origem.atribuicoes.map(function (a) {
+                            return '<li>' + a.professor + ' <small class="text-muted">— ' + a.disciplina + ' (' + a.papel + ')</small></li>';
+                        }).join('') + '</ul>';
+                }
+
                 function validar() {
                     var algum = document.querySelectorAll('.rep-destino:checked').length > 0;
                     var origem = turmaPorId(parseInt(selectOrigem.value, 10));
@@ -291,11 +322,13 @@
                     var origem = turmaPorId(parseInt(selectOrigem.value, 10));
                     if (!origem) {
                         boxDisc.innerHTML = '<span class="text-muted">Selecione a turma de origem para ver as disciplinas.</span>';
+                        boxProf.innerHTML = '<span class="text-muted">Selecione a turma de origem para ver os professores.</span>';
                         boxDest.innerHTML = '<span class="text-muted">Selecione a turma de origem primeiro — turmas da mesma etapa já vêm marcadas.</span>';
                         btn.disabled = true;
                         return;
                     }
                     renderDisciplinas(origem);
+                    renderProfessores(origem);
                     renderDestinos(origem);
                     validar();
                 });

@@ -123,7 +123,12 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
 
         $turmas = \App\Models\Turma::query()
             ->where('ano_letivo_id', $anoLetivo->id)
-            ->with(['etapa', 'disciplinas:id,nome'])
+            ->with([
+                'etapa',
+                'disciplinas:id,nome',
+                'atribuicoes.user:id,nome',
+                'atribuicoes.disciplina:id,nome',
+            ])
             ->withCount('matriculas')
             ->orderBy('nome')
             ->get();
@@ -143,7 +148,7 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
             'turnosOpcoes' => \App\Models\Turma::TURNOS,
             'nomesExistentes' => $turmas->pluck('nome')->map(fn ($n) => mb_strtolower($n))->all(),
             'podeGerar' => $user->hasPermissao('turma.gerar_lote'),
-            'podeReplicar' => $user->hasPermissao('turma.replicar_disciplinas'),
+            'podeReplicar' => $user->hasPermissao('turma.replicar_organizacao'),
         ])->with('titulo', "Ano letivo {$anoLetivo->ano}");
     }
 

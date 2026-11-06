@@ -5,7 +5,7 @@ namespace App\Http\Requests\Turma;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class ReplicarDisciplinasRequest extends FormRequest
+class ReplicarOrganizacaoRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -26,6 +26,7 @@ class ReplicarDisciplinasRequest extends FormRequest
                 'integer', 'different:turma_origem_id',
                 Rule::exists('turmas', 'id')->where('empresa_id', $empresaId),
             ],
+            'incluir_professores' => ['nullable', 'boolean'],
         ];
     }
 }

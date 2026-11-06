@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AnoLetivo;
+use App\Models\Atribuicao;
 use App\Models\Disciplina;
 use App\Models\Escola;
 use App\Models\Etapa;
@@ -61,16 +62,16 @@ test('show do ano letivo exibe o planejador com periodos, turmas e disciplinas',
         ->assertOk()
         ->assertSee('1º Semestre')
         ->assertSee('1º Ano EF A')
-        ->assertSee('Replicar disciplinas entre turmas')
+        ->assertSee('Replicar organização entre turmas')
         ->assertSee('Geração de turmas em massa');
 });
 
-test('replicar disciplinas copia ofertas e cargas para as turmas destino', function () {
+test('replicar organizacao copia ofertas e cargas para as turmas destino', function () {
     $empresa = tenant();
     $user = usuarioTenant($empresa, 'administrador');
     ['anoLetivo' => $anoLetivo, 'turmaA' => $turmaA, 'turmaB' => $turmaB, 'turmaC' => $turmaC, 'mat' => $mat, 'por' => $por] = plannerFixture($empresa);
 
-    $this->actingAs($user)->post('/admin/turma/replicar-disciplinas', [
+    $this->actingAs($user)->post('/admin/turma/replicar-organizacao', [
         'turma_origem_id' => $turmaA->id,
         'turmas_destino' => [$turmaB->id, $turmaC->id],
     ])->assertRedirect(route('ano_letivo.show', $anoLetivo->id));
@@ -92,7 +93,7 @@ test('replicacao atualiza carga existente e nao remove ofertas do destino', func
     $turmaB->disciplinas()->attach($mat->id, ['carga_horaria_semanal' => 2]);
     $turmaB->disciplinas()->attach($art->id, ['carga_horaria_semanal' => 2]);
 
-    $this->actingAs($user)->post('/admin/turma/replicar-disciplinas', [
+    $this->actingAs($user)->post('/admin/turma/replicar-organizacao', [
         'turma_origem_id' => $turmaA->id,
         'turmas_destino' => [$turmaB->id],
     ])->assertRedirect();
@@ -109,12 +110,12 @@ test('[PADRAO] validacao exige origem e destinos diferentes', function () {
     $user = usuarioTenant($empresa, 'administrador');
     ['turmaA' => $turmaA, 'turmaB' => $turmaB] = plannerFixture($empresa);
 
-    $this->actingAs($user)->post('/admin/turma/replicar-disciplinas', [
+    $this->actingAs($user)->post('/admin/turma/replicar-organizacao', [
         'turma_origem_id' => $turmaA->id,
         'turmas_destino' => [],
     ])->assertSessionHasErrors('turmas_destino');
 
-    $this->actingAs($user)->post('/admin/turma/replicar-disciplinas', [
+    $this->actingAs($user)->post('/admin/turma/replicar-organizacao', [
         'turma_origem_id' => $turmaA->id,
         'turmas_destino' => [$turmaA->id],
     ])->assertSessionHasErrors('turmas_destino.0');
@@ -134,19 +135,110 @@ test('turma de outro tenant e rejeitada na replicacao', function () {
         'etapa_id' => $etapa->id, 'nome' => 'Turma B', 'empresa_id' => $empresaB->id,
     ]);
 
-    $this->actingAs($user)->post('/admin/turma/replicar-disciplinas', [
+    $this->actingAs($user)->post('/admin/turma/replicar-organizacao', [
         'turma_origem_id' => $turmaA->id,
         'turmas_destino' => [$turmaB->id],
     ])->assertSessionHasErrors('turmas_destino.0');
 });
 
-test('perfil sem permissao de turma nao replica disciplinas', function () {
+test('perfil sem permissao de turma nao replica organizacao', function () {
     $empresa = tenant();
     $user = usuarioTenant($empresa, 'professor');
     ['turmaA' => $turmaA, 'turmaB' => $turmaB] = plannerFixture($empresa);
 
-    $this->actingAs($user)->post('/admin/turma/replicar-disciplinas', [
+    $this->actingAs($user)->post('/admin/turma/replicar-organizacao', [
         'turma_origem_id' => $turmaA->id,
         'turmas_destino' => [$turmaB->id],
     ])->assertForbidden();
+});
+
+test('replicacao copia atribuicoes de professores para as turmas destino', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $prof1 = usuarioTenant($empresa, 'professor', ['nome' => 'Prof Um']);
+    $prof2 = usuarioTenant($empresa, 'professor', ['nome' => 'Prof Dois']);
+    ['turmaA' => $turmaA, 'turmaB' => $turmaB, 'turmaC' => $turmaC, 'mat' => $mat, 'por' => $por] = plannerFixture($empresa);
+
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $turmaA->id,
+        'disciplina_id' => $mat->id, 'user_id' => $prof1->id,
+        'papel' => 'titular', 'ativo' => 'S',
+    ]);
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $turmaA->id,
+        'disciplina_id' => null, 'user_id' => $prof2->id,
+        'papel' => 'auxiliar', 'ativo' => 'S',
+    ]);
+
+    $this->actingAs($admin)->post('/admin/turma/replicar-organizacao', [
+        'turma_origem_id' => $turmaA->id,
+        'turmas_destino' => [$turmaB->id, $turmaC->id],
+        'incluir_professores' => '1',
+    ])->assertRedirect();
+
+    foreach ([$turmaB, $turmaC] as $destino) {
+        $atribuicoes = Atribuicao::where('turma_id', $destino->id)->get();
+        expect($atribuicoes)->toHaveCount(2);
+
+        $matAtrib = $atribuicoes->firstWhere('user_id', $prof1->id);
+        expect($matAtrib->disciplina_id)->toBe($mat->id)
+            ->and($matAtrib->papel)->toBe('titular')
+            ->and($matAtrib->escola_id)->toBe($destino->escola_id);
+
+        $geralAtrib = $atribuicoes->firstWhere('user_id', $prof2->id);
+        expect($geralAtrib->disciplina_id)->toBeNull()
+            ->and($geralAtrib->papel)->toBe('auxiliar');
+    }
+});
+
+test('atribuicao existente no destino e atualizada sem duplicar', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $prof = usuarioTenant($empresa, 'professor');
+    ['turmaA' => $turmaA, 'turmaB' => $turmaB, 'mat' => $mat] = plannerFixture($empresa);
+
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $turmaA->id,
+        'disciplina_id' => $mat->id, 'user_id' => $prof->id,
+        'papel' => 'titular', 'ativo' => 'S',
+    ]);
+    // destino ja tem o mesmo professor na mesma disciplina como auxiliar
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $turmaB->id,
+        'disciplina_id' => $mat->id, 'user_id' => $prof->id,
+        'papel' => 'auxiliar', 'ativo' => 'S',
+    ]);
+
+    $this->actingAs($admin)->post('/admin/turma/replicar-organizacao', [
+        'turma_origem_id' => $turmaA->id,
+        'turmas_destino' => [$turmaB->id],
+    ])->assertRedirect();
+
+    $atribuicoes = Atribuicao::where('turma_id', $turmaB->id)
+        ->where('user_id', $prof->id)->get();
+
+    expect($atribuicoes)->toHaveCount(1)
+        ->and($atribuicoes->first()->papel)->toBe('titular');
+});
+
+test('incluir_professores desligado nao copia atribuicoes', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $prof = usuarioTenant($empresa, 'professor');
+    ['turmaA' => $turmaA, 'turmaB' => $turmaB, 'mat' => $mat] = plannerFixture($empresa);
+
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $turmaA->id,
+        'disciplina_id' => $mat->id, 'user_id' => $prof->id,
+        'papel' => 'titular', 'ativo' => 'S',
+    ]);
+
+    $this->actingAs($admin)->post('/admin/turma/replicar-organizacao', [
+        'turma_origem_id' => $turmaA->id,
+        'turmas_destino' => [$turmaB->id],
+        'incluir_professores' => '0',
+    ])->assertRedirect();
+
+    expect(Atribuicao::where('turma_id', $turmaB->id)->count())->toBe(0)
+        ->and($turmaB->disciplinas()->count())->toBe(2); // disciplinas seguem replicadas
 });

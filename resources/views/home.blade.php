@@ -17,6 +17,8 @@
     $secoes = app(\App\Services\MenuSecoesService::class)->secoes(auth()->user());
 @endphp
 
+@include('partials.setup-checklist')
+
 @include('partials.menu-cards')
 
 @can('acessar-superadmin')

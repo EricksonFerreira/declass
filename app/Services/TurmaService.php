@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Atribuicao;
 use App\Models\Etapa;
 use App\Models\Turma;
 use App\Support\SchemaCache;
@@ -131,16 +132,23 @@ class TurmaService extends AbstractBaseService
     }
 
     /**
-     * Replica as disciplinas ofertadas da turma de origem para as
-     * turmas de destino: mesmas disciplinas e mesma carga horaria.
-     * Disciplinas que o destino ja tem tem a carga atualizada —
-     * nunca remove ofertas existentes do destino.
+     * Replica a organizacao da turma de origem para as turmas de
+     * destino: mesmas disciplinas ofertadas (com carga horaria) e,
+     * opcionalmente, os mesmos professores atribuidos.
      *
-     * @return array{disciplinas: int, turmas: int, puladas: int}
+     * Disciplinas que o destino ja tem tem a carga atualizada —
+     * nunca remove ofertas existentes. Atribuicoes repetidas
+     * (mesmo professor + mesma disciplina) tem papel/status
+     * atualizados; atribuicoes do destino nunca sao removidas.
+     *
+     * @return array{disciplinas: int, turmas: int, cargas_atualizadas: int,
+     *     professores_criados: int, professores_atualizados: int, ano_letivo_id: int}
      */
-    public function replicarDisciplinas(int $turmaOrigemId, array $turmaDestinoIds): array
+    public function replicarOrganizacao(int $turmaOrigemId, array $turmaDestinoIds, bool $incluirProfessores = true): array
     {
-        $origem = $this->model->newQuery()->with('disciplinas')->findOrFail($turmaOrigemId);
+        $origem = $this->model->newQuery()
+            ->with(['disciplinas', 'atribuicoes.user', 'atribuicoes.disciplina'])
+            ->findOrFail($turmaOrigemId);
 
         $destinos = $this->model->newQuery()
             ->whereIn('id', $turmaDestinoIds)
@@ -151,14 +159,48 @@ class TurmaService extends AbstractBaseService
             fn ($d) => [$d->id => ['carga_horaria_semanal' => $d->pivot->carga_horaria_semanal]]
         )->all();
 
-        $puladas = 0;
+        $cargasAtualizadas = 0;
         foreach ($destinos as $destino) {
             foreach ($ofertas as $disciplinaId => $pivot) {
                 if ($destino->disciplinas()->where('disciplinas.id', $disciplinaId)->exists()) {
                     $destino->disciplinas()->updateExistingPivot($disciplinaId, $pivot);
-                    $puladas++;
+                    $cargasAtualizadas++;
                 } else {
                     $destino->disciplinas()->attach($disciplinaId, $pivot);
+                }
+            }
+        }
+
+        $professoresCriados = 0;
+        $professoresAtualizados = 0;
+
+        if ($incluirProfessores) {
+            $atribuicoesOrigem = $origem->atribuicoes->filter->estaAtiva()->values();
+
+            foreach ($destinos as $destino) {
+                $existentes = $destino->atribuicoes()->get()
+                    ->keyBy(fn (Atribuicao $a) => $a->user_id.'|'.($a->disciplina_id ?? 0));
+
+                foreach ($atribuicoesOrigem as $atribuicao) {
+                    $chave = $atribuicao->user_id.'|'.($atribuicao->disciplina_id ?? 0);
+
+                    if (isset($existentes[$chave])) {
+                        $existentes[$chave]->update([
+                            'papel' => $atribuicao->papel,
+                            'ativo' => $atribuicao->ativo,
+                        ]);
+                        $professoresAtualizados++;
+                    } else {
+                        Atribuicao::create([
+                            'empresa_id' => $destino->empresa_id,
+                            'turma_id' => $destino->id,
+                            'disciplina_id' => $atribuicao->disciplina_id,
+                            'user_id' => $atribuicao->user_id,
+                            'papel' => $atribuicao->papel,
+                            'ativo' => $atribuicao->ativo,
+                        ]);
+                        $professoresCriados++;
+                    }
                 }
             }
         }
@@ -166,7 +208,9 @@ class TurmaService extends AbstractBaseService
         return [
             'disciplinas' => count($ofertas),
             'turmas' => $destinos->count(),
-            'puladas' => $puladas,
+            'cargas_atualizadas' => $cargasAtualizadas,
+            'professores_criados' => $professoresCriados,
+            'professores_atualizados' => $professoresAtualizados,
             'ano_letivo_id' => $origem->ano_letivo_id,
         ];
     }

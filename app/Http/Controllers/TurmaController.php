@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Turma\GerarTurmasRequest;
-use App\Http\Requests\Turma\ReplicarDisciplinasRequest;
+use App\Http\Requests\Turma\ReplicarOrganizacaoRequest;
 use App\Http\Requests\Turma\StoreTurmaRequest;
 use App\Http\Requests\Turma\UpdateTurmaRequest;
 use App\Models\AnoLetivo;
@@ -37,7 +37,7 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
         $this->middleware('can:turma.show')->only('show');
         $this->middleware('can:turma.create')->only('create');
         $this->middleware('can:turma.store')->only(['store', 'gerarLote']);
-        $this->middleware('can:turma.replicar_disciplinas')->only('replicarDisciplinas');
+        $this->middleware('can:turma.replicar_organizacao')->only('replicarOrganizacao');
         $this->middleware('can:turma.edit')->only('edit');
         $this->middleware('can:turma.update')->only('update');
         $this->middleware('can:turma.destroy')->only('destroy');
@@ -108,24 +108,33 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
     }
 
     /**
-     * Replica as disciplinas ofertadas da turma de origem para as
-     * turmas de destino (mesmas disciplinas e carga horaria).
-     * Usado pelo planejador do ano letivo para replicar a
-     * organizacao entre turmas irmas (A, B, C...).
+     * Replica a organizacao da turma de origem (disciplinas
+     * ofertadas e, opcionalmente, professores atribuidos) para as
+     * turmas de destino. Usado pelo planejador do ano letivo para
+     * replicar a mesma organizacao entre turmas irmas (A, B, C...).
      */
-    public function replicarDisciplinas(ReplicarDisciplinasRequest $request)
+    public function replicarOrganizacao(ReplicarOrganizacaoRequest $request)
     {
         $data = $request->validated();
 
-        $resultado = $this->turmaService->replicarDisciplinas(
+        $resultado = $this->turmaService->replicarOrganizacao(
             (int) $data['turma_origem_id'],
-            array_map('intval', $data['turmas_destino'])
+            array_map('intval', $data['turmas_destino']),
+            $request->boolean('incluir_professores', true)
         );
 
-        $mensagem = "Disciplinas replicadas para {$resultado['turmas']} turma(s).";
-        if ($resultado['puladas'] > 0) {
-            $mensagem .= " {$resultado['puladas']} oferta(s) já existiam e tiveram a carga horária atualizada.";
+        $mensagem = "Organização replicada para {$resultado['turmas']} turma(s): ";
+        $mensagem .= "{$resultado['disciplinas']} disciplina(s)";
+        if ($resultado['cargas_atualizadas'] > 0) {
+            $mensagem .= " ({$resultado['cargas_atualizadas']} carga(s) horária(s) atualizada(s))";
         }
+        if ($request->boolean('incluir_professores', true)) {
+            $mensagem .= ", {$resultado['professores_criados']} professor(es) atribuído(s)";
+            if ($resultado['professores_atualizados'] > 0) {
+                $mensagem .= " ({$resultado['professores_atualizados']} atualizado(s))";
+            }
+        }
+        $mensagem .= '.';
 
         return redirect()->route('ano_letivo.show', $resultado['ano_letivo_id'])
             ->with('success', $mensagem);
