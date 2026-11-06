@@ -401,6 +401,12 @@ return [
                     'icon' => 'fas fa-id-card',
                 ],
                 [
+                    'text' => 'Diário de Classe',
+                    'route' => 'diario.index',
+                    'can' => 'diario.index',
+                    'icon' => 'fas fa-clipboard-list',
+                ],
+                [
                     'text' => 'Alunos',
                     'route' => 'aluno.index',
                     'can' => 'aluno.index',

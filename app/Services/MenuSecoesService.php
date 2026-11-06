@@ -67,6 +67,7 @@ class MenuSecoesService
                     ['Disciplinas', 'fas fa-book', 'disciplina.index', 'Componentes curriculares', '#f59e0b'],
                     ['Turmas', 'fas fa-chalkboard-teacher', 'turma.index', 'Turmas, disciplinas e professores', '#10b981'],
                     ['Matrículas', 'fas fa-id-card', 'matricula.index', 'Inscrições de alunos em turmas', '#f97316'],
+                    ['Diário de Classe', 'fas fa-clipboard-list', 'diario.index', 'Registro de aulas e chamada', '#0d9488'],
                     ['Alunos', 'fas fa-user-graduate', 'aluno.index', 'Cadastro e dados dos alunos', '#4f46e5'],
                     ['Responsáveis', 'fas fa-user-friends', 'responsavel.index', 'Responsáveis legais, pedagógicos e financeiros', '#db2777'],
                 ],
