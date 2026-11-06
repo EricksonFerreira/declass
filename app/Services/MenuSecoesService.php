@@ -122,6 +122,13 @@ class MenuSecoesService
                 ],
             ],
             [
+                'slug' => 'estoque',
+                'titulo' => 'Estoque',
+                'cards' => [
+                    ['Materiais', 'fas fa-box-open', 'material.index', 'Materiais, insumos e controle de estoque', '#0891b2'],
+                ],
+            ],
+            [
                 'slug' => 'financeiro',
                 'titulo' => 'Financeiro',
                 'cards' => [

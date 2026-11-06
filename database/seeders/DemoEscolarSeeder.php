@@ -178,6 +178,7 @@ class DemoEscolarSeeder extends Seeder
         $this->agenda($empresa, array_values($escolas), $usuarios);
         $this->pesquisas($empresa, array_values($escolas), $usuarios);
         $this->saude($empresa);
+        $this->estoque($empresa, array_values($escolas));
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -1540,6 +1541,95 @@ class DemoEscolarSeeder extends Seeder
                         'ativo' => 'S',
                     ]
                 );
+            }
+        }
+    }
+
+    /**
+     * Materiais de estoque por unidade: catalogo fixo com
+     * estoque inicial e algumas movimentacoes de historico.
+     * Idempotente por (empresa, escola, nome).
+     */
+    private function estoque(Empresa $empresa, array $escolas): void
+    {
+        $catalogo = [
+            ['Papel sulfite A4', 'papelaria', 'pct', 240, 60, 'Almoxarifado'],
+            ['Caderno universitário 96fl', 'papelaria', 'un', 500, 100, 'Almoxarifado'],
+            ['Caneta esferográfica azul', 'papelaria', 'cx', 80, 20, 'Secretaria'],
+            ['Lousa branca piloto', 'didatico', 'un', 12, 3, 'Sala de aula'],
+            ['Jogo de xadrez', 'didatico', 'un', 15, 5, 'Biblioteca'],
+            ['Detergente neutro 5L', 'limpeza', 'un', 30, 8, 'Depósito limpeza'],
+            ['Papel toalha', 'limpeza', 'pct', 200, 50, 'Banheiros'],
+            ['Álcool 70% 1L', 'limpeza', 'un', 40, 10, 'Laboratório'],
+            ['Arroz tipo 1 5kg', 'cantina', 'un', 60, 15, 'Cantina'],
+            ['Feijão carioca 1kg', 'cantina', 'pct', 90, 20, 'Cantina'],
+            ['Leite integral 1L', 'cantina', 'un', 120, 30, 'Câmara fria'],
+            ['Uniforme camiseta P', 'uniforme', 'un', 45, 10, 'Guarda-roupa'],
+        ];
+
+        foreach ($escolas as $escola) {
+            $temMovimentacoes = \App\Models\MovimentacaoEstoque::query()
+                ->whereHas('material', fn ($q) => $q->where('escola_id', $escola->id))
+                ->exists();
+
+            foreach ($catalogo as [$nome, $categoria, $unidade, $estoque, $minimo, $local]) {
+                $material = \App\Models\Material::firstOrCreate(
+                    [
+                        'empresa_id' => $empresa->id,
+                        'escola_id' => $escola->id,
+                        'nome' => $nome,
+                    ],
+                    [
+                        'categoria' => $categoria,
+                        'unidade_medida' => $unidade,
+                        'estoque_atual' => $estoque,
+                        'estoque_minimo' => $minimo,
+                        'localizacao' => $local,
+                        'ativo' => 'S',
+                    ]
+                );
+
+                // Historico inicial apenas na primeira execucao da unidade
+                if ($temMovimentacoes) {
+                    continue;
+                }
+
+                \App\Models\MovimentacaoEstoque::firstOrCreate(
+                    [
+                        'material_id' => $material->id,
+                        'tipo' => 'entrada',
+                        'data' => now()->subDays(20)->toDateString(),
+                    ],
+                    [
+                        'empresa_id' => $empresa->id,
+                        'quantidade' => $estoque,
+                        'saldo_anterior' => 0,
+                        'saldo_novo' => $estoque,
+                        'motivo' => 'Compra inicial / reposição de estoque',
+                        'user_id' => null,
+                    ]
+                );
+
+                // Uma saida recente em parte dos materiais
+                if ($estoque > $minimo && crc32($nome) % 2 === 0) {
+                    $saida = (int) ceil(($estoque - $minimo) * 0.3);
+                    \App\Models\MovimentacaoEstoque::firstOrCreate(
+                        [
+                            'material_id' => $material->id,
+                            'tipo' => 'saida',
+                            'data' => now()->subDays(3)->toDateString(),
+                        ],
+                        [
+                            'empresa_id' => $empresa->id,
+                            'quantidade' => $saida,
+                            'saldo_anterior' => $estoque,
+                            'saldo_novo' => $estoque - $saida,
+                            'motivo' => 'Consumo interno / distribuição',
+                            'user_id' => null,
+                        ]
+                    );
+                    $material->update(['estoque_atual' => $estoque - $saida]);
+                }
             }
         }
     }

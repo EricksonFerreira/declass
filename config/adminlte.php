@@ -581,6 +581,20 @@ return [
             ],
         ],
 
+        // ESTOQUE
+        [
+            'text' => 'Estoque',
+            'icon' => 'fas fa-boxes',
+            'submenu' => [
+                [
+                    'text' => 'Materiais',
+                    'route' => 'material.index',
+                    'can' => 'material.index',
+                    'icon' => 'fas fa-box-open',
+                ],
+            ],
+        ],
+
         // FINANCEIRO
         [
             'text' => 'Financeiro',
