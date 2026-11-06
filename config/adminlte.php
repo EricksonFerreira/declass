@@ -413,6 +413,12 @@ return [
                     'icon' => 'fas fa-star-half-alt',
                 ],
                 [
+                    'text' => 'Boletim',
+                    'route' => 'boletim.index',
+                    'can' => 'boletim.index',
+                    'icon' => 'fas fa-file-alt',
+                ],
+                [
                     'text' => 'Alunos',
                     'route' => 'aluno.index',
                     'can' => 'aluno.index',
