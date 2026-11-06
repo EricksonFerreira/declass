@@ -63,6 +63,7 @@ class MaterialService extends AbstractBaseService
 
             $movimentacao = MovimentacaoEstoque::create([
                 'empresa_id' => $material->empresa_id,
+                'escola_id' => $material->escola_id,
                 'material_id' => $material->id,
                 'tipo' => $tipo,
                 'quantidade' => $quantidade,

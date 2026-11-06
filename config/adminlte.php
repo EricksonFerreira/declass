@@ -652,6 +652,12 @@ return [
                     'can' => 'material.index',
                     'icon' => 'fas fa-box-open',
                 ],
+                [
+                    'text' => 'Movimentação de Materiais',
+                    'route' => 'material.movimentacao.index',
+                    'can' => 'material.movimentacao.index',
+                    'icon' => 'fas fa-exchange-alt',
+                ],
             ],
         ],
 

@@ -35,6 +35,8 @@ class MaterialController extends BaseController implements FiltroInterface, Reso
         $this->middleware('can:material.update')->only('update');
         $this->middleware('can:material.destroy')->only('destroy');
         $this->middleware('can:material.movimentar')->only('movimentar');
+        $this->middleware('can:material.movimentacao.index')->only('movimentacao');
+        $this->middleware('can:material.movimentacao.store')->only('registrarMovimentacao');
         $this->middleware('can:material.filtro')->only('filtro');
         $this->middleware('can:material.removerFiltro')->only('removerFiltro');
         $this->middleware('can:material.setPerPage')->only('setPerPage');
@@ -161,6 +163,59 @@ class MaterialController extends BaseController implements FiltroInterface, Reso
         $this->materialService->movimentar($material, $request->validated());
 
         return redirect()->route('material.movimentacoes', $material->id)
+            ->with('success', 'Movimentação registrada com sucesso.');
+    }
+
+    /**
+     * Tela central de movimentacao: escolhe o material, registra
+     * entrada/saida/ajuste e mostra as movimentacoes recentes
+     * de todo o estoque.
+     */
+    public function movimentacao()
+    {
+        $materiais = Material::query()
+            ->where('ativo', 'S')
+            ->with('escola:id,nome')
+            ->orderBy('nome')
+            ->get(['id', 'empresa_id', 'escola_id', 'nome', 'estoque_atual', 'estoque_minimo', 'unidade_medida', 'categoria', 'localizacao']);
+
+        $movimentacoes = MovimentacaoEstoque::query()
+            ->with(['material:id,nome', 'usuario:id,name'])
+            ->orderBy('data', 'desc')
+            ->orderBy('id', 'desc')
+            ->limit(30)
+            ->get();
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Movimentação de Materiais', 'Estoque');
+
+        return view('material.movimentacao', [
+            'titulo' => 'Movimentação de Materiais',
+            'materiais' => $materiais,
+            'movimentacoes' => $movimentacoes,
+            'breadcrumb' => $breadcrumb,
+            'tipos' => MovimentacaoEstoque::TIPOS,
+        ]);
+    }
+
+    /** POST central: resolve o material e delega ao service. */
+    public function registrarMovimentacao(Request $request)
+    {
+        $request->validate([
+            'material_id' => ['required', 'integer'],
+            'tipo' => ['required', 'string', 'in:'.implode(',', array_keys(MovimentacaoEstoque::TIPOS))],
+            'quantidade' => ['required', 'numeric', 'min:0.01'],
+            'motivo' => ['nullable', 'string', 'max:1000'],
+            'data' => ['nullable', 'date'],
+        ]);
+
+        $material = $this->materialService->getById($request->integer('material_id'));
+        abort_if(! $material, 404, 'Material não encontrado.');
+
+        // ValidationException do service (ex.: estoque insuficiente)
+        // ja redireciona de volta com os erros preenchidos.
+        $this->materialService->movimentar($material, $request->only('tipo', 'quantidade', 'motivo', 'data'));
+
+        return redirect()->route('material.movimentacao.index')
             ->with('success', 'Movimentação registrada com sucesso.');
     }
 

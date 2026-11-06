@@ -181,6 +181,7 @@ class PerfisEscolaresSeeder extends Seeder
             'saude.filtro', 'saude.removerFiltro', 'saude.setPerPage',
             'material.index', 'material.create', 'material.store', 'material.edit', 'material.update',
             'material.movimentacoes', 'material.movimentar',
+            'material.movimentacao.index', 'material.movimentacao.store',
             'material.filtro', 'material.removerFiltro', 'material.setPerPage',
             'ocorrencia.index', 'ocorrencia.create', 'ocorrencia.store', 'ocorrencia.edit', 'ocorrencia.update',
             'ocorrencia.filtro', 'ocorrencia.removerFiltro', 'ocorrencia.setPerPage',

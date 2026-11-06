@@ -9,6 +9,10 @@ Route::prefix('material')->name('material.')->group(function () {
     Route::get('filtro', [MaterialController::class, 'filtro'])->name('filtro');
     Route::get('{material}/movimentacoes', [MaterialController::class, 'movimentacoes'])->name('movimentacoes');
     Route::post('{material}/movimentar', [MaterialController::class, 'movimentar'])->name('movimentar');
+
+    // Tela central de movimentacao de estoque (qualquer material)
+    Route::get('movimentacao', [MaterialController::class, 'movimentacao'])->name('movimentacao.index');
+    Route::post('movimentacao', [MaterialController::class, 'registrarMovimentacao'])->name('movimentacao.store');
 });
 Route::resource('material', MaterialController::class)
     ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
