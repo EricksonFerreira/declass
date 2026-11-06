@@ -39,6 +39,7 @@ class PerfisEscolaresSeeder extends Seeder
             'usuario.filtro', 'usuario.removerFiltro', 'usuario.setPerPage',
             'usuario.buscar', 'usuario.selectOptions',
             'escola.*', 'organizacao.*', 'documentos.*',
+            'aluno.*', 'responsavel.*',
         ],
 
         'diretor' => [
@@ -49,6 +50,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show', 'escola.filtro', 'escola.removerFiltro', 'escola.setPerPage',
             'organizacao.index', 'organizacao.show',
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
+            'aluno.*', 'responsavel.*',
         ],
 
         'vice_diretor' => [
@@ -59,6 +61,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show', 'escola.filtro', 'escola.removerFiltro', 'escola.setPerPage',
             'organizacao.index', 'organizacao.show',
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
+            'aluno.*', 'responsavel.*',
         ],
 
         'coordenador_pedagogico' => [
@@ -69,6 +72,8 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show',
             'organizacao.index', 'organizacao.show',
             'documentos.index',
+            'aluno.index', 'aluno.show', 'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
+            'responsavel.index', 'responsavel.show', 'responsavel.filtro', 'responsavel.removerFiltro', 'responsavel.setPerPage',
         ],
 
         'secretario' => [
@@ -79,6 +84,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.filtro', 'escola.removerFiltro', 'escola.setPerPage',
             'organizacao.index', 'organizacao.show',
             'documentos.*',
+            'aluno.*', 'responsavel.*',
         ],
 
         'auxiliar_secretaria' => [
@@ -90,6 +96,11 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show',
             'organizacao.index', 'organizacao.show',
             'documentos.index', 'documentos.show',
+            'aluno.index', 'aluno.show', 'aluno.create', 'aluno.store', 'aluno.edit', 'aluno.update',
+            'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
+            'aluno.responsavel.store', 'aluno.responsavel.update', 'aluno.responsavel.destroy',
+            'responsavel.index', 'responsavel.show', 'responsavel.create', 'responsavel.store',
+            'responsavel.filtro', 'responsavel.removerFiltro', 'responsavel.setPerPage',
         ],
 
         'professor' => [
@@ -97,6 +108,7 @@ class PerfisEscolaresSeeder extends Seeder
             'menu.*', 'perfil.*',
             'usuario.buscar', 'usuario.selectOptions',
             'escola.index', 'escola.show',
+            'aluno.index', 'aluno.show', 'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
         ],
 
         'professor_substituto' => [
@@ -104,6 +116,7 @@ class PerfisEscolaresSeeder extends Seeder
             'menu.*', 'perfil.*',
             'usuario.buscar', 'usuario.selectOptions',
             'escola.index', 'escola.show',
+            'aluno.index', 'aluno.show', 'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
         ],
 
         'funcionario_administrativo' => [
@@ -113,6 +126,8 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show',
             'organizacao.index', 'organizacao.show',
             'documentos.index', 'documentos.show',
+            'aluno.index', 'aluno.show',
+            'responsavel.index', 'responsavel.show',
         ],
 
         'financeiro' => [
@@ -122,24 +137,29 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show',
             'organizacao.index', 'organizacao.show',
             'documentos.index', 'documentos.show',
+            'aluno.index', 'aluno.show',
+            'responsavel.index', 'responsavel.show', 'responsavel.filtro', 'responsavel.removerFiltro', 'responsavel.setPerPage',
         ],
 
         'bibliotecario' => [
             ...self::BASE,
             'menu.*', 'perfil.*',
             'escola.index', 'escola.show',
+            'aluno.index', 'aluno.show',
         ],
 
         'responsavel_transporte' => [
             ...self::BASE,
             'menu.*', 'perfil.*',
             'escola.index', 'escola.show',
+            'aluno.index', 'aluno.show',
         ],
 
         'responsavel_alimentacao' => [
             ...self::BASE,
             'menu.*', 'perfil.*',
             'escola.index', 'escola.show',
+            'aluno.index', 'aluno.show',
         ],
 
         'atendimento_especializado' => [
@@ -148,6 +168,8 @@ class PerfisEscolaresSeeder extends Seeder
             'usuario.index', 'usuario.show', 'usuario.buscar', 'usuario.selectOptions',
             'escola.index', 'escola.show',
             'documentos.index', 'documentos.show',
+            'aluno.index', 'aluno.show', 'aluno.edit', 'aluno.update',
+            'aluno.filtro', 'aluno.removerFiltro', 'aluno.setPerPage',
         ],
 
         'aluno' => [

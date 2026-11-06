@@ -59,6 +59,14 @@ class MenuSecoesService
                 ],
             ],
             [
+                'slug' => 'academico',
+                'titulo' => 'Vida Acadêmica',
+                'cards' => [
+                    ['Alunos', 'fas fa-user-graduate', 'aluno.index', 'Cadastro e dados dos alunos', '#4f46e5'],
+                    ['Responsáveis', 'fas fa-user-friends', 'responsavel.index', 'Responsáveis legais, pedagógicos e financeiros', '#db2777'],
+                ],
+            ],
+            [
                 'slug' => 'documentos',
                 'titulo' => 'Documentos',
                 'cards' => [

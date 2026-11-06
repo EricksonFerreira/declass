@@ -365,6 +365,26 @@ return [
             ],
         ],
 
+        // VIDA ACADÊMICA
+        [
+            'text' => 'Vida Acadêmica',
+            'icon' => 'fas fa-graduation-cap',
+            'submenu' => [
+                [
+                    'text' => 'Alunos',
+                    'route' => 'aluno.index',
+                    'can' => 'aluno.index',
+                    'icon' => 'fas fa-user-graduate',
+                ],
+                [
+                    'text' => 'Responsáveis',
+                    'route' => 'responsavel.index',
+                    'can' => 'responsavel.index',
+                    'icon' => 'fas fa-user-friends',
+                ],
+            ],
+        ],
+
         // DOCUMENTOS
         [
             'text' => 'Documentos',
