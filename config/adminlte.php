@@ -474,6 +474,12 @@ return [
                     'can' => 'relatorio_frequencia.index',
                     'icon' => 'fas fa-clipboard-check',
                 ],
+                [
+                    'text' => 'Inadimplência',
+                    'route' => 'relatorio_inadimplencia.index',
+                    'can' => 'relatorio_inadimplencia.index',
+                    'icon' => 'fas fa-money-bill-wave',
+                ],
             ],
         ],
 

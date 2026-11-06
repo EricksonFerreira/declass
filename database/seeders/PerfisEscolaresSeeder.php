@@ -39,7 +39,7 @@ class PerfisEscolaresSeeder extends Seeder
             'usuario.filtro', 'usuario.removerFiltro', 'usuario.setPerPage',
             'usuario.buscar', 'usuario.selectOptions',
             'escola.*', 'organizacao.*', 'documentos.*',
-            'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*',
+            'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
             'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*',
             'aluno.*', 'responsavel.*',
@@ -53,7 +53,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show', 'escola.filtro', 'escola.removerFiltro', 'escola.setPerPage',
             'organizacao.index', 'organizacao.show',
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
-            'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*',
+            'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
             'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*',
             'aluno.*', 'responsavel.*',
@@ -67,7 +67,7 @@ class PerfisEscolaresSeeder extends Seeder
             'escola.index', 'escola.show', 'escola.filtro', 'escola.removerFiltro', 'escola.setPerPage',
             'organizacao.index', 'organizacao.show',
             'documentos.index', 'documentos.filtro', 'documentos.removerFiltro',
-            'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*',
+            'ano_letivo.*', 'periodo_letivo.*', 'etapa.*', 'disciplina.*', 'turma.*', 'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*',
             'plano_mensalidade.*', 'mensalidade.*', 'aviso.*', 'livro.*', 'emprestimo.*',
             'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*',
             'aluno.*', 'responsavel.*',
@@ -119,7 +119,7 @@ class PerfisEscolaresSeeder extends Seeder
             'etapa.index', 'etapa.filtro', 'etapa.removerFiltro', 'etapa.setPerPage',
             'disciplina.index', 'disciplina.filtro', 'disciplina.removerFiltro', 'disciplina.setPerPage',
             'turma.index', 'turma.show', 'turma.filtro', 'turma.removerFiltro', 'turma.setPerPage',
-            'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'aviso.*', 'livro.*', 'emprestimo.*', 'relatorio_frequencia.*',
+            'matricula.*', 'diario.*', 'avaliacao.*', 'boletim.*', 'ocorrencia.*', 'plano_atendimento.*', 'tarefa.*', 'aviso.*', 'livro.*', 'emprestimo.*', 'relatorio_frequencia.*', 'relatorio_inadimplencia.*',
             'veiculo.*', 'rota_transporte.*', 'transporte_aluno.*', 'cardapio.*',
             'plano_mensalidade.index', 'mensalidade.index',
             'aluno.*', 'responsavel.*',
@@ -168,7 +168,7 @@ class PerfisEscolaresSeeder extends Seeder
             'cardapio.filtro', 'cardapio.removerFiltro', 'cardapio.setPerPage',
             'ocorrencia.index', 'ocorrencia.create', 'ocorrencia.store', 'ocorrencia.edit', 'ocorrencia.update',
             'ocorrencia.filtro', 'ocorrencia.removerFiltro', 'ocorrencia.setPerPage',
-            'relatorio_frequencia.index',
+            'relatorio_frequencia.index', 'relatorio_inadimplencia.index',
         ],
 
         'professor' => [
@@ -271,6 +271,7 @@ class PerfisEscolaresSeeder extends Seeder
             'boletim.index', 'boletim.turma', 'boletim.aluno',
             'plano_mensalidade.*', 'mensalidade.*',
             'aviso.index', 'aviso.filtro', 'aviso.removerFiltro', 'aviso.setPerPage',
+            'relatorio_inadimplencia.index',
         ],
 
         'bibliotecario' => [

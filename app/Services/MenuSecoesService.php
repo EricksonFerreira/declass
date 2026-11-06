@@ -83,6 +83,7 @@ class MenuSecoesService
                 'titulo' => 'Relatórios',
                 'cards' => [
                     ['Frequência', 'fas fa-clipboard-check', 'relatorio_frequencia.index', 'Faltas e assiduidade por aluno', '#dc2626'],
+                    ['Inadimplência', 'fas fa-money-bill-wave', 'relatorio_inadimplencia.index', 'Cobranças vencidas e em aberto', '#b45309'],
                 ],
             ],
             [
