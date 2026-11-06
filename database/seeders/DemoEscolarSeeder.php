@@ -14,6 +14,7 @@ use App\Models\Escola;
 use App\Models\Etapa;
 use App\Models\Frequencia;
 use App\Models\Matricula;
+use App\Models\Ocorrencia;
 use App\Models\ParadaTransporte;
 use App\Models\PeriodoLetivo;
 use App\Models\Pessoa;
@@ -168,6 +169,7 @@ class DemoEscolarSeeder extends Seeder
         $this->biblioteca($empresa);
         $this->transporte($empresa, array_values($escolas));
         $this->alimentacao($empresa, array_values($escolas));
+        $this->ocorrencias($empresa);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -1117,6 +1119,56 @@ class DemoEscolarSeeder extends Seeder
 
                 $dias++;
                 $data->addDay();
+            }
+        }
+    }
+
+    /**
+     * Ocorrencias disciplinares/pedagogicas de alunos do ano
+     * atual: mistura de elogios, advertencias e ocorrencias.
+     * Idempotente — pula se a escola ja tem registros.
+     */
+    private function ocorrencias(Empresa $empresa): void
+    {
+        $tipos = [
+            'elogio' => ['Participou ativamente da aula', 'Desempenho excelente na avaliação', 'Ajuda colegas em atividades em grupo'],
+            'advertencia' => ['Conversas durante a explicação', 'Atraso reiterado', 'Não trouxe material escolar'],
+            'ocorrencia' => ['Uso de celular em sala', 'Desrespeito a colega', 'Recusa em realizar atividade'],
+        ];
+        $locais = ['Sala de aula', 'Pátio', 'Corredor', 'Laboratório', 'Refeitório'];
+
+        foreach (Escola::query()->where('empresa_id', $empresa->id)->get() as $escola) {
+            if (Ocorrencia::query()->where('escola_id', $escola->id)->exists()) {
+                continue;
+            }
+
+            $alunosIds = Matricula::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('status', 'ativa')
+                ->whereHas('turma', fn ($q) => $q->where('escola_id', $escola->id))
+                ->inRandomOrder()
+                ->limit(60)
+                ->pluck('aluno_id');
+
+            foreach ($alunosIds as $i => $alunoId) {
+                $tipo = $i % 5 === 0 ? 'elogio' : ($i % 3 === 0 ? 'advertencia' : 'ocorrencia');
+                $gravidade = $tipo === 'elogio' ? 'leve' : fake()->randomElement(['leve', 'media', 'grave']);
+
+                Ocorrencia::create([
+                    'empresa_id' => $empresa->id,
+                    'aluno_id' => $alunoId,
+                    'escola_id' => $escola->id,
+                    'data' => now()->subDays(fake()->numberBetween(1, 60))->toDateString(),
+                    'tipo' => $tipo,
+                    'gravidade' => $gravidade,
+                    'local' => fake()->randomElement($locais),
+                    'descricao' => fake()->randomElement($tipos[$tipo]),
+                    'medida_adotada' => $tipo === 'elogio' ? null : fake()->randomElement([
+                        'Advertência verbal registrada', 'Convocação dos pais', 'Orientação individual',
+                    ]),
+                    'notifica_responsavel' => $gravidade !== 'leve',
+                    'ativo' => 'S',
+                ]);
             }
         }
     }

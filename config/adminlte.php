@@ -425,6 +425,12 @@ return [
                     'icon' => 'fas fa-file-alt',
                 ],
                 [
+                    'text' => 'Ocorrências',
+                    'route' => 'ocorrencia.index',
+                    'can' => 'ocorrencia.index',
+                    'icon' => 'fas fa-exclamation-circle',
+                ],
+                [
                     'text' => 'Alunos',
                     'route' => 'aluno.index',
                     'can' => 'aluno.index',
