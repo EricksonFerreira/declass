@@ -219,6 +219,7 @@ class AppServiceProvider extends ServiceProvider
             'atribuicoes' => fn ($m) => $m->turma?->escola_id,
             'pesquisa_respostas' => fn ($m) => $m->pesquisa?->escola_id,
             'movimentacoes_estoque' => fn ($m) => $m->material?->escola_id,
+            'horarios_turma' => fn ($m) => $m->turma?->escola_id,
         ];
     }
 }

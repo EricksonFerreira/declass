@@ -180,6 +180,7 @@ class DemoEscolarSeeder extends Seeder
         $this->saude($empresa);
         $this->estoque($empresa, array_values($escolas));
         $this->solicitacoesMatricula($empresa, array_values($escolas), $usuarios);
+        $this->matrizHorarios($empresa, array_values($escolas));
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -212,6 +213,38 @@ class DemoEscolarSeeder extends Seeder
         }
 
         return $escolas;
+    }
+
+    /** Matriz de horarios padrao (seg-sex) para matutino e vespertino. */
+    private function matrizHorarios(Empresa $empresa, array $escolas): void
+    {
+        $turnos = [
+            'matutino' => [['07:00', '07:50'], ['07:50', '08:40'], ['08:40', '09:30'], ['09:30', '10:20'], ['10:20', '11:10']],
+            'vespertino' => [['13:00', '13:50'], ['13:50', '14:40'], ['14:40', '15:30'], ['15:30', '16:20'], ['16:20', '17:10']],
+        ];
+
+        foreach ($escolas as $escola) {
+            foreach ($turnos as $turno => $aulas) {
+                $existe = \App\Models\HorarioSlot::query()
+                    ->where('escola_id', $escola->id)->where('turno', $turno)->exists();
+                if ($existe) {
+                    continue;
+                }
+                foreach ([1, 2, 3, 4, 5] as $dia) {
+                    foreach ($aulas as $i => [$inicio, $fim]) {
+                        \App\Models\HorarioSlot::create([
+                            'empresa_id' => $empresa->id,
+                            'escola_id' => $escola->id,
+                            'turno' => $turno,
+                            'dia_semana' => $dia,
+                            'ordem' => $i + 1,
+                            'hora_inicio' => $inicio,
+                            'hora_fim' => $fim,
+                        ]);
+                    }
+                }
+            }
+        }
     }
 
     /**

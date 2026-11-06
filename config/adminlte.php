@@ -398,6 +398,18 @@ return [
                             'can' => 'turma.index',
                             'icon' => 'fas fa-chalkboard-teacher',
                         ],
+                        [
+                            'text' => 'Grades de Horário',
+                            'route' => 'horarios.index',
+                            'can' => 'horarios.index',
+                            'icon' => 'fas fa-calendar-week',
+                        ],
+                        [
+                            'text' => 'Matriz de Horários',
+                            'route' => 'horario_matriz.index',
+                            'can' => 'horario_matriz.index',
+                            'icon' => 'fas fa-clock',
+                        ],
                     ],
                 ],
                 [

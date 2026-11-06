@@ -1,0 +1,396 @@
+@extends('adminlte::page')
+
+@section('title', $titulo)
+
+@section('content_header')
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    <x-page-title :title="'Grade horária — '.$turma->nome" :subtitle="($turma->escola->nome ?? '').' · '.(\App\Models\Turma::TURNOS[$turma->turno ?? ''] ?? '')" />
+@stop
+
+@section('content')
+@php
+    $rotuloTurno = \App\Models\Turma::TURNOS[$turma->turno ?? ''] ?? $turma->turno;
+    $disciplinasJson = $disciplinas->map(fn ($d) => [
+        'id' => $d['id'], 'nome' => $d['nome'], 'sigla' => $d['sigla'],
+        'carga' => $d['carga'], 'usadas' => $d['usadas'], 'restante' => $d['restante'],
+    ])->values();
+    $professoresJson = $professores->map(fn ($p) => [
+        'id' => $p['id'], 'nome' => $p['nome'], 'disciplina_id' => $p['disciplina_id'],
+    ])->values();
+    $coresJson = [];
+    foreach ($disciplinas as $d) { $coresJson[$d['id']] = \App\Services\TurmaGradeService::corDaDisciplina($d['id']); }
+    $aulasJson = $aulas->map(fn ($a) => [
+        'disciplina_id' => $a->disciplina_id,
+        'user_id' => $a->user_id,
+        'sala' => $a->sala,
+    ])->all();
+@endphp
+
+<div class="row">
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="font-weight-bold">
+                    <i class="fas fa-calendar-week"></i> Semana letiva
+                    <small class="text-muted font-weight-normal">— clique numa aula para editar</small>
+                </span>
+                <div>
+                    @can('turma.grade.pdf')
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ route('turma.grade.pdf', [$turma->id, 'exibir' => 'disciplina']) }}" class="btn btn-outline-danger" title="PDF só com disciplinas"><i class="fa fa-file-pdf"></i> PDF</a>
+                            <a href="{{ route('turma.grade.pdf', [$turma->id, 'exibir' => 'professor']) }}" class="btn btn-outline-danger" title="PDF com professor"><i class="fa fa-user-graduate"></i></a>
+                        </div>
+                    @endcan
+                    <a href="{{ route('turma.show', $turma->id) }}" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Voltar</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                @if(!$temMatriz)
+                    <div class="text-center py-5">
+                        <i class="fas fa-clock fa-3x text-muted mb-3 d-block"></i>
+                        <h5>A matriz de horários do turno {{ strtolower($rotuloTurno) }} ainda não foi configurada</h5>
+                        <p class="text-muted">Sem ela não há faixas de horário para montar a grade desta turma.</p>
+                        @can('horario_matriz.update')
+                            <a href="{{ route('horario_matriz.edit', [$turma->escola_id, $turma->turno]) }}" class="btn btn-primary">
+                                <i class="fa fa-cog"></i> Configurar matriz {{ strtolower($rotuloTurno) }}
+                            </a>
+                        @endcan
+                    </div>
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-bordered mb-0 grade-horarios" id="grade-tabela">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th style="width:110px">Horário</th>
+                                    @foreach($dias as $dia)
+                                        <th class="text-center">{{ $diasLabels[$dia] ?? $dia }}</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($ordens as $ordem)
+                                    <tr>
+                                        <td class="text-center font-weight-bold bg-light">
+                                            {{ $ordem }}ª aula
+                                            @php
+                                                $horarioRef = '';
+                                                foreach ($dias as $d) {
+                                                    $s = $slots->get($d)?->get($ordem);
+                                                    if ($s) { $horarioRef = substr((string)$s->hora_inicio,0,5).'–'.substr((string)$s->hora_fim,0,5); break; }
+                                                }
+                                            @endphp
+                                            <br><small class="text-muted font-weight-normal">{{ $horarioRef }}</small>
+                                        </td>
+                                        @foreach($dias as $dia)
+                                            @php
+                                                $slot = $slots->get($dia)?->get($ordem);
+                                                $aula = $aulas->get($dia.'-'.$ordem);
+                                                $cor = $aula ? ($coresJson[$aula->disciplina_id] ?? null) : null;
+                                            @endphp
+                                            <td class="p-1 text-center"
+                                                @if(!$slot) style="background:#f8fafc;" @endif>
+                                                @if($slot)
+                                                    <div class="celula-aula {{ $aula ? '' : 'vazia' }}"
+                                                         data-dia="{{ $dia }}" data-ordem="{{ $ordem }}"
+                                                         @if($aula) style="background:{{ $cor['bg'] ?? '#e2e8f0' }};border-left:4px solid {{ $cor['tx'] ?? '#64748b' }};" @endif>
+                                                        @if($aula)
+                                                            <div class="font-weight-bold" style="color:{{ $cor['tx'] ?? '#1e293b' }};font-size:.82rem;">
+                                                                {{ $aula->disciplina?->sigla ?: $aula->disciplina?->nome }}
+                                                            </div>
+                                                            <div style="font-size:.72rem;color:{{ $cor['tx'] ?? '#475569' }};">
+                                                                {{ $aula->user?->nome ? \Illuminate\Support\Str::limit($aula->user->nome, 18) : '' }}
+                                                            </div>
+                                                            @if($aula->sala)<div style="font-size:.68rem;color:#64748b;"><i class="fa fa-door-open"></i> {{ $aula->sala }}</div>@endif
+                                                        @else
+                                                            <i class="fa fa-plus text-muted"></i>
+                                                        @endif
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted" style="font-size:.75rem;">—</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer text-muted" style="font-size:.78rem;">
+                        <i class="fas fa-info-circle"></i>
+                        Disciplinas coloridas conforme a grade; passe o mouse para ver detalhes. Células tracejadas estão livres.
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header font-weight-bold">Disciplinas ofertadas</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead class="thead-light">
+                        <tr><th>Disciplina</th><th class="text-center">Restam</th></tr>
+                    </thead>
+                    <tbody id="tbody-restantes">
+                        @forelse($disciplinas as $d)
+                            <tr data-disciplina="{{ $d['id'] }}">
+                                <td>
+                                    <span class="badge" style="background:{{ $coresJson[$d['id']]['bg'] }};color:{{ $coresJson[$d['id']]['tx'] }};">{{ $d['sigla'] ?: \Illuminate\Support\Str::limit($d['nome'], 12) }}</span>
+                                    {{ $d['nome'] }}
+                                    <br><small class="text-muted">{{ $d['usadas'] }}/{{ $d['carga'] ?: '∞' }} aulas</small>
+                                </td>
+                                <td class="text-center font-weight-bold restante" data-id="{{ $d['id'] }}">{{ $d['restante'] ?? '∞' }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="2" class="text-center text-muted py-3">Nenhuma disciplina ofertada.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if($turma->disciplinas->isEmpty())
+                <div class="card-footer">
+                    <a href="{{ route('turma.show', $turma->id) }}" class="btn btn-sm btn-primary btn-block">Ofertar disciplinas na turma</a>
+                </div>
+            @endif
+        </div>
+
+        @if($professores->isNotEmpty())
+        <div class="card">
+            <div class="card-header font-weight-bold">Professores na turma</div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    @foreach($professores as $p)
+                        <li class="list-group-item py-2" style="font-size:.85rem;">
+                            <i class="fas fa-user-tie text-muted"></i> {{ $p['nome'] }}
+                            <small class="text-muted d-block">{{ $p['disciplina_id'] ? ($disciplinas->firstWhere('id', $p['disciplina_id'])['nome'] ?? '—') : 'Toda a turma' }}</small>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+        @endif
+    </div>
+</div>
+
+{{-- Modal da celula --}}
+<div class="modal fade" id="modal-celula" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="form-celula">
+                @csrf
+                <input type="hidden" name="dia_semana" id="cel-dia">
+                <input type="hidden" name="ordem" id="cel-ordem">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold" id="cel-titulo">Editar aula</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Disciplina <span class="text-danger">*</span></label>
+                        <select name="disciplina_id" id="cel-disciplina" class="form-control" required>
+                            <option value="">Selecione…</option>
+                            @foreach($disciplinas as $d)
+                                <option value="{{ $d['id'] }}" data-restante="{{ $d['restante'] ?? '' }}">
+                                    {{ $d['nome'] }}{{ $d['carga'] ? " ({$d['usadas']}/{$d['carga']})" : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="text-danger" id="cel-erro-disciplina"></small>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Professor <small class="text-muted">(opcional)</small></label>
+                        <select name="user_id" id="cel-professor" class="form-control">
+                            <option value="">Sem professor</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="font-weight-bold">Sala <small class="text-muted">(opcional)</small></label>
+                        <input type="text" name="sala" id="cel-sala" class="form-control" maxlength="40" placeholder="Ex.: 12">
+                        <small class="text-danger" id="cel-erro-sala"></small>
+                    </div>
+                    <div class="alert alert-danger mt-3 mb-0 d-none" id="cel-erro-geral"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger mr-auto" id="btn-limpar" style="display:none;">
+                        <i class="fa fa-eraser"></i> Limpar célula
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-salvar-celula"><i class="fa fa-check"></i> Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@stop
+
+@section('js')
+<script>
+(function () {
+    var disciplinas = @json($disciplinasJson);
+    var professores = @json($professoresJson);
+    var cores = @json($coresJson);
+    var aulasMapa = @json($aulasJson);
+    var diasLabels = @json($diasLabels);
+    var csrf = document.querySelector('meta[name="csrf-token"]').content;
+    var storeUrl = @json(route('turma.grade.celula.store', $turma->id));
+    var destroyUrl = @json(route('turma.grade.celula.destroy', $turma->id));
+
+    var modal = document.getElementById('modal-celula');
+    var $ = window.jQuery;
+    var celDia, celOrdem, celAtual = null;
+
+    function professoresDa(disciplinaId) {
+        return professores.filter(function (p) {
+            return !p.disciplina_id || p.disciplina_id === disciplinaId;
+        });
+    }
+
+    function preencherProfessores(disciplinaId, selecionado) {
+        var sel = document.getElementById('cel-professor');
+        sel.innerHTML = '<option value="">Sem professor</option>';
+        professoresDa(disciplinaId).forEach(function (p) {
+            var op = document.createElement('option');
+            op.value = p.id;
+            op.textContent = p.nome + (p.disciplina_id ? '' : ' (turma toda)');
+            if (selecionado && p.id === selecionado) op.selected = true;
+            sel.appendChild(op);
+        });
+    }
+
+    function abrirCelula(dia, ordem, aula) {
+        celDia = dia; celOrdem = ordem; celAtual = aula;
+        document.getElementById('cel-dia').value = dia;
+        document.getElementById('cel-ordem').value = ordem;
+        document.getElementById('cel-titulo').textContent =
+            'Aula — ' + (diasLabels[dia] || dia) + ', ' + ordem + 'ª aula';
+        document.getElementById('cel-erro-geral').classList.add('d-none');
+        document.getElementById('cel-erro-disciplina').textContent = '';
+        document.getElementById('cel-erro-sala').textContent = '';
+        document.getElementById('btn-limpar').style.display = aula ? '' : 'none';
+
+        var sel = document.getElementById('cel-disciplina');
+        sel.value = aula && aula.disciplina_id ? aula.disciplina_id : '';
+        preencherProfessores(sel.value ? parseInt(sel.value, 10) : null, aula ? aula.user_id : null);
+        document.getElementById('cel-sala').value = aula && aula.sala ? aula.sala : '';
+        $(modal).modal('show');
+    }
+
+    document.getElementById('grade-tabela').addEventListener('click', function (e) {
+        var cel = e.target.closest('.celula-aula');
+        if (!cel) return;
+        var chave = cel.dataset.dia + '-' + cel.dataset.ordem;
+        abrirCelula(parseInt(cel.dataset.dia, 10), parseInt(cel.dataset.ordem, 10), aulasMapa[chave] || null);
+    });
+
+    document.getElementById('cel-disciplina').addEventListener('change', function () {
+        preencherProfessores(this.value ? parseInt(this.value, 10) : null, null);
+    });
+
+    function htmlCelula(disciplinaId, professor, sala) {
+        var d = disciplinas.find(function (x) { return x.id === disciplinaId; });
+        var cor = cores[disciplinaId] || { bg: '#e2e8f0', tx: '#1e293b' };
+        var nome = d ? (d.sigla || d.nome) : '—';
+        var html = '<div class="font-weight-bold" style="color:' + cor.tx + ';font-size:.82rem;">' + nome + '</div>';
+        if (professor) html += '<div style="font-size:.72rem;color:' + cor.tx + ';">' + professor + '</div>';
+        if (sala) html += '<div style="font-size:.68rem;color:#64748b;"><i class="fa fa-door-open"></i> ' + sala + '</div>';
+        return html;
+    }
+
+    function atualizarCelula(dia, ordem, conteudo, meta) {
+        var cel = document.querySelector('.celula-aula[data-dia="' + dia + '"][data-ordem="' + ordem + '"]');
+        if (!cel) return;
+        cel.classList.remove('vazia');
+        cel.style.background = meta.bg;
+        cel.style.borderLeft = '4px solid ' + meta.tx;
+        cel.innerHTML = conteudo;
+        aulasMapa[dia + '-' + ordem] = { disciplina_id: meta.disciplina_id, user_id: meta.user_id, sala: meta.sala };
+    }
+
+    function limparCelulaDom(dia, ordem) {
+        var cel = document.querySelector('.celula-aula[data-dia="' + dia + '"][data-ordem="' + ordem + '"]');
+        if (!cel) return;
+        cel.classList.add('vazia');
+        cel.style.background = '';
+        cel.style.borderLeft = '';
+        cel.innerHTML = '<i class="fa fa-plus text-muted"></i>';
+        delete aulasMapa[dia + '-' + ordem];
+    }
+
+    function atualizarRestante(disciplinaId, delta) {
+        var row = document.querySelector('#tbody-restantes tr[data-disciplina="' + disciplinaId + '"] .restante');
+        if (!row) return;
+        var d = disciplinas.find(function (x) { return x.id === disciplinaId; });
+        if (!d || d.restante === null) return;
+        d.usadas += delta;
+        d.restante = Math.max(0, (d.carga || 0) - d.usadas);
+        row.textContent = d.restante;
+        var opt = document.querySelector('#cel-disciplina option[value="' + disciplinaId + '"]');
+        if (opt) opt.textContent = d.nome + ' (' + d.usadas + '/' + d.carga + ')';
+    }
+
+    document.getElementById('form-celula').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var fd = new FormData(this);
+        var btn = document.getElementById('btn-salvar-celula');
+        btn.disabled = true;
+        fetch(storeUrl, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+            body: fd
+        }).then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+        .then(function (res) {
+            btn.disabled = false;
+            if (res.status === 422 || res.body.errors) {
+                var errs = res.body.errors || {};
+                document.getElementById('cel-erro-disciplina').textContent = errs.disciplina_id ? errs.disciplina_id[0] : '';
+                document.getElementById('cel-erro-sala').textContent = errs.sala ? errs.sala[0] : '';
+                document.getElementById('cel-erro-geral').textContent = errs.user_id ? errs.user_id[0] : (res.body.message || 'Não foi possível salvar.');
+                document.getElementById('cel-erro-geral').classList.remove('d-none');
+                return;
+            }
+            if (!res.body.ok) {
+                document.getElementById('cel-erro-geral').textContent = res.body.message || 'Erro ao salvar.';
+                document.getElementById('cel-erro-geral').classList.remove('d-none');
+                return;
+            }
+            var disciplinaId = parseInt(fd.get('disciplina_id'), 10);
+            // Ajusta contadores: remove 1 da disciplina anterior (se outra) e soma na nova.
+            var anterior = celAtual && celAtual.disciplina_id ? parseInt(celAtual.disciplina_id, 10) : null;
+            if (anterior && anterior !== disciplinaId) atualizarRestante(anterior, -1);
+            atualizarRestante(disciplinaId, anterior === disciplinaId ? 0 : 1);
+
+            var cor = cores[disciplinaId] || { bg: '#e2e8f0', tx: '#1e293b' };
+            atualizarCelula(celDia, celOrdem, htmlCelula(disciplinaId, res.body.professor, res.body.sala), {
+                bg: cor.bg, tx: cor.tx,
+                disciplina_id: disciplinaId,
+                user_id: fd.get('user_id') ? parseInt(fd.get('user_id'), 10) : null,
+                sala: fd.get('sala') || null
+            });
+            $(modal).modal('hide');
+        }).catch(function () {
+            btn.disabled = false;
+            document.getElementById('cel-erro-geral').textContent = 'Falha de comunicação. Tente novamente.';
+            document.getElementById('cel-erro-geral').classList.remove('d-none');
+        });
+    });
+
+    document.getElementById('btn-limpar').addEventListener('click', function () {
+        var fd = new FormData();
+        fd.append('dia_semana', celDia);
+        fd.append('ordem', celOrdem);
+        fetch(destroyUrl, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(fd).toString()
+        }).then(function (r) { return r.json(); }).then(function (j) {
+            if (j.ok) {
+                if (celAtual && celAtual.disciplina_id) atualizarRestante(parseInt(celAtual.disciplina_id, 10), -1);
+                limparCelulaDom(celDia, celOrdem);
+                $(modal).modal('hide');
+            }
+        });
+    });
+})();
+</script>
+@stop

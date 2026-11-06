@@ -51,6 +51,9 @@
                             </td>
                             <td class="text-right">
                                 <a href="{{ route('turma.show', $turma->id) }}" class="btn btn-xs btn-info" title="Ver"><i class="fa fa-eye"></i></a>
+                                @can('turma.grade')
+                                    <a href="{{ route('turma.grade', $turma->id) }}" class="btn btn-xs btn-outline-info" title="Grade horária"><i class="fa fa-calendar-week"></i></a>
+                                @endcan
                                 @can('turma.edit')
                                     <a href="{{ route('turma.edit', $turma->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                                 @endcan

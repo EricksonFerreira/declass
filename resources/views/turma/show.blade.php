@@ -8,6 +8,51 @@
 @stop
 
 @section('content')
+@php
+    $alunosAtivos = $turma->matriculas->where('status', 'ativa')->count();
+    $totalCarga = $turma->disciplinas->sum(fn ($d) => (int) $d->pivot->carga_horaria_semanal);
+    $professoresAtivos = $turma->atribuicoes->filter->estaAtiva()->pluck('user_id')->unique()->count();
+@endphp
+
+<div class="row mb-3">
+    <div class="col-md-3 col-6">
+        <div class="small-box bg-info">
+            <div class="inner">
+                <h3>{{ $alunosAtivos }}</h3>
+                <p>Alunos ativos</p>
+            </div>
+            <div class="icon"><i class="fas fa-user-graduate"></i></div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="small-box bg-success">
+            <div class="inner">
+                <h3>{{ $turma->disciplinas->count() }}</h3>
+                <p>Disciplinas</p>
+            </div>
+            <div class="icon"><i class="fas fa-book"></i></div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="small-box bg-warning">
+            <div class="inner">
+                <h3>{{ $professoresAtivos }}</h3>
+                <p>Professores</p>
+            </div>
+            <div class="icon"><i class="fas fa-chalkboard-teacher"></i></div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="small-box bg-secondary">
+            <div class="inner">
+                <h3>{{ $totalCarga }}h</h3>
+                <p>Carga semanal</p>
+            </div>
+            <div class="icon"><i class="fas fa-clock"></i></div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-4">
         <div class="card">
@@ -33,6 +78,9 @@
             </div>
             <div class="card-footer">
                 <a href="{{ route('turma.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
+                @can('turma.grade')
+                    <a href="{{ route('turma.grade', $turma->id) }}" class="btn btn-info btn-sm"><i class="fa fa-calendar-week"></i> Grade horária</a>
+                @endcan
                 @can('turma.edit')
                     <a href="{{ route('turma.edit', $turma->id) }}" class="btn btn-warning btn-sm">Editar</a>
                 @endcan

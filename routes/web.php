@@ -123,6 +123,8 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'livro',
         'emprestimo',
         'periodo_letivo',
+        'horario_matriz',
+        'horarios',
         'veiculo',
         'rota_transporte',
         'transporte_aluno',
