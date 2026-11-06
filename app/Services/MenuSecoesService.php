@@ -100,6 +100,13 @@ class MenuSecoesService
                 ],
             ],
             [
+                'slug' => 'alimentacao',
+                'titulo' => 'Alimentação',
+                'cards' => [
+                    ['Cardápios', 'fas fa-utensils', 'cardapio.index', 'Refeições servidas em cada unidade', '#16a34a'],
+                ],
+            ],
+            [
                 'slug' => 'financeiro',
                 'titulo' => 'Financeiro',
                 'cards' => [

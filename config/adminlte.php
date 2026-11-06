@@ -505,6 +505,20 @@ return [
             ],
         ],
 
+        // ALIMENTAÇÃO
+        [
+            'text' => 'Alimentação',
+            'icon' => 'fas fa-utensils',
+            'submenu' => [
+                [
+                    'text' => 'Cardápios',
+                    'route' => 'cardapio.index',
+                    'can' => 'cardapio.index',
+                    'icon' => 'fas fa-concierge-bell',
+                ],
+            ],
+        ],
+
         // FINANCEIRO
         [
             'text' => 'Financeiro',

@@ -6,6 +6,7 @@ use App\Models\Aluno;
 use App\Models\Atribuicao;
 use App\Models\Avaliacao;
 use App\Models\Aviso;
+use App\Models\Cardapio;
 use App\Models\Diario;
 use App\Models\Disciplina;
 use App\Models\Empresa;
@@ -166,6 +167,7 @@ class DemoEscolarSeeder extends Seeder
         $this->comunicacao($empresa);
         $this->biblioteca($empresa);
         $this->transporte($empresa, array_values($escolas));
+        $this->alimentacao($empresa, array_values($escolas));
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -1048,6 +1050,73 @@ class DemoEscolarSeeder extends Seeder
                 if (++$count >= 180) {
                     break;
                 }
+            }
+        }
+    }
+
+    /**
+     * Cardapios das proximas 2 semanas letivas por unidade:
+     * cafe da manha, almoco e lanche da tarde em dias uteis.
+     * Idempotente via unique (escola, data, tipo).
+     */
+    private function alimentacao(Empresa $empresa, array $escolas): void
+    {
+        $cardapios = [
+            'cafe_manha' => [
+                'Leite, pão francês com manteiga e fruta da estação',
+                'Achocolatado, tapioca com queijo coalho e banana',
+                'Iogurte natural, bolo caseiro e maçã',
+            ],
+            'almoco' => [
+                'Arroz, feijão, frango grelhado, salada de alface e tomate, suco de laranja',
+                'Macarrão ao sugo, almôndegas, brócolis no vapor e gelatina',
+                'Arroz, feijão, iscas de carne, purê de batata e salada de rúcula',
+                'Strogonoff de frango com arroz, legumes salteados e fruta',
+                'Feijoada completa (versão escolar), laranja e couve refogada',
+            ],
+            'lanche_tarde' => [
+                'Biscoito maisena e suco de uva',
+                'Pão de queijo (3 un.) e suco de maracujá',
+                'Bolacha recheada e leite',
+                'Fruta da estação e bolo de cenoura',
+            ],
+        ];
+
+        $restricoes = [
+            'Opção vegetariana disponível',
+            'Versão sem glúten para alérgicos',
+            'Opção sem lactose disponível',
+            null,
+        ];
+
+        foreach ($escolas as $escola) {
+            $dias = 0;
+            $data = now()->startOfDay();
+            while ($dias < 10) {
+                if ($data->isWeekend()) {
+                    $data->addDay();
+
+                    continue;
+                }
+
+                foreach ($cardapios as $tipo => $opcoes) {
+                    Cardapio::firstOrCreate(
+                        [
+                            'empresa_id' => $empresa->id,
+                            'escola_id' => $escola->id,
+                            'data' => $data->toDateString(),
+                            'tipo' => $tipo,
+                        ],
+                        [
+                            'descricao' => fake()->randomElement($opcoes),
+                            'restricoes_alimentares' => fake()->randomElement($restricoes),
+                            'ativo' => 'S',
+                        ]
+                    );
+                }
+
+                $dias++;
+                $data->addDay();
             }
         }
     }

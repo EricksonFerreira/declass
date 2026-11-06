@@ -130,6 +130,44 @@ class PortalController extends Controller
     }
 
     /**
+     * Cardapio das escolas onde os alunos vinculados estao
+     * matriculados: proximas refeicoes, da data atual em diante.
+     */
+    public function cardapio()
+    {
+        $alunos = $this->alunosDoUsuario(auth()->user());
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $escolaIds = Matricula::query()
+            ->whereIn('aluno_id', $alunos->pluck('id'))
+            ->where('status', 'ativa')
+            ->whereHas('turma', fn ($q) => $q->whereNotNull('escola_id'))
+            ->with('turma:id,escola_id')
+            ->get()
+            ->pluck('turma.escola_id')
+            ->filter()
+            ->unique();
+
+        $cardapios = \App\Models\Cardapio::query()
+            ->whereIn('escola_id', $escolaIds)
+            ->where('ativo', 'S')
+            ->whereDate('data', '>=', now()->toDateString())
+            ->with('escola')
+            ->orderBy('data')
+            ->orderBy('tipo')
+            ->limit(60)
+            ->get()
+            ->groupBy(fn ($c) => $c->data->toDateString());
+
+        return view('portal.cardapio', [
+            'titulo' => 'Cardápio',
+            'alunos' => $alunos,
+            'cardapios' => $cardapios,
+        ]);
+    }
+
+    /**
      * Alunos acessiveis pela conta: filhos de responsaveis vinculados
      * + o proprio aluno quando a conta e de aluno.
      */
