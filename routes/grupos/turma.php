@@ -13,6 +13,9 @@ Route::prefix('turma')->name('turma.')->group(function () {
     Route::post('gerar-lote', [TurmaController::class, 'gerarLote'])->name('gerar_lote');
     Route::post('replicar-organizacao', [TurmaController::class, 'replicarOrganizacao'])->name('replicar_organizacao');
 
+    // Chamada do dia: abre a chamada se ja existe aula hoje, senao leva ao registro da aula
+    Route::get('{turma}/chamada', [TurmaController::class, 'chamada'])->name('chamada');
+
     // Grade horaria da turma
     Route::get('{turma}/grade', [TurmaGradeController::class, 'grade'])->name('grade');
     Route::post('{turma}/grade/celula', [TurmaGradeController::class, 'celulaStore'])->name('grade.celula.store');

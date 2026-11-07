@@ -16,6 +16,8 @@ class StoreHorarioMatrizRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'nome' => ['required', 'string', 'max:120'],
+            'turno' => ['required', Rule::in(array_keys(\App\Models\Turma::TURNOS))],
             'dias' => ['required', 'array', 'min:1'],
             'dias.*' => ['integer', Rule::in(array_keys(\App\Models\HorarioSlot::DIAS))],
             'aulas' => ['required', 'array', 'min:1', 'max:12'],

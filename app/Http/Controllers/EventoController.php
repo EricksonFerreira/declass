@@ -84,15 +84,19 @@ class EventoController extends BaseController implements FiltroInterface, Resour
     {
         $data = $request->validated();
         $data['user_id'] = $request->user()->id;
+        $data['suspende_aulas'] ??= 'N';
+        $turmas = $data['turmas'] ?? [];
+        unset($data['turmas']);
 
-        $this->eventoService->create($data);
+        $evento = $this->eventoService->create($data);
+        $evento->turmas()->sync($turmas);
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Evento cadastrado com sucesso.');
     }
 
     public function edit($id)
     {
-        $evento = $this->eventoService->getById($id, ['escola']);
+        $evento = $this->eventoService->getById($id, ['escola', 'turmas']);
         abort_if(! $evento, 404, 'Evento não encontrado.');
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Agenda', 'evento.index', "Editar: {$evento->titulo}", 'Comunicação');
@@ -103,8 +107,14 @@ class EventoController extends BaseController implements FiltroInterface, Resour
 
     public function update(UpdateEventoRequest $request, $id)
     {
-        $evento = $this->eventoService->update($id, $request->validated());
+        $data = $request->validated();
+        $data['suspende_aulas'] ??= 'N';
+        $turmas = $data['turmas'] ?? [];
+        unset($data['turmas']);
+
+        $evento = $this->eventoService->update($id, $data);
         abort_if(! $evento, 403, 'Sem acesso para editar este evento.');
+        $evento->turmas()->sync($turmas);
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Evento atualizado com sucesso.');
     }
@@ -180,6 +190,11 @@ class EventoController extends BaseController implements FiltroInterface, Resour
             'tipos' => Evento::TIPOS,
             'publicos' => Evento::PUBLICOS,
             'statusList' => Evento::STATUS,
+            'turmasJson' => \App\Models\Turma::query()->where('ativo', 'S')
+                ->with('escola:id,nome')->orderBy('nome')
+                ->get(['id', 'nome', 'escola_id'])
+                ->map(fn ($t) => ['id' => $t->id, 'escola_id' => $t->escola_id, 'label' => $t->nome.' — '.($t->escola->nome ?? '')])
+                ->values(),
         ];
     }
 }

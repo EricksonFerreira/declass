@@ -38,8 +38,8 @@
                             <td>{{ $anoLetivo->escola->nome ?? '—' }}</td>
                             <td>{{ optional($anoLetivo->data_inicio)->format('d/m/Y') ?? '—' }}</td>
                             <td>{{ optional($anoLetivo->data_fim)->format('d/m/Y') ?? '—' }}</td>
-                            <td>{{ \App\Models\AnoLetivo::STATUS[$anoLetivo->status] ?? $anoLetivo->status }}</td>
-                            <td>{{ \App\Models\AnoLetivo::PERIODICIDADES[$anoLetivo->periodicidade] ?? '—' }}</td>
+                            <td><span class="badge badge-{{ \App\Models\AnoLetivo::STATUS_BADGES[$anoLetivo->status] ?? 'secondary' }}">{{ \App\Models\AnoLetivo::STATUS[$anoLetivo->status] ?? $anoLetivo->status }}</span></td>
+                            <td><span class="badge badge-{{ \App\Models\AnoLetivo::PERIODICIDADE_BADGES[$anoLetivo->periodicidade] ?? 'secondary' }}">{{ \App\Models\AnoLetivo::PERIODICIDADES[$anoLetivo->periodicidade] ?? '—' }}</span></td>
                             <td>
                                 @if($anoLetivo->estaAtivo())
                                     <span class="badge badge-success">Ativo</span>

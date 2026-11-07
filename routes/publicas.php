@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\MatriculaPublicaController;
+use App\Http\Controllers\SiteEmpresaController;
 use Illuminate\Support\Facades\Route;
 
 // Formulario publico de solicitacao de matricula (visitante, sem login).
@@ -10,3 +11,8 @@ Route::get('matricula/{empresaSlug}/{escolaSlug}', [MatriculaPublicaController::
 Route::post('matricula/{empresaSlug}/{escolaSlug}', [MatriculaPublicaController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('matricula_publica.store');
+
+// Site publico da empresa ("rede de escolas") no dominio da plataforma.
+// No dominio personalizado da empresa o mesmo controller serve a raiz.
+Route::get('rede/{empresa:slug}', [SiteEmpresaController::class, 'show'])
+    ->name('rede.site');

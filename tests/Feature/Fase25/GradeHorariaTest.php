@@ -59,7 +59,9 @@ test('matriz de horarios salva slots para todos os dias', function () {
     ['escola' => $escola] = gradeFixture($empresa);
     app(EmpresaContext::class)->setEmpresaId($empresa->id);
 
-    $this->actingAs($admin)->put("/admin/horario-matriz/{$escola->id}/vespertino", [
+    $this->actingAs($admin)->post("/admin/horario-matriz/{$escola->id}", [
+        'nome' => 'Vespertino Teste',
+        'turno' => 'vespertino',
         'dias' => [1, 2, 3, 4, 5],
         'aulas' => [
             ['inicio' => '13:00', 'fim' => '13:50'],
@@ -76,7 +78,9 @@ test('matriz rejeita horarios sobrepostos', function () {
     ['escola' => $escola] = gradeFixture($empresa);
     app(EmpresaContext::class)->setEmpresaId($empresa->id);
 
-    $this->actingAs($admin)->put("/admin/horario-matriz/{$escola->id}/noturno", [
+    $this->actingAs($admin)->post("/admin/horario-matriz/{$escola->id}", [
+        'nome' => 'Noturno Teste',
+        'turno' => 'noturno',
         'dias' => [1],
         'aulas' => [
             ['inicio' => '19:00', 'fim' => '20:00'],
@@ -200,7 +204,9 @@ test('perfil sem permissao nao acessa grade nem matriz', function () {
     ['turma' => $turma, 'escola' => $escola] = gradeFixture($empresa);
     app(EmpresaContext::class)->setEmpresaId($empresa->id);
 
-    $this->actingAs($prof)->get("/admin/turma/{$turma->id}/grade")->assertForbidden();
+    // Professor visualiza a grade da propria turma (somente leitura),
+    // mas nao acessa a visao geral de horarios nem a matriz.
+    $this->actingAs($prof)->get("/admin/turma/{$turma->id}/grade")->assertOk();
     $this->actingAs($prof)->get('/admin/horarios')->assertForbidden();
     $this->actingAs($prof)->get('/admin/horario-matriz')->assertForbidden();
 });

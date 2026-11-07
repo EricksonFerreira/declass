@@ -48,6 +48,12 @@
                                 @if($evento->publico === 'todos')
                                     <span class="badge badge-outline-primary ml-1" title="Visível para as famílias"><i class="fa fa-users"></i> famílias</span>
                                 @endif
+                                @if($evento->suspende_aulas === 'S')
+                                    <span class="badge badge-danger ml-1" title="Suspende as aulas do dia"><i class="fa fa-ban"></i> sem aula</span>
+                                @endif
+                                @if($evento->turmas->isNotEmpty())
+                                    <span class="badge badge-info ml-1" title="{{ $evento->turmas->pluck('nome')->implode(', ') }}"><i class="fa fa-chalkboard-teacher"></i> {{ $evento->turmas->count() }} turma(s)</span>
+                                @endif
                             </div>
                             <small class="text-muted">
                                 @if($evento->hora_inicio)

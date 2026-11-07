@@ -7,15 +7,22 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\NotificacaoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SiteEmpresaController;
 use App\Support\EmpresaDominio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    // Dominio/subdominio de empresa vai direto para a tela de login,
-    // que ja resolve a marca pelo host.
-    if (EmpresaDominio::porHost(request()->getHost())) {
+    // Dominio personalizado de empresa serve o site publico dela
+    // ("rede de escolas"); sem site ativo, vai para o login.
+    $empresa = EmpresaDominio::porHost(request()->getHost());
+
+    if ($empresa?->sitePublicoAtivo()) {
+        return app(SiteEmpresaController::class)->show($empresa);
+    }
+
+    if ($empresa) {
         return redirect()->route('login');
     }
 
@@ -98,6 +105,15 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         Route::post('comandos/executar', [\App\Http\Controllers\ComandoSistemaController::class, 'run'])->name('comandos.executar');
     });
 
+    // Espelhamento de acesso — o guard fica no controller (isSuperAdmin)
+    // porque durante o espelho o gate 'acessar-superadmin' e suprimido;
+    // o prefixo 'espelhamento.' e ignorado pela checagem por rota.
+    Route::middleware('auth')->group(function () {
+        Route::get('espelhamento', [\App\Http\Controllers\EspelhamentoController::class, 'index'])->name('espelhamento.index');
+        Route::post('espelhamento/{usuario}', [\App\Http\Controllers\EspelhamentoController::class, 'store'])->name('espelhamento.store');
+        Route::delete('espelhamento', [\App\Http\Controllers\EspelhamentoController::class, 'destroy'])->name('espelhamento.destroy');
+    });
+
     require __DIR__.'/auth.php';
 
     $authGroupFiles = [
@@ -125,6 +141,10 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'periodo_letivo',
         'horario_matriz',
         'horarios',
+        'calendario',
+        'feriado',
+        'justificativa',
+        'meus_horarios',
         'veiculo',
         'rota_transporte',
         'transporte_aluno',

@@ -6,6 +6,7 @@ use App\Menu\CustomAdminLte;
 use App\Models\User;
 use App\Support\EmpresaContext;
 use App\Support\EscolaContext;
+use App\Support\EspelhamentoContext;
 use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
@@ -27,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFour();
         $this->app->scoped(EmpresaContext::class, fn () => new EmpresaContext());
         $this->app->scoped(EscolaContext::class, fn () => new EscolaContext());
+        $this->app->scoped(EspelhamentoContext::class, fn () => new EspelhamentoContext());
     }
 
     /**
@@ -44,13 +46,15 @@ class AppServiceProvider extends ServiceProvider
             $this->bootEmpresaScope();
         });
 
-        // Superadmin tem acesso irrestrito a tudo, sem excecao.
+        // Superadmin tem acesso irrestrito a tudo, sem excecao —
+        // EXCETO durante espelhamento: ai as permissoes avaliadas sao
+        // as do usuario espelhado (hasPermissao ja delega para ele).
         Gate::before(function (User $user, mixed $ability) {
             if (! is_string($ability)) {
                 return null;
             }
 
-            if ($user->isSuperAdmin()) {
+            if ($user->isSuperAdmin() && ! app(EspelhamentoContext::class)->ativo()) {
                 return true;
             }
 
@@ -62,17 +66,19 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Troca de tenant de contexto e recurso da plataforma.
+        // Durante espelhamento, as telas exclusivas de superadmin ficam
+        // indisponiveis — o espelho mostra so o que o alvo veria.
         Gate::define('gerenciar-empresa', function (User $user) {
-            return $user->isSuperAdmin();
+            return $user->isSuperAdmin() && ! app(EspelhamentoContext::class)->ativo();
         });
 
         Gate::define('acessar-superadmin', function (User $user) {
-            return $user->isSuperAdmin();
+            return $user->isSuperAdmin() && ! app(EspelhamentoContext::class)->ativo();
         });
 
         // LogViewer (opcodesio/log-viewer): somente superadmin.
         Gate::define('viewLogViewer', function (User $user) {
-            return $user->isSuperAdmin();
+            return $user->isSuperAdmin() && ! app(EspelhamentoContext::class)->ativo();
         });
 
         Gate::define('acessar-perfil', function (User $user) {

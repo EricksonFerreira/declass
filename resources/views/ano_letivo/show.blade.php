@@ -49,10 +49,11 @@
                     <dt class="col-sm-5">Escola</dt><dd class="col-sm-7">{{ $anoLetivo->escola->nome ?? '—' }}</dd>
                     <dt class="col-sm-5">Início</dt><dd class="col-sm-7">{{ optional($anoLetivo->data_inicio)->format('d/m/Y') ?? '—' }}</dd>
                     <dt class="col-sm-5">Fim</dt><dd class="col-sm-7">{{ optional($anoLetivo->data_fim)->format('d/m/Y') ?? '—' }}</dd>
-                    <dt class="col-sm-5">Periodicidade</dt><dd class="col-sm-7">{{ $periodicidadeLabel }}</dd>
+                    <dt class="col-sm-5">Periodicidade</dt>
+                    <dd class="col-sm-7"><span class="badge badge-{{ \App\Models\AnoLetivo::PERIODICIDADE_BADGES[$anoLetivo->periodicidade] ?? 'secondary' }}">{{ $periodicidadeLabel }}</span></dd>
                     <dt class="col-sm-5">Status</dt>
                     <dd class="col-sm-7">
-                        <span class="badge badge-{{ \App\Models\AnoLetivo::STATUS[$anoLetivo->status] === 'Letivo' ? 'success' : 'secondary' }}">
+                        <span class="badge badge-{{ \App\Models\AnoLetivo::STATUS_BADGES[$anoLetivo->status] ?? 'secondary' }}">
                             {{ \App\Models\AnoLetivo::STATUS[$anoLetivo->status] ?? $anoLetivo->status }}
                         </span>
                     </dd>

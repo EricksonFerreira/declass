@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="'Matriz — '.$turnoLabel" :subtitle="$escola->nome" />
+    <x-page-title :title="($horario ? 'Editar — '.$horario->nome : 'Novo horário')" :subtitle="$escola->nome" />
 @stop
 
 @section('content')
@@ -12,12 +12,33 @@
     <div class="card-body">
         <div class="alert alert-info small mb-3">
             <i class="fas fa-info-circle"></i>
-            Defina os <strong>dias letivos</strong> e as <strong>aulas do dia</strong> (horário de início e fim de cada uma).
-            A mesma grade vale para todos os dias marcados — é ela que aparece na grade horária das turmas deste turno.
+            Dê um <strong>nome</strong> a este horário (ex.: "Matutino Regular", "Matutino A — contraturno"),
+            defina os <strong>dias letivos</strong> e as <strong>aulas do dia</strong>. Depois vincule as turmas
+            a este horário no cadastro de cada turma.
         </div>
 
-        <form method="POST" action="{{ route('horario_matriz.update', [$escola->id, $turno]) }}" id="form-matriz">
-            @csrf @method('PUT')
+        <form method="POST" action="{{ $horario ? route('horario_matriz.update', $horario->id) : route('horario_matriz.store', $escola->id) }}" id="form-matriz">
+            @csrf
+            @if($horario) @method('PUT') @endif
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nome do horário <span class="text-danger">*</span></label>
+                    <input type="text" name="nome" class="form-control" maxlength="120" required
+                        value="{{ old('nome', $horario->nome ?? '') }}" placeholder="Ex.: Matutino Regular">
+                    @error('nome')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Turno <span class="text-danger">*</span></label>
+                    <select name="turno" class="form-control" required>
+                        <option value="">Selecione…</option>
+                        @foreach($turnos as $valor => $label)
+                            <option value="{{ $valor }}" {{ old('turno', $horario->turno ?? '') === $valor ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('turno')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+            </div>
 
             <h6 class="font-weight-bold">Dias letivos</h6>
             <div class="form-check form-check-inline mb-3">

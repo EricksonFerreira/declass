@@ -41,7 +41,7 @@ class EventoService extends AbstractBaseService
         $fim = $inicio->copy()->endOfMonth();
 
         return Evento::query()
-            ->with('escola:id,nome')
+            ->with('escola:id,nome', 'turmas:id,nome')
             ->whereDate('data_inicio', '<=', $fim->toDateString())
             ->whereRaw('COALESCE(data_fim, data_inicio) >= ?', [$inicio->toDateString()])
             ->when(! empty($filtros['escola_id']), fn ($q) => $q->where('escola_id', (int) $filtros['escola_id']))
@@ -65,12 +65,22 @@ class EventoService extends AbstractBaseService
             return collect();
         }
 
+        // Eventos limitados a turmas especificas so aparecem se uma
+        // delas for a turma (matricula ativa) de um dos alunos.
+        $turmaIds = \App\Models\Matricula::query()
+            ->whereIn('aluno_id', $alunos->pluck('id'))
+            ->where('status', 'ativa')
+            ->pluck('turma_id')
+            ->unique();
+
         return Evento::query()
             ->with('escola:id,nome')
             ->where('publico', 'todos')
             ->where('status', '!=', 'cancelado')
             ->whereRaw('COALESCE(data_fim, data_inicio) >= ?', [now()->toDateString()])
             ->where(fn ($q) => $q->whereNull('escola_id')->orWhereIn('escola_id', $escolaIds))
+            ->where(fn ($q) => $q->whereDoesntHave('turmas')
+                ->orWhereHas('turmas', fn ($t) => $t->whereIn('turmas.id', $turmaIds)))
             ->orderBy('data_inicio')
             ->orderBy('hora_inicio')
             ->limit(60)

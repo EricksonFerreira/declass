@@ -52,23 +52,44 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Superadmin da plataforma (tipo_usuario_id = 1, sem empresa).
-        // tipo_usuario_id nao pode ir no create(): o mutator do model
-        // redireciona a escrita para role_id. Mesmo motivo para
-        // email_verified_at (fora do fillable) — ambos via update direto.
+        // Tenant da propria plataforma: os superadmins ficam vinculados
+        // a ele, mas continuam vendo e trocando para qualquer empresa
+        // pelo contexto de sessao (visao consolidada por padrao).
+        $declass = Empresa::query()->firstOrCreate(
+            ['slug' => 'declass'],
+            [
+                'nome' => 'DeClass',
+                'ativo' => 'S',
+                'email' => 'contato@declass.test',
+            ]
+        );
+
+        // Superadmin da plataforma (tipo_usuario_id = 1, vinculado ao
+        // tenant declass). tipo_usuario_id nao pode ir no create(): o
+        // mutator do model redireciona a escrita para role_id. Mesmo
+        // motivo para email_verified_at — ambos via update direto.
         $superAdmin = User::query()->firstOrCreate(
             ['email' => 'admin@declass.test'],
             [
                 'name' => 'Super Admin',
                 'nome' => 'Super Admin',
                 'password' => Hash::make('password'),
+                'empresa_id' => $declass->id,
                 'ativo' => true,
             ]
         );
         DB::table('users')->where('id', $superAdmin->id)->update([
             'tipo_usuario_id' => 1,
+            'empresa_id' => $declass->id,
             'email_verified_at' => now(),
         ]);
+
+        // Superadmins antigos soltos (empresa_id null) passam a pertencer
+        // ao tenant declass — continuam com a visao consolidada.
+        DB::table('users')
+            ->where('tipo_usuario_id', 1)
+            ->whereNull('empresa_id')
+            ->update(['empresa_id' => $declass->id]);
 
         // Administrador do tenant demo.
         $admin = User::query()->firstOrCreate(
@@ -86,6 +107,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(PerfisEscolaresSeeder::class);
+        $this->call(DeclassSuperadminSeeder::class);
 
         // Vincula o admin a todos os perfis? Nao — role_id aponta 1 perfil.
         // O papel 'administrador' do tenant e o perfil padrao dele.

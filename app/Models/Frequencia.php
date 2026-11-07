@@ -19,6 +19,7 @@ class Frequencia extends Model
         'presente' => 'Presente',
         'falta' => 'Falta',
         'justificada' => 'Falta justificada',
+        'abonada' => 'Falta abonada',
     ];
 
     protected $fillable = [
@@ -28,6 +29,7 @@ class Frequencia extends Model
         'matricula_id',
         'status',
         'justificativa',
+        'justificativa_id',
     ];
 
     public function empresa(): BelongsTo
@@ -43,5 +45,10 @@ class Frequencia extends Model
     public function matricula(): BelongsTo
     {
         return $this->belongsTo(Matricula::class, 'matricula_id');
+    }
+
+    public function justificativaRegistro(): BelongsTo
+    {
+        return $this->belongsTo(Justificativa::class, 'justificativa_id');
     }
 }

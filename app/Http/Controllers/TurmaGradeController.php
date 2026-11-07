@@ -84,7 +84,7 @@ class TurmaGradeController extends BaseController
             'pdf.horario-turma',
             [
                 'turma' => $turma->loadMissing(['escola', 'anoLetivo', 'etapa']),
-                'grade' => $grade,
+                'export' => $grade,
                 'dias' => \App\Models\HorarioSlot::DIAS,
                 'comProfessor' => $comProfessor,
             ],

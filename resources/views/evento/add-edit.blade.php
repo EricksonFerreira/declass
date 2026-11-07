@@ -60,6 +60,20 @@
                 <div class="col-md-4">
                     <x-form-select name="status" label="Status" :options="$statusList ?? []" :selected="old('status', $evento->status ?? 'agendado')" required />
                 </div>
+                <div class="col-md-4">
+                    <x-form-select name="suspende_aulas" label="Aulas neste dia" :options="['N' => 'Aula normal (o evento convive)', 'S' => 'Suspensas (sem aula, só o evento)']" :selected="old('suspende_aulas', $evento->suspende_aulas ?? 'N')" required hint="Ex.: festa junina com aula = Aula normal; excursão = Suspensas" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <label class="form-label">Turmas específicas <small class="text-muted">(vazio = todas do alcance)</small></label>
+                    <select name="turmas[]" id="select-turmas" class="form-control" multiple size="5"
+                        data-escola-fixa="{{ $evento->escola_id ?? '' }}">
+                    </select>
+                    <small class="text-muted">Ex.: excursão só do 3º Ano A — marque só essa turma. Ctrl+clique para várias.</small>
+                    @error('turmas')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
             </div>
 
             <div class="row">
@@ -77,4 +91,32 @@
         </form>
     </div>
 </div>
+@stop
+
+@section('js')
+<script>
+(function () {
+    var turmas = @json($turmasJson ?? []);
+    var escolaSel = document.querySelector('[name="escola_id"]');
+    var sel = document.getElementById('select-turmas');
+    var selecionadas = @json(old('turmas', isset($evento) ? $evento->turmas->pluck('id')->all() : []));
+    var escolaFixa = sel && sel.dataset.escolaFixa ? parseInt(sel.dataset.escolaFixa, 10) : null;
+    if (!sel) return;
+
+    function preencher() {
+        var escolaId = escolaSel && escolaSel.value ? parseInt(escolaSel.value, 10) : escolaFixa;
+        sel.querySelectorAll('option').forEach(function (o) { o.remove(); });
+        turmas.filter(function (t) { return escolaId === null || t.escola_id === escolaId; })
+            .forEach(function (t) {
+                var o = document.createElement('option');
+                o.value = t.id; o.textContent = t.label;
+                o.selected = selecionadas.map(String).includes(String(t.id));
+                sel.appendChild(o);
+            });
+    }
+
+    if (escolaSel) escolaSel.addEventListener('change', preencher);
+    preencher();
+})();
+</script>
 @stop

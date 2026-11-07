@@ -325,10 +325,30 @@ return [
             'icon' => 'fas fa-home',
         ],
 
-        // INSTITUCIONAL
+        // Professor: atalho direto para as turmas que leciona
+        // (somente_professor — ProfessorMenuFilter esconde dos demais).
         [
-            'text' => 'Institucional',
-            'icon' => 'fas fa-school',
+            'text' => 'Minhas Turmas',
+            'route' => 'turma.index',
+            'icon' => 'fas fa-chalkboard-teacher',
+            'somente_professor' => true,
+        ],
+        [
+            'text' => 'Meus Horários',
+            'route' => 'meus_horarios.index',
+            'icon' => 'fas fa-calendar-week',
+            'somente_professor' => true,
+            'can' => 'meus_horarios.index',
+        ],
+
+        // ORGANIZAÇÃO ADMINISTRATIVA — cadastros e configuração
+        // definidos pela coordenação/secretaria/administração.
+        // Oculta para professores (eles tem a Operação Pedagógica).
+        [
+            'key' => 'org_admin',
+            'text' => 'Organização Administrativa',
+            'icon' => 'fas fa-cogs',
+            'ocultar_professor' => true,
             'submenu' => [
                 [
                     'text' => 'Escolas',
@@ -336,34 +356,6 @@ return [
                     'can' => 'escola.index',
                     'icon' => 'fas fa-school',
                 ],
-            ],
-        ],
-
-        // PESSOAS
-        [
-            'text' => 'Pessoas',
-            'icon' => 'fas fa-users',
-            'submenu' => [
-                [
-                    'text' => 'Usuários',
-                    'route' => 'usuario.index',
-                    'can' => 'usuario.index',
-                    'icon' => 'fas fa-user-cog',
-                ],
-                [
-                    'text' => 'Perfis de Acesso',
-                    'route' => 'regra.index',
-                    'icon' => 'fas fa-user-shield',
-                    'can' => 'regra.index',
-                ],
-            ],
-        ],
-
-        // VIDA ACADÊMICA
-        [
-            'text' => 'Vida Acadêmica',
-            'icon' => 'fas fa-graduation-cap',
-            'submenu' => [
                 [
                     'text' => 'Estrutura Acadêmica',
                     'icon' => 'fas fa-sitemap',
@@ -392,6 +384,12 @@ return [
                             'can' => 'disciplina.index',
                             'icon' => 'fas fa-book',
                         ],
+                    ],
+                ],
+                [
+                    'text' => 'Turmas e Horários',
+                    'icon' => 'fas fa-chalkboard-teacher',
+                    'submenu' => [
                         [
                             'text' => 'Turmas',
                             'route' => 'turma.index',
@@ -413,7 +411,7 @@ return [
                     ],
                 ],
                 [
-                    'text' => 'Matrícula',
+                    'text' => 'Matrículas',
                     'icon' => 'fas fa-id-card',
                     'submenu' => [
                         [
@@ -437,32 +435,20 @@ return [
                     ],
                 ],
                 [
-                    'text' => 'Avaliação',
-                    'icon' => 'fas fa-clipboard-check',
+                    'text' => 'Pessoas',
+                    'icon' => 'fas fa-users',
                     'submenu' => [
                         [
-                            'text' => 'Diário de Classe',
-                            'route' => 'diario.index',
-                            'can' => 'diario.index',
-                            'icon' => 'fas fa-clipboard-list',
+                            'text' => 'Usuários',
+                            'route' => 'usuario.index',
+                            'can' => 'usuario.index',
+                            'icon' => 'fas fa-user-cog',
                         ],
                         [
-                            'text' => 'Avaliações',
-                            'route' => 'avaliacao.index',
-                            'can' => 'avaliacao.index',
-                            'icon' => 'fas fa-star-half-alt',
-                        ],
-                        [
-                            'text' => 'Agenda de Avaliações',
-                            'route' => 'avaliacao.agenda',
-                            'can' => 'avaliacao.index',
-                            'icon' => 'fas fa-calendar-check',
-                        ],
-                        [
-                            'text' => 'Boletim',
-                            'route' => 'boletim.index',
-                            'can' => 'boletim.index',
-                            'icon' => 'fas fa-file-alt',
+                            'text' => 'Perfis de Acesso',
+                            'route' => 'regra.index',
+                            'icon' => 'fas fa-user-shield',
+                            'can' => 'regra.index',
                         ],
                     ],
                 ],
@@ -513,10 +499,86 @@ return [
                             'icon' => 'fas fa-hands-helping',
                         ],
                         [
+                            'text' => 'Atestados e Abonos',
+                            'route' => 'justificativa.index',
+                            'can' => 'justificativa.index',
+                            'icon' => 'fas fa-file-medical',
+                        ],
+                        [
                             'text' => 'Tarefas',
                             'route' => 'tarefa.index',
                             'can' => 'tarefa.index',
                             'icon' => 'fas fa-tasks',
+                        ],
+                    ],
+                ],
+                [
+                    'text' => 'Documentos',
+                    'route' => 'documentos.index',
+                    'icon' => 'fas fa-folder-open',
+                    'can' => 'documentos.index',
+                ],
+            ],
+        ],
+
+        // OPERAÇÃO PEDAGÓGICA — rotina do dia a dia acadêmico,
+        // visível também para professores (filtrada por permissão).
+        [
+            'key' => 'op_pedagogica',
+            'text' => 'Operação Pedagógica',
+            'icon' => 'fas fa-chalkboard',
+            'submenu' => [
+                [
+                    'text' => 'Calendário',
+                    'icon' => 'fas fa-calendar-check',
+                    'submenu' => [
+                        [
+                            'text' => 'Calendário Letivo',
+                            'route' => 'calendario.index',
+                            'can' => 'calendario.index',
+                            'icon' => 'fas fa-calendar-alt',
+                        ],
+                        [
+                            'text' => 'Feriados',
+                            'route' => 'feriado.index',
+                            'can' => 'feriado.index',
+                            'icon' => 'fas fa-umbrella-beach',
+                        ],
+                        [
+                            'text' => 'Agenda',
+                            'route' => 'evento.index',
+                            'can' => 'evento.index',
+                            'icon' => 'fas fa-calendar-alt',
+                        ],
+                    ],
+                ],
+                [
+                    'text' => 'Diário e Avaliações',
+                    'icon' => 'fas fa-clipboard-check',
+                    'submenu' => [
+                        [
+                            'text' => 'Diário de Classe',
+                            'route' => 'diario.index',
+                            'can' => 'diario.index',
+                            'icon' => 'fas fa-clipboard-list',
+                        ],
+                        [
+                            'text' => 'Avaliações',
+                            'route' => 'avaliacao.index',
+                            'can' => 'avaliacao.index',
+                            'icon' => 'fas fa-star-half-alt',
+                        ],
+                        [
+                            'text' => 'Agenda de Avaliações',
+                            'route' => 'avaliacao.agenda',
+                            'can' => 'avaliacao.index',
+                            'icon' => 'fas fa-calendar-check',
+                        ],
+                        [
+                            'text' => 'Boletim',
+                            'route' => 'boletim.index',
+                            'can' => 'boletim.index',
+                            'icon' => 'fas fa-file-alt',
                         ],
                     ],
                 ],
@@ -525,6 +587,7 @@ return [
 
         // RELATÓRIOS
         [
+            'key' => 'relatorios',
             'text' => 'Relatórios',
             'icon' => 'fas fa-chart-bar',
             'submenu' => [
@@ -557,6 +620,7 @@ return [
 
         // COMUNICAÇÃO
         [
+            'key' => 'comunicacao',
             'text' => 'Comunicação',
             'icon' => 'fas fa-bullhorn',
             'submenu' => [
@@ -567,12 +631,6 @@ return [
                     'icon' => 'fas fa-bullhorn',
                 ],
                 [
-                    'text' => 'Agenda',
-                    'route' => 'evento.index',
-                    'can' => 'evento.index',
-                    'icon' => 'fas fa-calendar-alt',
-                ],
-                [
                     'text' => 'Pesquisas',
                     'route' => 'pesquisa.index',
                     'can' => 'pesquisa.index',
@@ -581,88 +639,90 @@ return [
             ],
         ],
 
-        // BIBLIOTECA
+        // OPERAÇÕES — setores de apoio escolar.
         [
-            'text' => 'Biblioteca',
-            'icon' => 'fas fa-book-open',
+            'key' => 'operacoes',
+            'text' => 'Operações',
+            'icon' => 'fas fa-concierge-bell',
             'submenu' => [
                 [
-                    'text' => 'Empréstimos',
-                    'route' => 'emprestimo.index',
-                    'can' => 'emprestimo.index',
-                    'icon' => 'fas fa-book-reader',
+                    'text' => 'Biblioteca',
+                    'icon' => 'fas fa-book-open',
+                    'submenu' => [
+                        [
+                            'text' => 'Empréstimos',
+                            'route' => 'emprestimo.index',
+                            'can' => 'emprestimo.index',
+                            'icon' => 'fas fa-book-reader',
+                        ],
+                        [
+                            'text' => 'Acervo',
+                            'route' => 'livro.index',
+                            'can' => 'livro.index',
+                            'icon' => 'fas fa-book',
+                        ],
+                    ],
                 ],
                 [
-                    'text' => 'Acervo',
-                    'route' => 'livro.index',
-                    'can' => 'livro.index',
-                    'icon' => 'fas fa-book',
-                ],
-            ],
-        ],
-
-        // TRANSPORTE
-        [
-            'text' => 'Transporte',
-            'icon' => 'fas fa-bus',
-            'submenu' => [
-                [
-                    'text' => 'Passageiros',
-                    'route' => 'transporte_aluno.index',
-                    'can' => 'transporte_aluno.index',
-                    'icon' => 'fas fa-user-friends',
-                ],
-                [
-                    'text' => 'Rotas',
-                    'route' => 'rota_transporte.index',
-                    'can' => 'rota_transporte.index',
-                    'icon' => 'fas fa-route',
+                    'text' => 'Transporte',
+                    'icon' => 'fas fa-bus',
+                    'submenu' => [
+                        [
+                            'text' => 'Passageiros',
+                            'route' => 'transporte_aluno.index',
+                            'can' => 'transporte_aluno.index',
+                            'icon' => 'fas fa-user-friends',
+                        ],
+                        [
+                            'text' => 'Rotas',
+                            'route' => 'rota_transporte.index',
+                            'can' => 'rota_transporte.index',
+                            'icon' => 'fas fa-route',
+                        ],
+                        [
+                            'text' => 'Veículos',
+                            'route' => 'veiculo.index',
+                            'can' => 'veiculo.index',
+                            'icon' => 'fas fa-truck',
+                        ],
+                    ],
                 ],
                 [
-                    'text' => 'Veículos',
-                    'route' => 'veiculo.index',
-                    'can' => 'veiculo.index',
-                    'icon' => 'fas fa-truck',
-                ],
-            ],
-        ],
-
-        // ALIMENTAÇÃO
-        [
-            'text' => 'Alimentação',
-            'icon' => 'fas fa-utensils',
-            'submenu' => [
-                [
-                    'text' => 'Cardápios',
-                    'route' => 'cardapio.index',
-                    'can' => 'cardapio.index',
-                    'icon' => 'fas fa-concierge-bell',
-                ],
-            ],
-        ],
-
-        // ESTOQUE
-        [
-            'text' => 'Estoque',
-            'icon' => 'fas fa-boxes',
-            'submenu' => [
-                [
-                    'text' => 'Materiais',
-                    'route' => 'material.index',
-                    'can' => 'material.index',
-                    'icon' => 'fas fa-box-open',
+                    'text' => 'Alimentação',
+                    'icon' => 'fas fa-utensils',
+                    'submenu' => [
+                        [
+                            'text' => 'Cardápios',
+                            'route' => 'cardapio.index',
+                            'can' => 'cardapio.index',
+                            'icon' => 'fas fa-concierge-bell',
+                        ],
+                    ],
                 ],
                 [
-                    'text' => 'Movimentação de Materiais',
-                    'route' => 'material.movimentacao.index',
-                    'can' => 'material.movimentacao.index',
-                    'icon' => 'fas fa-exchange-alt',
+                    'text' => 'Estoque',
+                    'icon' => 'fas fa-boxes',
+                    'submenu' => [
+                        [
+                            'text' => 'Materiais',
+                            'route' => 'material.index',
+                            'can' => 'material.index',
+                            'icon' => 'fas fa-box-open',
+                        ],
+                        [
+                            'text' => 'Movimentação de Materiais',
+                            'route' => 'material.movimentacao.index',
+                            'can' => 'material.movimentacao.index',
+                            'icon' => 'fas fa-exchange-alt',
+                        ],
+                    ],
                 ],
             ],
         ],
 
         // FINANCEIRO
         [
+            'key' => 'financeiro',
             'text' => 'Financeiro',
             'icon' => 'fas fa-hand-holding-usd',
             'submenu' => [
@@ -711,22 +771,9 @@ return [
             ],
         ],
 
-        // DOCUMENTOS
-        [
-            'text' => 'Documentos',
-            'icon' => 'fas fa-folder-open',
-            'submenu' => [
-                [
-                    'text' => 'Documentos da Empresa',
-                    'route' => 'documentos.index',
-                    'icon' => 'fas fa-folder-open',
-                    'can' => 'documentos.index',
-                ],
-            ],
-        ],
-
         // SISTEMA (somente superadmin)
         [
+            'key' => 'configuracoes',
             'text' => 'Configurações',
             'icon' => 'fas fa-cogs',
             'can' => 'acessar-superadmin',
@@ -735,6 +782,12 @@ return [
                     'text' => 'Tenants',
                     'route' => 'empresa.index',
                     'icon' => 'fas fa-building',
+                ],
+                [
+                    'text' => 'Espelhar acesso',
+                    'route' => 'espelhamento.index',
+                    'can' => 'acessar-superadmin',
+                    'icon' => 'fas fa-user-secret',
                 ],
                 [
                     'text' => 'Comandos',
@@ -765,6 +818,7 @@ return [
         App\Menu\Filters\AutoPermissionFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\GateFilter::class,
         App\Menu\Filters\RoutePermissionVisibilityFilter::class,
+        App\Menu\Filters\ProfessorMenuFilter::class,
         App\Menu\Filters\RemoveEmptySubmenuFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\HrefFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\SearchFilter::class,

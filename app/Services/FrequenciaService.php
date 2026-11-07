@@ -57,16 +57,23 @@ class FrequenciaService extends AbstractBaseService
 
         DB::transaction(function () use ($diario, $itens) {
             foreach ($itens as $item) {
+                $valores = [
+                    'empresa_id' => $diario->empresa_id,
+                    'status' => $item['status'],
+                ];
+                // So atualiza a justificativa quando o campo veio no payload:
+                // chamada do professor nao renderiza o campo e nao pode apagar
+                // texto existente.
+                if (array_key_exists('justificativa', $item)) {
+                    $valores['justificativa'] = $item['justificativa'];
+                }
+
                 $this->model->updateOrCreate(
                     [
                         'diario_id' => $diario->id,
                         'matricula_id' => $item['matricula_id'],
                     ],
-                    [
-                        'empresa_id' => $diario->empresa_id,
-                        'status' => $item['status'],
-                        'justificativa' => $item['justificativa'] ?? null,
-                    ]
+                    $valores
                 );
             }
         });
@@ -128,9 +135,9 @@ class FrequenciaService extends AbstractBaseService
             ->selectRaw("
                 frequencias.matricula_id,
                 SUM(CASE WHEN frequencias.status = 'presente' THEN 1 ELSE 0 END) as presente,
-                SUM(CASE WHEN frequencias.status = 'justificada' THEN 1 ELSE 0 END) as justificada,
+                SUM(CASE WHEN frequencias.status IN ('justificada', 'abonada') THEN 1 ELSE 0 END) as justificada,
                 SUM(CASE WHEN frequencias.status = 'falta' THEN 1 ELSE 0 END) as falta,
-                COUNT(*) as total
+                SUM(CASE WHEN frequencias.status <> 'abonada' THEN 1 ELSE 0 END) as total
             ");
 
         $query = Matricula::query()

@@ -25,6 +25,7 @@ class Turma extends Model
         'etapa_id',
         'nome',
         'turno',
+        'horario_id',
         'sala',
         'capacidade_maxima',
         'ativo',
@@ -59,6 +60,12 @@ class Turma extends Model
     public function etapa(): BelongsTo
     {
         return $this->belongsTo(Etapa::class, 'etapa_id');
+    }
+
+    /** Grade de horarios vinculada a turma (matriz de slots). */
+    public function horario(): BelongsTo
+    {
+        return $this->belongsTo(Horario::class, 'horario_id');
     }
 
     public function disciplinas(): BelongsToMany

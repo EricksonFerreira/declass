@@ -33,6 +33,85 @@ class TurmaGradeService
     }
 
     /**
+     * Grade semanal do professor: as celulas de aula (horarios_turma)
+     * atribuidas a ele nas turmas onde tem atribuicao ativa, com os
+     * horarios de cada turma vindos da sua matriz vinculada.
+     *
+     * Retorna [dias, ordens, celulas, turmas] — celulas indexadas por
+     * "dia-ordem" com a lista de aulas do professor naquele slot.
+     */
+    public function gradeSemanalDoProfessor(
+        \App\Models\User $professor,
+        ?int $anoLetivoId = null,
+        ?int $escolaId = null,
+        ?string $turno = null
+    ): array {
+        $turmas = Turma::query()
+            ->where('ativo', 'S')
+            ->whereHas('atribuicoes', fn ($q) => $q
+                ->where('user_id', $professor->id)->where('ativo', 'S'))
+            ->when($anoLetivoId, fn ($q) => $q->where('ano_letivo_id', $anoLetivoId))
+            ->when($escolaId, fn ($q) => $q->where('escola_id', $escolaId))
+            ->when($turno, fn ($q) => $q->where('turno', $turno))
+            ->with(['escola:id,nome', 'anoLetivo:id,ano'])
+            ->orderBy('nome')
+            ->get();
+
+        $aulas = HorarioTurma::query()
+            ->where('user_id', $professor->id)
+            ->whereIn('turma_id', $turmas->pluck('id'))
+            ->with(['turma:id,nome,horario_id,escola_id,turno,sala', 'disciplina:id,nome,sigla'])
+            ->get();
+
+        // Slots por turma para montar rotulo de horario de cada aula.
+        $slotsPorTurma = [];
+        $dias = collect();
+        $ordens = collect();
+
+        foreach ($turmas as $turma) {
+            $slots = $this->slotsDaTurma($turma)->get()
+                ->keyBy(fn ($s) => $s->dia_semana.'-'.$s->ordem);
+            $slotsPorTurma[$turma->id] = $slots;
+            $dias = $dias->merge($slots->pluck('dia_semana'));
+            $ordens = $ordens->merge($slots->pluck('ordem'));
+        }
+
+        $celulas = [];
+        foreach ($aulas as $aula) {
+            $slot = $slotsPorTurma[$aula->turma_id][$aula->dia_semana.'-'.$aula->ordem] ?? null;
+            $celulas[$aula->dia_semana.'-'.$aula->ordem][] = [
+                'turma' => $aula->turma->nome ?? '?',
+                'turma_id' => $aula->turma_id,
+                'disciplina_id' => $aula->disciplina_id,
+                'disciplina' => $aula->disciplina->nome ?? '—',
+                'sigla' => $aula->disciplina->sigla ?? null,
+                'sala' => $aula->sala ?: $aula->turma->sala,
+                'inicio' => $slot ? substr((string) $slot->hora_inicio, 0, 5) : '',
+                'fim' => $slot ? substr((string) $slot->hora_fim, 0, 5) : '',
+                'chamada_data' => $this->proximaDataDoDia((int) $aula->dia_semana),
+            ];
+            $dias->push($aula->dia_semana);
+            $ordens->push($aula->ordem);
+        }
+
+        return [
+            'turmas' => $turmas,
+            'dias' => $dias->unique()->sort()->values(),
+            'ordens' => $ordens->unique()->sort()->values(),
+            'celulas' => $celulas,
+        ];
+    }
+
+    /** Proxima ocorrencia do dia da semana (1=seg..7=dom), hoje inclusa. */
+    private function proximaDataDoDia(int $diaSemana): string
+    {
+        $dow = (int) now()->dayOfWeek; // 0=dom..6=sab
+        $hoje = $dow === 0 ? 7 : $dow;
+
+        return now()->addDays(($diaSemana - $hoje + 7) % 7)->toDateString();
+    }
+
+    /**
      * Estrutura completa para renderizar a grade da turma.
      */
     public function gradeDaTurma(Turma $turma): array
@@ -40,10 +119,8 @@ class TurmaGradeService
         $escola = $turma->escola;
         $turno = $turma->turno;
 
-        $slots = $escola && $turno
-            ? HorarioSlot::query()
-                ->where('escola_id', $escola->id)
-                ->where('turno', $turno)
+        $slots = $this->temSlots($turma)
+            ? $this->slotsDaTurma($turma)
                 ->orderBy('dia_semana')->orderBy('ordem')
                 ->get()
                 ->groupBy('dia_semana')
@@ -99,8 +176,36 @@ class TurmaGradeService
             'dias' => $dias,
             'disciplinas' => $disciplinas,
             'professores' => $professores,
+            'intervalos' => $this->intervalosDosSlots($slots),
             'temMatriz' => $slots->isNotEmpty(),
         ];
+    }
+
+    /**
+     * Intervalos (recreios) da grade: espacos de tempo entre slots
+     * consecutivos de um mesmo dia. Retorna [dia => [ordem_anterior
+     * => ['inicio','fim']]] — a chave e a ordem da aula anterior ao
+     * intervalo, usada para renderizar a linha logo abaixo dela.
+     */
+    private function intervalosDosSlots(Collection $slots): array
+    {
+        $intervalos = [];
+
+        foreach ($slots as $dia => $porOrdem) {
+            $anterior = null;
+            foreach ($porOrdem->sortKeys() as $slot) {
+                if ($anterior) {
+                    $fim = substr((string) $anterior->hora_fim, 0, 5);
+                    $ini = substr((string) $slot->hora_inicio, 0, 5);
+                    if ($fim !== '' && $ini !== '' && $fim < $ini) {
+                        $intervalos[$dia][$anterior->ordem] = ['inicio' => $fim, 'fim' => $ini];
+                    }
+                }
+                $anterior = $slot;
+            }
+        }
+
+        return $intervalos;
     }
 
     /**
@@ -162,21 +267,21 @@ class TurmaGradeService
     /** Slot da matriz que corresponde à célula (dia, ordem) desta turma. */
     public function slotDaTurma(Turma $turma, int $dia, int $ordem): ?HorarioSlot
     {
-        if (! $turma->escola_id || ! $turma->turno) {
+        if (! $this->temSlots($turma)) {
             return null;
         }
 
-        return HorarioSlot::query()
-            ->where('escola_id', $turma->escola_id)
-            ->where('turno', $turma->turno)
+        return $this->slotsDaTurma($turma)
             ->where('dia_semana', $dia)
             ->where('ordem', $ordem)
             ->first();
     }
 
     /**
-     * Grade pronta para exportacao: [dia => [ordem => rotulo]].
-     * $comProfessor=true inclui o nome do professor na celula.
+     * Grade pronta para exportacao (PDF/XLSX): celulas por dia e
+     * ordem com rotulo, cor da disciplina, professor e sala, mais
+     * os intervalos da matriz. $comProfessor inclui o nome do
+     * professor na celula.
      */
     public function gradeParaExportacao(Turma $turma, bool $comProfessor = false): array
     {
@@ -194,11 +299,20 @@ class TurmaGradeService
                     'inicio' => substr((string) $slot->hora_inicio, 0, 5),
                     'fim' => substr((string) $slot->hora_fim, 0, 5),
                     'rotulo' => $this->rotuloCelula($aula, $comProfessor),
+                    'disciplina' => $aula?->disciplina?->sigla ?: $aula?->disciplina?->nome,
+                    'professor' => $comProfessor ? $aula?->user?->nome : null,
+                    'sala' => $aula?->sala,
+                    'cor' => $aula ? self::corDaDisciplina($aula->disciplina_id) : null,
                 ];
             }
         }
 
-        return $grade;
+        return [
+            'grade' => $grade,
+            'intervalos' => $dados['intervalos'],
+            'dias' => $dados['dias'],
+            'ordens' => $dados['ordens'],
+        ];
     }
 
     /** Rotulo da celula conforme o modo de exibicao. */
@@ -229,11 +343,31 @@ class TurmaGradeService
             ->get()
             ->map(function (Turma $t) {
                 $t->aulas_count = HorarioTurma::query()->where('turma_id', $t->id)->count();
-                $t->tem_matriz = $t->escola_id && $t->turno
-                    && HorarioSlot::query()->where('escola_id', $t->escola_id)->where('turno', $t->turno)->exists();
+                $t->tem_matriz = $this->temSlots($t)
+                    && $this->slotsDaTurma($t)->exists();
 
                 return $t;
             });
+    }
+
+    /** Turma tem referencia de grade (horario vinculado ou escola+turno legado). */
+    private function temSlots(Turma $turma): bool
+    {
+        return (bool) ($turma->horario_id || ($turma->escola_id && $turma->turno));
+    }
+
+    /**
+     * Query dos slots da turma: horario vinculado quando definido,
+     * senao a matriz legada por escola+turno.
+     */
+    private function slotsDaTurma(Turma $turma): \Illuminate\Database\Eloquent\Builder
+    {
+        $q = HorarioSlot::query();
+        if ($turma->horario_id) {
+            return $q->where('horario_id', $turma->horario_id);
+        }
+
+        return $q->where('escola_id', $turma->escola_id)->where('turno', $turma->turno);
     }
 
     /**
@@ -278,14 +412,14 @@ class TurmaGradeService
             ->where('user_id', $userId)
             ->where('dia_semana', $dia)
             ->where('turma_id', '!=', $turma->id)
-            ->with('turma:id,turno,escola_id,nome')
+            ->with('turma:id,turno,horario_id,escola_id,nome')
             ->get()
             ->filter(function (HorarioTurma $a) use ($turma, $slot, $ordem) {
-                if ($a->ordem === $ordem && $a->turma?->escola_id === $turma->escola_id && $a->turma?->turno === $turma->turno) {
+                if ($a->ordem === $ordem && $this->mesmaGrade($turma, $a->turma)) {
                     return true; // mesmo slot => mesmo horario
                 }
 
-                $slotOutro = $this->slotDe($a->turma?->escola_id, $a->turma?->turno, $a->dia_semana, $a->ordem);
+                $slotOutro = $a->turma ? $this->slotDaTurma($a->turma, $a->dia_semana, $a->ordem) : null;
                 if (! $slotOutro) {
                     return false;
                 }
@@ -313,14 +447,14 @@ class TurmaGradeService
             ->whereRaw('LOWER(TRIM(sala)) = ?', [$normalizada])
             ->where('dia_semana', $dia)
             ->where('turma_id', '!=', $turma->id)
-            ->with('turma:id,turno,escola_id,nome')
+            ->with('turma:id,turno,horario_id,escola_id,nome')
             ->get()
             ->filter(function (HorarioTurma $a) use ($turma, $slot, $ordem) {
-                if ($a->ordem === $ordem && $a->turma?->escola_id === $turma->escola_id && $a->turma?->turno === $turma->turno) {
+                if ($a->ordem === $ordem && $this->mesmaGrade($turma, $a->turma)) {
                     return true;
                 }
 
-                $slotOutro = $this->slotDe($a->turma?->escola_id, $a->turma?->turno, $a->dia_semana, $a->ordem);
+                $slotOutro = $a->turma ? $this->slotDaTurma($a->turma, $a->dia_semana, $a->ordem) : null;
 
                 return $slotOutro && $this->intervalosSeSobrepoem($slot, $slotOutro);
             });
@@ -333,18 +467,18 @@ class TurmaGradeService
         }
     }
 
-    private function slotDe(?int $escolaId, ?string $turno, int $dia, int $ordem): ?HorarioSlot
+    /** Duas turmas dividem a mesma matriz de slots (mesmo horario ou mesmo turno legado). */
+    private function mesmaGrade(Turma $a, ?Turma $b): bool
     {
-        if (! $escolaId || ! $turno) {
-            return null;
+        if (! $b) {
+            return false;
         }
 
-        return HorarioSlot::query()
-            ->where('escola_id', $escolaId)
-            ->where('turno', $turno)
-            ->where('dia_semana', $dia)
-            ->where('ordem', $ordem)
-            ->first();
+        if ($a->horario_id && $b->horario_id) {
+            return $a->horario_id === $b->horario_id;
+        }
+
+        return $a->escola_id === $b->escola_id && $a->turno === $b->turno;
     }
 
     private function intervalosSeSobrepoem(HorarioSlot $a, HorarioSlot $b): bool

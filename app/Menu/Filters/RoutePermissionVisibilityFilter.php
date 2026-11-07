@@ -37,7 +37,9 @@ class RoutePermissionVisibilityFilter implements FilterInterface
             return $item;
         }
 
-        if (! $this->permissaoRotaService->usuarioPodeAcessarRota(auth()->user(), $routeName)) {
+        $user = auth()->user();
+        if (! $this->permissaoRotaService->usuarioPodeAcessarRota($user, $routeName)
+            || ! $this->permissaoRotaService->rotaVisivelNoMenu($user, $routeName)) {
             $item['restricted'] = true;
         }
 

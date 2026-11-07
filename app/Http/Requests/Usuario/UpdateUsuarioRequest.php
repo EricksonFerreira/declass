@@ -22,6 +22,16 @@ class UpdateUsuarioRequest extends FormRequest
             'usuario' => Str::lower(trim((string) $this->input('usuario', ''))) ?: null,
         ]);
 
+        // Conta de portal (aluno/responsavel): o perfil e resolvido
+        // automaticamente — o select de perfil nao se aplica.
+        $tipo = (string) $this->input('tipo_conta', '');
+        if (in_array($tipo, ['aluno', 'responsavel'], true)) {
+            $rolePortal = $tipo === 'aluno' ? 'aluno' : 'responsavel_legal';
+            $this->merge([
+                'role_id' => app(\App\Services\UsuarioService::class)->roleIdPorNome($rolePortal),
+            ]);
+        }
+
         if (! $this->filled('role_id')) {
             $usuarioId = (int) $this->route('usuario');
             $roleId = $usuarioId > 0
@@ -48,6 +58,8 @@ class UpdateUsuarioRequest extends FormRequest
     {
         $empresaId = app(EmpresaContext::class)->empresaId() ?? $this->user()?->empresa_id;
         $usuarioId = $this->route('usuario');
+        $tipo = (string) $this->input('tipo_conta', 'colaborador');
+        $isPortal = in_array($tipo, ['aluno', 'responsavel'], true);
 
         return [
             'nome' => 'required|string|max:255',
@@ -80,6 +92,16 @@ class UpdateUsuarioRequest extends FormRequest
             ],
             'cargo' => 'nullable|string|max:120',
             'role_id' => ['required', 'integer', Rule::exists('roles', 'id')->where('empresa_id', $empresaId)],
+            'tipo_conta' => 'nullable|in:colaborador,aluno,responsavel',
+            'vinculo_id' => $isPortal
+                ? [
+                    'required', 'integer',
+                    Rule::exists($tipo === 'aluno' ? 'alunos' : 'responsaveis', 'id')
+                        ->where(fn ($query) => $query
+                            ->where('empresa_id', $empresaId)
+                            ->where(fn ($q) => $q->whereNull('user_id')->orWhere('user_id', $usuarioId))),
+                ]
+                : ['nullable', 'integer'],
             'ativo' => 'nullable|boolean',
             'escolas' => 'nullable|array',
             'escolas.*' => [
@@ -104,6 +126,8 @@ class UpdateUsuarioRequest extends FormRequest
             'usuario.unique' => 'O usuario informado ja esta em uso.',
             'usuario.regex' => 'O usuario pode conter apenas letras minusculas, numeros, ponto, hifen e sublinhado.',
             'numero_identificacao.unique' => 'O numero de identificacao informado ja esta em uso.',
+            'vinculo_id.required' => 'Selecione o :attribute ao qual a conta pertence.',
+            'vinculo_id.exists' => 'O :attribute informado nao existe ou ja possui conta de acesso.',
         ];
     }
 
@@ -121,6 +145,8 @@ class UpdateUsuarioRequest extends FormRequest
             'numero_identificacao' => 'CPF / documento',
             'cargo' => 'cargo',
             'role_id' => 'perfil de acesso',
+            'tipo_conta' => 'tipo de conta',
+            'vinculo_id' => $this->input('tipo_conta') === 'responsavel' ? 'responsável' : 'aluno',
             'ativo' => 'ativo',
             'escolas' => 'escolas',
         ];

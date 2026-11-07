@@ -3,52 +3,37 @@
 namespace App\Services;
 
 use App\Models\Escola;
+use App\Models\Horario;
 use App\Models\HorarioSlot;
+use App\Models\Turma;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Matriz de horarios: faixas de horario (slots) por escola e turno.
- * Os slots sao a "grade vazia" que as turmas preenchem com aulas.
+ * Matriz de horarios: faixas de horario (slots) agrupadas em um
+ * Horario nomeado de uma escola/turno. Um turno pode ter varias
+ * matrizes; a turma se vincula a uma especifica.
  */
 class HorarioMatrizService
 {
-    /**
-     * Slots configurados de uma escola, agrupados por turno.
-     * Retorna [turno => ['dias' => int[], 'slots' => HorarioSlot[]]].
-     */
-    public function matrizDaEscola(Escola $escola): array
+    /** Horarios da escola com contagens de slots e turmas vinculadas. */
+    public function horariosDaEscola(Escola $escola): Collection
     {
-        $slots = HorarioSlot::query()
+        return Horario::query()
             ->where('escola_id', $escola->id)
-            ->orderBy('dia_semana')->orderBy('ordem')
+            ->with('slots:id,horario_id,dia_semana,ordem,hora_inicio,hora_fim')
+            ->withCount('turmas')
+            ->orderBy('turno')->orderBy('nome')
             ->get();
-
-        $matriz = [];
-        foreach ($slots as $slot) {
-            $matriz[$slot->turno] ??= ['dias' => [], 'slots' => collect()];
-            $matriz[$slot->turno]['dias'][$slot->dia_semana] = true;
-            $matriz[$slot->turno]['slots']->push($slot);
-        }
-
-        foreach ($matriz as &$item) {
-            $item['dias'] = array_keys($item['dias']);
-            sort($item['dias']);
-        }
-
-        return $matriz;
     }
 
     /**
-     * Grade de slots de um turno, organizada como
+     * Grade de slots do horario, organizada como
      * [dia_semana => [ordem => HorarioSlot]].
      */
-    public function gradeDoTurno(Escola $escola, string $turno): array
+    public function gradeDoHorario(Horario $horario): array
     {
-        return HorarioSlot::query()
-            ->where('escola_id', $escola->id)
-            ->where('turno', $turno)
-            ->orderBy('dia_semana')->orderBy('ordem')
+        return $horario->slots()
             ->get()
             ->groupBy('dia_semana')
             ->map(fn (Collection $dia) => $dia->keyBy('ordem'))
@@ -56,41 +41,68 @@ class HorarioMatrizService
     }
 
     /**
-     * Substitui integralmente a matriz de um turno: remove os slots
-     * atuais e recria a partir de [dia_semana => [[inicio,fim],...]].
-     * Validacao de formato/consistencia fica no Form Request.
+     * Cria o horario nomeado e grava sua matriz de slots
+     * ([dia_semana => [[inicio,fim],...]]).
      */
-    public function salvarMatriz(Escola $escola, string $turno, array $grade): void
+    public function criarHorario(Escola $escola, array $dados, array $grade): Horario
     {
-        DB::transaction(function () use ($escola, $turno, $grade) {
-            HorarioSlot::query()
-                ->where('escola_id', $escola->id)
-                ->where('turno', $turno)
-                ->delete();
+        return DB::transaction(function () use ($escola, $dados, $grade) {
+            $horario = Horario::create([
+                'empresa_id' => $escola->empresa_id,
+                'escola_id' => $escola->id,
+                'turno' => $dados['turno'],
+                'nome' => $dados['nome'],
+                'ativo' => 'S',
+            ]);
 
-            foreach ($grade as $dia => $slots) {
-                foreach (array_values($slots) as $i => $slot) {
-                    HorarioSlot::create([
-                        'empresa_id' => $escola->empresa_id,
-                        'escola_id' => $escola->id,
-                        'turno' => $turno,
-                        'dia_semana' => (int) $dia,
-                        'ordem' => $i + 1,
-                        'hora_inicio' => $slot['inicio'],
-                        'hora_fim' => $slot['fim'],
-                    ]);
-                }
-            }
+            $this->gravarSlots($horario, $grade);
+
+            return $horario;
         });
     }
 
-    /** Turnos que ja tem ao menos um slot nesta escola. */
-    public function turnosConfigurados(Escola $escola): array
+    /**
+     * Atualiza nome/turno do horario e substitui integralmente
+     * sua matriz de slots.
+     */
+    public function salvarHorario(Horario $horario, array $dados, array $grade): void
     {
-        return HorarioSlot::query()
-            ->where('escola_id', $escola->id)
-            ->distinct()
-            ->pluck('turno')
-            ->all();
+        DB::transaction(function () use ($horario, $dados, $grade) {
+            $horario->update([
+                'nome' => $dados['nome'],
+                'turno' => $dados['turno'],
+            ]);
+
+            $horario->slots()->delete();
+            $this->gravarSlots($horario, $grade);
+        });
+    }
+
+    /** Remove o horario se nenhuma turma estiver vinculada. */
+    public function excluirHorario(Horario $horario): void
+    {
+        abort_if($horario->turmas()->exists(), 422,
+            'Este horário tem turmas vinculadas. Desvincule-as antes de excluir.');
+
+        DB::transaction(fn () => $horario->delete());
+    }
+
+    /** Grava slots do horario mantendo escola_id/turno denormalizados. */
+    private function gravarSlots(Horario $horario, array $grade): void
+    {
+        foreach ($grade as $dia => $slots) {
+            foreach (array_values($slots) as $i => $slot) {
+                HorarioSlot::create([
+                    'empresa_id' => $horario->empresa_id,
+                    'escola_id' => $horario->escola_id,
+                    'horario_id' => $horario->id,
+                    'turno' => $horario->turno,
+                    'dia_semana' => (int) $dia,
+                    'ordem' => $i + 1,
+                    'hora_inicio' => $slot['inicio'],
+                    'hora_fim' => $slot['fim'],
+                ]);
+            }
+        }
     }
 }

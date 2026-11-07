@@ -7,7 +7,9 @@ use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Usuario\StoreUsuarioRequest;
 use App\Http\Requests\Usuario\UpdatePasswordUsuarioRequest;
 use App\Http\Requests\Usuario\UpdateUsuarioRequest;
+use App\Models\Aluno;
 use App\Models\Escola;
+use App\Models\Responsavel;
 use App\Models\User;
 use App\Services\BreadcrumbService;
 use App\Services\RegraService;
@@ -55,7 +57,15 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $usuarios = $this->usuarioService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['tipoUsuario', 'escolas']);
+        $tipoFiltro = $itensFiltered['tipo_conta']['valor'] ?? null;
+        $usuarios = $this->usuarioService->getAllWithFiltersAndPagination(
+            $itensFiltered,
+            $perPage,
+            ['tipoUsuario', 'regra', 'escolas', 'aluno.pessoa', 'responsavel.pessoa'],
+            'id',
+            'asc',
+            $this->usuarioService->scopeTipoConta(is_string($tipoFiltro) ? $tipoFiltro : null)
+        );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Usuários', 'Gerenciar');
         $filters = $this->obterFiltrosPrincipais();
@@ -111,6 +121,11 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
             $usuario = $this->usuarioService->createUser($data);
             $this->sincronizarVinculos($usuario, $request);
+            $this->usuarioService->sincronizarVinculoConta(
+                $usuario,
+                (string) $request->input('tipo_conta', User::TIPO_CONTA_COLABORADOR),
+                $request->integer('vinculo_id') ?: null
+            );
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -189,9 +204,20 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         return response()->json(['usuarios' => $usuarios]);
     }
 
+    public function show($id)
+    {
+        $usuario = $this->usuarioService->getById($id, ['regra', 'escolas', 'aluno.pessoa', 'responsavel.pessoa']);
+        abort_if(! $usuario, 403, 'Sem acesso a este usuario.');
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Usuários', 'usuario.index', $usuario->nome ?? 'Usuário');
+
+        return view('usuario.show', compact('usuario', 'breadcrumb'))
+            ->with('titulo', $usuario->nome ?? 'Usuário');
+    }
+
     public function edit($id)
     {
-        $usuario = $this->usuarioService->getById($id, ['escolas']);
+        $usuario = $this->usuarioService->getById($id, ['escolas', 'aluno', 'responsavel']);
         abort_if(! $usuario, 403, 'Sem acesso a este usuario.');
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuários', 'usuario.index', "Editar: {$usuario->nome}", 'Gerenciar');
@@ -211,8 +237,18 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         abort_if(! $usuario, 403, 'Sem acesso para editar este usuario.');
 
         $data = $request->except(['escolas']);
-        $this->usuarioService->updateUser($id, $data);
+        $atualizado = $this->usuarioService->updateUser($id, $data);
         $this->sincronizarVinculos($usuario, $request);
+
+        // Vinculo so e regravado quando o tipo de conta veio no
+        // form — chamadas antigas sem tipo_conta preservam o atual.
+        if ($request->has('tipo_conta') && $atualizado) {
+            $this->usuarioService->sincronizarVinculoConta(
+                $atualizado,
+                (string) $request->input('tipo_conta'),
+                $request->integer('vinculo_id') ?: null
+            );
+        }
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
@@ -303,18 +339,71 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
     public function obterFiltrosSecundarios()
     {
-        return [];
+        return [
+            [
+                'name' => 'tipo_conta', 'label' => 'Tipo de conta', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => collect(User::TIPOS_CONTA)
+                    ->map(fn ($label, $value) => ['value' => $value, 'label' => $label])
+                    ->values()
+                    ->all(),
+            ],
+        ];
     }
 
     /**
-     * Opcoes de vinculo de escolas + ids ja marcados.
+     * Opcoes de vinculo: escolas do colaborador + alunos/
+     * responsaveis disponiveis para contas de portal.
      */
     private function opcoesVinculos(?User $usuario = null): array
     {
+        $usuario?->loadMissing(['aluno', 'responsavel', 'escolas']);
+
+        $alunos = $this->vinculoRegistros(Aluno::class, $usuario);
+        $responsaveis = $this->vinculoRegistros(Responsavel::class, $usuario);
+
         return [
             'escolasOpcoes' => Escola::query()->orderBy('nome')->pluck('nome', 'id'),
             'escolasSelecionadas' => $usuario ? $usuario->escolas->pluck('id')->all() : [],
+            'tiposConta' => User::TIPOS_CONTA,
+            'tipoConta' => $usuario?->tipoConta() ?? User::TIPO_CONTA_COLABORADOR,
+            'vinculoSelecionado' => $usuario ? ($usuario->aluno?->id ?? $usuario->responsavel?->id) : null,
+            'alunosOpcoes' => $alunos->mapWithKeys(fn (Aluno $a) => [$a->id => $a->nome ?? ('#'.$a->id)])->all(),
+            'responsaveisOpcoes' => $responsaveis->mapWithKeys(fn (Responsavel $r) => [$r->id => $r->nome ?? ('#'.$r->id)])->all(),
+            'vinculoDadosAluno' => $this->vinculoDados($alunos),
+            'vinculoDadosResponsavel' => $this->vinculoDados($responsaveis),
         ];
+    }
+
+    /**
+     * Alunos/responsaveis ativos do tenant sem conta de acesso
+     * (ou ja vinculados a esta conta, para edicao).
+     */
+    private function vinculoRegistros(string $modelClass, ?User $usuario): \Illuminate\Support\Collection
+    {
+        $empresaId = auth()->user()?->empresa_id;
+
+        return $modelClass::query()
+            ->with('pessoa:id,nome,nome_social,email,celular,telefone,cpf,data_nascimento')
+            ->where('ativo', 'S')
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
+            ->where(fn ($q) => $q->whereNull('user_id')
+                ->when($usuario, fn ($qq) => $qq->orWhere('user_id', $usuario->id)))
+            ->orderBy('id')
+            ->get();
+    }
+
+    /** Dados de pessoa usados para preencher o form ao escolher o vinculo. */
+    private function vinculoDados(\Illuminate\Support\Collection $registros): array
+    {
+        return $registros->mapWithKeys(fn ($r) => [$r->id => [
+            'nome' => $r->pessoa?->nomeExibicao() ?? '',
+            'email' => $r->pessoa?->email ?? '',
+            'nascimento' => optional($r->pessoa?->data_nascimento)->format('Y-m-d') ?? '',
+            'telefone' => $r->pessoa?->telefone ?? '',
+            'celular' => $r->pessoa?->celular ?? '',
+            'cpf' => $r->pessoa?->cpf ?? '',
+        ]])->all();
     }
 
     /**

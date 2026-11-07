@@ -44,6 +44,7 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
         $this->middleware('can:turma.filtro')->only('filtro');
         $this->middleware('can:turma.removerFiltro')->only('removerFiltro');
         $this->middleware('can:turma.setPerPage')->only('setPerPage');
+        $this->middleware('can:diario.frequencia')->only('chamada');
     }
 
     public function index()
@@ -140,7 +141,7 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
             ->with('success', $mensagem);
     }
 
-    public function show($id)
+    public function show($id, \Illuminate\Http\Request $request)
     {
         $turma = $this->turmaService->getById($id, [
             'escola', 'anoLetivo', 'etapa',
@@ -170,12 +171,75 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
         $papeis = Atribuicao::PAPEIS;
         $turnos = Turma::TURNOS;
 
+        $viewer = auth()->user();
+
+        $diarioHoje = $this->turmaService->diarioDeHoje($turma, $viewer);
+
+        $filtrosRegistros = [
+            'disciplina_id' => $request->query('f_disciplina') ?: null,
+            'data_inicio' => $request->query('f_ini') ?: null,
+            'data_fim' => $request->query('f_fim') ?: null,
+            'tipo' => $request->query('f_tipo') ?: null,
+            'periodo_letivo_id' => $request->query('f_periodo') ?: null,
+        ];
+        $temFiltroRegistro = collect($filtrosRegistros)->filter()->isNotEmpty();
+        $registros = $this->turmaService->registrosDaTurma(
+            $turma, $temFiltroRegistro ? 100 : 30, $viewer, $filtrosRegistros
+        );
+        $periodosLetivos = \App\Models\PeriodoLetivo::query()
+            ->where('ano_letivo_id', $turma->ano_letivo_id)
+            ->orderBy('ordem')
+            ->get(['id', 'nome']);
+
+        $filtroDisciplinaPresenca = $request->query('al_disciplina') ? (int) $request->query('al_disciplina') : null;
+        $presencas = $this->turmaService->presencasDaTurma($turma, $viewer, $filtroDisciplinaPresenca);
+        $disciplinasVisiveis = $this->turmaService->disciplinasVisiveisNaTurma($turma, $viewer);
+
+        // Professor: aulas/semana que ELE da em cada disciplina
+        // visivel (grade semanal), exibidas no lugar da carga
+        // horaria ofertada da turma.
+        $minhasAulas = $viewer->isProfessor()
+            ? \App\Models\HorarioTurma::query()
+                ->where('turma_id', $turma->id)
+                ->where('user_id', $viewer->id)
+                ->selectRaw('disciplina_id, count(*) as total')
+                ->groupBy('disciplina_id')
+                ->pluck('total', 'disciplina_id')
+            : collect();
+
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Turmas', 'turma.index', $turma->nome);
 
         return view('turma.show', compact(
             'turma', 'disciplinasOpcoes', 'disciplinasOfertadas',
-            'professoresOpcoes', 'papeis', 'turnos', 'breadcrumb'
+            'professoresOpcoes', 'papeis', 'turnos', 'breadcrumb',
+            'diarioHoje', 'registros', 'presencas', 'disciplinasVisiveis',
+            'periodosLetivos', 'filtrosRegistros', 'minhasAulas'
         ))->with('titulo', $turma->nome);
+    }
+
+    /**
+     * Fazer chamada: leva direto a chamada unificada do diario —
+     * a escolha de disciplina (quando ha mais de uma) e a data sao
+     * feitas na propria tela.
+     */
+    public function chamada(Request $request, $id)
+    {
+        $turma = $this->turmaService->getById($id);
+        abort_if(! $turma, 404, 'Turma não encontrada.');
+        abort_if(! $this->turmaService->podeAcessar($turma), 403, 'Sem acesso a esta turma.');
+
+        $disciplinaId = (int) $request->input('disciplina_id');
+        if ($disciplinaId) {
+            $disciplinas = $this->turmaService->disciplinasVisiveisNaTurma($turma, auth()->user());
+            abort_unless($disciplinas->contains('id', $disciplinaId), 403,
+                'Disciplina não atribuída a você nesta turma.');
+        }
+
+        return redirect()->route('diario.chamada', [
+            'turma_id' => $turma->id,
+            'disciplina_id' => $disciplinaId ?: null,
+            'data' => $request->input('data') ?: now()->toDateString(),
+        ]);
     }
 
     public function edit($id)
@@ -239,36 +303,79 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
             [
                 'name' => 'escola_id', 'label' => 'Escola', 'type' => 'select',
                 'typeWhere' => 'where',
-                'options' => Escola::query()->orderBy('nome')->get(['id', 'nome'])
-                    ->map(fn (Escola $e) => ['value' => $e->id, 'label' => $e->nome])->all(),
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todas', 'selected' => false]],
+                    Escola::query()->orderBy('nome')->get(['id', 'nome'])
+                        ->map(fn (Escola $e) => ['value' => $e->id, 'label' => $e->nome, 'selected' => false])->all()
+                ),
+            ],
+            [
+                'name' => 'ano_letivo_id', 'label' => 'Ano', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todos', 'selected' => false]],
+                    collect($this->anosLetivosOpcoes())
+                        ->map(fn ($label, $id) => ['value' => $id, 'label' => $label, 'selected' => false])
+                        ->values()->all()
+                ),
+            ],
+            [
+                'name' => 'turno', 'label' => 'Turno', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todos', 'selected' => false]],
+                    collect(Turma::TURNOS)
+                        ->map(fn ($label, $v) => ['value' => $v, 'label' => $label, 'selected' => false])
+                        ->values()->all()
+                ),
             ],
         ];
     }
 
     public function obterFiltrosSecundarios()
     {
-        return [
-            [
-                'name' => 'ano_letivo_id', 'label' => 'Ano letivo', 'type' => 'select',
-                'typeWhere' => 'where',
-                'options' => $this->anosLetivosOpcoes(),
-            ],
+        $filtros = [
             [
                 'name' => 'etapa_id', 'label' => 'Etapa', 'type' => 'select',
                 'typeWhere' => 'where',
-                'options' => $this->etapasOpcoes(),
-            ],
-            [
-                'name' => 'turno', 'label' => 'Turno', 'type' => 'select',
-                'typeWhere' => 'where',
-                'options' => Turma::TURNOS,
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todas', 'selected' => false]],
+                    collect($this->etapasOpcoes())
+                        ->map(fn ($label, $id) => ['value' => $id, 'label' => $label, 'selected' => false])
+                        ->values()->all()
+                ),
             ],
             [
                 'name' => 'ativo', 'label' => 'Status', 'type' => 'select',
                 'typeWhere' => 'where',
-                'options' => ['S' => 'Ativa', 'N' => 'Inativa'],
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todas', 'selected' => false]],
+                    collect(['S' => 'Ativa', 'N' => 'Inativa'])
+                        ->map(fn ($label, $v) => ['value' => $v, 'label' => $label, 'selected' => false])
+                        ->values()->all()
+                ),
             ],
         ];
+
+        // Professor: padrao = turmas em periodo letivo; o filtro
+        // permite ver as fora do periodo (lancamentos encerrados).
+        if (auth()->user()?->isProfessor()) {
+            $filtros[] = [
+                'name' => 'periodo_letivo', 'label' => 'Período letivo', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Padrão (em período letivo)', 'selected' => false]],
+                    collect([
+                        'atual' => 'Em período letivo (atual)',
+                        'fora' => 'Fora do período letivo',
+                        'todas' => 'Todas as minhas turmas',
+                    ])->map(fn ($label, $v) => ['value' => $v, 'label' => $label, 'selected' => false])
+                        ->values()->all()
+                ),
+            ];
+        }
+
+        return $filtros;
     }
 
     private function opcoesFormulario(): array
@@ -279,6 +386,13 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
             'etapas' => Etapa::query()->where('ativo', 'S')->orderBy('ordem')->orderBy('nome')
                 ->pluck('nome', 'id')->all(),
             'turnos' => Turma::TURNOS,
+            'horariosJson' => \App\Models\Horario::query()->where('ativo', 'S')
+                ->orderBy('turno')->orderBy('nome')
+                ->get(['id', 'escola_id', 'turno', 'nome'])
+                ->map(fn ($h) => [
+                    'id' => $h->id, 'escola_id' => $h->escola_id,
+                    'turno' => $h->turno, 'label' => $h->nome.' ('.(Turma::TURNOS[$h->turno] ?? $h->turno).')',
+                ])->values(),
         ];
     }
 

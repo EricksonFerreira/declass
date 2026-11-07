@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\PermissaoRotaService;
+use App\Support\EspelhamentoContext;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,7 +22,10 @@ class CheckPermissaoPorRota
         }
 
         $user = auth()->user();
-        if ($user->isSuperAdmin()) {
+
+        // Durante espelhamento, ate o superadmin passa pela checagem
+        // de rota com as permissoes do usuario espelhado.
+        if ($user->isSuperAdmin() && ! app(EspelhamentoContext::class)->ativo()) {
             return $next($request);
         }
 

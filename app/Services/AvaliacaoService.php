@@ -99,7 +99,10 @@ class AvaliacaoService extends AbstractBaseService
         return parent::create($data);
     }
 
-    /** Professor gerencia avaliacoes das turmas onde tem atribuicao ativa. */
+    /**
+     * Professor gerencia so as proprias avaliacoes; regente (atribuicao
+     * sem disciplina) gerencia todas as da turma.
+     */
     public function podeGerenciar(Avaliacao $avaliacao, ?User $user = null): bool
     {
         $user = $user ?? auth()->user();
@@ -111,10 +114,17 @@ class AvaliacaoService extends AbstractBaseService
             return true;
         }
 
-        return $avaliacao->turma?->atribuicoes()
+        $atribuicoes = $avaliacao->turma?->atribuicoes()
             ->where('user_id', $user->id)
             ->where('ativo', 'S')
-            ->exists() ?? false;
+            ->get(['disciplina_id']) ?? collect();
+
+        if ($atribuicoes->isEmpty()) {
+            return false;
+        }
+
+        return $atribuicoes->contains(fn ($a) => $a->disciplina_id === null)
+            || $avaliacao->user_id === $user->id;
     }
 
     public function update($id, array $data)

@@ -33,7 +33,15 @@
                     <x-form-select name="etapa_id" label="Etapa" :options="$etapas ?? []" :selected="old('etapa_id', $turma->etapa_id ?? '')" placeholder="Selecionar" required />
                 </div>
                 <div class="col-md-4">
-                    <x-form-select name="turno" label="Turno" :options="$turnos ?? []" :selected="old('turno', $turma->turno ?? '')" placeholder="Selecionar" />
+                    <x-form-select name="turno" label="Turno" :options="$turnos ?? []" :selected="old('turno', $turma->turno ?? '')" placeholder="Selecionar" hint="Filtra os horários disponíveis abaixo." />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Grade de horário</label>
+                    <select name="horario_id" id="select-horario" class="form-control">
+                        <option value="">Padrão do turno (matriz legada)</option>
+                    </select>
+                    <small class="text-muted">Vincula a turma a um horário específico da escola. Cadastre horários em Estrutura Acadêmica → Matriz de Horários.</small>
+                    @error('horario_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-2">
                     <x-form-input name="sala" label="Sala" :value="old('sala', $turma->sala ?? '')" maxlength="40" placeholder="101" />
@@ -56,4 +64,35 @@
         </form>
     </div>
 </div>
+@stop
+
+@section('js')
+<script>
+(function () {
+    var horarios = @json($horariosJson ?? []);
+    var escolaSel = document.querySelector('[name="escola_id"]');
+    var turnoSel = document.querySelector('[name="turno"]');
+    var horarioSel = document.getElementById('select-horario');
+    var atual = '{{ old('horario_id', $turma->horario_id ?? '') }}';
+
+    function preencher() {
+        var escolaId = parseInt(escolaSel.value, 10);
+        var turno = turnoSel.value;
+        horarioSel.querySelectorAll('option:not(:first-child)').forEach(function (o) { o.remove(); });
+
+        horarios.filter(function (h) {
+            return h.escola_id === escolaId && (!turno || h.turno === turno);
+        }).forEach(function (h) {
+            var o = document.createElement('option');
+            o.value = h.id; o.textContent = h.label;
+            if (String(h.id) === String(atual)) o.selected = true;
+            horarioSel.appendChild(o);
+        });
+    }
+
+    escolaSel.addEventListener('change', preencher);
+    turnoSel.addEventListener('change', preencher);
+    preencher();
+})();
+</script>
 @stop

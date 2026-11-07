@@ -26,13 +26,34 @@
     ])->all();
 @endphp
 
+<style>
+    .grade-horarios .intervalo-cell { background: #f1f5f9; }
+    .grade-horarios .intervalo-tag {
+        display: inline-block;
+        font-size: .68rem;
+        font-style: italic;
+        color: #64748b;
+        border: 1px dashed #cbd5e1;
+        border-radius: .8rem;
+        padding: .05rem .5rem;
+        background: #fff;
+    }
+    .grade-horarios .celula-aula { min-height: 52px; border-radius: 3px; padding: 4px 5px; }
+    .grade-horarios .celula-aula.vazia { border: 1px dashed #cbd5e1; background: #f8fafc; }
+    .card-header[data-toggle="modal"]:hover { background: #f4f6f9; }
+</style>
+
 <div class="row">
     <div class="col-md-9">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span class="font-weight-bold">
                     <i class="fas fa-calendar-week"></i> Semana letiva
-                    <small class="text-muted font-weight-normal">— clique numa aula para editar</small>
+                    @can('turma.grade.celula.store')
+                        <small class="text-muted font-weight-normal">— clique numa aula para editar</small>
+                    @else
+                        <small class="text-muted font-weight-normal">— visualização</small>
+                    @endcan
                 </span>
                 <div>
                     @can('turma.grade.pdf')
@@ -41,18 +62,22 @@
                             <a href="{{ route('turma.grade.pdf', [$turma->id, 'exibir' => 'professor']) }}" class="btn btn-outline-danger" title="PDF com professor"><i class="fa fa-user-graduate"></i></a>
                         </div>
                     @endcan
-                    <a href="{{ route('turma.show', $turma->id) }}" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Voltar</a>
                 </div>
             </div>
             <div class="card-body p-0">
                 @if(!$temMatriz)
                     <div class="text-center py-5">
                         <i class="fas fa-clock fa-3x text-muted mb-3 d-block"></i>
-                        <h5>A matriz de horários do turno {{ strtolower($rotuloTurno) }} ainda não foi configurada</h5>
-                        <p class="text-muted">Sem ela não há faixas de horário para montar a grade desta turma.</p>
-                        @can('horario_matriz.update')
-                            <a href="{{ route('horario_matriz.edit', [$turma->escola_id, $turma->turno]) }}" class="btn btn-primary">
-                                <i class="fa fa-cog"></i> Configurar matriz {{ strtolower($rotuloTurno) }}
+                        <h5>A turma ainda não tem uma grade de horário configurada</h5>
+                        <p class="text-muted">Vincule um horário no cadastro da turma ou crie um novo na Matriz de Horários.</p>
+                        @can('horario_matriz.create')
+                            <a href="{{ route('horario_matriz.create', $turma->escola_id) }}" class="btn btn-primary">
+                                <i class="fa fa-cog"></i> Criar horário na Matriz
+                            </a>
+                        @endcan
+                        @can('turma.update')
+                            <a href="{{ route('turma.edit', $turma->id) }}" class="btn btn-outline-primary">
+                                <i class="fa fa-link"></i> Vincular horário na turma
                             </a>
                         @endcan
                     </div>
@@ -111,6 +136,23 @@
                                             </td>
                                         @endforeach
                                     </tr>
+                                    @php
+                                        $temIntervalo = collect($intervalos ?? [])->contains(fn ($porDia) => isset($porDia[$ordem]));
+                                        $ivPrimeiro = $temIntervalo ? collect($intervalos)->map(fn ($porDia) => $porDia[$ordem] ?? null)->filter()->first() : null;
+                                    @endphp
+                                    @if($temIntervalo)
+                                        <tr class="intervalo-row">
+                                            <td class="text-center font-weight-bold bg-light" style="font-size:.8rem;">
+                                                <i class="fa fa-coffee text-muted"></i> Intervalo
+                                                @if($ivPrimeiro)<br><small class="text-muted font-weight-normal">{{ $ivPrimeiro['inicio'] }}–{{ $ivPrimeiro['fim'] }}</small>@endif
+                                            </td>
+                                            @foreach($dias as $dia)
+                                                <td class="text-center intervalo-cell">
+                                                    @if(isset($intervalos[$dia][$ordem]))<span class="intervalo-tag">Intervalo</span>@endif
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    @endif
                                 @endforeach
                             </tbody>
                         </table>
@@ -126,11 +168,35 @@
 
     <div class="col-md-3">
         <div class="card">
-            <div class="card-header font-weight-bold">Disciplinas ofertadas</div>
-            <div class="card-body p-0">
+            <div class="card-header font-weight-bold" data-toggle="modal" data-target="#modal-disciplinas" style="cursor:pointer;">
+                <i class="fas fa-book text-primary"></i> Disciplinas ofertadas
+                <span class="badge badge-light float-right">{{ $disciplinas->count() }}</span>
+                <i class="fas fa-chevron-right float-right mr-2 text-muted" style="margin-top:2px;"></i>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header font-weight-bold" data-toggle="modal" data-target="#modal-professores" style="cursor:pointer;">
+                <i class="fas fa-user-tie text-primary"></i> Professores na turma
+                <span class="badge badge-light float-right">{{ $professores->count() }}</span>
+                <i class="fas fa-chevron-right float-right mr-2 text-muted" style="margin-top:2px;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal: disciplinas ofertadas --}}
+<div class="modal fade" id="modal-disciplinas" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-book text-primary"></i> Disciplinas ofertadas — {{ $turma->nome }}</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body p-0">
                 <table class="table table-sm mb-0">
                     <thead class="thead-light">
-                        <tr><th>Disciplina</th><th class="text-center">Restam</th></tr>
+                        <tr><th>Disciplina</th><th class="text-center">Aulas</th><th class="text-center">Restam</th></tr>
                     </thead>
                     <tbody id="tbody-restantes">
                         @forelse($disciplinas as $d)
@@ -140,40 +206,52 @@
                                     {{ $d['nome'] }}
                                     <br><small class="text-muted">{{ $d['usadas'] }}/{{ $d['carga'] ?: '∞' }} aulas</small>
                                 </td>
-                                <td class="text-center font-weight-bold restante" data-id="{{ $d['id'] }}">{{ $d['restante'] ?? '∞' }}</td>
+                                <td class="text-center text-muted">{{ $d['usadas'] }}</td>
+                                <td class="text-center font-weight-bold restante{{ $d['restante'] > 0 ? ' text-danger' : '' }}" data-id="{{ $d['id'] }}">{{ $d['restante'] ?? '∞' }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="2" class="text-center text-muted py-3">Nenhuma disciplina ofertada.</td></tr>
+                            <tr><td colspan="3" class="text-center text-muted py-3">Nenhuma disciplina ofertada.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
             @if($turma->disciplinas->isEmpty())
-                <div class="card-footer">
-                    <a href="{{ route('turma.show', $turma->id) }}" class="btn btn-sm btn-primary btn-block">Ofertar disciplinas na turma</a>
+                <div class="modal-footer">
+                    <a href="{{ route('turma.show', $turma->id) }}" class="btn btn-sm btn-primary">Ofertar disciplinas na turma</a>
                 </div>
             @endif
         </div>
-
-        @if($professores->isNotEmpty())
-        <div class="card">
-            <div class="card-header font-weight-bold">Professores na turma</div>
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    @foreach($professores as $p)
-                        <li class="list-group-item py-2" style="font-size:.85rem;">
-                            <i class="fas fa-user-tie text-muted"></i> {{ $p['nome'] }}
-                            <small class="text-muted d-block">{{ $p['disciplina_id'] ? ($disciplinas->firstWhere('id', $p['disciplina_id'])['nome'] ?? '—') : 'Toda a turma' }}</small>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
-        </div>
-        @endif
     </div>
 </div>
 
-{{-- Modal da celula --}}
+{{-- Modal: professores na turma --}}
+<div class="modal fade" id="modal-professores" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-user-tie text-primary"></i> Professores na turma — {{ $turma->nome }}</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body p-0">
+                @if($professores->isNotEmpty())
+                    <ul class="list-group list-group-flush">
+                        @foreach($professores as $p)
+                            <li class="list-group-item py-2" style="font-size:.9rem;">
+                                <i class="fas fa-user-tie text-muted"></i> {{ $p['nome'] }}
+                                <small class="text-muted d-block">{{ $p['disciplina_id'] ? ($disciplinas->firstWhere('id', $p['disciplina_id'])['nome'] ?? '—') : 'Toda a turma' }}</small>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="text-muted text-center py-4 mb-0">Nenhum professor atribuído a esta turma.</p>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal da celula (somente para quem pode editar a grade) --}}
+@can('turma.grade.celula.store')
 <div class="modal fade" id="modal-celula" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -222,9 +300,11 @@
         </div>
     </div>
 </div>
+@endcan
 @stop
 
 @section('js')
+@can('turma.grade.celula.store')
 <script>
 (function () {
     var disciplinas = @json($disciplinasJson);
@@ -325,6 +405,7 @@
         d.usadas += delta;
         d.restante = Math.max(0, (d.carga || 0) - d.usadas);
         row.textContent = d.restante;
+        row.classList.toggle('text-danger', d.restante > 0);
         var opt = document.querySelector('#cel-disciplina option[value="' + disciplinaId + '"]');
         if (opt) opt.textContent = d.nome + ' (' + d.usadas + '/' + d.carga + ')';
     }
@@ -393,4 +474,5 @@
     });
 })();
 </script>
+@endcan
 @stop

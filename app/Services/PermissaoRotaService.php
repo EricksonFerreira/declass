@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Permissao;
 use App\Models\User;
+use App\Support\EspelhamentoContext;
 use Illuminate\Support\Collection;
 
 /**
@@ -35,6 +36,7 @@ class PermissaoRotaService
         'cron.',
         'matricula_publica.',
         'escola_context.',
+        'espelhamento.',
     ];
 
     /**
@@ -48,9 +50,33 @@ class PermissaoRotaService
         'site.apresentacao',
     ];
 
+    /**
+     * Rotas de listagem que o professor acompanha pela tela da turma:
+     * continuam acessiveis, mas ficam fora do menu (sidebar e hub).
+     *
+     * @var string[]
+     */
+    private const ROTAS_OCULTAS_PROFESSOR = [
+        'diario.index',
+        'avaliacao.index',
+        'avaliacao.agenda',
+        'cardapio.index',
+    ];
+
     public function usuarioPodeAcessarRota(User $user, string $routeName): bool
     {
         return $this->motivoBloqueioRota($user, $routeName) === null;
+    }
+
+    /**
+     * Visibilidade no menu (sidebar/hub de cards) — nao confundir com
+     * acesso a rota: aqui so escondemos itens redundantes para o
+     * professor, sem bloquear a URL.
+     */
+    public function rotaVisivelNoMenu(User $user, string $routeName): bool
+    {
+        return ! ($user->isProfessor()
+            && in_array($routeName, self::ROTAS_OCULTAS_PROFESSOR, true));
     }
 
     public function motivoBloqueioRota(User $user, string $routeName): ?string
@@ -59,7 +85,9 @@ class PermissaoRotaService
             return null;
         }
 
-        if ($user->isSuperAdmin()) {
+        // Durante espelhamento o superadmin responde pelas permissoes
+        // do usuario espelhado — hasPermissao ja delega para ele.
+        if ($user->isSuperAdmin() && ! app(EspelhamentoContext::class)->ativo()) {
             return null;
         }
 

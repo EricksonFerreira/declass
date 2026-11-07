@@ -35,6 +35,14 @@ class Empresa extends Model
         'cor_primaria',
         'cor_secundaria',
         'cor_terciaria',
+        'site_titulo',
+        'site_descricao',
+        'site_whatsapp',
+        'site_instagram',
+        'site_ativo',
+        'site_unidades',
+        'site_matricula',
+        'site_contato',
         'ativo',
     ];
 
@@ -89,5 +97,29 @@ class Empresa extends Model
     public function estaAtiva(): bool
     {
         return strtoupper((string) $this->ativo) === 'S';
+    }
+
+    /**
+     * Site publico da empresa ("rede de escolas") so fica no ar quando
+     * a empresa esta ativa e o site foi ligado nas definicoes.
+     */
+    public function sitePublicoAtivo(): bool
+    {
+        return $this->estaAtiva() && strtoupper((string) $this->site_ativo) === 'S';
+    }
+
+    /**
+     * URL publica do site da empresa: dominio personalizado quando
+     * configurado, senao o path /rede/{slug} no dominio da plataforma.
+     */
+    public function getSiteUrlAttribute(): ?string
+    {
+        $dominio = trim((string) $this->dominio);
+
+        if ($dominio !== '') {
+            return 'https://'.$dominio;
+        }
+
+        return url('/rede/'.$this->slug);
     }
 }

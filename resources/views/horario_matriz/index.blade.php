@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title title="Matriz de Horários" subtitle="Faixas de horário por escola e turno — base das grades das turmas" />
+    <x-page-title title="Matriz de Horários" subtitle="Grades de horário nomeadas por escola e turno — cada turma se vincula a uma" />
 @stop
 
 @section('content')
@@ -12,45 +12,56 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="font-weight-bold"><i class="fas fa-school"></i> {{ $escola->nome }}</span>
+            @can('horario_matriz.create')
+                <a href="{{ route('horario_matriz.create', $escola->id) }}" class="btn btn-xs btn-primary">
+                    <i class="fa fa-plus"></i> Novo horário
+                </a>
+            @endcan
         </div>
         <div class="card-body p-0">
             <table class="table table-sm table-hover mb-0">
                 <thead class="thead-light">
                     <tr>
+                        <th>Horário</th>
                         <th>Turno</th>
                         <th>Dias letivos</th>
                         <th>Aulas/dia</th>
-                        <th>Horário</th>
+                        <th>Turmas</th>
                         <th class="text-right">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($turnos as $valor => $label)
-                        @php $cfg = $matriz[$escola->id][$valor] ?? null; @endphp
+                    @forelse($horarios[$escola->id] as $h)
                         <tr>
-                            <td class="font-weight-bold">{{ $label }}</td>
-                            @if($cfg)
-                                <td>
-                                    @foreach($cfg['dias'] as $dia)
-                                        <span class="badge badge-secondary">{{ \App\Models\HorarioSlot::diaLabel($dia) }}</span>
-                                    @endforeach
-                                </td>
-                                <td>{{ $cfg['slots']->pluck('ordem')->unique()->count() }}</td>
-                                <td class="small text-muted">
-                                    {{ $cfg['slots']->min('hora_inicio') }}–{{ $cfg['slots']->max('hora_fim') }}
-                                </td>
-                            @else
-                                <td colspan="3" class="text-muted">Não configurado</td>
-                            @endif
+                            <td class="font-weight-bold">{{ $h->nome }}</td>
+                            <td>{{ $turnos[$h->turno] ?? $h->turno }}</td>
+                            <td>
+                                @foreach($h->slots->pluck('dia_semana')->unique()->sort() as $dia)
+                                    <span class="badge badge-secondary">{{ \App\Models\HorarioSlot::diaLabel($dia) }}</span>
+                                @endforeach
+                            </td>
+                            <td>{{ $h->slots->groupBy('dia_semana')->map->count()->max() ?? 0 }}</td>
+                            <td>{{ $h->turmas_count }}</td>
                             <td class="text-right">
                                 @can('horario_matriz.edit')
-                                    <a href="{{ route('horario_matriz.edit', [$escola->id, $valor]) }}" class="btn btn-xs {{ $cfg ? 'btn-warning' : 'btn-primary' }}">
-                                        <i class="fa fa-{{ $cfg ? 'edit' : 'cog' }}"></i> {{ $cfg ? 'Editar' : 'Configurar' }}
+                                    <a href="{{ route('horario_matriz.edit', $h->id) }}" class="btn btn-xs btn-warning">
+                                        <i class="fa fa-edit"></i> Editar
                                     </a>
+                                @endcan
+                                @can('horario_matriz.destroy')
+                                    @if(!$h->turmas_count)
+                                        <form method="POST" action="{{ route('horario_matriz.destroy', $h->id) }}" class="d-inline"
+                                            onsubmit="return confirm('Excluir o horário {{ addslashes($h->nome) }}?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></button>
+                                        </form>
+                                    @endif
                                 @endcan
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr><td colspan="6" class="text-muted text-center py-3">Nenhum horário cadastrado nesta escola.</td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

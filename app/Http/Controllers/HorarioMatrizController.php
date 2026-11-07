@@ -4,15 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\HorarioMatriz\StoreHorarioMatrizRequest;
 use App\Models\Escola;
+use App\Models\Horario;
 use App\Models\HorarioSlot;
 use App\Models\Turma;
 use App\Services\BreadcrumbService;
 use App\Services\HorarioMatrizService;
-use Illuminate\Http\Request;
 
 /**
- * Matriz de horarios: define as faixas de horario (aulas por
- * dia/turno) que servem de grade vazia para as turmas.
+ * Matriz de horarios: gerencia os Horarios nomeados de cada
+ * escola/turno (a "grade vazia" que as turmas preenchem).
  */
 class HorarioMatrizController extends BaseController
 {
@@ -23,33 +23,62 @@ class HorarioMatrizController extends BaseController
         $this->titulo = 'Matriz de Horários';
 
         $this->middleware('can:horario_matriz.index')->only('index');
+        $this->middleware('can:horario_matriz.create')->only(['create', 'store']);
         $this->middleware('can:horario_matriz.edit')->only('edit');
         $this->middleware('can:horario_matriz.update')->only('update');
+        $this->middleware('can:horario_matriz.destroy')->only('destroy');
     }
 
     public function index()
     {
         $escolas = Escola::query()->orderBy('nome')->get(['id', 'nome', 'empresa_id']);
-        $matriz = [];
+        $horarios = [];
         foreach ($escolas as $escola) {
-            $matriz[$escola->id] = $this->matrizService->matrizDaEscola($escola);
+            $horarios[$escola->id] = $this->matrizService->horariosDaEscola($escola);
         }
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Matriz de Horários', 'Estrutura Acadêmica');
 
         return view('horario_matriz.index', [
             'escolas' => $escolas,
-            'matriz' => $matriz,
+            'horarios' => $horarios,
             'turnos' => Turma::TURNOS,
             'breadcrumb' => $breadcrumb,
         ])->with('titulo', $this->titulo);
     }
 
-    public function edit(Request $request, Escola $escola, string $turno)
+    public function create(Escola $escola)
     {
-        abort_unless(array_key_exists($turno, Turma::TURNOS), 404);
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit(
+            'Matriz de Horários', 'horario_matriz.index', "{$escola->nome} — novo horário"
+        );
 
-        $grade = $this->matrizService->gradeDoTurno($escola, $turno);
+        return view('horario_matriz.edit', [
+            'escola' => $escola,
+            'horario' => null,
+            'turnos' => Turma::TURNOS,
+            'dias' => HorarioSlot::DIAS,
+            'diasAtuais' => [],
+            'slotsAtuais' => collect(),
+            'breadcrumb' => $breadcrumb,
+        ])->with('titulo', $this->titulo);
+    }
+
+    public function store(StoreHorarioMatrizRequest $request, Escola $escola)
+    {
+        $data = $request->validated();
+        $grade = $this->montarGrade($data);
+
+        $horario = $this->matrizService->criarHorario($escola, $data, $grade);
+
+        return redirect()->route('horario_matriz.index')
+            ->with('success', "Horário \"{$horario->nome}\" criado em {$escola->nome}: ".count($data['dias']).' dia(s) × '.count($data['aulas']).' aula(s).');
+    }
+
+    public function edit(Horario $horario)
+    {
+        $horario->load('escola');
+        $grade = $this->matrizService->gradeDoHorario($horario);
 
         // Os slots sao compartilhados entre os dias: usa o primeiro dia
         // configurado como modelo do formulario.
@@ -58,13 +87,13 @@ class HorarioMatrizController extends BaseController
         $diasAtuais = $primeiroDia !== null ? array_keys($grade) : [];
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit(
-            'Matriz de Horários', 'horario_matriz.index', "{$escola->nome} — ".Turma::TURNOS[$turno]
+            'Matriz de Horários', 'horario_matriz.index', "{$horario->escola->nome} — {$horario->nome}"
         );
 
         return view('horario_matriz.edit', [
-            'escola' => $escola,
-            'turno' => $turno,
-            'turnoLabel' => Turma::TURNOS[$turno],
+            'escola' => $horario->escola,
+            'horario' => $horario,
+            'turnos' => Turma::TURNOS,
             'dias' => HorarioSlot::DIAS,
             'diasAtuais' => $diasAtuais,
             'slotsAtuais' => $slotsAtuais->sortKeys()->values(),
@@ -72,11 +101,28 @@ class HorarioMatrizController extends BaseController
         ])->with('titulo', $this->titulo);
     }
 
-    public function update(StoreHorarioMatrizRequest $request, Escola $escola, string $turno)
+    public function update(StoreHorarioMatrizRequest $request, Horario $horario)
     {
-        abort_unless(array_key_exists($turno, Turma::TURNOS), 404);
-
         $data = $request->validated();
+        $grade = $this->montarGrade($data);
+
+        $this->matrizService->salvarHorario($horario, $data, $grade);
+
+        return redirect()->route('horario_matriz.index')
+            ->with('success', "Horário \"{$horario->nome}\" salvo: ".count($data['dias']).' dia(s) × '.count($data['aulas']).' aula(s).');
+    }
+
+    public function destroy(Horario $horario)
+    {
+        $nome = $horario->nome;
+        $this->matrizService->excluirHorario($horario);
+
+        return redirect()->route('horario_matriz.index')
+            ->with('success', "Horário \"{$nome}\" excluído.");
+    }
+
+    private function montarGrade(array $data): array
+    {
         $grade = [];
         foreach ($data['dias'] as $dia) {
             $grade[(int) $dia] = array_map(
@@ -85,9 +131,6 @@ class HorarioMatrizController extends BaseController
             );
         }
 
-        $this->matrizService->salvarMatriz($escola, $turno, $grade);
-
-        return redirect()->route('horario_matriz.index')
-            ->with('success', "Matriz {$turno} de {$escola->nome} salva: ".count($data['dias']).' dia(s) × '.count($data['aulas']).' aula(s).');
+        return $grade;
     }
 }

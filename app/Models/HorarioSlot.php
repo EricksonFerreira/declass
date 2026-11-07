@@ -20,6 +20,7 @@ class HorarioSlot extends Model
     protected $fillable = [
         'empresa_id',
         'escola_id',
+        'horario_id',
         'turno',
         'dia_semana',
         'ordem',
@@ -50,6 +51,11 @@ class HorarioSlot extends Model
     public function escola(): BelongsTo
     {
         return $this->belongsTo(Escola::class, 'escola_id');
+    }
+
+    public function horario(): BelongsTo
+    {
+        return $this->belongsTo(Horario::class, 'horario_id');
     }
 
     public static function diaLabel(int $dia): string

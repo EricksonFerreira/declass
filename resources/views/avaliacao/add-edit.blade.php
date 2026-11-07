@@ -82,7 +82,7 @@
             </div>
 
             <div class="mt-3">
-                <a href="{{ route('avaliacao.index') }}" class="btn btn-secondary">Cancelar</a>
+                <a href="{{ url()->previous() }}" class="btn btn-secondary">Cancelar</a>
                 <button type="submit" class="btn btn-primary">Salvar</button>
             </div>
         </form>

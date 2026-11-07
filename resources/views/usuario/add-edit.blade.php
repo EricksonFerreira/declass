@@ -60,14 +60,34 @@
             <h6 class="font-weight-bold">Acesso e vínculos</h6>
             <div class="row">
                 <div class="col-md-4">
-                    <x-form-select name="role_id" label="Perfil de acesso" :options="$tiposUsuario ?? []" :selected="old('role_id', $usuario->role_id ?? '')" required />
+                    <x-form-select name="tipo_conta" label="Tipo de conta" :options="$tiposConta ?? []" :selected="old('tipo_conta', $tipoConta ?? 'colaborador')" id="tipo-conta" />
+                </div>
+                <div class="col-md-4" id="grupo-perfil">
+                    <x-form-select name="role_id" label="Perfil de acesso" :options="$tiposUsuario ?? []" :selected="old('role_id', $usuario->role_id ?? '')" required id="perfil-acesso" />
                 </div>
                 <div class="col-md-4">
                     <x-form-select name="ativo" label="Status" :options="['1' => 'Ativo', '0' => 'Inativo']" :selected="old('ativo', isset($usuario) ? ($usuario->ativo ? '1' : '0') : '1')" />
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row" id="grupo-vinculo-aluno" style="display:none;">
+                <div class="col-md-8">
+                    <x-form-select name="vinculo_id" label="Aluno da conta" :options="$alunosOpcoes ?? []" :selected="old('vinculo_id', ($tipoConta ?? '') === 'aluno' ? $vinculoSelecionado : '')" placeholder="Selecionar aluno" id="vinculo-aluno" />
+                </div>
+                <div class="col-md-4 d-flex align-items-end pb-3">
+                    <small class="text-muted">Acesso do próprio aluno ao Portal Familiar (boletim, tarefas, agenda).</small>
+                </div>
+            </div>
+            <div class="row" id="grupo-vinculo-responsavel" style="display:none;">
+                <div class="col-md-8">
+                    <x-form-select name="vinculo_id" label="Responsável da conta" :options="$responsaveisOpcoes ?? []" :selected="old('vinculo_id', ($tipoConta ?? '') === 'responsavel' ? $vinculoSelecionado : '')" placeholder="Selecionar responsável" id="vinculo-responsavel" />
+                </div>
+                <div class="col-md-4 d-flex align-items-end pb-3">
+                    <small class="text-muted">Acesso da família ao Portal Familiar: vê dados dos alunos vinculados, financeiro e avisos.</small>
+                </div>
+            </div>
+
+            <div class="row" id="grupo-escolas">
                 <div class="col-md-12">
                     <x-form-select name="escolas[]" label="Escolas / unidades" :options="$escolasOpcoes ?? []" :selected="old('escolas', $escolasSelecionadas ?? [])" multiple />
                 </div>
@@ -80,4 +100,56 @@
         </form>
     </div>
 </div>
+@stop
+
+@section('js')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var tipo = document.getElementById('tipo-conta');
+        var grupoPerfil = document.getElementById('grupo-perfil');
+        var grupoEscolas = document.getElementById('grupo-escolas');
+        var grupoAluno = document.getElementById('grupo-vinculo-aluno');
+        var grupoResp = document.getElementById('grupo-vinculo-responsavel');
+        var selPerfil = document.getElementById('perfil-acesso');
+        var selAluno = document.getElementById('vinculo-aluno');
+        var selResp = document.getElementById('vinculo-responsavel');
+
+        var dadosVinculo = {
+            aluno: @json($vinculoDadosAluno ?? []),
+            responsavel: @json($vinculoDadosResponsavel ?? [])
+        };
+
+        function aplicarTipo() {
+            var t = tipo.value;
+            var portal = (t === 'aluno' || t === 'responsavel');
+
+            grupoPerfil.style.display = portal ? 'none' : '';
+            if (selPerfil) selPerfil.disabled = portal;
+            if (grupoEscolas) grupoEscolas.style.display = portal ? 'none' : '';
+
+            grupoAluno.style.display = (t === 'aluno') ? '' : 'none';
+            grupoResp.style.display = (t === 'responsavel') ? '' : 'none';
+            selAluno.disabled = (t !== 'aluno');
+            selResp.disabled = (t !== 'responsavel');
+        }
+
+        // Preenche os dados da conta com o cadastro do vinculo escolhido.
+        function preencher(tipoConta, id) {
+            var d = (dadosVinculo[tipoConta] || {})[id];
+            if (!d) return;
+
+            var mapa = { nome: 'nome', email: 'email', data_nascimento: 'nascimento',
+                         telefone: 'telefone', celular: 'celular', numero_identificacao: 'cpf' };
+            Object.keys(mapa).forEach(function (campo) {
+                var input = document.querySelector('input[name="' + campo + '"]');
+                if (input && d[mapa[campo]]) input.value = d[mapa[campo]];
+            });
+        }
+
+        if (selAluno) selAluno.addEventListener('change', function () { preencher('aluno', selAluno.value); });
+        if (selResp) selResp.addEventListener('change', function () { preencher('responsavel', selResp.value); });
+        if (tipo) tipo.addEventListener('change', aplicarTipo);
+        aplicarTipo();
+    });
+</script>
 @stop

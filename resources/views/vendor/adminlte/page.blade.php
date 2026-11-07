@@ -43,6 +43,9 @@
             @include('adminlte::partials.navbar.navbar')
         @endif
 
+        {{-- Banner de espelhamento de acesso (superadmin) --}}
+        @include('partials.espelhamento-banner')
+
         {{-- Left Main Sidebar --}}
         @if(!$layoutHelper->isLayoutTopnavEnabled())
             @include('adminlte::partials.sidebar.left-sidebar')

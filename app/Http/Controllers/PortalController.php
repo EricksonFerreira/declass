@@ -282,6 +282,65 @@ class PortalController extends Controller
     }
 
     /**
+     * Calendario letivo do aluno: cruza dias letivos da grade da
+     * turma com feriados e eventos publicos — responde "tem aula?"
+     * sem a familia precisar perguntar.
+     */
+    public function calendario()
+    {
+        $user = auth()->user();
+        $alunos = $this->alunosDoUsuario($user);
+
+        abort_if($alunos->isEmpty(), 403, 'Nenhum aluno vinculado a esta conta.');
+
+        $alunoId = (int) request('aluno_id', $alunos->first()->id);
+        $aluno = $alunos->firstWhere('id', $alunoId) ?? $alunos->first();
+
+        $matricula = Matricula::query()
+            ->where('aluno_id', $aluno->id)
+            ->where('status', 'ativa')
+            ->with('turma.anoLetivo.periodos', 'turma.escola', 'turma.horario')
+            ->first();
+
+        abort_if(! $matricula?->turma, 404, 'Este aluno não tem matrícula ativa em uma turma.');
+
+        $turma = $matricula->turma;
+        $service = app(\App\Services\CalendarioLetivoService::class);
+
+        // Intervalo exibido: mes atual por padrao; "ano" mostra o ano letivo.
+        $escopo = request('escopo', 'mes');
+        if ($escopo === 'ano') {
+            $ano = $turma->anoLetivo;
+            $inicio = $ano?->data_inicio ?? now()->startOfYear();
+            $fim = $ano?->data_fim ?? now()->endOfYear();
+            $rotuloPeriodo = 'Ano letivo '.($ano->ano ?? '');
+        } else {
+            $mes = \Carbon\Carbon::parse(request('mes', now()->format('Y-m')).'-01')->startOfMonth();
+            $inicio = $mes->copy();
+            $fim = $mes->copy()->endOfMonth();
+            $rotuloPeriodo = ucfirst($mes->locale('pt_BR')->translatedFormat('F/Y'));
+        }
+
+        $dias = $service->calendarioDaTurma($turma, $inicio, $fim, somenteEventosPublicos: true);
+        $meses = $service->mesesDoCalendario($dias);
+
+        return view('portal.calendario', [
+            'titulo' => 'Calendário do Aluno',
+            'alunos' => $alunos,
+            'aluno' => $aluno,
+            'turma' => $turma,
+            'meses' => $meses,
+            'escopo' => $escopo,
+            'rotuloPeriodo' => $rotuloPeriodo,
+            'mesAtual' => $inicio->format('Y-m'),
+            'mesAnterior' => $inicio->copy()->subMonth()->format('Y-m'),
+            'mesProximo' => $inicio->copy()->addMonth()->format('Y-m'),
+            'alteracoes' => $service->proximasAlteracoes($dias),
+            'rotulosStatus' => \App\Services\CalendarioLetivoService::ROTULOS,
+        ]);
+    }
+
+    /**
      * Pesquisas abertas para as familias: pesquisa da escola
      * dos alunos vinculados (ou da rede toda) dentro do periodo
      * e ainda nao respondida pelo usuario.

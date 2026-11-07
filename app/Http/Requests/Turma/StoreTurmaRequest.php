@@ -39,6 +39,16 @@ class StoreTurmaRequest extends FormRequest
             ],
             'nome' => ['required', 'string', 'max:120'],
             'turno' => ['nullable', Rule::in(array_keys(Turma::TURNOS))],
+            'horario_id' => [
+                'nullable', 'integer',
+                Rule::exists('horarios', 'id')->where('empresa_id', $empresaId),
+                function (string $attribute, $value, \Closure $fail) use ($escolaId) {
+                    $horarioEscola = \App\Models\Horario::query()->whereKey($value)->value('escola_id');
+                    if ($horarioEscola !== null && (int) $horarioEscola !== (int) $escolaId) {
+                        $fail('O horário selecionado não pertence à escola informada.');
+                    }
+                },
+            ],
             'sala' => ['nullable', 'string', 'max:40'],
             'capacidade_maxima' => ['nullable', 'integer', 'min:1', 'max:500'],
             'ativo' => ['nullable', Rule::in(['S', 'N'])],

@@ -25,6 +25,7 @@ class Evento extends Model
         'local',
         'publico',
         'status',
+        'suspende_aulas',
     ];
 
     protected $casts = [
@@ -66,6 +67,27 @@ class Evento extends Model
     public function responsavel(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Turmas especificas do evento (excursao de sala, por exemplo).
+     * Pivot vazio = evento vale para todas as turmas do alcance.
+     */
+    public function turmas(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Turma::class, 'evento_turma');
+    }
+
+    /** O evento suspende as aulas de uma turma especifica? */
+    public function suspendeAulasPara(?int $turmaId): bool
+    {
+        if ($this->suspende_aulas !== 'S') {
+            return false;
+        }
+
+        $turmas = $this->relationLoaded('turmas') ? $this->turmas : $this->turmas()->get();
+
+        return $turmas->isEmpty() || ($turmaId !== null && $turmas->contains('id', $turmaId));
     }
 
     public function tipoLabel(): string

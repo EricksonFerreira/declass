@@ -9,6 +9,46 @@
     $mobileSecaoParam = request()->route('secao');
 
     // Prefixos de rota que acendem cada item da barra.
+    // Professor: barra com as funcoes que ele mais usa no dia a dia.
+    if ($mobileNavUser?->isProfessor()) {
+        $mobileItens = [
+            [
+                'label' => 'Início',
+                'icone' => 'fas fa-home',
+                'url' => route('home'),
+                'slug' => null,
+                'prefixos' => ['home', 'dashboard'],
+            ],
+            [
+                'label' => 'Turmas',
+                'icone' => 'fas fa-chalkboard-teacher',
+                'url' => route('turma.index'),
+                'slug' => 'academico',
+                'prefixos' => ['turma.', 'diario.', 'avaliacao.'],
+            ],
+            [
+                'label' => 'Horários',
+                'icone' => 'fas fa-clock',
+                'url' => route('meus_horarios.index'),
+                'slug' => null,
+                'prefixos' => ['meus_horarios.'],
+            ],
+            [
+                'label' => 'Calendário',
+                'icone' => 'fas fa-calendar-alt',
+                'url' => route('calendario.index'),
+                'slug' => null,
+                'prefixos' => ['calendario.', 'feriado.', 'evento.'],
+            ],
+            [
+                'label' => 'Menu',
+                'icone' => 'fas fa-bars',
+                'url' => route('menu.index'),
+                'slug' => '__menu__',
+                'prefixos' => [],
+            ],
+        ];
+    } else {
     $mobileItens = [
         [
             'label' => 'Início',
@@ -46,6 +86,7 @@
             'prefixos' => [],
         ],
     ];
+    }
 
     $mobileAtivo = function (array $item) use ($mobileRotaAtual, $mobileSecaoParam) {
         if ($item['slug'] === '__menu__') {

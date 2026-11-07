@@ -5,10 +5,12 @@ namespace App\Models;
 use App\Notifications\ResetPasswordCustom;
 use App\Notifications\VerifyEmailCustom;
 use App\Services\PermissaoRotaService;
+use App\Support\EspelhamentoContext;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +41,29 @@ class User extends Authenticatable implements MustVerifyEmail
         'ativo',
         'password',
     ];
+
+    /**
+     * Tipos de conta de acesso: colaborador (equipe do tenant) ou
+     * conta de portal vinculada a um aluno/responsavel.
+     */
+    public const TIPO_CONTA_COLABORADOR = 'colaborador';
+
+    public const TIPO_CONTA_ALUNO = 'aluno';
+
+    public const TIPO_CONTA_RESPONSAVEL = 'responsavel';
+
+    public const TIPOS_CONTA = [
+        self::TIPO_CONTA_COLABORADOR => 'Colaborador',
+        self::TIPO_CONTA_ALUNO => 'Aluno',
+        self::TIPO_CONTA_RESPONSAVEL => 'Responsável',
+    ];
+
+    /** Perfis (roles) que representam acesso ao Portal Familiar. */
+    public const ROLE_ALUNO = 'aluno';
+
+    public const ROLES_RESPONSAVEL = ['responsavel_legal', 'responsavel_financeiro'];
+
+    public const ROLES_PORTAL = ['aluno', 'responsavel_legal', 'responsavel_financeiro'];
 
     protected $hidden = [
         'password',
@@ -185,6 +210,88 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Registro de aluno vinculado a esta conta (acesso do proprio
+     * aluno ao Portal Familiar).
+     */
+    public function aluno(): HasOne
+    {
+        return $this->hasOne(Aluno::class, 'user_id');
+    }
+
+    /**
+     * Registro de responsavel vinculado a esta conta (acesso da
+     * familia ao Portal Familiar).
+     */
+    public function responsavel(): HasOne
+    {
+        return $this->hasOne(Responsavel::class, 'user_id');
+    }
+
+    /**
+     * Tipo da conta: 'aluno' quando vinculada a um registro de aluno
+     * (ou perfil 'aluno'), 'responsavel' quando vinculada a um
+     * responsavel (ou perfil responsavel_*), senao 'colaborador'.
+     */
+    public function tipoConta(): string
+    {
+        $roleName = strtolower(trim((string) ($this->regra?->name ?? '')));
+
+        if ($this->temVinculo('aluno') || $roleName === self::ROLE_ALUNO) {
+            return self::TIPO_CONTA_ALUNO;
+        }
+
+        if ($this->temVinculo('responsavel') || in_array($roleName, self::ROLES_RESPONSAVEL, true)) {
+            return self::TIPO_CONTA_RESPONSAVEL;
+        }
+
+        return self::TIPO_CONTA_COLABORADOR;
+    }
+
+    public function tipoContaLabel(): string
+    {
+        return self::TIPOS_CONTA[$this->tipoConta()] ?? self::TIPOS_CONTA[self::TIPO_CONTA_COLABORADOR];
+    }
+
+    /** Nome do aluno/responsavel vinculado a conta, quando houver. */
+    public function vinculoNome(): ?string
+    {
+        return $this->aluno?->nome ?? $this->responsavel?->nome;
+    }
+
+    /**
+     * Conta de portal: o perfil e de aluno/responsavel e a home
+     * operacional nao se aplica — o destino pos-login e o Portal.
+     */
+    public function isPortalAccount(): bool
+    {
+        $roleName = strtolower(trim((string) ($this->regra?->name ?? '')));
+
+        return in_array($roleName, self::ROLES_PORTAL, true);
+    }
+
+    /**
+     * Ha alunos acessiveis pela conta no Portal Familiar: o proprio
+     * aluno ou os alunos do responsavel vinculado.
+     */
+    public function temAlunosVinculados(): bool
+    {
+        if ($this->aluno()->exists()) {
+            return true;
+        }
+
+        $responsavel = $this->responsavel()->first(['id']);
+
+        return $responsavel ? $responsavel->alunos()->exists() : false;
+    }
+
+    private function temVinculo(string $relation): bool
+    {
+        return $this->relationLoaded($relation)
+            ? $this->getRelation($relation) !== null
+            : $this->{$relation}()->exists();
+    }
+
+    /**
      * Escolas que o usuario pode selecionar no contexto da sessao.
      * Retorna null quando o usuario nao tem vinculos — nesse caso
      * ele pode alternar entre todas as escolas do tenant.
@@ -204,6 +311,11 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isProfessor(): bool
     {
+        // Espelhamento: o superadmin ve o papel do usuario espelhado.
+        if ($this->isSuperAdmin() && ($alvo = $this->alvoEspelhado())) {
+            return $alvo->isProfessor();
+        }
+
         $role = strtolower(trim((string) ($this->regra?->name ?? '')));
 
         return in_array($role, ['professor', 'professor_substituto'], true);
@@ -212,6 +324,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdministrador(): bool
     {
         if ($this->isSuperAdmin()) {
+            if ($alvo = $this->alvoEspelhado()) {
+                return $alvo->isAdministrador();
+            }
+
             return true;
         }
 
@@ -230,9 +346,27 @@ class User extends Authenticatable implements MustVerifyEmail
         return (int) ($this->getRawOriginal('tipo_usuario_id') ?? 0) === 1;
     }
 
+    /**
+     * Alvo do espelhamento ativo — so existe para superadmin; para
+     * qualquer outro usuario (inclusive o proprio alvo) retorna null,
+     * o que evita recursao quando o alvo avalia as suas permissoes.
+     */
+    private function alvoEspelhado(): ?self
+    {
+        $contexto = app(EspelhamentoContext::class);
+
+        return $contexto->ativo() ? $contexto->alvo() : null;
+    }
+
     public function hasPermissao(string $permissao): bool
     {
         if ($this->isSuperAdmin()) {
+            // Espelhamento: avalia a permissao do usuario espelhado,
+            // mantendo a identidade (e a auditoria) do superadmin.
+            if ($alvo = $this->alvoEspelhado()) {
+                return $alvo->hasPermissao($permissao);
+            }
+
             return true;
         }
 

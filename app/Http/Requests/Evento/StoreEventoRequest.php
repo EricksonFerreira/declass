@@ -32,6 +32,12 @@ class StoreEventoRequest extends FormRequest
             'local' => ['nullable', 'string', 'max:190'],
             'publico' => ['required', 'string', Rule::in(array_keys(Evento::PUBLICOS))],
             'status' => ['required', 'string', Rule::in(array_keys(Evento::STATUS))],
+            'suspende_aulas' => ['nullable', Rule::in(['S', 'N'])],
+            'turmas' => ['nullable', 'array'],
+            'turmas.*' => [
+                'integer',
+                Rule::exists('turmas', 'id')->where('empresa_id', $empresaId),
+            ],
         ];
     }
 }

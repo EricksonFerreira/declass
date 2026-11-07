@@ -48,7 +48,9 @@ class HorarioExportService
     /** Preenche uma aba com a grade da turma em formato matriz. */
     private function preencherAba(Worksheet $sheet, Turma $turma, bool $comProfessor): void
     {
-        $grade = $this->gradeService->gradeParaExportacao($turma, $comProfessor);
+        $export = $this->gradeService->gradeParaExportacao($turma, $comProfessor);
+        $grade = $export['grade'];
+        $intervalos = $export['intervalos'];
         $dias = HorarioSlot::DIAS;
 
         $diasGrade = array_keys($grade);
@@ -96,6 +98,18 @@ class HorarioExportService
                 $col++;
             }
             $linha++;
+
+            // Linha de intervalo logo abaixo da aula anterior ao recreio.
+            if (collect($intervalos)->contains(fn ($porDia) => isset($porDia[$ordem]))) {
+                $iv = collect($intervalos)->map(fn ($porDia) => $porDia[$ordem] ?? null)->filter()->first();
+                $sheet->setCellValue('A'.$linha, 'Intervalo'.($iv ? " ({$iv['inicio']}–{$iv['fim']})" : ''));
+                $col = 2;
+                foreach ($diasGrade as $dia) {
+                    $sheet->setCellValue([$col, $linha], isset($intervalos[$dia][$ordem]) ? 'Intervalo' : '');
+                    $col++;
+                }
+                $linha++;
+            }
         }
 
         $sheet->getColumnDimension('A')->setWidth(22);
@@ -123,7 +137,7 @@ class HorarioExportService
     {
         return $turmas->map(fn (Turma $t) => [
             'turma' => $t,
-            'grade' => $this->gradeService->gradeParaExportacao($t, $comProfessor),
+            'export' => $this->gradeService->gradeParaExportacao($t, $comProfessor),
         ])->all();
     }
 }

@@ -19,7 +19,8 @@ class MenuSecoesService
 
         $secoes = collect($this->definicoes())->map(function ($secao) use ($rotaPermissao, $user) {
             $secao['cards'] = array_values(array_filter($secao['cards'], function ($card) use ($rotaPermissao, $user) {
-                return $rotaPermissao->usuarioPodeAcessarRota($user, $card[2]);
+                return $rotaPermissao->usuarioPodeAcessarRota($user, $card[2])
+                    && $rotaPermissao->rotaVisivelNoMenu($user, $card[2]);
             }));
 
             return $secao;
@@ -53,7 +54,7 @@ class MenuSecoesService
                 'slug' => 'pessoas',
                 'titulo' => 'Pessoas',
                 'cards' => [
-                    ['Usuários', 'fas fa-users', 'usuario.index', 'Colaboradores e contas de acesso', '#0891b2'],
+                    ['Usuários', 'fas fa-users', 'usuario.index', 'Contas de acesso: equipe, alunos e responsáveis', '#0891b2'],
                     ['Perfis de Acesso', 'fas fa-user-shield', 'regra.index', 'Perfis e permissões do tenant', '#0d9488'],
                 ],
             ],

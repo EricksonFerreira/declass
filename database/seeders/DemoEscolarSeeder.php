@@ -61,6 +61,9 @@ use Illuminate\Support\Facades\Hash;
  *                                                 avaliacoes e boletim
  *                                                 apenas das turmas
  *                                                 em que leciona
+ *                                                 (itinerante: duas
+ *                                                 unidades, sem
+ *                                                 conflito de horario)
  *  prof2@escolademo.test          professor      — idem prof1
  *  secretaria@escolademo.test     secretario    — cadastro e gestao
  *                                                 Academica/Administrativa
@@ -176,11 +179,13 @@ class DemoEscolarSeeder extends Seeder
         $this->planosAtendimento($empresa);
         $this->tarefas($empresa, $usuarios);
         $this->agenda($empresa, array_values($escolas), $usuarios);
+        $this->feriadosNacionais($empresa);
         $this->pesquisas($empresa, array_values($escolas), $usuarios);
         $this->saude($empresa);
         $this->estoque($empresa, array_values($escolas));
         $this->solicitacoesMatricula($empresa, array_values($escolas), $usuarios);
         $this->matrizHorarios($empresa, array_values($escolas));
+        $this->gradesCurriculares($empresa, array_values($escolas), $usuarios);
 
         $this->command->info('Massa demo criada com sucesso.');
     }
@@ -215,34 +220,303 @@ class DemoEscolarSeeder extends Seeder
         return $escolas;
     }
 
-    /** Matriz de horarios padrao (seg-sex) para matutino e vespertino. */
+    /**
+     * Matrizes de horario nomeadas (seg-sex) por escola+turno.
+     * Slots legados (escola+turno sem horario_id) sao herdados
+     * pela matriz criada; turmas se vinculam via horario_id.
+     */
     private function matrizHorarios(Empresa $empresa, array $escolas): void
     {
+        // Intervalo de 20min apos a 2a aula (gap entre o fim de uma
+        // aula e o inicio da seguinte aparece como "Intervalo" na grade).
         $turnos = [
-            'matutino' => [['07:00', '07:50'], ['07:50', '08:40'], ['08:40', '09:30'], ['09:30', '10:20'], ['10:20', '11:10']],
-            'vespertino' => [['13:00', '13:50'], ['13:50', '14:40'], ['14:40', '15:30'], ['15:30', '16:20'], ['16:20', '17:10']],
+            'matutino' => [['07:00', '07:50'], ['07:50', '08:40'], ['09:00', '09:50'], ['09:50', '10:40'], ['10:40', '11:30']],
+            'vespertino' => [['13:00', '13:50'], ['13:50', '14:40'], ['15:00', '15:50'], ['15:50', '16:40'], ['16:40', '17:30']],
         ];
+        $nomes = ['matutino' => 'Matutino Regular', 'vespertino' => 'Vespertino Regular'];
 
         foreach ($escolas as $escola) {
             foreach ($turnos as $turno => $aulas) {
-                $existe = \App\Models\HorarioSlot::query()
-                    ->where('escola_id', $escola->id)->where('turno', $turno)->exists();
-                if ($existe) {
-                    continue;
-                }
+                $horario = \App\Models\Horario::firstOrCreate(
+                    [
+                        'empresa_id' => $empresa->id,
+                        'escola_id' => $escola->id,
+                        'turno' => $turno,
+                        'nome' => $nomes[$turno],
+                    ],
+                    ['ativo' => 'S']
+                );
+
+                // Slots legados passam a pertencer a esta matriz.
+                \App\Models\HorarioSlot::query()
+                    ->where('empresa_id', $empresa->id)
+                    ->where('escola_id', $escola->id)
+                    ->where('turno', $turno)
+                    ->whereNull('horario_id')
+                    ->update(['horario_id' => $horario->id]);
+
                 foreach ([1, 2, 3, 4, 5] as $dia) {
                     foreach ($aulas as $i => [$inicio, $fim]) {
-                        \App\Models\HorarioSlot::create([
-                            'empresa_id' => $empresa->id,
-                            'escola_id' => $escola->id,
-                            'turno' => $turno,
-                            'dia_semana' => $dia,
-                            'ordem' => $i + 1,
-                            'hora_inicio' => $inicio,
-                            'hora_fim' => $fim,
-                        ]);
+                        // updateOrCreate: corrige os horarios de slots
+                        // ja existentes (ex.: quando o intervalo muda).
+                        \App\Models\HorarioSlot::updateOrCreate(
+                            [
+                                'empresa_id' => $empresa->id,
+                                'horario_id' => $horario->id,
+                                'dia_semana' => $dia,
+                                'ordem' => $i + 1,
+                            ],
+                            [
+                                'escola_id' => $escola->id,
+                                'turno' => $turno,
+                                'hora_inicio' => $inicio,
+                                'hora_fim' => $fim,
+                            ]
+                        );
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Grade semanal das turmas do ano atual: vincula cada turma a
+     * matriz do seu turno e distribui as disciplinas ofertadas
+     * pelos slots (proporcional a carga), respeitando os mesmos
+     * conflitos do TurmaGradeService — professor nao fica em duas
+     * salas no mesmo horario nem a sala recebe duas turmas —
+     * alimentando "Meus Horarios" e a grade da turma de forma
+     * organizada. Antes, redistribui as atribuicoes de professor
+     * de forma equilibrada por disciplina.
+     */
+    private function gradesCurriculares(Empresa $empresa, array $escolas, array $usuarios): void
+    {
+        // Intervalo de cada celula por turma (dia|ordem => HH:MM|HH:MM)
+        // — resolve o horario da turma (vinculado ou legado).
+        $intervalosPorTurma = [];
+        Turma::query()
+            ->where('empresa_id', $empresa->id)
+            ->with('horario.slots')
+            ->get(['id', 'horario_id', 'escola_id', 'turno'])
+            ->each(function ($t) use (&$intervalosPorTurma) {
+                $slots = $t->horario?->slots;
+                if ((! $slots || $slots->isEmpty()) && $t->escola_id && $t->turno) {
+                    $slots = \App\Models\HorarioSlot::query()
+                        ->where('escola_id', $t->escola_id)->where('turno', $t->turno)->get();
+                }
+                foreach (($slots ?? collect()) as $s) {
+                    $intervalosPorTurma[$t->id][$s->dia_semana.'|'.$s->ordem]
+                        = substr((string) $s->hora_inicio, 0, 5).'|'.substr((string) $s->hora_fim, 0, 5);
+                }
+            });
+
+        // Ocupacao por professor e sala: lista de intervalos por
+        // dia — professor itinerante nao pode estar em duas
+        // escolas no mesmo horario real, mesmo com grades
+        // diferentes; em dias distintos, sem problema.
+        $ocupadoProf = [];
+        $ocupadoSala = [];
+        \App\Models\HorarioTurma::query()
+            ->where('empresa_id', $empresa->id)
+            ->get(['id', 'turma_id', 'dia_semana', 'ordem', 'user_id', 'sala'])
+            ->each(function ($a) use (&$ocupadoProf, &$ocupadoSala, $intervalosPorTurma) {
+                $iv = $intervalosPorTurma[$a->turma_id][$a->dia_semana.'|'.$a->ordem] ?? null;
+                if (! $iv) {
+                    return;
+                }
+                [$ini, $fim] = explode('|', $iv);
+                if ($a->user_id) {
+                    $ocupadoProf[$a->user_id][$a->dia_semana][] = ['i' => $ini, 'f' => $fim];
+                }
+                if ($a->sala) {
+                    $ocupadoSala[mb_strtolower(trim($a->sala))][$a->dia_semana][] = ['i' => $ini, 'f' => $fim];
+                }
+            });
+
+        // Verdadeiro se algum intervalo ocupado no dia sobrepoe
+        // o candidato [ini,fim) — cobre grades com horarios
+        // diferentes entre escolas.
+        $conflita = function (array $mapa, int|string $chave, int $dia, string $ini, string $fim): bool {
+            foreach (($mapa[$chave][$dia] ?? []) as $o) {
+                if ($ini < $o['f'] && $o['i'] < $fim) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        foreach ($escolas as $indice => $escola) {
+            // prof1/prof2 sao itinerantes: lecionam nas duas
+            // primeiras unidades (dias/horarios diferentes — o
+            // controle de conflito impede sobreposicao real).
+            $this->sincronizarAtribuicoes($empresa, $escola, $usuarios, $indice < 2);
+
+            $horariosPorTurno = \App\Models\Horario::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('escola_id', $escola->id)
+                ->with('slots')
+                ->get()
+                ->keyBy('turno');
+
+            if ($horariosPorTurno->isEmpty()) {
+                continue;
+            }
+
+            $anoAtual = \App\Models\AnoLetivo::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('escola_id', $escola->id)
+                ->where('ano', self::ANO_ATUAL)
+                ->first();
+
+            // Vincula TODAS as turmas da escola a matriz do turno;
+            // grade semanal so nas turmas do ano atual.
+            Turma::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('escola_id', $escola->id)
+                ->whereNull('horario_id')
+                ->get(['id', 'turno'])
+                ->each(function ($t) use ($horariosPorTurno) {
+                    if ($h = $horariosPorTurno->get($t->turno)) {
+                        $t->horario_id = $h->id;
+                        $t->save();
+                    }
+                });
+
+            $turmas = Turma::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('escola_id', $escola->id)
+                ->when($anoAtual, fn ($q) => $q->where('ano_letivo_id', $anoAtual->id))
+                ->with(['disciplinas', 'atribuicoes'])
+                ->orderBy('id')
+                ->get();
+
+            // Salas deterministicas por escola+turno (C-M01 =
+            // Unidade Central, matutino, sala 01): evita a colisao
+            // de salas aleatorias que deixava turmas sem nenhum
+            // slot livre, e mantem o nome legivel na grade.
+            $siglaEscola = strtoupper(collect(explode('-', $escola->slug ?? 'escola'))->map(fn ($p) => mb_substr($p, 0, 1))->implode(''));
+            $seqSala = ['matutino' => 0, 'vespertino' => 0];
+            $letraTurno = ['matutino' => 'M', 'vespertino' => 'V'];
+            foreach ($turmas as $turma) {
+                $seqSala[$turma->turno] = ($seqSala[$turma->turno] ?? 0) + 1;
+                $salaNome = 'Sala '.$siglaEscola.'-'.($letraTurno[$turma->turno] ?? 'T').str_pad((string) $seqSala[$turma->turno], 2, '0', STR_PAD_LEFT);
+                if ($turma->sala !== $salaNome) {
+                    $turma->sala = $salaNome;
+                    $turma->save();
+                }
+            }
+
+            foreach ($turmas as $turma) {
+                $horario = $horariosPorTurno->get($turma->turno);
+                if (! $horario || $horario->slots->isEmpty()) {
+                    continue;
+                }
+
+                if (! $turma->horario_id) {
+                    $turma->horario_id = $horario->id;
+                    $turma->save();
+                }
+
+                $jaMontada = \App\Models\HorarioTurma::query()
+                    ->where('turma_id', $turma->id)->exists();
+                if ($jaMontada) {
+                    continue;
+                }
+
+                // Candidatos em ordem de aula x dia (coluna a coluna)
+                // com deslocamento por turma para nao competirem
+                // sempre pelos mesmos slots.
+                $celulas = [];
+                foreach ($horario->slots->pluck('ordem')->unique()->sort() as $ordem) {
+                    foreach ($horario->slots->pluck('dia_semana')->unique()->sort() as $dia) {
+                        $celulas[] = [$dia, $ordem];
+                    }
+                }
+                $offset = count($celulas) ? $turma->id % count($celulas) : 0;
+                $celulas = array_merge(array_slice($celulas, $offset), array_slice($celulas, 0, $offset));
+
+                $livres = array_fill_keys(array_map(fn ($c) => $c[0].'|'.$c[1], $celulas), true);
+                $profPorDisciplina = $turma->atribuicoes->where('ativo', 'S')->keyBy('disciplina_id');
+                $salaKey = $turma->sala ? mb_strtolower(trim($turma->sala)) : null;
+                $intervaloCelula = $horario->slots
+                    ->mapWithKeys(fn ($s) => [
+                        $s->dia_semana.'|'.$s->ordem => substr((string) $s->hora_inicio, 0, 5).'|'.substr((string) $s->hora_fim, 0, 5),
+                    ])->all();
+
+                $nDisc = max(1, $turma->disciplinas->count());
+                $quota = intdiv(count($celulas), $nDisc);
+                $extra = count($celulas) % $nDisc;
+
+                DB::transaction(function () use ($turma, $celulas, &$livres, $profPorDisciplina, $salaKey, $intervaloCelula, $conflita, $quota, $extra, $empresa, $escola, &$ocupadoProf, &$ocupadoSala) {
+                    foreach ($turma->disciplinas->values() as $idx => $disciplina) {
+                        $alvo = min(
+                            max(1, (int) ($disciplina->pivot->carga_horaria_semanal ?? $quota)),
+                            $quota + ($idx < $extra ? 1 : 0)
+                        );
+                        $profId = $profPorDisciplina->get($disciplina->id)?->user_id;
+
+                        for ($k = 0; $k < $alvo; $k++) {
+                            $pick = null;
+                            $semProf = false;
+
+                            foreach ($celulas as [$dia, $ordem]) {
+                                if (empty($livres[$dia.'|'.$ordem])) {
+                                    continue;
+                                }
+                                [$ini, $fim] = explode('|', $intervaloCelula[$dia.'|'.$ordem]);
+                                if ($profId && $conflita($ocupadoProf, $profId, $dia, $ini, $fim)) {
+                                    continue;
+                                }
+                                if ($salaKey && $conflita($ocupadoSala, $salaKey, $dia, $ini, $fim)) {
+                                    continue;
+                                }
+                                $pick = [$dia, $ordem, $ini, $fim];
+                                break;
+                            }
+
+                            // Professor sem slot livre: aula ainda entra
+                            // na grade, mas sem docente vinculado.
+                            if (! $pick && $profId) {
+                                foreach ($celulas as [$dia, $ordem]) {
+                                    if (empty($livres[$dia.'|'.$ordem])) {
+                                        continue;
+                                    }
+                                    [$ini, $fim] = explode('|', $intervaloCelula[$dia.'|'.$ordem]);
+                                    if ($salaKey && $conflita($ocupadoSala, $salaKey, $dia, $ini, $fim)) {
+                                        continue;
+                                    }
+                                    $pick = [$dia, $ordem, $ini, $fim];
+                                    $semProf = true;
+                                    break;
+                                }
+                            }
+
+                            if (! $pick) {
+                                break;
+                            }
+
+                            [$dia, $ordem, $ini, $fim] = $pick;
+                            \App\Models\HorarioTurma::create([
+                                'empresa_id' => $empresa->id,
+                                'escola_id' => $escola->id,
+                                'turma_id' => $turma->id,
+                                'dia_semana' => $dia,
+                                'ordem' => $ordem,
+                                'disciplina_id' => $disciplina->id,
+                                'user_id' => $semProf ? null : $profId,
+                                'sala' => $turma->sala,
+                            ]);
+                            unset($livres[$dia.'|'.$ordem]);
+                            if ($profId && ! $semProf) {
+                                $ocupadoProf[$profId][$dia][] = ['i' => $ini, 'f' => $fim];
+                            }
+                            if ($salaKey) {
+                                $ocupadoSala[$salaKey][$dia][] = ['i' => $ini, 'f' => $fim];
+                            }
+                        }
+                    }
+                });
             }
         }
     }
@@ -756,31 +1030,7 @@ class DemoEscolarSeeder extends Seeder
     /** Usuarios de acesso para testar os perfis. */
     private function usuarios(Empresa $empresa): array
     {
-        $criar = function (string $email, string $nome, string $perfil) use ($empresa) {
-            $user = User::query()->firstOrCreate(
-                ['email' => $email],
-                [
-                    'name' => $nome,
-                    'nome' => $nome,
-                    'password' => Hash::make(self::SENHA),
-                    'empresa_id' => $empresa->id,
-                    'ativo' => true,
-                ]
-            );
-
-            $roleId = DB::table('roles')
-                ->where('empresa_id', $empresa->id)
-                ->where('name', $perfil)
-                ->where('guard_name', 'web')
-                ->value('id');
-
-            DB::table('users')->where('id', $user->id)->update([
-                'role_id' => $roleId,
-                'email_verified_at' => now(),
-            ]);
-
-            return $user->fresh();
-        };
+        $criar = fn (string $email, string $nome, string $perfil) => $this->criarUsuarioPerfil($empresa, $email, $nome, $perfil);
 
         return [
             'prof1' => $criar('prof1@escolademo.test', 'Professora Ana Souza', 'professor'),
@@ -792,6 +1042,154 @@ class DemoEscolarSeeder extends Seeder
             'financeiro' => $criar('financeiro@escolademo.test', 'Financeiro Demo', 'financeiro'),
             'bibliotecario' => $criar('bibliotecario@escolademo.test', 'Bibliotecário Demo', 'bibliotecario'),
         ];
+    }
+
+    /** Cria (ou reaproveita) um usuario com o perfil informado. */
+    private function criarUsuarioPerfil(Empresa $empresa, string $email, string $nome, string $perfil): User
+    {
+        $user = User::query()->firstOrCreate(
+            ['email' => $email],
+            [
+                'name' => $nome,
+                'nome' => $nome,
+                'password' => Hash::make(self::SENHA),
+                'empresa_id' => $empresa->id,
+                'ativo' => true,
+            ]
+        );
+
+        $roleId = DB::table('roles')
+            ->where('empresa_id', $empresa->id)
+            ->where('name', $perfil)
+            ->where('guard_name', 'web')
+            ->value('id');
+
+        DB::table('users')->where('id', $user->id)->update([
+            'role_id' => $roleId,
+            'email_verified_at' => now(),
+        ]);
+
+        return $user->fresh();
+    }
+
+    /**
+     * Quadro de professores da escola: 2 logins demo na escola
+     * sede + 22 docentes extras por unidade (3 por disciplina
+     * garante carga semanal realista sem conflito de horario).
+     *
+     * @return array<int, User>
+     */
+    private function professoresPool(Empresa $empresa, Escola $escola, array $usuarios, bool $incluirLogins): array
+    {
+        $pool = $incluirLogins
+            ? array_values(array_filter([$usuarios['prof1'] ?? null, $usuarios['prof2'] ?? null]))
+            : [];
+
+        for ($i = 1; $i <= 22; $i++) {
+            $pool[] = $this->criarUsuarioPerfil(
+                $empresa,
+                "prof.{$escola->slug}.{$i}@escolademo.test",
+                'Prof. '.fake()->firstName().' '.fake()->lastName(),
+                'professor'
+            );
+        }
+
+        return $pool;
+    }
+
+    /**
+     * Atribui professores as disciplinas das turmas do ano atual
+     * de forma equilibrada: cada disciplina tem 3 docentes e a
+     * turma vai para o menos carregado naquele turno — evita o
+     * mesmo professor em duas salas no mesmo horario quando a
+     * grade semanal e montada. Sincroniza atribuicoes e o
+     * responsavel pelos diarios/avaliacoes ja existentes.
+     */
+    private function sincronizarAtribuicoes(Empresa $empresa, Escola $escola, array $usuarios, bool $incluirLogins): void
+    {
+        $anoAtual = \App\Models\AnoLetivo::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('escola_id', $escola->id)
+            ->where('ano', self::ANO_ATUAL)
+            ->first();
+        if (! $anoAtual) {
+            return;
+        }
+
+        $pool = $this->professoresPool($empresa, $escola, $usuarios, $incluirLogins);
+        $disciplinas = Disciplina::query()->where('empresa_id', $empresa->id)->orderBy('id')->get();
+        if (count($pool) < 3 || $disciplinas->isEmpty()) {
+            return;
+        }
+
+        // Cada disciplina tem 3 docentes do pool; a turma vai ao
+        // menos carregado no seu turno (estimativa pela carga).
+        $profsDaDisciplina = $disciplinas->mapWithKeys(fn ($d, $i) => [$d->id => [
+            $pool[(3 * $i) % count($pool)],
+            $pool[(3 * $i + 1) % count($pool)],
+            $pool[(3 * $i + 2) % count($pool)],
+        ]]);
+
+        $turmas = Turma::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('escola_id', $escola->id)
+            ->where('ano_letivo_id', $anoAtual->id)
+            ->with('disciplinas')
+            ->orderBy('id')
+            ->get();
+
+        $carga = [];
+        $escolha = [];
+        foreach ($turmas as $turma) {
+            foreach ($turma->disciplinas as $disc) {
+                $candidatos = $profsDaDisciplina->get($disc->id) ?? $pool;
+                $escolhido = null;
+                $menor = PHP_INT_MAX;
+                foreach ($candidatos as $u) {
+                    $atual = $carga[$u->id][$turma->turno] ?? 0;
+                    if ($atual < $menor) {
+                        $menor = $atual;
+                        $escolhido = $u;
+                    }
+                }
+                $carga[$escolhido->id][$turma->turno] = $menor + min(4, max(1, (int) ($disc->pivot->carga_horaria_semanal ?? 3)));
+                $escolha[$turma->id.'|'.$disc->id] = $escolhido->id;
+            }
+        }
+
+        $atribuicoes = Atribuicao::query()
+            ->where('empresa_id', $empresa->id)
+            ->whereIn('turma_id', $turmas->pluck('id'))
+            ->get()
+            ->keyBy(fn ($a) => $a->turma_id.'|'.$a->disciplina_id);
+
+        foreach ($escolha as $chave => $userId) {
+            [$turmaId, $disciplinaId] = explode('|', $chave);
+            $atribuicao = $atribuicoes->get($chave);
+
+            if (! $atribuicao) {
+                Atribuicao::create([
+                    'empresa_id' => $empresa->id,
+                    'turma_id' => $turmaId,
+                    'disciplina_id' => $disciplinaId,
+                    'user_id' => $userId,
+                    'papel' => 'titular',
+                    'ativo' => 'S',
+                ]);
+            } elseif ($atribuicao->user_id != $userId) {
+                $atribuicao->user_id = $userId;
+                $atribuicao->save();
+            }
+
+            // Diarios e avaliacoes passam a pertencer ao titular,
+            // mantendo a visao "so o que ele leciona" consistente.
+            Diario::query()
+                ->where('turma_id', $turmaId)->where('disciplina_id', $disciplinaId)
+                ->update(['user_id' => $userId]);
+            Avaliacao::query()
+                ->where('turma_id', $turmaId)->where('disciplina_id', $disciplinaId)
+                ->update(['user_id' => $userId]);
+        }
     }
 
     /**
@@ -1748,5 +2146,85 @@ class DemoEscolarSeeder extends Seeder
 
         app(\App\Services\SolicitacaoMatriculaService::class)
             ->aprovar($solicitacao, ['turma_id' => $turma->id], $secretaria);
+    }
+
+    /**
+     * Feriados nacionais para cada ano letivo da rede (escola_id
+     * nulo = vale para todas as unidades). Inclui os pontos que as
+     * escolas observam de costume (Carnaval e Corpus Christi).
+     * Idempotente por (empresa, nome, data_inicio).
+     */
+    private function feriadosNacionais(Empresa $empresa): void
+    {
+        // Pascoa pelo algoritmo gregoriano (Meeus/Jones/Butcher).
+        $pascoa = function (int $ano): \Carbon\Carbon {
+            $a = $ano % 19;
+            $b = intdiv($ano, 100);
+            $c = $ano % 100;
+            $d = intdiv($b, 4);
+            $e = $b % 4;
+            $f = intdiv($b + 8, 25);
+            $g = intdiv($b - $f + 1, 3);
+            $h = (19 * $a + $b - $d - $g + 15) % 30;
+            $i = intdiv($c, 4);
+            $k = $c % 4;
+            $l = (32 + 2 * $e + 2 * $i - $h - $k) % 7;
+            $m = intdiv($a + 11 * $h + 22 * $l, 451);
+            $mes = intdiv($h + $l - 7 * $m + 114, 31);
+            $dia = (($h + $l - 7 * $m + 114) % 31) + 1;
+
+            return \Carbon\Carbon::create($ano, $mes, $dia);
+        };
+
+        $fixos = [
+            ['01-01', 'Confraternização Universal'],
+            ['04-21', 'Tiradentes'],
+            ['05-01', 'Dia do Trabalho'],
+            ['09-07', 'Independência do Brasil'],
+            ['10-12', 'Nossa Senhora Aparecida'],
+            ['11-02', 'Finados'],
+            ['11-15', 'Proclamação da República'],
+            ['11-20', 'Consciência Negra'],
+            ['12-25', 'Natal'],
+        ];
+
+        $anos = \App\Models\AnoLetivo::query()
+            ->where('empresa_id', $empresa->id)
+            ->distinct()
+            ->pluck('ano');
+
+        if ($anos->isEmpty()) {
+            $anos = collect([(int) date('Y')]);
+        }
+
+        foreach ($anos as $ano) {
+            $ano = (int) $ano;
+            $p = $pascoa($ano);
+
+            $lista = collect($fixos)->map(fn ($f) => [
+                'nome' => $f[1],
+                'inicio' => \Carbon\Carbon::createFromFormat('Y-m-d', "{$ano}-{$f[0]}"),
+                'fim' => null,
+            ])->push(
+                ['nome' => 'Carnaval', 'inicio' => $p->copy()->subDays(48), 'fim' => $p->copy()->subDays(47)],
+                ['nome' => 'Sexta-feira Santa', 'inicio' => $p->copy()->subDays(2), 'fim' => null],
+                ['nome' => 'Corpus Christi', 'inicio' => $p->copy()->addDays(60), 'fim' => null],
+            );
+
+            foreach ($lista as $f) {
+                \App\Models\Feriado::firstOrCreate(
+                    [
+                        'empresa_id' => $empresa->id,
+                        'nome' => $f['nome'],
+                        'data_inicio' => $f['inicio']->toDateString(),
+                    ],
+                    [
+                        'escola_id' => null,
+                        'data_fim' => $f['fim']?->toDateString(),
+                        'suspende_aulas' => 'S',
+                    ]
+                );
+            }
+        }
     }
 }

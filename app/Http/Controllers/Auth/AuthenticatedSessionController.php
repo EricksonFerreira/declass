@@ -52,6 +52,12 @@ class AuthenticatedSessionController extends Controller
 
     private function redirectPosLogin(?User $user): string
     {
+        // Conta de portal (aluno/responsavel) vai direto ao Portal
+        // Familiar quando ha alunos vinculados a ela.
+        if ($user?->isPortalAccount() && $user->temAlunosVinculados()) {
+            return route('portal.index');
+        }
+
         return route('home');
     }
 }

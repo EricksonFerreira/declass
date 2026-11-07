@@ -17,6 +17,15 @@
                     <dt class="col-sm-4">Nome</dt><dd class="col-sm-8">{{ $empresa->nome }}</dd>
                     <dt class="col-sm-4">Slug</dt><dd class="col-sm-8"><code>{{ $empresa->slug }}</code></dd>
                     <dt class="col-sm-4">Domínio</dt><dd class="col-sm-8">{{ $empresa->dominio ?? '—' }}</dd>
+                    <dt class="col-sm-4">Site público</dt>
+                    <dd class="col-sm-8">
+                        @if($empresa->sitePublicoAtivo())
+                            <span class="badge badge-success">No ar</span>
+                        @else
+                            <span class="badge badge-secondary">Desligado</span>
+                        @endif
+                        <a href="{{ $empresa->site_url }}" target="_blank" rel="noopener" class="ml-1"><code>{{ $empresa->site_url }}</code></a>
+                    </dd>
                     <dt class="col-sm-4">CNPJ</dt><dd class="col-sm-8">{{ $empresa->cnpj ?? '—' }}</dd>
                     <dt class="col-sm-4">E-mail</dt><dd class="col-sm-8">{{ $empresa->email ?? '—' }}</dd>
                     <dt class="col-sm-4">Telefone</dt><dd class="col-sm-8">{{ $empresa->telefone ?? '—' }}</dd>
@@ -34,6 +43,7 @@
             </div>
             <div class="card-footer">
                 <a href="{{ route('empresa.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
+                <a href="{{ $empresa->site_url }}" target="_blank" rel="noopener" class="btn btn-info btn-sm"><i class="fas fa-globe"></i> Abrir site</a>
                 <a href="{{ route('empresa.edit', $empresa->id) }}" class="btn btn-warning btn-sm">Editar</a>
             </div>
         </div>

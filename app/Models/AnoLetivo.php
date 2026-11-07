@@ -41,6 +41,22 @@ class AnoLetivo extends Model
         'planejamento' => 'Planejamento',
     ];
 
+    /** Classe de badge Bootstrap por status (letivo verde, encerrado vermelho, planejamento azul). */
+    public const STATUS_BADGES = [
+        'letivo' => 'success',
+        'encerrado' => 'danger',
+        'planejamento' => 'info',
+    ];
+
+    /** Classe de badge Bootstrap por periodicidade. */
+    public const PERIODICIDADE_BADGES = [
+        'bimestral' => 'primary',
+        'trimestral' => 'info',
+        'semestral' => 'warning',
+        'anual' => 'dark',
+        'personalizado' => 'secondary',
+    ];
+
     /**
      * Periodicidade: quantidade e nomes dos periodos letivos gerados
      * automaticamente. 'personalizado' nao gera — os periodos sao

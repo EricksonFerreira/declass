@@ -172,6 +172,62 @@ test('professor nao edita diario de outro professor', function () {
     ])->assertForbidden();
 });
 
+test('registrar aula vindo da chamada abre a chamada ao salvar', function () {
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+    $ids = setupDiario($empresa);
+
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
+        'papel' => 'titular',
+    ]);
+
+    $this->actingAs($professor)->post(route('diario.store'), payloadDiario($ids) + ['ir_para_chamada' => '1'])
+        ->assertRedirect(route('diario.frequencia', Diario::latest('id')->first()->id));
+});
+
+test('professor nao gerencia diario de outro professor na mesma turma', function () {
+    $empresa = tenant();
+    usuarioTenant($empresa, 'administrador');
+    $profA = usuarioTenant($empresa, 'professor');
+    $profB = usuarioTenant($empresa, 'professor');
+    $regente = usuarioTenant($empresa, 'professor');
+    $ids = setupDiario($empresa);
+
+    $outra = Disciplina::create(['nome' => 'História', 'sigla' => 'HIS', 'empresa_id' => $empresa->id]);
+    DB::table('turma_disciplina')->insert([
+        'turma_id' => $ids['turma']->id, 'disciplina_id' => $outra->id,
+        'carga_horaria_semanal' => 3, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    // profA e profB lecionam disciplinas diferentes na mesma turma.
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $ids['disciplina']->id, 'user_id' => $profA->id, 'papel' => 'titular',
+    ]);
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $outra->id, 'user_id' => $profB->id, 'papel' => 'titular',
+    ]);
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => null, 'user_id' => $regente->id, 'papel' => 'titular',
+    ]);
+
+    $diario = Diario::create(payloadDiario($ids, [
+        'user_id' => $profA->id, 'empresa_id' => $empresa->id,
+    ]));
+
+    // profB: mesma turma, mas diario alheio -> bloqueado.
+    $this->actingAs($profB)->get(route('diario.edit', $diario->id))->assertForbidden();
+    $this->actingAs($profB)->get(route('diario.frequencia', $diario->id))->assertForbidden();
+
+    // regente da turma: liberado.
+    $this->actingAs($regente)->get(route('diario.edit', $diario->id))->assertOk();
+    $this->actingAs($regente)->get(route('diario.frequencia', $diario->id))->assertOk();
+});
+
 test('professor ve diarios das turmas que leciona', function () {
     $empresa = tenant();
     $admin = usuarioTenant($empresa, 'administrador');
@@ -195,15 +251,42 @@ test('professor ve diarios das turmas que leciona', function () {
 
     expect(Diario::count())->toBe(2);
 
-    // professor ve os diarios da turma que leciona (o seu e o do admin)
+    // professor ve apenas o proprio diario, nao o do admin na mesma turma
     $response = $this->actingAs($professor)->get(route('diario.index'));
     $response->assertOk();
     $diariosVisiveis = $response->viewData('diarios');
-    expect($diariosVisiveis->total())->toBe(2);
+    expect($diariosVisiveis->total())->toBe(1);
+    expect($diariosVisiveis->getCollection()->first()->conteudo)->toBe('Aula do professor');
 
     // admin ve ambos
     $responseAdmin = $this->actingAs($admin)->get(route('diario.index'));
     expect($responseAdmin->viewData('diarios')->total())->toBe(2);
+});
+
+test('professor regente ve todos os diarios das turmas que rege', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $regente = usuarioTenant($empresa, 'professor');
+    $ids = setupDiario($empresa);
+
+    // atribuicao sem disciplina = regente da turma
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => null, 'user_id' => $regente->id,
+        'papel' => 'titular',
+    ]);
+
+    // diario do admin e do regente na mesma turma
+    $this->actingAs($admin)->post(route('diario.store'), payloadDiario($ids));
+    $this->actingAs($regente)->post(route('diario.store'), payloadDiario($ids, [
+        'data' => '2026-03-11', 'conteudo' => 'Aula do regente',
+    ]));
+
+    expect(Diario::count())->toBe(2);
+
+    // regente ve os dois diarios da turma
+    $response = $this->actingAs($regente)->get(route('diario.index'));
+    expect($response->viewData('diarios')->total())->toBe(2);
 });
 
 test('professor nao registra aula em turma que nao leciona', function () {
@@ -218,6 +301,103 @@ test('professor nao registra aula em turma que nao leciona', function () {
 
     $response = $this->actingAs($professor)->get(route('diario.index'));
     expect($response->viewData('diarios')->total())->toBe(0);
+});
+
+test('professor ve apenas suas turmas, disciplinas e o proprio nome nos filtros', function () {
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+    $outroProfessor = usuarioTenant($empresa, 'professor', ['nome' => 'Professor Outro']);
+    $ids = setupDiario($empresa);
+
+    // Segunda turma + disciplina sem atribuicao para o professor.
+    $turma2 = Turma::create([
+        'escola_id' => $ids['escola']->id, 'ano_letivo_id' => $ids['anoLetivo']->id,
+        'etapa_id' => $ids['etapa']->id, 'nome' => '2º Ano B', 'turno' => 'vespertino',
+        'empresa_id' => $empresa->id,
+    ]);
+    $disciplina2 = Disciplina::create(['nome' => 'Geografia', 'empresa_id' => $empresa->id]);
+
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
+        'papel' => 'titular',
+    ]);
+
+    $response = $this->actingAs($professor)->get(route('diario.index'));
+    $response->assertOk();
+
+    $filters = collect($response->viewData('filters'));
+    $additional = collect($response->viewData('additionalFilters'));
+
+    $turmaOptions = $filters->firstWhere('name', 'turma_id')['options'];
+    $disciplinaOptions = $filters->firstWhere('name', 'disciplina_id')['options'];
+    $profOptions = $additional->firstWhere('name', 'user_id')['options'];
+
+    expect($turmaOptions)->toHaveCount(1)->toHaveKey($ids['turma']->id)
+        ->and($turmaOptions)->not->toHaveKey($turma2->id)
+        ->and($disciplinaOptions)->toHaveCount(1)->toHaveKey($ids['disciplina']->id)
+        ->and($disciplinaOptions)->not->toHaveKey($disciplina2->id)
+        ->and($profOptions)->toBe([$professor->id => $professor->nome])
+        ->and($profOptions)->not->toHaveKey($outroProfessor->id);
+});
+
+test('professor regente ve todas as disciplinas ofertadas na turma', function () {
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+    $ids = setupDiario($empresa);
+
+    // Segunda disciplina ofertada na mesma turma.
+    $disciplina2 = Disciplina::create(['nome' => 'Português', 'empresa_id' => $empresa->id]);
+    DB::table('turma_disciplina')->insert([
+        'turma_id' => $ids['turma']->id, 'disciplina_id' => $disciplina2->id,
+        'carga_horaria_semanal' => 5, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    // Disciplina sem oferta em nenhuma turma do professor.
+    $disciplina3 = Disciplina::create(['nome' => 'Artes', 'empresa_id' => $empresa->id]);
+
+    // Atribuicao sem disciplina = regente da turma.
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'user_id' => $professor->id, 'papel' => 'titular',
+    ]);
+
+    $response = $this->actingAs($professor)->get(route('diario.index'));
+    $disciplinaOptions = collect($response->viewData('filters'))
+        ->firstWhere('name', 'disciplina_id')['options'];
+
+    expect($disciplinaOptions)->toHaveKey($ids['disciplina']->id)
+        ->and($disciplinaOptions)->toHaveKey($disciplina2->id)
+        ->and($disciplinaOptions)->not->toHaveKey($disciplina3->id);
+
+    // Regente pode registrar aula em qualquer disciplina ofertada.
+    $this->actingAs($professor)->post(route('diario.store'), payloadDiario($ids, [
+        'disciplina_id' => $disciplina2->id,
+    ]))->assertSessionHasNoErrors();
+});
+
+test('professor nao registra aula em disciplina que nao leciona', function () {
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+    $ids = setupDiario($empresa);
+
+    $disciplina2 = Disciplina::create(['nome' => 'Português', 'empresa_id' => $empresa->id]);
+    DB::table('turma_disciplina')->insert([
+        'turma_id' => $ids['turma']->id, 'disciplina_id' => $disciplina2->id,
+        'carga_horaria_semanal' => 5, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    // Atribuicao somente para Matematica — Portugues ofertada mas nao atribuida.
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
+        'papel' => 'titular',
+    ]);
+
+    $this->actingAs($professor)->post(route('diario.store'), payloadDiario($ids, [
+        'disciplina_id' => $disciplina2->id,
+    ]))->assertSessionHasErrors('disciplina_id');
+
+    expect(Diario::count())->toBe(0);
 });
 
 test('diarios tem escopo de tenant', function () {
@@ -254,4 +434,145 @@ test('chamada e upsert: segunda gravacao atualiza status', function () {
     expect(Frequencia::count())->toBe(1)
         ->and(Frequencia::first()->status)->toBe('justificada')
         ->and(Frequencia::first()->justificativa)->toBe('Atestado');
+});
+
+test('professor nao grava justificativa livre na chamada', function () {
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+    $ids = setupDiario($empresa);
+
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
+        'papel' => 'titular',
+    ]);
+
+    $this->actingAs($professor)->post(route('diario.store'), payloadDiario($ids));
+    $diario = Diario::first();
+
+    // tentativa forjada de enviar justificativa
+    $this->actingAs($professor)->put(route('diario.frequencia.salvar', $diario->id), [
+        'frequencias' => [
+            ['matricula_id' => $ids['matricula']->id, 'status' => 'falta', 'justificativa' => 'Texto forjado'],
+        ],
+    ])->assertSessionHasNoErrors();
+
+    expect(Frequencia::first()->status)->toBe('falta')
+        ->and(Frequencia::first()->justificativa)->toBeNull();
+});
+
+test('professor nao forja status justificada ou abonada na chamada', function () {
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+    $ids = setupDiario($empresa);
+
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
+        'papel' => 'titular',
+    ]);
+
+    $this->actingAs($professor)->post(route('diario.store'), payloadDiario($ids));
+    $diario = Diario::first();
+
+    $this->actingAs($professor)->put(route('diario.frequencia.salvar', $diario->id), [
+        'frequencias' => [
+            ['matricula_id' => $ids['matricula']->id, 'status' => 'justificada'],
+        ],
+    ])->assertSessionHasNoErrors();
+
+    // sem registro previo justificado, vira falta comum
+    expect(Frequencia::first()->status)->toBe('falta');
+});
+
+test('professor preserva falta justificada existente ao salvar chamada', function () {
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+    $admin = usuarioTenant($empresa, 'administrador');
+    $ids = setupDiario($empresa);
+
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
+        'papel' => 'titular',
+    ]);
+
+    $this->actingAs($admin)->post(route('diario.store'), payloadDiario($ids));
+    $diario = Diario::first();
+
+    // secretaria ja registrou a justificativa (status justificada)
+    Frequencia::create([
+        'empresa_id' => $empresa->id, 'escola_id' => $ids['escola']->id,
+        'diario_id' => $diario->id, 'matricula_id' => $ids['matricula']->id,
+        'status' => 'justificada', 'justificativa' => 'Atestado médico',
+    ]);
+
+    // professor salva a chamada sem tocar na linha (checkbox vermelho = falta visual,
+    // mas o status real preservado e justificada)
+    $this->actingAs($professor)->put(route('diario.frequencia.salvar', $diario->id), [
+        'frequencias' => [
+            ['matricula_id' => $ids['matricula']->id, 'status' => 'justificada'],
+        ],
+    ])->assertSessionHasNoErrors();
+
+    expect(Frequencia::count())->toBe(1)
+        ->and(Frequencia::first()->status)->toBe('justificada')
+        ->and(Frequencia::first()->justificativa)->toBe('Atestado médico');
+});
+
+test('registrar aula trava turma do contexto e lista so as disciplinas dela', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $ids = setupDiario($empresa);
+
+    // segunda disciplina ofertada na mesma turma + uma fora dela
+    $artes = Disciplina::create(['nome' => 'Artes', 'empresa_id' => $empresa->id]);
+    DB::table('turma_disciplina')->insert([
+        'turma_id' => $ids['turma']->id, 'disciplina_id' => $artes->id,
+        'carga_horaria_semanal' => 2, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    Disciplina::create(['nome' => 'Fora da Turma', 'empresa_id' => $empresa->id]);
+
+    // sem contexto: select de disciplina comeca vazio (depende da turma)
+    $this->actingAs($admin)->get(route('diario.create'))
+        ->assertOk()
+        ->assertViewHas('turmaFixa', null)
+        ->assertViewHas('disciplinas', fn ($d) => $d === []);
+
+    // com turma_id: turma travada e disciplinas = so as ofertadas nela
+    $response = $this->actingAs($admin)->get(route('diario.create', [
+        'turma_id' => $ids['turma']->id, 'disciplina_id' => $ids['disciplina']->id,
+        'data' => '2026-03-10', 'chamada' => '1',
+    ]));
+    $response->assertOk()
+        ->assertViewHas('turmaFixa', fn ($t) => $t && $t->id === $ids['turma']->id)
+        ->assertViewHas('disciplinas', fn ($d) => count($d) === 2
+            && isset($d[$ids['disciplina']->id], $d[$artes->id]));
+});
+
+test('endpoint de disciplinas por turma respeita perfil e acesso', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $professor = usuarioTenant($empresa, 'professor');
+    $ids = setupDiario($empresa);
+
+    // admin recebe todas as ofertadas na turma
+    $this->actingAs($admin)->getJson(route('diario.disciplinas', ['turma_id' => $ids['turma']->id]))
+        ->assertOk()
+        ->assertJsonFragment(['Matemática'])
+        ->assertJsonCount(1);
+
+    // professor sem atribuicao nao acessa a turma
+    $this->actingAs($professor)->getJson(route('diario.disciplinas', ['turma_id' => $ids['turma']->id]))
+        ->assertForbidden();
+
+    // com atribuicao na disciplina, recebe so ela
+    Atribuicao::create([
+        'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
+        'papel' => 'titular',
+    ]);
+    $this->actingAs($professor)->getJson(route('diario.disciplinas', ['turma_id' => $ids['turma']->id]))
+        ->assertOk()
+        ->assertJsonCount(1);
 });
