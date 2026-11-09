@@ -528,9 +528,9 @@
                 <div class="shot-caption"><i class="fas fa-user-graduate"></i> Cadastro de alunos</div>
             </div>
             <div class="shot-browser">
-                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">portal/notas</span></div>
-                <img src="{{ asset('img/mockups/desktop-portal-notas.png') }}" alt="Boletim no portal da família" loading="lazy">
-                <div class="shot-caption"><i class="fas fa-file-alt"></i> Boletim no portal da família</div>
+                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">admin/avaliacao</span></div>
+                <img src="{{ asset('img/mockups/desktop-secretaria-avaliacao.png') }}" alt="Avaliações e lançamento de notas" loading="lazy">
+                <div class="shot-caption"><i class="fas fa-clipboard-check"></i> Avaliações e lançamento de notas</div>
             </div>
         </div>
     </div>

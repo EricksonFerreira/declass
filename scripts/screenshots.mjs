@@ -30,6 +30,7 @@ await login(page, 'secretaria@escolademo.test');
 await shot(page, '/admin/home', 'desktop-secretaria-home', 1400);
 await shot(page, '/admin/turma', 'desktop-secretaria-turmas');
 await shot(page, '/admin/aluno', 'desktop-secretaria-alunos');
+await shot(page, '/admin/avaliacao', 'desktop-secretaria-avaliacao', 1200);
 await desk.close();
 
 // ---- SECRETARIA (mobile) ----
@@ -45,14 +46,14 @@ const desk2 = await browser.newContext({ viewport: { width: 1440, height: 900 },
 page = await desk2.newPage();
 await login(page, 'responsavel.demo@escolademo.test');
 await shot(page, '/portal', 'desktop-portal-home', 1400);
-await shot(page, '/portal/notas', 'desktop-portal-notas', 1200);
+await shot(page, '/portal/horarios', 'desktop-portal-horarios', 1200);
 await desk2.close();
 
 const mob2 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, deviceScaleFactor: 2 });
 page = await mob2.newPage();
 await login(page, 'responsavel.demo@escolademo.test');
 await shot(page, '/portal', 'mobile-portal-home', 1400);
-await shot(page, '/portal/frequencia', 'mobile-portal-frequencia', 1200);
+await shot(page, '/portal/avisos', 'mobile-portal-avisos', 1200);
 await mob2.close();
 
 await browser.close();
