@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>DECLASS — Gestão Escolar Completa para Escolas e Redes de Ensino</title>
+    <title>DECLASS - Gestão Escolar Completa para Escolas e Redes de Ensino</title>
     <meta name="description" content="O Declass reúne matrículas, diário de classe, avaliações, boletim, financeiro, biblioteca, transporte e portal da família em uma única plataforma SaaS multi-tenant.">
     <link rel="icon" type="image/png" href="{{ asset('assets/imgs/logo-sem-texto.png') }}">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet">
@@ -251,7 +251,7 @@
         <div>
             <span class="eyebrow" style="background:rgba(245,158,11,.15);color:#fbbf24"><i class="fas fa-graduation-cap"></i> Plataforma SaaS para escolas</span>
             <h1>Gestão completa da sua escola em <span class="hl">um só lugar</span></h1>
-            <p class="sub">O Declass reúne matrículas, diário de classe, avaliações, boletim, financeiro, biblioteca, transporte e portal da família — do primeiro contato à emissão de certificados.</p>
+            <p class="sub">O Declass reúne matrículas, diário de classe, avaliações, boletim, financeiro, biblioteca, transporte e portal da família - do primeiro contato à emissão de certificados.</p>
             <div class="hero-ctas">
                 <a href="{{ route('cadastro.empresa.create') }}" class="btn btn-amber btn-lg">Começar agora <i class="fas fa-arrow-right"></i></a>
                 <a href="#modulos" class="btn btn-ghost-light btn-lg">Ver módulos</a>
@@ -292,9 +292,9 @@
                         </div>
                         <div class="dash-table">
                             <div><span>Últimas mensalidades</span><span>Status</span></div>
-                            <div><span>Maria Silva — 5º Ano A</span><span style="color:#059669;font-weight:700">Paga</span></div>
-                            <div><span>João Souza — 3º Ano B</span><span style="color:#d97706;font-weight:700">Pendente</span></div>
-                            <div><span>Ana Lima — 1º Ano C</span><span style="color:#059669;font-weight:700">Paga</span></div>
+                            <div><span>Maria Silva - 5º Ano A</span><span style="color:#059669;font-weight:700">Paga</span></div>
+                            <div><span>João Souza - 3º Ano B</span><span style="color:#d97706;font-weight:700">Pendente</span></div>
+                            <div><span>Ana Lima - 1º Ano C</span><span style="color:#059669;font-weight:700">Paga</span></div>
                         </div>
                     </div>
                 </div>
@@ -501,18 +501,18 @@
         <div class="center">
             <div class="eyebrow"><i class="fas fa-desktop"></i> Telas reais do sistema</div>
             <h2>O sistema <span class="hl">por dentro</span>, no PC e no celular</h2>
-            <p class="lead">Capturas reais do Declass em produção — a secretaria no controle da rotina e a família acompanhando tudo pelo portal, em qualquer dispositivo.</p>
+            <p class="lead">Capturas reais do Declass em produção - a secretaria no controle da rotina e a família acompanhando tudo pelo portal, em qualquer dispositivo.</p>
         </div>
 
         <div class="shots-grid">
             <div class="shot-browser">
                 <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
                 <img src="{{ asset('img/mockups/desktop-secretaria-home.png') }}" alt="Painel da secretaria no computador" loading="lazy">
-                <div class="shot-caption"><i class="fas fa-desktop"></i> Painel da secretaria — fila de atendimento, resumo da escola e ações rápidas</div>
+                <div class="shot-caption"><i class="fas fa-desktop"></i> Painel da secretaria - fila de atendimento, resumo da escola e ações rápidas</div>
             </div>
             <div class="shot-phone">
                 <img src="{{ asset('img/mockups/mobile-portal-home.png') }}" alt="Portal da família no celular" loading="lazy">
-                <div class="shot-caption"><i class="fas fa-mobile-alt"></i> Portal da família — notas, frequência e avisos no bolso</div>
+                <div class="shot-caption"><i class="fas fa-mobile-alt"></i> Portal da família - notas, frequência e avisos no bolso</div>
             </div>
         </div>
 
@@ -540,7 +540,7 @@
     <div class="wrap center">
         <span class="eyebrow" style="background:rgba(245,158,11,.15);color:#fbbf24"><i class="fas fa-tag"></i> Planos</span>
         <h2>Escolha pelo que sua escola precisa</h2>
-        <p class="lead">Todos os planos incluem suporte e atualizações. A cobrança é por unidade e porte de alunos — fale com a gente para a tabela da sua realidade.</p>
+        <p class="lead">Todos os planos incluem suporte e atualizações. A cobrança é por unidade e porte de alunos - fale com a gente para a tabela da sua realidade.</p>
         <div class="plan-grid">
             <div class="plan">
                 <h3>Essencial</h3>
@@ -601,7 +601,7 @@
         </details>
         <details>
             <summary>Meus dados ficam seguros e isolados?</summary>
-            <div class="ans">Sim. Todo registro é vinculado à empresa (tenant) e as consultas são sempre filtradas por ela. O controle de acesso é granular — cada perfil só vê e faz o que lhe é permitido, e as ações sensíveis ficam registradas em auditoria.</div>
+            <div class="ans">Sim. Todo registro é vinculado à empresa (tenant) e as consultas são sempre filtradas por ela. O controle de acesso é granular - cada perfil só vê e faz o que lhe é permitido, e as ações sensíveis ficam registradas em auditoria.</div>
         </details>
         <details>
             <summary>Como funciona a cobrança?</summary>
@@ -609,7 +609,7 @@
         </details>
         <details>
             <summary>Posso começar a usar agora?</summary>
-            <div class="ans">Sim. O cadastro cria a estrutura da sua escola em minutos — você já pode cadastrar unidades, usuários e alunos. Para redes maiores, oferecemos implantação assistida.</div>
+            <div class="ans">Sim. O cadastro cria a estrutura da sua escola em minutos - você já pode cadastrar unidades, usuários e alunos. Para redes maiores, oferecemos implantação assistida.</div>
         </details>
     </div>
 </section>
