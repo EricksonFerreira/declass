@@ -144,9 +144,9 @@ class DatabaseSeeder extends Seeder
             return $dest;
         };
 
-        $galeria = collect(['foto_escolar_02.png', 'foto_escolar_03.png', 'foto_escolar_04.png',
-            'foto_escolar_05.png', 'foto_escolar_06.png', 'foto_escolar_07.png',
-            'foto_escolar_08.png', 'foto_escolar_09.png', 'foto_escolar_10.png'])
+        $galeria = collect(['foto_escolar_02.jpg', 'foto_escolar_03.jpg', 'foto_escolar_04.jpg',
+            'foto_escolar_05.jpg', 'foto_escolar_06.jpg', 'foto_escolar_07.jpg',
+            'foto_escolar_08.jpg', 'foto_escolar_09.jpg', 'foto_escolar_10.jpg'])
             ->map(fn ($f) => $copiar($f))->all();
 
         $empresa->update([
@@ -158,8 +158,8 @@ class DatabaseSeeder extends Seeder
             'site_unidades' => 'S',
             'site_matricula' => 'S',
             'site_contato' => 'S',
-            'site_banner' => $copiar('banner_escolar_01.png'),
-            'site_imagem_sobre' => $copiar('foto_escolar_01.png'),
+            'site_banner' => $copiar('banner_escolar_01.jpg'),
+            'site_imagem_sobre' => $copiar('foto_escolar_01.jpg'),
             'site_galeria' => $galeria,
             'site_whatsapp' => '(11) 99999-0000',
             'site_instagram' => '@escolavilanova',
