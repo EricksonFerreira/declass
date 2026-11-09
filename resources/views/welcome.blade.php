@@ -88,6 +88,19 @@
         .dash-table div{display:flex;justify-content:space-between;padding:.42rem .7rem;font-size:.68rem;color:#475569;border-top:1px solid #f1f5f9}
         .dash-table div:first-child{border-top:0;font-weight:700;color:#94a3b8;text-transform:uppercase;font-size:.58rem}
 
+        /* carrossel de telas reais */
+        .car{position:relative;overflow:hidden;aspect-ratio:16/10;background:#0d1830}
+        .car-slide{position:absolute;inset:0;opacity:0;transform:scale(1.04);transition:opacity .6s ease,transform .6s ease}
+        .car-slide.on{opacity:1;transform:scale(1);z-index:1}
+        .car-slide img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+        .car-cap{position:absolute;left:0;right:0;bottom:0;padding:.55rem .9rem;font-size:.72rem;color:#e2e8f0;background:linear-gradient(0deg,rgba(2,6,23,.85),transparent);z-index:2}
+        .car-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(13,24,48,.75);color:#e2e8f0;font-size:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+        .car-arrow:hover{background:var(--accent);border-color:var(--accent);color:#0f172a}
+        .car-prev{left:.6rem}.car-next{right:.6rem}
+        .car-dots{position:absolute;bottom:.55rem;right:.9rem;z-index:3;display:flex;gap:.35rem}
+        .car-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;transition:background .2s,transform .2s}
+        .car-dot.on{background:var(--accent);transform:scale(1.25)}
+
         /* screenshots reais */
         .shots{background:#0b1530;color:#fff}
         .shots .lead{color:#b6c2dd}
@@ -269,34 +282,22 @@
                     <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
                     
                 </div>
-                <div class="dash">
-                    <div class="dash-side">
-                        <i class="fas fa-home on"></i><i class="fas fa-id-card"></i><i class="fas fa-book"></i>
-                        <i class="fas fa-hand-holding-usd"></i><i class="fas fa-bus"></i><i class="fas fa-boxes"></i>
-                    </div>
-                    <div class="dash-main">
-                        <div class="dash-cards">
-                            <div class="dcard"><div class="t">Alunos ativos</div><div class="v">1.248</div><div class="d up">▲ 4,2%</div></div>
-                            <div class="dcard"><div class="t">Inadimplência</div><div class="v">3,1%</div><div class="d down">▼ 0,8%</div></div>
-                            <div class="dcard"><div class="t">Frequência hoje</div><div class="v">96,4%</div><div class="d up">▲ 1,1%</div></div>
+                <div class="car" id="heroCar">
+                    @foreach([
+                        ['desktop-secretaria-home.png', 'Painel da secretaria - fila de atendimento e resumo da escola'],
+                        ['desktop-secretaria-turmas.png', 'Gestão de turmas e alunos'],
+                        ['desktop-secretaria-avaliacao.png', 'Avaliações e lançamento de notas'],
+                        ['desktop-secretaria-alunos.png', 'Cadastro e ficha completa do aluno'],
+                        ['desktop-portal-home.png', 'Portal da família - notas, frequência e avisos'],
+                    ] as $idx => [$img, $cap])
+                        <div class="car-slide {{ $idx === 0 ? 'on' : '' }}">
+                            <img src="{{ asset('img/mockups/'.$img) }}" alt="{{ $cap }}" loading="{{ $idx === 0 ? 'eager' : 'lazy' }}">
+                            <div class="car-cap">{{ $cap }}</div>
                         </div>
-                        <div class="dash-chart">
-                            <div class="bcol" style="height:38%"></div>
-                            <div class="bcol alt" style="height:55%"></div>
-                            <div class="bcol" style="height:46%"></div>
-                            <div class="bcol" style="height:70%"></div>
-                            <div class="bcol alt" style="height:62%"></div>
-                            <div class="bcol" style="height:82%"></div>
-                            <div class="bcol" style="height:74%"></div>
-                            <div class="bcol alt" style="height:92%"></div>
-                        </div>
-                        <div class="dash-table">
-                            <div><span>Últimas mensalidades</span><span>Status</span></div>
-                            <div><span>Maria Silva - 5º Ano A</span><span style="color:#059669;font-weight:700">Paga</span></div>
-                            <div><span>João Souza - 3º Ano B</span><span style="color:#d97706;font-weight:700">Pendente</span></div>
-                            <div><span>Ana Lima - 1º Ano C</span><span style="color:#059669;font-weight:700">Paga</span></div>
-                        </div>
-                    </div>
+                    @endforeach
+                    <button type="button" class="car-arrow car-prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+                    <button type="button" class="car-arrow car-next" aria-label="Próximo"><i class="fas fa-chevron-right"></i></button>
+                    <div class="car-dots"></div>
                 </div>
             </div>
         </div>
@@ -666,5 +667,37 @@
     </div>
 </footer>
 
+<script>
+(function () {
+    var car = document.getElementById('heroCar');
+    if (!car) return;
+    var slides = car.querySelectorAll('.car-slide');
+    var dotsWrap = car.querySelector('.car-dots');
+    var i = 0, timer;
+
+    slides.forEach(function (_, n) {
+        var d = document.createElement('span');
+        d.className = 'car-dot' + (n === 0 ? ' on' : '');
+        d.addEventListener('click', function () { go(n); reset(); });
+        dotsWrap.appendChild(d);
+    });
+    var dots = dotsWrap.querySelectorAll('.car-dot');
+
+    function go(n) {
+        slides[i].classList.remove('on');
+        dots[i].classList.remove('on');
+        i = (n + slides.length) % slides.length;
+        slides[i].classList.add('on');
+        dots[i].classList.add('on');
+    }
+    function reset() { clearInterval(timer); timer = setInterval(function () { go(i + 1); }, 4000); }
+
+    car.querySelector('.car-prev').addEventListener('click', function () { go(i - 1); reset(); });
+    car.querySelector('.car-next').addEventListener('click', function () { go(i + 1); reset(); });
+    car.addEventListener('mouseenter', function () { clearInterval(timer); });
+    car.addEventListener('mouseleave', reset);
+    reset();
+})();
+</script>
 </body>
 </html>
