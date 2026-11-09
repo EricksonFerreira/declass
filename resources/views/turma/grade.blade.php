@@ -207,6 +207,7 @@
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body p-0">
+                <div class="table-responsive">
                 <table class="table mb-0 gd-disc-table">
                     <thead>
                         <tr>
@@ -245,6 +246,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
             </div>
             @if($turma->disciplinas->isEmpty())
                 <div class="modal-footer">

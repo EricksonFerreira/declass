@@ -21,3 +21,5 @@ yarn-error.log
 /storage/framework/views/
 scratch/
 declass-deploy.tar.gz
+.build-tmp/
+declass-deploy.tar.gz

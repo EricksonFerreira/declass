@@ -159,3 +159,17 @@
     border-color: #5c656e !important;
     color: #e4e9ee;
 }
+
+/* Mobile: nav-tabs viram trilha rolavel horizontal em vez de empilhar.
+   Cobre todas as telas com abas (aluno, turma, evento, portal etc). */
+@media (max-width: 767.98px) {
+    .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+    .nav-tabs .nav-item { flex-shrink: 0; }
+    .nav-tabs .nav-link { white-space: nowrap; }
+}

@@ -16,28 +16,33 @@
 @endif
 
 @php($din = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.'))
+@push('css')
+<style>
+    @media (max-width: 575.98px) { .mens-stat-val { font-size: 1.05rem !important; } }
+</style>
+@endpush
 <div class="row">
     <div class="col-md-3 col-6 mb-2">
         <div class="card mb-0 border"><div class="card-body py-2 px-3 text-center">
-            <div class="h4 mb-0 text-success">{{ $din($resumo['recebido']) }}</div>
+            <div class="h4 mens-stat-val mb-0 text-success">{{ $din($resumo['recebido']) }}</div>
             <small class="text-muted">Recebido</small>
         </div></div>
     </div>
     <div class="col-md-3 col-6 mb-2">
         <div class="card mb-0 border"><div class="card-body py-2 px-3 text-center">
-            <div class="h4 mb-0 text-info">{{ $din($resumo['a_receber']) }}</div>
+            <div class="h4 mens-stat-val mb-0 text-info">{{ $din($resumo['a_receber']) }}</div>
             <small class="text-muted">A receber</small>
         </div></div>
     </div>
     <div class="col-md-3 col-6 mb-2">
         <div class="card mb-0 border"><div class="card-body py-2 px-3 text-center">
-            <div class="h4 mb-0 text-danger">{{ $din($resumo['vencido']) }}</div>
+            <div class="h4 mens-stat-val mb-0 text-danger">{{ $din($resumo['vencido']) }}</div>
             <small class="text-muted">Vencido (R$)</small>
         </div></div>
     </div>
     <div class="col-md-3 col-6 mb-2">
         <div class="card mb-0 border"><div class="card-body py-2 px-3 text-center">
-            <div class="h4 mb-0 text-danger">{{ $totalInadimplente }}</div>
+            <div class="h4 mens-stat-val mb-0 text-danger">{{ $totalInadimplente }}</div>
             <small class="text-muted">Cobranças vencidas</small>
         </div></div>
     </div>

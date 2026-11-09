@@ -212,7 +212,7 @@ class DemoEscolarSeeder extends Seeder
     private function escolas(Empresa $empresa): array
     {
         $defs = [
-            'unidade-central' => ['nome' => 'Unidade Central', 'cidade' => 'São Paulo', 'capacidade' => 1200, 'cor_primaria' => '#1e3a8a', 'cor_secundaria' => '#f59e0b'],
+            'unidade-central' => ['nome' => 'Escola Vila Nova', 'cidade' => 'São Paulo', 'capacidade' => 1200, 'cor_primaria' => '#1e3a8a', 'cor_secundaria' => '#f59e0b'],
             'unidade-norte' => ['nome' => 'Unidade Norte', 'cidade' => 'São Paulo', 'capacidade' => 900, 'cor_primaria' => '#166534', 'cor_secundaria' => '#84cc16'],
             'unidade-sul' => ['nome' => 'Campus Sul', 'cidade' => 'São Paulo', 'capacidade' => 800, 'cor_primaria' => '#7c2d12', 'cor_secundaria' => '#fb923c'],
         ];
