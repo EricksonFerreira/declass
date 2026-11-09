@@ -267,7 +267,7 @@
             <div class="browser">
                 <div class="browser-bar">
                     <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                    <span class="url">app.declass — painel da escola</span>
+                    
                 </div>
                 <div class="dash">
                     <div class="dash-side">
@@ -506,7 +506,7 @@
 
         <div class="shots-grid">
             <div class="shot-browser">
-                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">declass.test/admin</span></div>
+                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
                 <img src="{{ asset('img/mockups/desktop-secretaria-home.png') }}" alt="Painel da secretaria no computador" loading="lazy">
                 <div class="shot-caption"><i class="fas fa-desktop"></i> Painel da secretaria — fila de atendimento, resumo da escola e ações rápidas</div>
             </div>
@@ -518,17 +518,17 @@
 
         <div class="shots-row">
             <div class="shot-browser">
-                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">admin/turma</span></div>
+                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
                 <img src="{{ asset('img/mockups/desktop-secretaria-turmas.png') }}" alt="Gestão de turmas" loading="lazy">
                 <div class="shot-caption"><i class="fas fa-users"></i> Gestão de turmas</div>
             </div>
             <div class="shot-browser">
-                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">admin/aluno</span></div>
+                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
                 <img src="{{ asset('img/mockups/desktop-secretaria-alunos.png') }}" alt="Gestão de alunos" loading="lazy">
                 <div class="shot-caption"><i class="fas fa-user-graduate"></i> Cadastro de alunos</div>
             </div>
             <div class="shot-browser">
-                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">admin/avaliacao</span></div>
+                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
                 <img src="{{ asset('img/mockups/desktop-secretaria-avaliacao.png') }}" alt="Avaliações e lançamento de notas" loading="lazy">
                 <div class="shot-caption"><i class="fas fa-clipboard-check"></i> Avaliações e lançamento de notas</div>
             </div>
