@@ -72,7 +72,7 @@
                                         <i class="fas fa-chevron-{{ $showTurno ? 'down' : 'right' }} ml-auto text-muted"></i>
                                     </div>
                                     <div id="grp-t{{ $grupo['id'] }}-{{ $anoGrupo['id'] }}-{{ $turnoGrupo['turno'] }}" class="collapse {{ $showTurno ? 'show' : '' }}">
-                                        <table class="table table-sm table-hover mb-0">
+                                        <div class="table-responsive"><table class="table table-sm table-hover mb-0">
                                             <tbody>
                                                 @foreach($turnoGrupo['turmas'] as $turma)
                                                     <tr>
@@ -114,7 +114,7 @@
                                                     </tr>
                                                 @endforeach
                                             </tbody>
-                                        </table>
+                                        </table></div>
                                     </div>
                                 @endforeach
                             </div>

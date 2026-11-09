@@ -69,3 +69,11 @@ php artisan tinker
 - Cron obrigatorio (ja configurado): `* * * * * php .../public_html/artisan schedule:run`.
 - Se precisar rodar comandos manualmente em producao: `/admin/comandos` (whitelist: migrate, optimize, storage:link, seeders etc.).
 - Banco: MySQL `u694151234_declock` em `localhost` (host interno; `srv792.hstgr.io` e so para acesso externo).
+
+## Notas operacionais (sessao UX/permissoes)
+
+- **Permissoes**: `PerfisEscolaresSeeder` NAO re-sincroniza roles ja existentes — apos editar padroes de um perfil, aplicar direto em `role_has_permissions` (roles sao por empresa — ha um role por perfil por tenant). Permissoes diretas por usuario: concessao em `model_has_permissions`, negacao em `user_permission_denies` (superadmin gerencia em `usuario.show`).
+- **Views padrao de listagem**: `partials/ux-index-styles` + `partials/ux-view-toggle` (cards/tabela com localStorage `*_index_view`) + `partials/entity-picker` (modal de busca para entidades grandes).
+- **Checkboxes**: `icheck-bootstrap` global via `config/adminlte.php` + `public/js/app-custom.js` (auto-aplica `icheck-primary` em `.form-check` com label).
+- **Compilar blades**: `php artisan view:cache && php artisan view:clear` (dev) para validar sintaxe.
+- **Mobile**: grid `repeat(7,1fr)` de calendarios vira marcador colorido em <=576px; tabelas sempre em `table-responsive`; `col-6` bare e o padrao para stats 2-por-linha no celular.

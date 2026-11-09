@@ -167,12 +167,18 @@
                 <strong>{{ number_format($realizacao, 1, ',', '.') }}%</strong>
             </div>
         </div>
-        <div style="height:320px">
+        <div class="chart-wrap" style="height:320px">
             <canvas id="chartReceita"></canvas>
         </div>
     </div>
 </div>
 @stop
+
+@push('css')
+<style>
+    @media (max-width: 575.98px) { .chart-wrap { height: 220px !important; } }
+</style>
+@endpush
 
 @section('js')
 <script>

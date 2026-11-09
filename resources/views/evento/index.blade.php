@@ -464,6 +464,12 @@
     @media (max-width: 575.98px) {
         .cal-cell { min-height: 62px; }
         .cal-evt { font-size: 10px; }
+        /* Em telas pequenas os eventos viram marcadores coloridos;
+           tocar no dia abre os detalhes. */
+        .cal-evt, .dia-evt { padding: 2px 4px; min-height: 8px; border-radius: 4px; margin-bottom: 2px; }
+        .cal-evt span, .cal-evt i, .dia-evt span, .dia-evt i { display: none; }
+        .cal-head { font-size: .68rem; }
+        .cal-mais { font-size: 9px; }
     }
 </style>
 @endpush

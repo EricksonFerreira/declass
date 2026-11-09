@@ -27,7 +27,7 @@
             </div>
         </div>
         <div class="card-body p-0">
-            <table class="table table-sm table-striped mb-0">
+            <div class="table-responsive"><table class="table table-sm table-striped mb-0">
                 <thead>
                     <tr>
                         <th>Competência</th>
@@ -65,7 +65,7 @@
                         <tr><td colspan="7" class="text-center text-muted">Nenhuma mensalidade registrada.</td></tr>
                     @endforelse
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 @endforeach

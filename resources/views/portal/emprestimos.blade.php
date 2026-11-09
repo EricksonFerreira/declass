@@ -18,7 +18,7 @@
             <span class="badge badge-secondary ml-1">{{ $lista->count() }} registro(s)</span>
         </div>
         <div class="card-body p-0">
-            <table class="table table-sm mb-0">
+            <div class="table-responsive"><table class="table table-sm mb-0">
                 <thead class="thead-light">
                     <tr>
                         <th>Livro</th>
@@ -51,7 +51,7 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 @empty

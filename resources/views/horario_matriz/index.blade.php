@@ -19,7 +19,7 @@
             @endcan
         </div>
         <div class="card-body p-0">
-            <table class="table table-sm table-hover mb-0">
+            <div class="table-responsive"><table class="table table-sm table-hover mb-0">
                 <thead class="thead-light">
                     <tr>
                         <th>Horário</th>
@@ -63,7 +63,7 @@
                         <tr><td colspan="6" class="text-muted text-center py-3">Nenhum horário cadastrado nesta escola.</td></tr>
                     @endforelse
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 @endforeach

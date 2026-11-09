@@ -64,7 +64,7 @@
                 </div>
                 <div id="{{ $collapseId }}" class="collapse">
                     <div class="card-body p-0">
-                        <table class="table table-sm table-striped mb-0">
+                        <div class="table-responsive"><table class="table table-sm table-striped mb-0">
                             <thead>
                                 <tr>
                                     <th>Avaliação</th>
@@ -88,7 +88,7 @@
                                     <tr><td colspan="4" class="text-center text-muted">Sem avaliações registradas.</td></tr>
                                 @endforelse
                             </tbody>
-                        </table>
+                        </table></div>
                     </div>
                 </div>
             </div>

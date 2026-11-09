@@ -14,7 +14,7 @@
             <strong>{{ \Illuminate\Support\Carbon::parse($data)->locale('pt_BR')->translatedFormat('l, d \d\e F \d\e Y') }}</strong>
         </div>
         <div class="card-body p-0">
-            <table class="table table-sm mb-0">
+            <div class="table-responsive"><table class="table table-sm mb-0">
                 <tbody>
                     @foreach($refeicoes as $cardapio)
                         <tr>
@@ -34,7 +34,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 @empty

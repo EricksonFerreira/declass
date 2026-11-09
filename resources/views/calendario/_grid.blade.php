@@ -19,7 +19,7 @@
     <div class="card card-outline card-primary">
         <div class="card-header py-2"><span class="font-weight-bold">{{ $mes['rotulo'] }}</span></div>
         <div class="card-body p-1">
-            <table class="table table-bordered table-sm mb-0 calendario-grid">
+            <div class="table-responsive"><table class="table table-bordered table-sm mb-0 calendario-grid">
                 <thead><tr>
                     @foreach($diasSemana as $ds)
                         <th class="text-center small">{{ $ds }}</th>
@@ -78,7 +78,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 @endforeach

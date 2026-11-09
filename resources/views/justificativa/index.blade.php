@@ -39,7 +39,7 @@
     </div>
 
     <div class="card-body p-0" id="jf-lista">
-        <table class="table table-sm table-hover mb-0">
+        <div class="table-responsive"><table class="table table-sm table-hover mb-0">
             <thead class="thead-light">
                 <tr>
                     <th>Período</th>
@@ -89,7 +89,7 @@
                     <tr><td colspan="8" class="text-center text-muted py-4">Nenhuma justificativa registrada.</td></tr>
                 @endforelse
             </tbody>
-        </table>
+        </table></div>
     </div>
 
     <div class="card-body" id="jf-cards" style="display:none;">

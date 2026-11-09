@@ -147,7 +147,7 @@
         <div class="card">
             <div class="card-header font-weight-bold">{{ $isProfessor ? 'Disciplinas que você leciona' : 'Disciplinas ofertadas' }} ({{ $disciplinasVisiveis->count() }})</div>
             <div class="card-body p-0">
-                <table class="table table-sm mb-0">
+                <div class="table-responsive"><table class="table table-sm mb-0">
                     <thead class="thead-light">
                         <tr>
                             <th>Disciplina</th>
@@ -193,7 +193,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </table></div>
             </div>
             @can('turma.disciplina.store')
                 @unless($isProfessor)
@@ -230,7 +230,7 @@
         <div class="card">
             <div class="card-header font-weight-bold">Professores atribuídos ({{ $turma->atribuicoes->count() }})</div>
             <div class="card-body p-0">
-                <table class="table table-sm mb-0">
+                <div class="table-responsive"><table class="table table-sm mb-0">
                     <thead class="thead-light">
                         <tr>
                             <th>Professor</th>
@@ -268,7 +268,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </table></div>
             </div>
             @can('turma.atribuicao.store')
             <div class="card-footer">
@@ -359,7 +359,7 @@
     <div class="card">
         <div class="card-header font-weight-bold">Diário e avaliações ({{ $registros->count() }})</div>
         <div class="card-body p-0">
-            <table class="table table-sm mb-0">
+            <div class="table-responsive"><table class="table table-sm mb-0">
                 <thead class="thead-light">
                     <tr>
                         <th style="width:115px">Registro</th>
@@ -412,7 +412,7 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
+            </table></div>
         </div>
         @can('avaliacao.create')
             <div class="card-footer">
@@ -452,7 +452,7 @@
                 @endif
             </div>
             <div class="card-body p-0">
-                <table class="table table-sm mb-0">
+                <div class="table-responsive"><table class="table table-sm mb-0">
                     <thead class="thead-light">
                         <tr>
                             <th>Nº</th>
@@ -504,7 +504,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </table></div>
             </div>
             @can('matricula.create')
                 <div class="card-footer">

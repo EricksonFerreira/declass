@@ -54,7 +54,7 @@
                     </span>
                 </div>
                 <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
+                    <div class="table-responsive"><table class="table table-sm mb-0">
                         <thead class="thead-light">
                             <tr>
                                 <th>Avaliação</th>
@@ -78,7 +78,7 @@
                                 <tr><td colspan="4" class="text-center text-muted py-3">Nenhuma avaliação registrada.</td></tr>
                             @endforelse
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             </div>
         @endforeach
@@ -98,7 +98,7 @@
                 </span>
             </div>
             <div class="card-body p-0">
-                <table class="table table-sm mb-0">
+                <div class="table-responsive"><table class="table table-sm mb-0">
                     <thead class="thead-light">
                         <tr>
                             <th>Data</th>
@@ -124,7 +124,7 @@
                             <tr><td colspan="5" class="text-center text-muted py-3">Nenhuma ocorrência registrada no período.</td></tr>
                         @endforelse
                     </tbody>
-                </table>
+                </table></div>
             </div>
         </div>
     </div>

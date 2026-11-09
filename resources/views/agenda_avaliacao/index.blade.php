@@ -33,6 +33,10 @@
     @media (max-width: 575.98px) {
         .cal-cell { min-height: 62px; }
         .cal-evt { font-size: 10px; }
+        /* Em telas pequenas as avaliacoes viram marcadores coloridos. */
+        .cal-evt { padding: 2px 4px; min-height: 8px; border-radius: 4px; margin-bottom: 2px; }
+        .cal-evt span, .cal-evt i { display: none; }
+        .cal-mais { font-size: 9px; }
     }
 </style>
 @endpush
