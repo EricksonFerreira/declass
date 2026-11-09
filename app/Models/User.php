@@ -6,6 +6,7 @@ use App\Notifications\ResetPasswordCustom;
 use App\Notifications\VerifyEmailCustom;
 use App\Services\PermissaoRotaService;
 use App\Support\EspelhamentoContext;
+use App\Support\SchemaCache;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -97,6 +98,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         if (! empty($this->foto_perfil) && Storage::disk('public')->exists($this->foto_perfil)) {
             return Storage::url($this->foto_perfil);
+        }
+
+        // Conta de portal sem foto propria: usa a foto cadastral da
+        // pessoa vinculada (aluno ou responsavel) quando existir.
+        if ($url = $this->vinculoPessoa()?->foto_url) {
+            return $url;
         }
 
         $background = $this->normalizeHexColor($this->avatarBackgroundColor()) ?: 'FFFFFF';
@@ -258,6 +265,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->aluno?->nome ?? $this->responsavel?->nome;
     }
 
+    /** Pessoa do aluno/responsavel vinculado a conta, quando houver. */
+    private function vinculoPessoa(): ?Pessoa
+    {
+        return $this->aluno?->pessoa ?? $this->responsavel?->pessoa;
+    }
+
     /**
      * Conta de portal: o perfil e de aluno/responsavel e a home
      * operacional nao se aplica — o destino pos-login e o Portal.
@@ -267,6 +280,15 @@ class User extends Authenticatable implements MustVerifyEmail
         $roleName = strtolower(trim((string) ($this->regra?->name ?? '')));
 
         return in_array($roleName, self::ROLES_PORTAL, true);
+    }
+
+    /**
+     * Conta com perfil restrito (aluno, responsavel ou professor):
+     * no Meu Perfil so pode alterar a propria foto.
+     */
+    public function perfilApenasFoto(): bool
+    {
+        return $this->isPortalAccount() || $this->isProfessor();
     }
 
     /**
@@ -296,13 +318,53 @@ class User extends Authenticatable implements MustVerifyEmail
      * Retorna null quando o usuario nao tem vinculos — nesse caso
      * ele pode alternar entre todas as escolas do tenant.
      *
+     * Professor e excecao: so alterna entre as unidades onde leciona
+     * (atribuicao ativa em turma); os vinculos em user_escolas, quando
+     * existem, seguem valendo como restricao adicional.
+     *
      * @return array<int, int>|null
      */
+    /** @var false|array<int, int>|null */
+    private $escolasContextoIdsResolvido = false;
+
     public function escolasContextoIds(): ?array
     {
-        $ids = $this->escolas()->pluck('escolas.id')->map(fn ($id) => (int) $id)->all();
+        // Memoizado por instancia: o escopo global 'escola' chama este
+        // metodo em toda consulta da tabela escolas.
+        if ($this->escolasContextoIdsResolvido !== false) {
+            return $this->escolasContextoIdsResolvido;
+        }
 
-        return $ids === [] ? null : $ids;
+        // Espelhamento: as escolas avaliadas sao as do usuario espelhado.
+        $efetivo = ($this->isSuperAdmin() ? $this->alvoEspelhado() : null) ?? $this;
+
+        // DB::table em vez do relacionamento: o escopo global 'escola'
+        // agora tambem limita a tabela escolas pelas unidades permitidas
+        // — consulta-lo aqui causaria recursao.
+        $vinculadas = DB::table('user_escolas')
+            ->where('user_id', $efetivo->id)
+            ->pluck('escola_id')
+            ->map(fn ($id) => (int) $id);
+
+        $permitidas = null;
+        if ($efetivo->isProfessor() && SchemaCache::hasTable('atribuicoes')) {
+            // Sem o escopo global de escola: o filtro da sessao nao pode
+            // esconder as demais unidades onde o professor leciona.
+            $leciona = Atribuicao::query()
+                ->withoutGlobalScope('escola')
+                ->where('user_id', $efetivo->id)
+                ->where('ativo', 'S')
+                ->whereNotNull('escola_id')
+                ->pluck('escola_id')
+                ->map(fn ($id) => (int) $id)
+                ->unique();
+
+            $permitidas = ($vinculadas->isEmpty() ? $leciona : $leciona->intersect($vinculadas))->values()->all();
+        } elseif ($vinculadas->isNotEmpty()) {
+            $permitidas = $vinculadas->all();
+        }
+
+        return $this->escolasContextoIdsResolvido = $permitidas;
     }
 
     /**
@@ -319,6 +381,18 @@ class User extends Authenticatable implements MustVerifyEmail
         $role = strtolower(trim((string) ($this->regra?->name ?? '')));
 
         return in_array($role, ['professor', 'professor_substituto'], true);
+    }
+
+    public function isSecretaria(): bool
+    {
+        // Espelhamento: o superadmin ve o papel do usuario espelhado.
+        if ($this->isSuperAdmin() && ($alvo = $this->alvoEspelhado())) {
+            return $alvo->isSecretaria();
+        }
+
+        $role = strtolower(trim((string) ($this->regra?->name ?? '')));
+
+        return in_array($role, ['secretario', 'auxiliar_secretaria'], true);
     }
 
     public function isAdministrador(): bool
@@ -376,6 +450,27 @@ class User extends Authenticatable implements MustVerifyEmail
 
         // Rotas liberadas para qualquer autenticado nao dependem de perfil.
         if (app(PermissaoRotaService::class)->rotaSempreLiberada($permissao)) {
+            return true;
+        }
+
+        // Negacao direta do superadmin tem prioridade sobre o perfil.
+        $negada = DB::table('user_permission_denies')
+            ->join('permissions', 'user_permission_denies.permission_id', '=', 'permissions.id')
+            ->where('user_permission_denies.user_id', $this->id)
+            ->where('permissions.name', $permissao)
+            ->exists();
+        if ($negada) {
+            return false;
+        }
+
+        // Concessao direta (permissoes individuais além do perfil).
+        $concedida = DB::table('model_has_permissions')
+            ->join('permissions', 'model_has_permissions.permission_id', '=', 'permissions.id')
+            ->where('model_has_permissions.model_id', $this->id)
+            ->where('model_has_permissions.model_type', self::class)
+            ->where('permissions.name', $permissao)
+            ->exists();
+        if ($concedida) {
             return true;
         }
 

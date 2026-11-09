@@ -9,6 +9,7 @@ use App\Services\SetupChecklistService;
 use App\Services\TurmaGradeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -22,6 +23,9 @@ class HomeController extends Controller
         $user = $request->user();
         if ($user->isProfessor()) {
             return $this->homeProfessor($user);
+        }
+        if ($user->isSecretaria()) {
+            return $this->homeSecretaria($user);
         }
 
         return view('home', [
@@ -62,6 +66,22 @@ class HomeController extends Controller
             ->whereBetween('data', [$hojeData, today()->addDays(7)->toDateString()])
             ->count();
 
+        // Entregas enviadas pelos alunos aguardando correcao, por turma
+        $correcoesPorTurma = \App\Models\EntregaTarefa::query()
+            ->join('tarefas', 'entregas_tarefa.tarefa_id', '=', 'tarefas.id')
+            ->where('entregas_tarefa.status', 'entregue')
+            ->where('tarefas.ativo', 'S')
+            ->whereNull('tarefas.deleted_at')
+            ->whereIn('tarefas.turma_id', $grade['turmas']->pluck('id'))
+            ->groupBy('tarefas.turma_id')
+            ->pluck(DB::raw('count(*)'), 'tarefas.turma_id');
+
+        $turmasComCorrecao = $grade['turmas']
+            ->filter(fn ($t) => ($correcoesPorTurma[$t->id] ?? 0) > 0)
+            ->map(fn ($t) => ['turma' => $t, 'pendentes' => (int) $correcoesPorTurma[$t->id]])
+            ->sortByDesc('pendentes')
+            ->values();
+
         return view('home_professor', [
             'titulo' => 'Início',
             'breadcrumb' => [['name' => 'Home', 'active' => true]],
@@ -69,7 +89,54 @@ class HomeController extends Controller
             'totalTurmas' => $grade['turmas']->count(),
             'chamadasHoje' => $chamadasHoje,
             'avaliacoesSemana' => $avaliacoesSemana,
+            'turmasComCorrecao' => $turmasComCorrecao,
+            'totalCorrecoes' => $turmasComCorrecao->sum('pendentes'),
             'dataHoje' => $hojeData,
+        ]);
+    }
+
+    /**
+     * Painel da secretaria: fila de atendimento (solicitacoes, documentos,
+     * atestados), resumo da escola e atalhos das acoes do dia a dia.
+     */
+    private function homeSecretaria(User $user): View
+    {
+        $eid = $user->empresa_id;
+        $hoje = today()->toDateString();
+        $anoAtual = \App\Models\AnoLetivo::query()
+            ->where('empresa_id', $eid)->where('status', 'letivo')->latest('ano')->value('id');
+
+        $documentos = \App\Models\DocumentoSolicitacao::query()
+            ->where('empresa_id', $eid)->selectRaw('status, count(*) as qtd')
+            ->groupBy('status')->pluck('qtd', 'status');
+
+        return view('home_secretaria', [
+            'titulo' => 'Início',
+            'breadcrumb' => [['name' => 'Home', 'active' => true]],
+            'solicitacoesAbertas' => \App\Models\Solicitacao::where('empresa_id', $eid)
+                ->whereIn('status', ['aberta', 'em_analise'])->count(),
+            'docEnviados' => (int) ($documentos['enviado'] ?? 0),
+            'docPendentes' => (int) ($documentos['pendente'] ?? 0) + (int) ($documentos['devolvido'] ?? 0),
+            'atestadosEmVigor' => \App\Models\Justificativa::where('empresa_id', $eid)
+                ->whereDate('data_inicio', '<=', $hoje)->whereDate('data_fim', '>=', $hoje)->count(),
+            'ocorrenciasSemana' => \App\Models\Ocorrencia::where('empresa_id', $eid)
+                ->whereDate('created_at', '>=', today()->subDays(7))->count(),
+            'pesquisasAbertas' => \App\Models\Pesquisa::where('empresa_id', $eid)
+                ->where('status', 'aberta')->whereDate('data_inicio', '<=', $hoje)
+                ->whereDate('data_fim', '>=', $hoje)->count(),
+            'alunosAtivos' => \App\Models\Aluno::where('empresa_id', $eid)->where('ativo', 'S')->count(),
+            'matriculasAtivas' => \App\Models\Matricula::where('empresa_id', $eid)
+                ->where('status', 'ativa')
+                ->when($anoAtual, fn ($q) => $q->where('ano_letivo_id', $anoAtual))->count(),
+            'turmasAno' => \App\Models\Turma::where('empresa_id', $eid)
+                ->when($anoAtual, fn ($q) => $q->where('ano_letivo_id', $anoAtual))->count(),
+            'avisosAtivos' => \App\Models\Aviso::where('empresa_id', $eid)
+                ->where('ativo', 'S')->where('destino', 'familias')
+                ->whereDate('data_publicacao', '<=', $hoje)->count(),
+            'eventosHoje' => \App\Models\Evento::where('empresa_id', $eid)
+                ->whereDate('data_inicio', '<=', $hoje)
+                ->where(fn ($q) => $q->whereNull('data_fim')->orWhereDate('data_fim', '>=', $hoje))
+                ->count(),
         ]);
     }
 

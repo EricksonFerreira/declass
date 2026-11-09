@@ -109,7 +109,12 @@ class SaudeAlunoController extends BaseController implements FiltroInterface
     {
         $this->saudeService->salvar($aluno->id, $request->validated());
 
-        return redirect()->route('saude.show', $aluno->id)
+        // Form vindo da aba Saude da ficha do aluno volta para la
+        $destino = $request->input('voltar') === 'aluno'
+            ? route('aluno.show', $aluno->id).'#as-saude'
+            : route('saude.show', $aluno->id);
+
+        return redirect()->to($destino)
             ->with('success', 'Ficha de saúde salva com sucesso.');
     }
 
@@ -147,12 +152,6 @@ class SaudeAlunoController extends BaseController implements FiltroInterface
                 'name' => 'nome', 'label' => 'Nome do aluno', 'type' => 'text',
                 'typeWhere' => 'like',
             ],
-        ];
-    }
-
-    public function obterFiltrosSecundarios()
-    {
-        return [
             [
                 'name' => 'escola_id', 'label' => 'Escola', 'type' => 'select',
                 'typeWhere' => 'where',
@@ -161,5 +160,10 @@ class SaudeAlunoController extends BaseController implements FiltroInterface
                     ->all(),
             ],
         ];
+    }
+
+    public function obterFiltrosSecundarios()
+    {
+        return [];
     }
 }

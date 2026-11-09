@@ -18,7 +18,7 @@ function setupCertificado($empresa, string $statusMatricula = 'concluida'): arra
         'escola_id' => $escola->id, 'ano' => 2025, 'empresa_id' => $empresa->id,
     ]);
     $etapa = Etapa::create([
-        'nome' => '9º Ano EF', 'segmento' => 'fundamental', 'empresa_id' => $empresa->id,
+        'nome' => '9º Ano EF', 'segmento' => 'fundamental', 'emite_certificado' => true, 'empresa_id' => $empresa->id,
     ]);
     $turma = Turma::create([
         'escola_id' => $escola->id, 'ano_letivo_id' => $anoLetivo->id,

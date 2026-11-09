@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Aluno;
 use App\Models\AlunoDocumento;
+use App\Support\UploadStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -68,9 +69,10 @@ class AlunoDocumentoService extends AbstractBaseService
         return (bool) $documento->delete();
     }
 
-    private function guardarArquivo(Aluno $aluno, UploadedFile $arquivo): string
+    private function guardarArquivo(Aluno $aluno, UploadedFile $arquivo): ?string
     {
-        return $arquivo->storeAs(
+        return UploadStorage::putFile(
+            $arquivo,
             "aluno_documentos/{$aluno->empresa_id}/{$aluno->id}",
             uniqid('doc-').'.'.$arquivo->getClientOriginalExtension()
         );

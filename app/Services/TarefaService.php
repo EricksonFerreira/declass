@@ -35,10 +35,12 @@ class TarefaService extends AbstractBaseService
     public function create(array $data)
     {
         $gerarEntregas = (bool) ($data['gerar_entregas'] ?? false);
-        unset($data['gerar_entregas']);
+        $questoes = $data['questoes'] ?? [];
+        unset($data['gerar_entregas'], $data['questoes']);
 
-        return DB::transaction(function () use ($data, $gerarEntregas) {
+        return DB::transaction(function () use ($data, $gerarEntregas, $questoes) {
             $tarefa = parent::create($data);
+            $this->sincronizarQuestoes($tarefa, $questoes);
 
             if ($gerarEntregas) {
                 $this->gerarEntregas($tarefa);
@@ -46,6 +48,49 @@ class TarefaService extends AbstractBaseService
 
             return $tarefa;
         });
+    }
+
+    public function update($id, array $data)
+    {
+        $temQuestoes = array_key_exists('questoes', $data);
+        $questoes = $data['questoes'] ?? [];
+        unset($data['questoes']);
+
+        return DB::transaction(function () use ($id, $data, $temQuestoes, $questoes) {
+            $tarefa = parent::update($id, $data);
+
+            if ($temQuestoes) {
+                $this->sincronizarQuestoes($tarefa, $questoes);
+            }
+
+            return $tarefa;
+        });
+    }
+
+    /**
+     * Questoes da atividade/prova respondidas online: objetivas
+     * (A-E com gabarito) ou discursivas. Substitui o conjunto
+     * atual — alunos ainda nao enviaram respostas na edicao.
+     */
+    private function sincronizarQuestoes(Tarefa $tarefa, array $questoes): void
+    {
+        $tarefa->questoes()->delete();
+
+        foreach (array_values($questoes) as $i => $questao) {
+            $alternativas = collect($questao['alternativas'] ?? [])
+                ->filter(fn ($texto) => trim((string) $texto) !== '')
+                ->all();
+
+            $tarefa->questoes()->create([
+                'empresa_id' => $tarefa->empresa_id,
+                'ordem' => $i + 1,
+                'tipo' => $questao['tipo'],
+                'enunciado' => $questao['enunciado'],
+                'alternativas' => $questao['tipo'] === 'objetiva' ? $alternativas : null,
+                'gabarito' => $questao['tipo'] === 'objetiva' ? ($questao['gabarito'] ?? null) : null,
+                'valor' => $questao['valor'] ?? null,
+            ]);
+        }
     }
 
     /**

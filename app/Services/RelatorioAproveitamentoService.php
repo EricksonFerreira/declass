@@ -45,6 +45,11 @@ class RelatorioAproveitamentoService
                     ->where('turmas.etapa_id', $filtros['etapa_id'])
             ))
             ->when(! empty($filtros['turma_id']), fn ($q) => $q->where('matriculas.turma_id', $filtros['turma_id']))
+            ->when(! empty($filtros['turno']), fn ($q) => $q->whereExists(
+                fn ($e) => $e->selectRaw(1)->from('turmas')
+                    ->whereColumn('turmas.id', 'matriculas.turma_id')
+                    ->where('turmas.turno', $filtros['turno'])
+            ))
             ->groupBy('matriculas.turma_id', 'notas.matricula_id')
             ->selectRaw('matriculas.turma_id, notas.matricula_id, AVG(notas.nota) as media')
             ->get();
@@ -62,6 +67,7 @@ class RelatorioAproveitamentoService
             ->when(! empty($filtros['ano_letivo_id']), fn ($q) => $q->where('matriculas.ano_letivo_id', $filtros['ano_letivo_id']))
             ->when(! empty($filtros['etapa_id']), fn ($q) => $q->where('turmas.etapa_id', $filtros['etapa_id']))
             ->when(! empty($filtros['turma_id']), fn ($q) => $q->where('matriculas.turma_id', $filtros['turma_id']))
+            ->when(! empty($filtros['turno']), fn ($q) => $q->where('turmas.turno', $filtros['turno']))
             ->groupBy('matriculas.turma_id', 'turmas.nome', 'turmas.ano_letivo_id', 'turmas.etapa_id', 'turmas.escola_id', 'escolas.nome', 'etapas.nome', 'anos_letivos.ano')
             ->selectRaw('matriculas.turma_id, turmas.nome as turma_nome, escolas.nome as escola_nome, etapas.nome as etapa_nome, anos_letivos.ano as ano_letivo, COUNT(matriculas.id) as alunos')
             ->orderBy('escolas.nome')

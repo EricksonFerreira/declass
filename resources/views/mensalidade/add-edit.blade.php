@@ -10,7 +10,7 @@
 @section('content')
 <div class="card">
     <div class="card-body">
-        <form method="POST" action="{{ isset($mensalidade) ? route('mensalidade.update', $mensalidade->id) : route('mensalidade.store') }}">
+        <form method="POST" enctype="multipart/form-data" action="{{ isset($mensalidade) ? route('mensalidade.update', $mensalidade->id) : route('mensalidade.store') }}">
             @csrf
             @if(isset($mensalidade))
                 @method('PUT')
@@ -54,7 +54,23 @@
             </div>
 
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-6">
+                    <label class="form-label">Boleto (PDF)</label>
+                    <input type="file" name="boleto" accept="application/pdf" class="form-control-file">
+                    <small class="text-muted">Disponibiliza o boleto para download no portal da família.</small>
+                    @error('boleto')<small class="text-danger d-block">{{ $message }}</small>@enderror
+                    @if(isset($mensalidade) && $mensalidade->boleto_path)
+                        <div class="mt-1">
+                            <a href="{{ route('mensalidade.boleto', $mensalidade->id) }}" target="_blank">
+                                <i class="fa fa-file-pdf"></i> {{ $mensalidade->boleto_nome ?? 'Ver boleto atual' }}
+                            </a>
+                            <label class="ml-2 mb-0 font-weight-normal">
+                                <input type="checkbox" name="remover_boleto" value="1"> remover
+                            </label>
+                        </div>
+                    @endif
+                </div>
+                <div class="col-md-6">
                     <label class="form-label">Observações</label>
                     <textarea name="observacoes" rows="2" class="form-control">{{ old('observacoes', $mensalidade->observacoes ?? '') }}</textarea>
                 </div>

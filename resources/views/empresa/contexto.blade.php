@@ -25,7 +25,7 @@
 
             <div class="col-12">
                 <button type="submit" class="btn btn-primary btn-xs col-12">
-                    Alterar tenant
+                    Alterar empresa
                 </button>
             </div>
         </x-form>

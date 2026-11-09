@@ -46,8 +46,11 @@ class TransporteAlunoController extends BaseController implements FiltroInterfac
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 15);
 
+        $nome = $itensFiltered['nome']['valor'] ?? null;
+
         $passageiros = $this->transporteService->getAllWithFiltersAndPagination(
-            $itensFiltered, $perPage, ['aluno.pessoa', 'rota.escola', 'rota.veiculo', 'parada'], 'id', 'desc'
+            $itensFiltered, $perPage, ['aluno.pessoa', 'rota.escola', 'rota.veiculo', 'parada'], 'id', 'desc',
+            fn ($q) => $q->when($nome, fn ($w) => $w->whereHas('aluno.pessoa', fn ($p) => $p->where('nome', 'like', '%'.$nome.'%')))
         );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Passageiros do Transporte', 'Transporte');
@@ -138,6 +141,7 @@ class TransporteAlunoController extends BaseController implements FiltroInterfac
     public function obterFiltrosPrincipais()
     {
         return [
+            ['name' => 'nome', 'label' => 'Aluno', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'ativo', 'label' => 'Situação', 'type' => 'select', 'typeWhere' => 'where',
                 'options' => ['S' => 'Ativo', 'N' => 'Inativo']],
         ];

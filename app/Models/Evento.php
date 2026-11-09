@@ -106,6 +106,20 @@ class Evento extends Model
         return $this->data_fim ?? $this->data_inicio;
     }
 
+    /**
+     * Agenda publica do site: eventos abertos a familias, nao
+     * cancelados e ainda por acontecer, na ordem da agenda.
+     */
+    public function scopePublicosSite($query)
+    {
+        return $query
+            ->where('publico', 'todos')
+            ->where('status', '!=', 'cancelado')
+            ->whereRaw('COALESCE(data_fim, data_inicio) >= ?', [now()->toDateString()])
+            ->orderBy('data_inicio')
+            ->orderBy('hora_inicio');
+    }
+
     /** Eventos visiveis no portal: publico "todos", nao cancelados,
      *  que comecaram ate hoje ou terminam no futuro. */
     public function visivelNoPortal(): bool

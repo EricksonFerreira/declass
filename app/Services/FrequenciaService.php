@@ -91,14 +91,14 @@ class FrequenciaService extends AbstractBaseService
     /**
      * Relatorio consolidado de faltas: uma linha por matricula ativa
      * com contagens de presenca/falta/justificativa, ordenado pelos
-     * piores índices de frequencia. Filtros: escola_id, ano_letivo_id,
-     * turma_id e apenas_risco (frequencia < 75%).
+     * piores índices de frequencia. Filtros de sessao: nome (aluno),
+     * escola_id, ano_letivo_id, turma_id e apenas_risco (<75%).
      */
     public function consolidadoFaltas(array $filtros = [], int $perPage = 25)
     {
         $query = $this->queryConsolidado($filtros);
 
-        return $query->paginate($perPage)->withQueryString();
+        return $query->paginate($perPage);
     }
 
     /** Totais do relatorio (independentes da paginacao). */
@@ -122,6 +122,55 @@ class FrequenciaService extends AbstractBaseService
             'com_frequencia' => (int) ($base->com_frequencia ?? 0),
             'media_pct' => $base->media_pct !== null ? round((float) $base->media_pct, 1) : null,
             'em_risco' => (int) ($base->em_risco ?? 0),
+        ];
+    }
+
+    /**
+     * Dados dos graficos do relatorio (mesmo escopo dos filtros):
+     * distribuicao dos alunos por faixa de frequencia e turmas
+     * com mais alunos em risco (<75%).
+     */
+    public function graficosFaltas(array $filtros = []): array
+    {
+        $pct = '(COALESCE(f.total, 0) - COALESCE(f.falta, 0)) * 100.0 / f.total';
+
+        $faixas = $this->queryConsolidado($filtros)
+            ->reorder()
+            ->select(DB::raw("
+                SUM(CASE WHEN COALESCE(f.total, 0) > 0 AND {$pct} >= 90 THEN 1 ELSE 0 END) as regular,
+                SUM(CASE WHEN COALESCE(f.total, 0) > 0 AND {$pct} >= 75 AND {$pct} < 90 THEN 1 ELSE 0 END) as atencao,
+                SUM(CASE WHEN COALESCE(f.total, 0) > 0 AND {$pct} >= 50 AND {$pct} < 75 THEN 1 ELSE 0 END) as alerta,
+                SUM(CASE WHEN COALESCE(f.total, 0) > 0 AND {$pct} < 50 THEN 1 ELSE 0 END) as critico,
+                SUM(CASE WHEN COALESCE(f.total, 0) = 0 THEN 1 ELSE 0 END) as sem_aulas
+            "))
+            ->first();
+
+        $porTurma = $this->queryConsolidado($filtros)
+            ->reorder()
+            ->select('turmas.nome as turma')
+            ->selectRaw("
+                SUM(CASE WHEN COALESCE(f.total, 0) > 0 AND {$pct} < 75 THEN 1 ELSE 0 END) as em_risco,
+                AVG(CASE WHEN COALESCE(f.total, 0) > 0 THEN {$pct} END) as media_pct
+            ")
+            ->groupBy('turmas.id', 'turmas.nome')
+            ->orderByDesc('em_risco')
+            ->orderBy('media_pct')
+            ->limit(8)
+            ->get();
+
+        return [
+            'faixas' => [
+                'regular' => (int) ($faixas->regular ?? 0),
+                'atencao' => (int) ($faixas->atencao ?? 0),
+                'alerta' => (int) ($faixas->alerta ?? 0),
+                'critico' => (int) ($faixas->critico ?? 0),
+                'sem_aulas' => (int) ($faixas->sem_aulas ?? 0),
+            ],
+            'por_turma' => $porTurma->map(fn ($t) => [
+                'turma' => $t->turma,
+                'em_risco' => (int) $t->em_risco,
+                'media_pct' => $t->media_pct !== null ? round((float) $t->media_pct, 1) : null,
+            ])->all(),
         ];
     }
 
@@ -168,16 +217,24 @@ class FrequenciaService extends AbstractBaseService
             $query->where('matriculas.empresa_id', $empresaId);
         }
 
-        if (! empty($filtros['escola_id'])) {
-            $query->where('turmas.escola_id', (int) $filtros['escola_id']);
+        $filtros = $this->sanitizeEscolaContextFilter($filtros);
+
+        if ($nome = $this->filtroValor($filtros, 'nome')) {
+            $query->where('pessoas.nome', 'like', '%'.$nome.'%');
         }
-        if (! empty($filtros['ano_letivo_id'])) {
-            $query->where('matriculas.ano_letivo_id', (int) $filtros['ano_letivo_id']);
+        if ($escolaId = $this->filtroValor($filtros, 'escola_id')) {
+            $query->where('turmas.escola_id', (int) $escolaId);
         }
-        if (! empty($filtros['turma_id'])) {
-            $query->where('matriculas.turma_id', (int) $filtros['turma_id']);
+        if ($anoLetivoId = $this->filtroValor($filtros, 'ano_letivo_id')) {
+            $query->where('matriculas.ano_letivo_id', (int) $anoLetivoId);
         }
-        if (! empty($filtros['apenas_risco'])) {
+        if ($turmaId = $this->filtroValor($filtros, 'turma_id')) {
+            $query->where('matriculas.turma_id', (int) $turmaId);
+        }
+        if ($turno = $this->filtroValor($filtros, 'turno')) {
+            $query->where('turmas.turno', $turno);
+        }
+        if ($this->filtroValor($filtros, 'apenas_risco')) {
             $query->whereRaw('
                 COALESCE(f.total, 0) > 0
                 AND (COALESCE(f.total, 0) - COALESCE(f.falta, 0)) * 100.0 / f.total < 75

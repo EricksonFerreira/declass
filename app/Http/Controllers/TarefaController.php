@@ -8,6 +8,8 @@ use App\Http\Requests\Tarefa\StoreTarefaRequest;
 use App\Http\Requests\Tarefa\UpdateTarefaRequest;
 use App\Models\Disciplina;
 use App\Models\EntregaTarefa;
+use App\Models\Escola;
+use App\Models\User;
 use App\Models\Matricula;
 use App\Models\Tarefa;
 use App\Services\BoletimService;
@@ -56,10 +58,23 @@ class TarefaController extends BaseController implements FiltroInterface, Resour
         $turmasIds = auth()->user()->isProfessor()
             ? $this->boletimService->turmasVisiveis(auth()->user())->pluck('id')
             : null;
+        $progresso = $itensFiltered['progresso']['valor'] ?? null;
 
         $tarefas = $this->tarefaService->getAllWithFiltersAndPagination(
             $itensFiltered, $perPage, ['turma.escola', 'turma.anoLetivo', 'disciplina', 'autor'], 'data_entrega', 'desc',
-            $turmasIds ? fn ($q) => $q->whereIn('turma_id', $turmasIds) : null
+            function ($q) use ($turmasIds, $progresso) {
+                if ($turmasIds) {
+                    $q->whereIn('turma_id', $turmasIds);
+                }
+                if ($progresso === 'vencida') {
+                    $q->whereDate('data_entrega', '<', now()->toDateString());
+                } elseif ($progresso === 'pendente') {
+                    $q->whereHas('entregas', fn ($e) => $e->whereIn('status', ['pendente', 'entregue']));
+                } elseif ($progresso === 'concluida') {
+                    $q->whereHas('entregas')
+                        ->whereDoesntHave('entregas', fn ($e) => $e->whereIn('status', ['pendente', 'entregue']));
+                }
+            }
         );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Tarefas', 'Vida Acadêmica');
@@ -80,10 +95,21 @@ class TarefaController extends BaseController implements FiltroInterface, Resour
 
     public function create()
     {
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Tarefas', 'tarefa.index', 'Nova Tarefa', 'Vida Acadêmica');
+        $turmaRota = request()->route('turma');
+        $turmaPreId = (int) request()->query('turma_id', 0) ?: ($turmaRota ? (int) $turmaRota : null);
+        $turma = $turmaPreId ? \App\Models\Turma::find($turmaPreId) : null;
 
-        return view('tarefa.add-edit', array_merge(compact('breadcrumb'), $this->opcoesFormulario()))
-            ->with('titulo', $this->titulo);
+        $breadcrumb = $turmaRota && $turma
+            ? $this->breadcrumbService->prepararBreadcrumbCustom([
+                ['Turmas', route('turma.index')],
+                [$turma->nome, route('turma.show', $turma->id)],
+                ['Nova Tarefa', null],
+            ])
+            : $this->breadcrumbService->prepararBreadcrumbCreate('Tarefas', 'tarefa.index', 'Nova Tarefa', 'Vida Acadêmica');
+
+        return view('tarefa.add-edit', array_merge(
+            compact('breadcrumb'), $this->opcoesFormulario(), ['turmaPreId' => $turmaPreId]
+        ))->with('titulo', $this->titulo);
     }
 
     public function store(StoreTarefaRequest $request)
@@ -94,14 +120,26 @@ class TarefaController extends BaseController implements FiltroInterface, Resour
         $dados = $request->validated();
         $dados['user_id'] = auth()->id();
 
-        $this->tarefaService->create($dados);
+        // Multi-select: uma tarefa por disciplina marcada; nenhuma = turma toda.
+        $disciplinaIds = $dados['disciplina_ids'] ?? [];
+        unset($dados['disciplina_ids']);
+        if ($disciplinaIds === []) {
+            $disciplinaIds = [null];
+        }
 
-        return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Tarefa criada com sucesso.');
+        foreach ($disciplinaIds as $disciplinaId) {
+            $this->tarefaService->create($dados + ['disciplina_id' => $disciplinaId]);
+        }
+
+        $n = count($disciplinaIds);
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro,
+            $n > 1 ? "Tarefa criada para {$n} disciplinas." : 'Tarefa criada com sucesso.');
     }
 
     public function edit($id)
     {
-        $tarefa = $this->tarefaService->getById($id, ['turma', 'disciplina', 'autor']);
+        $tarefa = $this->tarefaService->getById($id, ['turma', 'disciplina', 'autor', 'questoes']);
         abort_if(! $tarefa, 404, 'Tarefa não encontrada.');
 
         $this->autorizarTarefa($tarefa);
@@ -138,7 +176,7 @@ class TarefaController extends BaseController implements FiltroInterface, Resour
      */
     public function entregas($id)
     {
-        $tarefa = $this->tarefaService->getById($id, ['turma.escola', 'disciplina', 'autor']);
+        $tarefa = $this->tarefaService->getById($id, ['turma.escola', 'disciplina', 'autor', 'questoes']);
         abort_if(! $tarefa, 404, 'Tarefa não encontrada.');
 
         $this->autorizarTarefa($tarefa);
@@ -152,6 +190,7 @@ class TarefaController extends BaseController implements FiltroInterface, Resour
 
         $entregas = EntregaTarefa::query()
             ->where('tarefa_id', $tarefa->id)
+            ->with(['respostas.questao:id,enunciado,ordem', 'anexos'])
             ->get()
             ->keyBy('matricula_id');
 
@@ -241,6 +280,15 @@ class TarefaController extends BaseController implements FiltroInterface, Resour
     {
         return [
             ['name' => 'titulo', 'label' => 'Título', 'type' => 'text', 'typeWhere' => 'like'],
+            [
+                'name' => 'escola_id', 'label' => 'Escola', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todas', 'selected' => false]],
+                    Escola::query()->orderBy('nome')->get(['id', 'nome'])
+                        ->map(fn ($e) => ['value' => $e->id, 'label' => $e->nome, 'selected' => false])->all()
+                ),
+            ],
         ];
     }
 
@@ -261,6 +309,26 @@ class TarefaController extends BaseController implements FiltroInterface, Resour
                     ->map(fn ($d) => ['value' => $d->id, 'label' => $d->nome])->all(),
             ],
             [
+                'name' => 'user_id', 'label' => 'Professor', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todos', 'selected' => false]],
+                    User::query()->whereIn('id', Tarefa::query()->select('user_id')->distinct()->pluck('user_id'))
+                        ->orderBy('name')->get(['id', 'name'])
+                        ->map(fn ($u) => ['value' => $u->id, 'label' => $u->name, 'selected' => false])->all()
+                ),
+            ],
+            [
+                'name' => 'progresso', 'label' => 'Progresso', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => [
+                    ['value' => '', 'label' => 'Todos', 'selected' => false],
+                    ['value' => 'pendente', 'label' => 'Pendentes', 'selected' => false],
+                    ['value' => 'concluida', 'label' => 'Concluídas', 'selected' => false],
+                    ['value' => 'vencida', 'label' => 'Vencidas', 'selected' => false],
+                ],
+            ],
+            [
                 'name' => 'ativo', 'label' => 'Status', 'type' => 'select',
                 'typeWhere' => 'where',
                 'options' => ['S' => 'Ativa', 'N' => 'Inativa'],
@@ -270,13 +338,37 @@ class TarefaController extends BaseController implements FiltroInterface, Resour
 
     private function opcoesFormulario(?int $turmaId = null): array
     {
-        $turmas = $this->boletimService->turmasVisiveis(auth()->user());
+        $user = auth()->user();
+        $turmas = $this->boletimService->turmasVisiveis($user);
+        $isProfessor = $user && $user->isProfessor();
+        if ($isProfessor) {
+            $turmas->loadMissing('atribuicoes');
+        }
 
         return [
             'turmas' => $turmas->mapWithKeys(fn ($t) => [$t->id => $t->nome.' — '.($t->escola->nome ?? '')])->all(),
-            'disciplinasPorTurma' => $turmas->mapWithKeys(fn ($t) => [
-                $t->id => $t->disciplinas->mapWithKeys(fn ($d) => [$d->id => $d->nome])->all(),
-            ])->toJson(),
+            'turmasPicker' => $turmas->map(fn ($t) => [
+                'id' => $t->id,
+                'rotulo' => $t->nome.' — '.($t->escola->nome ?? '').' — '.($t->anoLetivo->ano ?? ''),
+                'nome' => $t->nome,
+                'detalhe' => trim(($t->etapa->nome ?? '').' · '.($t->anoLetivo->ano ?? '').' · '.($t->escola->nome ?? ''), ' ·'),
+                'escola_id' => $t->escola_id,
+                'escola' => $t->escola->nome ?? '',
+                'ano_letivo_id' => $t->ano_letivo_id,
+                'ano' => $t->anoLetivo?->ano,
+            ])->values()->all(),
+            // Professor: por turma, somente as disciplinas que ele leciona.
+            'disciplinasPorTurma' => $turmas->mapWithKeys(function ($t) use ($user, $isProfessor) {
+                $disciplinas = $t->disciplinas;
+                if ($isProfessor) {
+                    $minhas = $t->atribuicoes
+                        ->where('user_id', $user->id)->where('ativo', 'S')
+                        ->pluck('disciplina_id');
+                    $disciplinas = $disciplinas->whereIn('id', $minhas);
+                }
+
+                return [$t->id => $disciplinas->mapWithKeys(fn ($d) => [$d->id => $d->nome])->all()];
+            })->toJson(),
         ];
     }
 }

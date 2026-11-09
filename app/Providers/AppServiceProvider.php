@@ -170,6 +170,19 @@ class AppServiceProvider extends ServiceProvider
             // com escola_id sao filtradas por ela. escola_id nulo = registro
             // da rede toda, visivel em qualquer unidade.
             $class::addGlobalScope('escola', function (Builder $builder) use ($table) {
+                // A tabela de unidades nao tem escola_id: quando o usuario
+                // tem unidades restritas (professor = onde leciona; demais
+                // = vinculos em user_escolas), a listagem de unidades fica
+                // limitada a elas em qualquer tela/seletor.
+                if ($table === 'escolas') {
+                    $permitidas = auth()->user()?->escolasContextoIds();
+                    if ($permitidas !== null) {
+                        $builder->whereIn('escolas.id', $permitidas);
+                    }
+
+                    return;
+                }
+
                 if (! SchemaCache::hasColumn($table, 'escola_id')) {
                     return;
                 }

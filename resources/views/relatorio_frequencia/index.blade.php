@@ -1,5 +1,7 @@
 @extends('adminlte::page')
 
+@section('plugins.Chartjs', true)
+
 @section('title', $titulo)
 
 @section('content_header')
@@ -47,39 +49,44 @@
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <form method="GET" action="{{ route('relatorio_frequencia.index') }}" class="form-inline flex-wrap" style="gap:.5rem;">
-            @unless(app(\App\Support\EscolaContext::class)->filtrar())
-            <select name="escola_id" class="form-control form-control-sm">
-                <option value="">Todas as escolas</option>
-                @foreach($escolas as $escola)
-                    <option value="{{ $escola->id }}" {{ ($filtros['escola_id'] ?? '') == $escola->id ? 'selected' : '' }}>{{ $escola->nome }}</option>
-                @endforeach
-            </select>
-            @endunless
-            <select name="ano_letivo_id" class="form-control form-control-sm">
-                <option value="">Todos os anos letivos</option>
-                @foreach($anosLetivos as $ano)
-                    <option value="{{ $ano->id }}" {{ ($filtros['ano_letivo_id'] ?? '') == $ano->id ? 'selected' : '' }}>Ano {{ $ano->ano }}</option>
-                @endforeach
-            </select>
-            <select name="turma_id" class="form-control form-control-sm">
-                <option value="">Todas as turmas</option>
-                @foreach($turmas as $turma)
-                    <option value="{{ $turma->id }}" {{ ($filtros['turma_id'] ?? '') == $turma->id ? 'selected' : '' }}>
-                        {{ $turma->nome }} — {{ $turma->escola->nome ?? '' }}
-                    </option>
-                @endforeach
-            </select>
-            <div class="form-check">
-                <input type="checkbox" name="apenas_risco" value="1" class="form-check-input" id="apenas_risco"
-                    {{ !empty($filtros['apenas_risco']) ? 'checked' : '' }}>
-                <label class="form-check-label" for="apenas_risco">Somente em risco (&lt;75%)</label>
+{{-- Graficos: distribuicao por faixa + turmas com mais alunos em risco --}}
+@php($temDados = array_sum($graficos['faixas'] ?? []) > 0)
+@if($temDados)
+<div class="row">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header py-2">
+                <h3 class="card-title text-sm font-weight-bold mb-0"><i class="fas fa-chart-pie mr-1"></i> Distribuição por faixa de frequência</h3>
             </div>
-            <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-filter"></i> Filtrar</button>
-            <a href="{{ route('relatorio_frequencia.index') }}" class="btn btn-sm btn-secondary">Limpar</a>
-        </form>
+            <div class="card-body">
+                <canvas id="chartFaixas" style="max-height:220px;"></canvas>
+                <div class="text-center mt-2">
+                    <small class="text-muted">
+                        ≥90% regular · 75–90% atenção · 50–75% alerta · &lt;50% crítico (abaixo do mínimo legal de 75%)
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header py-2">
+                <h3 class="card-title text-sm font-weight-bold mb-0"><i class="fas fa-chart-bar mr-1"></i> Turmas com mais alunos em risco</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="chartTurmas" style="max-height:245px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap align-items-center" style="gap:.5rem;">
+        <div class="flex-grow-1">
+            <x-filter :filters="$filters" :additional-filters="$additionalFilters" :itens-filtered="$itensFiltered" :nome-filtro="$nomeFiltro" />
+        </div>
+        <x-per-page-selector :per-pages="$perPages" :selected-per-page="$perPage" />
     </div>
 
     <div class="card-body p-0">
@@ -141,3 +148,62 @@
     @endif
 </div>
 @stop
+
+@push('js')
+<script>
+$(function () {
+    if (typeof Chart === 'undefined') return;
+
+    var faixas = @json($graficos['faixas'] ?? []);
+    var porTurma = @json($graficos['por_turma'] ?? []);
+
+    var ctxF = document.getElementById('chartFaixas');
+    if (ctxF) {
+        new Chart(ctxF.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Regular (≥90%)', 'Atenção (75–90%)', 'Alerta (50–75%)', 'Crítico (<50%)', 'Sem aulas'],
+                datasets: [{
+                    data: [faixas.regular, faixas.atencao, faixas.alerta, faixas.critico, faixas.sem_aulas],
+                    backgroundColor: ['#22c55e', '#eab308', '#f97316', '#dc2626', '#cbd5e1'],
+                }],
+            },
+            options: {
+                legend: {position: 'bottom'},
+                cutoutPercentage: 62,
+            },
+        });
+    }
+
+    var ctxT = document.getElementById('chartTurmas');
+    if (ctxT && porTurma.length) {
+        var dados = porTurma.filter(function (t) { return t.em_risco > 0; });
+        if (!dados.length) dados = porTurma.slice(0, 5);
+        new Chart(ctxT.getContext('2d'), {
+            type: 'horizontalBar',
+            data: {
+                labels: dados.map(function (t) { return t.turma; }),
+                datasets: [
+                    {
+                        label: 'Alunos em risco (<75%)',
+                        data: dados.map(function (t) { return t.em_risco; }),
+                        backgroundColor: '#dc2626',
+                    },
+                    {
+                        label: 'Frequência média (%)',
+                        data: dados.map(function (t) { return t.media_pct; }),
+                        backgroundColor: '#93c5fd',
+                    },
+                ],
+            },
+            options: {
+                legend: {position: 'bottom'},
+                scales: {
+                    xAxes: [{ticks: {beginAtZero: true}}],
+                },
+            },
+        });
+    }
+});
+</script>
+@endpush

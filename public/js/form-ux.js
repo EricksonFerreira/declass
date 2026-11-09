@@ -10,8 +10,25 @@
 
     // Spinner inline (não depende de Bootstrap nem FontAwesome)
     var style = document.createElement('style');
-    style.textContent = '.fx-spinner{display:inline-block;width:.85rem;height:.85rem;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;margin-right:.35rem;vertical-align:-.1rem;animation:fxSpin .7s linear infinite}@keyframes fxSpin{to{transform:rotate(360deg)}}';
+    style.textContent = '.fx-spinner{display:inline-block;width:.85rem;height:.85rem;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;margin-right:.35rem;vertical-align:-.1rem;animation:fxSpin .7s linear infinite}@keyframes fxSpin{to{transform:rotate(360deg)}}'
+        + '.fx-overlay{position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}'
+        + '.fx-overlay-box{background:#fff;border-radius:12px;padding:1.1rem 1.6rem;display:flex;align-items:center;gap:.7rem;box-shadow:0 10px 40px rgba(0,0,0,.25);font-weight:600;color:#1f2937;font-size:.95rem}'
+        + '.fx-overlay-spin{width:1.4rem;height:1.4rem;border:3px solid #bfdbfe;border-top-color:#2563eb;border-radius:50%;animation:fxSpin .7s linear infinite}';
     document.head.appendChild(style);
+
+    var overlayEl = null;
+
+    function showOverlay() {
+        if (overlayEl) { return; }
+        overlayEl = document.createElement('div');
+        overlayEl.className = 'fx-overlay';
+        overlayEl.innerHTML = '<div class="fx-overlay-box"><span class="fx-overlay-spin" aria-hidden="true"></span><span>Processando, aguarde...</span></div>';
+        document.body.appendChild(overlayEl);
+    }
+
+    function hideOverlay() {
+        if (overlayEl) { overlayEl.remove(); overlayEl = null; }
+    }
 
     function buttonText(btn) {
         return (btn.tagName === 'INPUT' ? btn.value : btn.textContent || '').trim();
@@ -92,9 +109,11 @@
             btn.innerHTML = '<span class="fx-spinner" aria-hidden="true"></span> Processando...';
         }
         btn.disabled = true;
+        showOverlay();
 
         // Submit via AJAX (preventDefault) não navega: restaura o botão após um tempo.
         setTimeout(function () {
+            hideOverlay();
             if (!document.body.contains(btn)) {
                 return;
             }

@@ -71,7 +71,7 @@ class Turma extends Model
     public function disciplinas(): BelongsToMany
     {
         return $this->belongsToMany(Disciplina::class, 'turma_disciplina')
-            ->withPivot('carga_horaria_semanal')
+            ->withPivot('carga_horaria_semanal', 'media_aprovacao')
             ->withTimestamps();
     }
 
@@ -88,5 +88,15 @@ class Turma extends Model
     public function estaAtiva(): bool
     {
         return strtoupper((string) $this->ativo) === 'S';
+    }
+
+    /**
+     * Turma finalizada: inativa ou com ano letivo encerrado.
+     * O forum da disciplina fica somente leitura (historico).
+     */
+    public function finalizada(): bool
+    {
+        return ! $this->estaAtiva()
+            || ($this->anoLetivo?->status ?? 'letivo') === 'encerrado';
     }
 }

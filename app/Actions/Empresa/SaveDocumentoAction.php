@@ -4,6 +4,7 @@ namespace App\Actions\Empresa;
 
 use App\Models\EmpresaDocumento;
 use App\Support\EmpresaContext;
+use App\Support\UploadStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -16,7 +17,8 @@ class SaveDocumentoAction
                 Storage::delete($documento->arquivo_path);
             }
             $empresaId = $documento?->empresa_id ?? app(EmpresaContext::class)->empresaId() ?? auth()->user()?->empresa_id;
-            $data['arquivo_path'] = $arquivo->storeAs(
+            $data['arquivo_path'] = UploadStorage::putFile(
+                $arquivo,
                 "empresa_documentos/{$empresaId}",
                 uniqid('doc-').'.'.$arquivo->getClientOriginalExtension()
             );

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Empresa;
+use App\Services\SiteEmpresaService;
 
 /**
  * Site publico da empresa ("rede de escolas"): pagina de exibicao
@@ -12,6 +13,8 @@ use App\Models\Empresa;
  */
 class SiteEmpresaController extends Controller
 {
+    public function __construct(private SiteEmpresaService $site) {}
+
     /**
      * Pagina do site da empresa por slug (/rede/{slug}) ou pela
      * empresa ja resolvida pelo dominio personalizado (raiz do dominio).
@@ -24,15 +27,7 @@ class SiteEmpresaController extends Controller
 
         abort_if(! $empresa?->sitePublicoAtivo(), 404);
 
-        $escolas = $empresa->escolas()
-            ->where('ativa', 'S')
-            ->orderBy('nome')
-            ->get(['id', 'empresa_id', 'nome', 'slug', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'logo_path']);
-
-        return view('site.empresa', [
-            'empresa' => $empresa,
-            'escolas' => $escolas,
-        ]);
+        return view('site.empresa', $this->site->dados($empresa));
     }
 
     /**

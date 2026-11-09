@@ -100,6 +100,36 @@ test('salvar duas vezes atualiza a mesma ficha (upsert)', function () {
         ->and($ficha->tipo_sanguineo)->toBe('B-');
 });
 
+test('ficha salva pela tela do aluno redireciona de volta para a aba saude', function () {
+    $empresa = tenant();
+    $ids = setupSaude($empresa);
+    $user = usuarioTenant($empresa, 'secretario');
+
+    $this->actingAs($user)->put(route('saude.update', $ids['aluno']->id), [
+        'voltar' => 'aluno',
+        'tipo_sanguineo' => 'A+',
+        'alergias' => 'Amendoim',
+    ])->assertRedirect(route('aluno.show', $ids['aluno']->id).'#as-saude');
+
+    expect(SaudeAluno::where('aluno_id', $ids['aluno']->id)->first()->alergias)->toBe('Amendoim');
+});
+
+test('ficha de saude aparece na aba da tela do aluno', function () {
+    $empresa = tenant();
+    $ids = setupSaude($empresa);
+    SaudeAluno::create([
+        'empresa_id' => $empresa->id, 'aluno_id' => $ids['aluno']->id,
+        'alergias' => 'Amendoim', 'tipo_sanguineo' => 'O+', 'ativo' => 'S',
+    ]);
+    $user = usuarioTenant($empresa, 'secretario');
+
+    $this->actingAs($user)->get(route('aluno.show', $ids['aluno']->id))
+        ->assertOk()
+        ->assertSee('as-saude')
+        ->assertSee('Amendoim')
+        ->assertSee('O+');
+});
+
 test('tipo sanguineo invalido e rejeitado', function () {
     $empresa = tenant();
     $ids = setupSaude($empresa);

@@ -71,9 +71,23 @@
                 <div class="profile-hero__content">
                     <div class="profile-hero__main">
                         <div class="profile-avatar-wrap">
-                            <div class="profile-avatar" aria-hidden="true">
-                                <img src="{{ $user->foto_perfil_url }}" alt="Foto de perfil de {{ $user->nome }}">
-                            </div>
+                            <form action="{{ route('profile.foto.update') }}" method="POST" enctype="multipart/form-data" id="form-foto-perfil">
+                                @csrf
+                                @method('PUT')
+                                <div class="profile-avatar">
+                                    <img src="{{ $user->foto_perfil_url }}" alt="Foto de perfil de {{ $user->nome }}" id="profile-avatar-preview">
+                                    <label for="foto" class="profile-avatar__edit" title="Alterar foto de perfil">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+                                </div>
+                                <input type="file" name="foto" id="foto" accept="image/png,image/jpeg,image/webp" class="d-none">
+                                @error('foto')
+                                    <span class="text-danger text-xs d-block text-center mt-1">{{ $message }}</span>
+                                @enderror
+                                <button type="submit" class="btn btn-primary btn-sm font-weight-bold d-none mt-2" id="btn-salvar-foto">
+                                    <i class="fas fa-save mr-1"></i> Salvar foto
+                                </button>
+                            </form>
                             <div class="profile-id-badge">ID #{{ $user->id }}</div>
                         </div>
 
@@ -87,7 +101,7 @@
                                     <i class="fas fa-user-shield mr-1"></i>{{ $roleLabel }}
                                 </span> --}}
                                 <span class="profile-badge profile-badge--soft">
-                                    <i class="fas fa-pen mr-1"></i>Dados de contato editáveis
+                                    <i class="fas fa-pen mr-1"></i>{{ $apenasFoto ? 'Apenas foto editável' : 'Dados de contato editáveis' }}
                                 </span>
                             </div>
                         </div>
@@ -121,6 +135,7 @@
                 @endforeach
             </section>
 
+            @unless ($apenasFoto)
             <section class="profile-action card">
                 <div class="card-body p-4">
                     <span class="profile-action__eyebrow">Dados de contato</span>
@@ -153,6 +168,7 @@
                     </form>
                 </div>
             </section>
+            @endunless
 
             {{-- <section class="profile-action card">
                 <div class="profile-action__content">
@@ -283,12 +299,42 @@
         }
 
         .profile-avatar {
+            position: relative;
             width: 120px;
             height: 120px;
             padding: 5px;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, color-mix(in srgb, var(--profile-primary) 10%, #ffffff 90%) 100%);
             box-shadow: 0 18px 38px rgba(15, 23, 42, .16);
+        }
+
+        .profile-avatar__edit {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--profile-primary);
+            color: var(--empresa-cor-primaria-contraste, #ffffff);
+            border: 2px solid #ffffff;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .25);
+            cursor: pointer;
+            margin: 0;
+            font-size: .85rem;
+        }
+
+        .profile-avatar__edit:hover {
+            filter: brightness(1.08);
+        }
+
+        #form-foto-perfil {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .profile-avatar img {
@@ -626,4 +672,26 @@
             }
         }
     </style>
+@stop
+
+@section('js')
+    <script>
+        $(function () {
+            $('#foto').on('change', function () {
+                var file = this.files && this.files[0];
+                if (! file) {
+                    $('#btn-salvar-foto').addClass('d-none');
+                    return;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#profile-avatar-preview').attr('src', e.target.result);
+                };
+                reader.readAsDataURL(file);
+
+                $('#btn-salvar-foto').removeClass('d-none');
+            });
+        });
+    </script>
 @stop

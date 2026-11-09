@@ -50,14 +50,6 @@ class UpdateEmpresaRequest extends FormRequest
             'cor_primaria' => ['nullable', 'regex:/^#[A-F0-9]{6}$/'],
             'cor_secundaria' => ['nullable', 'regex:/^#[A-F0-9]{6}$/'],
             'cor_terciaria' => ['nullable', 'regex:/^#[A-F0-9]{6}$/'],
-            'site_titulo' => ['nullable', 'string', 'max:255'],
-            'site_descricao' => ['nullable', 'string', 'max:2000'],
-            'site_whatsapp' => ['nullable', 'string', 'max:30'],
-            'site_instagram' => ['nullable', 'string', 'max:100'],
-            'site_ativo' => ['nullable', Rule::in(['S', 'N'])],
-            'site_unidades' => ['nullable', Rule::in(['S', 'N'])],
-            'site_matricula' => ['nullable', Rule::in(['S', 'N'])],
-            'site_contato' => ['nullable', Rule::in(['S', 'N'])],
         ];
     }
 

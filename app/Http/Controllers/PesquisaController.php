@@ -113,13 +113,15 @@ class PesquisaController extends BaseController implements FiltroInterface, Reso
         $pesquisa = $this->pesquisaService->getById($id, ['escola', 'perguntas', 'respostas.usuario']);
         abort_if(! $pesquisa, 404, 'Pesquisa não encontrada.');
 
-        $resultados = $this->pesquisaService->resultados($pesquisa);
+        $filtros = request()->only(['de', 'ate', 'pergunta_id']);
+        $resultados = $this->pesquisaService->resultados($pesquisa, $filtros);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Pesquisas', 'pesquisa.index', "Resultados: {$pesquisa->titulo}", 'Comunicação');
 
         return view('pesquisa.resultados', [
             'pesquisa' => $pesquisa,
             'resultados' => $resultados,
+            'filtros' => $filtros,
             'breadcrumb' => $breadcrumb,
             'titulo' => 'Resultados — '.$pesquisa->titulo,
         ]);

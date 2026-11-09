@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Frequencia;
 use App\Models\Justificativa;
 use App\Models\Matricula;
+use App\Support\UploadStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -39,19 +40,29 @@ class JustificativaService extends AbstractBaseService
         return $this->model;
     }
 
+    /**
+     * Paginacao com filtros da sessao. 'nome' busca no aluno/pessoa
+     * via matricula; 'turma_id'/'escola_id'/'efeito' sao diretos.
+     */
     public function paginateComFiltros(array $filtros, int $perPage = 15)
     {
+        $filtros = $this->sanitizeEscolaContextFilter($filtros);
+
+        $nome = $this->filtroValor($filtros, 'nome');
+        $efeito = $this->filtroValor($filtros, 'efeito');
+        $turmaId = $this->filtroValor($filtros, 'turma_id');
+        $escolaId = $this->filtroValor($filtros, 'escola_id');
+
         return Justificativa::query()
             ->with(['matricula.aluno.pessoa:id,nome', 'matricula.turma:id,nome', 'disciplina:id,nome', 'registradoPor:id,nome', 'escola:id,nome'])
             ->where('justificativas.empresa_id', auth()->user()->empresa_id)
-            ->when(! empty($filtros['turma_id']), fn ($q) => $q->whereHas('matricula', fn ($m) => $m->where('turma_id', (int) $filtros['turma_id'])))
-            ->when(! empty($filtros['escola_id']), fn ($q) => $q->where('justificativas.escola_id', (int) $filtros['escola_id']))
-            ->when(! empty($filtros['efeito']), fn ($q) => $q->where('efeito', $filtros['efeito']))
-            ->when(! empty($filtros['aluno']), fn ($q) => $q->whereHas('matricula.aluno.pessoa', fn ($p) => $p->where('nome', 'like', '%'.$filtros['aluno'].'%')))
+            ->when($turmaId, fn ($q) => $q->whereHas('matricula', fn ($m) => $m->where('turma_id', (int) $turmaId)))
+            ->when($escolaId, fn ($q) => $q->where('justificativas.escola_id', (int) $escolaId))
+            ->when($efeito, fn ($q) => $q->where('efeito', $efeito))
+            ->when($nome, fn ($q) => $q->whereHas('matricula.aluno.pessoa', fn ($p) => $p->where('nome', 'like', '%'.$nome.'%')))
             ->orderByDesc('data_inicio')
             ->orderByDesc('id')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->paginate($perPage);
     }
 
     /**
@@ -85,6 +96,29 @@ class JustificativaService extends AbstractBaseService
      *
      * @return array<int, array<int, string>> [turma_id => [disciplina_id => nome]]
      */
+    /** Matriculas ativas por turma no formato do picker: [{id, rotulo, detalhe}]. */
+    public function matriculasPickerPorTurma(Collection $turmas): array
+    {
+        if ($turmas->isEmpty()) {
+            return [];
+        }
+
+        return Matricula::query()
+            ->with('aluno.pessoa:id,nome')
+            ->whereIn('turma_id', $turmas->pluck('id'))
+            ->where('status', 'ativa')
+            ->orderBy('numero_chamada')
+            ->get()
+            ->groupBy('turma_id')
+            ->map(fn ($ms) => $ms->values()->map(fn ($m) => [
+                'id' => $m->id,
+                'rotulo' => $m->aluno?->pessoa?->nome ?? "Matrícula #{$m->id}",
+                'detalhe' => ($m->numero_chamada ? 'Chamada '.$m->numero_chamada : '')
+                    .($m->aluno?->registro_academico ? ' · RA '.$m->aluno->registro_academico : ''),
+            ])->all())
+            ->all();
+    }
+
     public function disciplinasPorTurma(Collection $turmas): array
     {
         if ($turmas->isEmpty()) {
@@ -118,7 +152,7 @@ class JustificativaService extends AbstractBaseService
             ]));
 
             if ($arquivo instanceof UploadedFile) {
-                $justificativa->arquivo_path = $arquivo->store("justificativas/{$justificativa->id}", 'public');
+                $justificativa->arquivo_path = UploadStorage::putFile($arquivo, "justificativas/{$justificativa->id}", null, 'public');
                 $justificativa->save();
             }
 

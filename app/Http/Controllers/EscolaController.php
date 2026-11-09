@@ -9,6 +9,7 @@ use App\Http\Requests\Escola\UpdateEscolaRequest;
 use App\Models\Escola;
 use App\Services\BreadcrumbService;
 use App\Services\EscolaService;
+use App\Support\UploadStorage;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\Request;
@@ -80,7 +81,7 @@ class EscolaController extends BaseController implements FiltroInterface, Resour
         unset($data['logo']);
 
         if ($logo) {
-            $data['logo_path'] = $logo->store('escolas/logo', 'public');
+            $data['logo_path'] = UploadStorage::putFile($logo, 'escolas/logo');
         }
 
         $this->escolaService->create($data);
@@ -123,7 +124,7 @@ class EscolaController extends BaseController implements FiltroInterface, Resour
             if ($escola->logo_path) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($escola->logo_path);
             }
-            $data['logo_path'] = $logo->store('escolas/logo', 'public');
+            $data['logo_path'] = UploadStorage::putFile($logo, 'escolas/logo');
         }
 
         $escola = $this->escolaService->update($id, $data);

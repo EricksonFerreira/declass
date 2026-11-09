@@ -99,6 +99,7 @@ class MigrationController extends Controller
             Artisan::call('declass:setup-producao', [
                 '--demo' => (bool) $request->query('demo'),
                 '--reset-demo' => (bool) $request->query('reset'),
+                '--fresh' => (bool) $request->query('fresh'),
             ], $buffer);
             $output = $buffer->fetch();
 

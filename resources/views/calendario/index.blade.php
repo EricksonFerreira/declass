@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title title="Calendário Letivo" subtitle="Dia a dia da turma: aulas, feriados e eventos — saiba quando há aula" />
+    <x-page-title title="Calendário Letivo" subtitle="Dia a dia da turma: {{ $ocultarFeriados ? 'aulas e eventos' : 'aulas, feriados e eventos' }} — saiba quando há aula" />
 @stop
 
 @section('content')
@@ -127,16 +127,44 @@
 
     @if($alteracoes->isNotEmpty())
         <div class="card card-warning card-outline">
-            <div class="card-header py-2"><span class="font-weight-bold"><i class="fas fa-bell"></i> Próximas alterações na rotina</span></div>
+            <div class="card-header py-2 d-flex align-items-center">
+                <span class="font-weight-bold"><i class="fas fa-bell"></i> Próximas alterações na rotina</span>
+                <span class="badge badge-warning ml-2">{{ $alteracoes->count() }} dia(s)</span>
+            </div>
             <div class="card-body py-2">
-                @foreach($alteracoes as $alt)
-                    <div class="small mb-1">
-                        <strong>{{ $alt['data']->format('d/m') }}</strong>
-                        ({{ ['1'=>'seg','2'=>'ter','3'=>'qua','4'=>'qui','5'=>'sex','6'=>'sáb','7'=>'dom'][$alt['data']->dayOfWeekIso] }}):
-                        {{ $rotulosStatus[$alt['status']] }}
-                        — {{ $alt['feriados']->pluck('nome')->merge($alt['eventos']->pluck('titulo'))->implode(', ') }}
-                    </div>
-                @endforeach
+                <div class="list-group list-group-flush">
+                    @foreach($alteracoes as $alt)
+                        @php
+                            [$bg, $tx] = match ($alt['status']) {
+                                'sem_aula' => ['bg-danger-light', 'text-danger'],
+                                'evento' => ['bg-info-light', 'text-info'],
+                                'aula_evento' => ['bg-warning-light', 'text-warning'],
+                                default => ['bg-light', 'text-muted'],
+                            };
+                            $nomesAlt = $ocultarFeriados
+                                ? $alt['eventos']->pluck('titulo')
+                                : $alt['feriados']->pluck('nome')->merge($alt['eventos']->pluck('titulo'));
+                        @endphp
+                        <div class="list-group-item d-flex align-items-center px-2 py-2 mb-1 {{ $bg }} cal-alt">
+                            <div class="cal-alt-data text-center mr-3">
+                                <span class="d-block font-weight-bold">{{ $alt['data']->format('d') }}</span>
+                                <span class="d-block small text-uppercase text-muted">{{ $alt['data']->locale('pt_BR')->translatedFormat('M') }}</span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <span class="badge {{ $tx }} border mr-1">{{ $rotulosStatus[$alt['status']] ?? $alt['status'] }}</span>
+                                    <span class="small text-muted">{{ ucfirst($alt['data']->locale('pt_BR')->translatedFormat('l')) }}</span>
+                                    @if($alt['data']->isToday())
+                                        <span class="badge badge-primary ml-1">Hoje</span>
+                                    @endif
+                                </div>
+                                @if($nomesAlt->isNotEmpty())
+                                    <div class="small mt-1 font-weight-medium text-dark">{{ $nomesAlt->implode(', ') }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
     @endif
@@ -146,6 +174,14 @@
         'diasProfessor' => $diasProfessor,
         'aulasProfessor' => $aulasProfessor,
         'somenteMinhas' => $somenteMinhas,
+        'ocultarFeriados' => $ocultarFeriados,
     ])
 @endif
+@push('css')
+<style>
+    .cal-alt { border-left: 4px solid rgba(0, 0, 0, .12); }
+    .cal-alt-data { min-width: 52px; padding: 4px 6px; background: #fff; border-radius: 6px; line-height: 1.15; box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+    .cal-alt-data .font-weight-bold { font-size: 18px; }
+</style>
+@endpush
 @stop

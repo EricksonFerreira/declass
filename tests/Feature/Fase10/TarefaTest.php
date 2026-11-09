@@ -141,27 +141,41 @@ test('nota acima da nota maxima e rejeitada', function () {
     ])->assertSessionHasErrors('entregas.'.$ids['matricula']->id.'.nota');
 });
 
-test('professor nao acessa tarefas', function () {
+test('professor gerencia tarefas apenas das turmas que leciona', function () {
     $empresa = tenant();
     $ids = setupTarefa($empresa);
     $professor = usuarioTenant($empresa, 'professor');
     $tarefa = criarTarefaDemo($ids, $empresa);
 
-    // perfil professor nao tem permissao de tarefas — 403 mesmo com atribuicao
+    // professor pode criar tarefas/provas online — escopo validado por atribuicao
     Atribuicao::create([
         'empresa_id' => $empresa->id, 'turma_id' => $ids['turma']->id,
         'disciplina_id' => $ids['disciplina']->id, 'user_id' => $professor->id,
-        'papel' => 'titular',
+        'papel' => 'titular', 'ativo' => 'S',
     ]);
 
-    $this->actingAs($professor)->get(route('tarefa.index'))->assertForbidden();
-    $this->actingAs($professor)->get(route('tarefa.entregas', $tarefa->id))->assertForbidden();
+    $this->actingAs($professor)->get(route('tarefa.index'))->assertOk();
+    $this->actingAs($professor)->get(route('tarefa.entregas', $tarefa->id))->assertOk();
     $this->actingAs($professor)->post(route('tarefa.store'), [
         'turma_id' => $ids['turma']->id,
+        'disciplina_id' => $ids['disciplina']->id,
+        'titulo' => 'Prova online da turma',
+        'data_entrega' => now()->addDay()->toDateString(),
+        'ativo' => 'S',
+    ])->assertRedirect();
+
+    // turma sem atribuicao: o servico bloqueia a criacao
+    $outraTurma = Turma::create([
+        'escola_id' => $ids['escola']->id, 'ano_letivo_id' => $ids['anoLetivo']->id,
+        'etapa_id' => $ids['turma']->etapa_id,
+        'nome' => 'Turma alheia', 'turno' => 'matutino', 'empresa_id' => $empresa->id,
+    ]);
+    $this->actingAs($professor)->post(route('tarefa.store'), [
+        'turma_id' => $outraTurma->id,
         'titulo' => 'Tarefa indevida',
         'data_entrega' => now()->addDay()->toDateString(),
         'ativo' => 'S',
-    ])->assertForbidden();
+    ])->assertSessionHasErrors('turma_id');
 });
 
 test('tarefas tem escopo de tenant', function () {
@@ -208,4 +222,87 @@ test('portal mostra tarefas das turmas dos alunos vinculados', function () {
     // mesma turma: ve a tarefa mas so o proprio status de entrega
     $response2 = $this->actingAs($outroAlunoUser)->get(route('portal.tarefas'));
     $response2->assertOk()->assertSee('Exercicios de fixacao');
+});
+
+test('portal tarefas tem filtro padrao e mostra o nome do aluno so para responsavel', function () {
+    $empresa = tenant();
+    $ids = setupTarefa($empresa);
+    criarTarefaDemo($ids, $empresa);
+    criarTarefaDemo($ids, $empresa, ['titulo' => 'Prova de matematica', 'tipo' => 'prova']);
+
+    // conta do proprio aluno: nao exibe nome/avatar na linha da tarefa
+    $alunoUser = usuarioTenant($empresa, 'aluno');
+    $ids['aluno']->update(['user_id' => $alunoUser->id]);
+
+    $this->actingAs($alunoUser)->get(route('portal.tarefas'))
+        ->assertOk()
+        ->assertSee('Exercicios de fixacao')
+        ->assertSee('Prova de matematica')
+        ->assertDontSee('class="avatar-iniciais', false);
+
+    // filtro padrao por tipo
+    $this->actingAs($alunoUser)
+        ->get(route('portal.filtro', 'tarefas').'?'.http_build_query(['tipo_where' => 'prova']))
+        ->assertRedirect(route('portal.tarefas'));
+
+    $this->actingAs($alunoUser)->get(route('portal.tarefas'))
+        ->assertOk()
+        ->assertSee('Prova de matematica')
+        ->assertDontSee('Exercicios de fixacao');
+
+    $this->actingAs($alunoUser)
+        ->get(route('portal.removerFiltro', 'tarefas'))
+        ->assertRedirect(route('portal.tarefas'));
+
+    // conta de responsavel: exibe o nome do aluno em cada tarefa
+    $ids['aluno']->update(['user_id' => null]);
+    $pessoaResp = Pessoa::create(['nome' => 'Mae do Pedro', 'empresa_id' => $empresa->id]);
+    $responsavel = \App\Models\Responsavel::create([
+        'pessoa_id' => $pessoaResp->id, 'empresa_id' => $empresa->id,
+    ]);
+    $ids['aluno']->responsaveis()->attach($responsavel->id, [
+        'tipo' => 'legal', 'principal' => true, 'pode_retirar' => true, 'autoriza_contato' => true,
+    ]);
+    $respUser = usuarioTenant($empresa, 'responsavel_legal');
+    $responsavel->update(['user_id' => $respUser->id]);
+
+    $this->actingAs($respUser)->get(route('portal.tarefas'))
+        ->assertOk()
+        ->assertSee('Exercicios de fixacao')
+        ->assertSee('class="avatar-iniciais', false)
+        ->assertSee('Pedro Souza');
+});
+
+test('create de tarefa pre-seleciona a turma informada', function () {
+    $empresa = tenant();
+    $ids = setupTarefa($empresa);
+    $user = usuarioTenant($empresa, 'administrador');
+
+    $html = $this->actingAs($user)
+        ->get(route('tarefa.create', ['turma_id' => $ids['turma']->id]))
+        ->assertOk()
+        ->getContent();
+
+    expect($html)->toMatch('/<input[^>]*id="turma_id"[^>]*value="'.$ids['turma']->id.'"/');
+});
+
+test('tarefa criada em lote para varias disciplinas', function () {
+    $empresa = tenant();
+    $ids = setupTarefa($empresa);
+    $user = usuarioTenant($empresa, 'administrador');
+    $d2 = Disciplina::create(['nome' => 'Ciências', 'sigla' => 'CIE', 'empresa_id' => $empresa->id]);
+
+    $this->actingAs($user)->post(route('tarefa.store'), [
+        'turma_id' => $ids['turma']->id,
+        'titulo' => 'Leitura compartilhada',
+        'data_entrega' => now()->addDays(3)->toDateString(),
+        'tipo' => 'atividade',
+        'disciplina_ids' => [$ids['disciplina']->id, $d2->id],
+        'gerar_entregas' => 1,
+    ])->assertRedirect();
+
+    $tarefas = Tarefa::where('turma_id', $ids['turma']->id)->get();
+    expect($tarefas)->toHaveCount(2)
+        ->and($tarefas->pluck('disciplina_id')->sort()->values()->all())
+        ->toBe(collect([$ids['disciplina']->id, $d2->id])->sort()->values()->all());
 });

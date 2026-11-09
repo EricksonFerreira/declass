@@ -3,6 +3,7 @@
 @section('title', $titulo)
 
 @section('content_header')
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
     <x-page-title :title="$pesquisa->titulo" subtitle="Responda até ".$pesquisa->data_fim->format('d/m/Y')" />
 @stop
 

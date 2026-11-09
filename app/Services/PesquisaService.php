@@ -177,10 +177,14 @@ class PesquisaService extends AbstractBaseService
      * nota -> media e distribuicao; sim_nao -> contagens;
      * texto -> lista de respostas.
      */
-    public function resultados(Pesquisa $pesquisa): array
+    public function resultados(Pesquisa $pesquisa, array $filtros = []): array
     {
-        $respostas = $pesquisa->respostas()->with('usuario:id,name')->get();
-        $perguntas = $pesquisa->perguntas;
+        $respostas = $pesquisa->respostas()->with('usuario:id,name')
+            ->when(! empty($filtros['de']), fn ($q) => $q->whereDate('created_at', '>=', $filtros['de']))
+            ->when(! empty($filtros['ate']), fn ($q) => $q->whereDate('created_at', '<=', $filtros['ate']))
+            ->get();
+        $perguntas = $pesquisa->perguntas
+            ->when(! empty($filtros['pergunta_id']), fn ($c) => $c->where('id', (int) $filtros['pergunta_id']));
 
         $porPergunta = [];
         foreach ($perguntas as $p) {

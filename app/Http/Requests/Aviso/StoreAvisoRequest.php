@@ -26,6 +26,11 @@ class StoreAvisoRequest extends FormRequest
                 'nullable', 'integer',
                 Rule::exists('turmas', 'id')->where('empresa_id', $empresaId),
             ],
+            'turma_ids' => ['nullable', 'array'],
+            'turma_ids.*' => [
+                'integer',
+                Rule::exists('turmas', 'id')->where('empresa_id', $empresaId),
+            ],
             'titulo' => ['required', 'string', 'max:160'],
             'mensagem' => ['required', 'string', 'max:5000'],
             'tipo' => ['nullable', Rule::in(array_keys(Aviso::TIPOS))],

@@ -64,7 +64,22 @@ function alunoComMatricula($empresa, $ids, string $nome, int $chamada = 1): Matr
 
 function urlRematricula($ids): string
 {
-    return '/admin/matricula/rematricula?ano_origem='.$ids['anoOrigem']->id.'&ano_destino='.$ids['anoDestino']->id;
+    return '/admin/matricula/rematricula?'.http_build_query([
+        'escola_origem' => $ids['escola']->id,
+        'ano_origem' => $ids['anoOrigem']->id,
+        'turma_origem' => $ids['turmaOrigem']->id,
+        'escola_destino' => $ids['escola']->id,
+        'ano_destino' => $ids['anoDestino']->id,
+    ]);
+}
+
+function postRematricula($ids, array $itens, ?int $anoDestinoId = null): array
+{
+    return [
+        'turma_origem' => $ids['turmaOrigem']->id,
+        'ano_destino' => $anoDestinoId ?? $ids['anoDestino']->id,
+        'itens' => $itens,
+    ];
 }
 
 test('secretaria acessa wizard e ve alunos elegiveis', function () {
@@ -76,7 +91,8 @@ test('secretaria acessa wizard e ve alunos elegiveis', function () {
     $this->actingAs($secretaria)
         ->get('/admin/matricula/rematricula')
         ->assertOk()
-        ->assertSee('Ano letivo de origem');
+        ->assertSee('Ano letivo de origem')
+        ->assertSee('Turma de origem');
 
     $this->actingAs($secretaria)
         ->get(urlRematricula($ids))
@@ -97,14 +113,10 @@ test('rematricula em lote cria matriculas no ano destino', function () {
     $secretaria = usuarioTenant($empresa, 'secretario');
 
     $this->actingAs($secretaria)
-        ->post('/admin/matricula/rematricula', [
-            'ano_origem' => $ids['anoOrigem']->id,
-            'ano_destino' => $ids['anoDestino']->id,
-            'itens' => [
-                $m1->id => $ids['turmaDestino']->id,
-                $m2->id => $ids['turmaDestinoB']->id,
-            ],
-        ])
+        ->post('/admin/matricula/rematricula', postRematricula($ids, [
+            $m1->id => $ids['turmaDestino']->id,
+            $m2->id => $ids['turmaDestinoB']->id,
+        ]))
         ->assertRedirect()
         ->assertSessionHas('success');
 
@@ -134,11 +146,9 @@ test('aluno ja matriculado no destino e ignorado', function () {
     $secretaria = usuarioTenant($empresa, 'secretario');
 
     $this->actingAs($secretaria)
-        ->post('/admin/matricula/rematricula', [
-            'ano_origem' => $ids['anoOrigem']->id,
-            'ano_destino' => $ids['anoDestino']->id,
-            'itens' => [$m1->id => $ids['turmaDestinoB']->id],
-        ])
+        ->post('/admin/matricula/rematricula', postRematricula($ids, [
+            $m1->id => $ids['turmaDestinoB']->id,
+        ]))
         ->assertSessionHas('ignoradas');
 
     // continua existindo apenas a matricula destino original
@@ -146,12 +156,12 @@ test('aluno ja matriculado no destino e ignorado', function () {
         ->where('ano_letivo_id', $ids['anoDestino']->id)->count())->toBe(1);
 });
 
-test('turma de outra escola e rejeitada como ignorada', function () {
+test('rematricula para turma de outra escola cria matricula na outra unidade', function () {
     $empresa = tenant();
     $ids = setupRematricula($empresa);
-    $m1 = alunoComMatricula($empresa, $ids, 'Aluno Escola', 1);
+    $m1 = alunoComMatricula($empresa, $ids, 'Aluno Transferido', 1);
 
-    // segunda escola com ano letivo proprio
+    // segunda unidade com ano letivo proprio
     $escola2 = Escola::create(['nome' => 'Escola 2', 'empresa_id' => $empresa->id]);
     $ano2 = AnoLetivo::create(['escola_id' => $escola2->id, 'ano' => 2026, 'empresa_id' => $empresa->id]);
     $turmaFora = Turma::create([
@@ -163,28 +173,28 @@ test('turma de outra escola e rejeitada como ignorada', function () {
     $secretaria = usuarioTenant($empresa, 'secretario');
 
     $this->actingAs($secretaria)
-        ->post('/admin/matricula/rematricula', [
-            'ano_origem' => $ids['anoOrigem']->id,
-            'ano_destino' => $ids['anoDestino']->id,
-            'itens' => [$m1->id => $turmaFora->id],
-        ])
-        ->assertSessionHas('ignoradas');
+        ->post('/admin/matricula/rematricula', postRematricula($ids, [
+            $m1->id => $turmaFora->id,
+        ], $ano2->id))
+        ->assertSessionHas('success');
 
-    expect(Matricula::where('ano_letivo_id', $ids['anoDestino']->id)->count())->toBe(0);
+    $this->assertDatabaseHas('matriculas', [
+        'aluno_id' => $m1->aluno_id,
+        'turma_id' => $turmaFora->id,
+        'ano_letivo_id' => $ano2->id,
+        'status' => 'ativa',
+    ]);
 });
 
-test('anos de escolas diferentes retornam erro de validacao', function () {
+test('ano destino igual ao da turma origem retorna erro de validacao', function () {
     $empresa = tenant();
     $ids = setupRematricula($empresa);
     $secretaria = usuarioTenant($empresa, 'secretario');
 
-    $escola2 = Escola::create(['nome' => 'Escola B', 'empresa_id' => $empresa->id]);
-    $anoOutro = AnoLetivo::create(['escola_id' => $escola2->id, 'ano' => 2026, 'empresa_id' => $empresa->id]);
-
     $this->actingAs($secretaria)
-        ->get('/admin/matricula/rematricula?ano_origem='.$ids['anoOrigem']->id.'&ano_destino='.$anoOutro->id)
+        ->get('/admin/matricula/rematricula?turma_origem='.$ids['turmaOrigem']->id.'&ano_destino='.$ids['anoOrigem']->id)
         ->assertOk()
-        ->assertSee('mesma escola');
+        ->assertSee('deve ser diferente');
 });
 
 test('coordenador nao acessa rematricula em lote', function () {
@@ -216,10 +226,8 @@ test('rematricula tem escopo de tenant', function () {
 
     // e nao consegue rematricular matricula de outro tenant
     $this->actingAs($secretariaB)
-        ->post('/admin/matricula/rematricula', [
-            'ano_origem' => $idsB['anoOrigem']->id,
-            'ano_destino' => $idsB['anoDestino']->id,
-            'itens' => [$m1->id => $idsB['turmaDestino']->id],
-        ])
+        ->post('/admin/matricula/rematricula', postRematricula($idsB, [
+            $m1->id => $idsB['turmaDestino']->id,
+        ]))
         ->assertSessionHas('ignoradas');
 });

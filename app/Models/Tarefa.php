@@ -18,6 +18,20 @@ class Tarefa extends Model
 
     public const STATUS_ENTREGA = ['pendente', 'entregue', 'avaliada'];
 
+    public const TIPOS = [
+        'atividade' => 'Atividade',
+        'prova' => 'Prova',
+        'trabalho' => 'Trabalho',
+    ];
+
+    /** O que o aluno envia pelo portal (alem das questoes online). */
+    public const TIPOS_ENTREGA = [
+        'nenhuma' => 'Sem envio online',
+        'leitura' => 'Confirmação de leitura',
+        'texto' => 'Texto digitado',
+        'foto' => 'Fotos/arquivos',
+    ];
+
     protected $fillable = [
         'empresa_id',
         'escola_id',
@@ -25,10 +39,12 @@ class Tarefa extends Model
         'disciplina_id',
         'user_id',
         'titulo',
+        'tipo',
         'descricao',
         'instrucoes',
         'data_entrega',
         'nota_maxima',
+        'tipo_entrega',
         'ativo',
     ];
 
@@ -57,6 +73,16 @@ class Tarefa extends Model
         return $this->hasMany(EntregaTarefa::class, 'tarefa_id');
     }
 
+    public function questoes(): HasMany
+    {
+        return $this->hasMany(TarefaQuestao::class, 'tarefa_id')->orderBy('ordem');
+    }
+
+    public function temQuestoes(): bool
+    {
+        return $this->questoes()->exists();
+    }
+
     public function atraso(): bool
     {
         return $this->data_entrega->isPast() && $this->ativo === 'S';
@@ -75,5 +101,21 @@ class Tarefa extends Model
     public function estaAtivo(): bool
     {
         return $this->ativo === 'S';
+    }
+
+    public function tipoLabel(): string
+    {
+        return self::TIPOS[$this->tipo] ?? self::TIPOS['atividade'];
+    }
+
+    public function tipoEntregaLabel(): string
+    {
+        return self::TIPOS_ENTREGA[$this->tipo_entrega] ?? self::TIPOS_ENTREGA['nenhuma'];
+    }
+
+    /** Aluno precisa enviar algo pelo portal (leitura, texto ou fotos). */
+    public function exigeEntregaOnline(): bool
+    {
+        return ($this->tipo_entrega ?? 'nenhuma') !== 'nenhuma';
     }
 }

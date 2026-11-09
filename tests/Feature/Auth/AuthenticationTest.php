@@ -1,14 +1,14 @@
 <?php
 
 test('login screen can be rendered', function () {
-    $this->get('/admin/login')->assertOk();
+    $this->get('/login')->assertOk();
 });
 
 test('tenant user can authenticate with slug, email and password', function () {
     $empresa = tenant();
     $user = usuarioTenant($empresa, 'administrador');
 
-    $response = $this->post('/admin/login', [
+    $response = $this->post('/login', [
         'slug' => $empresa->slug,
         'email' => $user->email,
         'password' => 'password',
@@ -22,7 +22,7 @@ test('user cannot authenticate with wrong password', function () {
     $empresa = tenant();
     $user = usuarioTenant($empresa, 'professor');
 
-    $this->post('/admin/login', [
+    $this->post('/login', [
         'slug' => $empresa->slug,
         'email' => $user->email,
         'password' => 'wrong-password',
@@ -36,7 +36,7 @@ test('user of another tenant cannot authenticate with this slug', function () {
     $empresaB = tenant();
     $userB = usuarioTenant($empresaB, 'administrador');
 
-    $this->post('/admin/login', [
+    $this->post('/login', [
         'slug' => $empresaA->slug,
         'email' => $userB->email,
         'password' => 'password',
@@ -49,7 +49,7 @@ test('unknown slug rejects login', function () {
     $empresa = tenant();
     $user = usuarioTenant($empresa);
 
-    $this->post('/admin/login', [
+    $this->post('/login', [
         'slug' => 'slug-inexistente',
         'email' => $user->email,
         'password' => 'password',
@@ -61,7 +61,7 @@ test('unknown slug rejects login', function () {
 test('superadmin can authenticate with the platform slug', function () {
     $admin = superadmin(['email' => 'admin@declass.test']);
 
-    $response = $this->post('/admin/login', [
+    $response = $this->post('/login', [
         'slug' => 'declass',
         'email' => 'admin@declass.test',
         'password' => 'password',

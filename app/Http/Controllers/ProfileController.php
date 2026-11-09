@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\BreadcrumbService;
+use App\Support\UploadStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
@@ -22,11 +26,14 @@ class ProfileController extends Controller
             'user' => $user,
             'titulo' => 'Meu Perfil',
             'breadcrumb' => $breadcrumb,
+            'apenasFoto' => $user->perfilApenasFoto(),
         ]);
     }
 
     public function update(Request $request): RedirectResponse
     {
+        abort_if($request->user()->perfilApenasFoto(), 403);
+
         $data = $request->validate([
             'telefone' => ['nullable', 'string', 'max:30'],
             'celular' => ['nullable', 'string', 'max:30'],
@@ -36,6 +43,38 @@ class ProfileController extends Controller
         $request->user()->update($data);
 
         return redirect()->route('profile.edit')->with('success', 'Dados de contato atualizados com sucesso.');
+    }
+
+    public function updateFoto(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'foto' => ['required', 'image', 'mimes:png,jpeg,jpg,webp', 'max:2048'],
+        ]);
+
+        $user = $request->user();
+        $foto = $request->file('foto');
+
+        if (! $foto instanceof UploadedFile || ! $foto->isValid()) {
+            throw ValidationException::withMessages([
+                'foto' => 'O arquivo de foto nao foi enviado corretamente. Tente novamente.',
+            ]);
+        }
+
+        $path = UploadStorage::putFile($foto, 'usuarios/foto', null, 'public');
+        if (! $path) {
+            throw ValidationException::withMessages([
+                'foto' => 'O arquivo de foto nao foi enviado corretamente. Tente novamente.',
+            ]);
+        }
+
+        if ($user->foto_perfil) {
+            Storage::disk('public')->delete($user->foto_perfil);
+        }
+
+        $user->foto_perfil = $path;
+        $user->save();
+
+        return redirect()->route('profile.edit')->with('success', 'Foto de perfil atualizada com sucesso.');
     }
 
     public function editPassword(Request $request)

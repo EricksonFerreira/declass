@@ -20,6 +20,9 @@
     .b-info { background: #dbeafe; color: #1e40af; }
     .b-secondary { background: #e2e8f0; color: #475569; }
     .muted { color: #64748b; }
+    .assinatura { margin-top: 34px; }
+    .assinatura td { border: none; text-align: center; }
+    .assinatura .linha { display: inline-block; border-top: 1px solid #334155; padding-top: 5px; margin-top: 22px; width: 88%; font-size: 9px; color: #475569; }
     .rodape { margin-top: 20px; font-size: 8px; color: #94a3b8; text-align: center; }
 </style>
 </head>
@@ -32,6 +35,7 @@
     @endphp
 
     <div class="cab">
+        @include('pdf._logo', ['escola' => $aluno->escola])
         <h1>{{ $aluno->escola->nome ?? 'Escola' }}</h1>
         <h2>Histórico Escolar do Aluno</h2>
     </div>
@@ -81,6 +85,9 @@
             @endforelse
         </tbody>
     </table>
+    <div class="muted" style="font-size:8px; margin:-4px 0 8px;">
+        Média de aprovação definida por disciplina na turma (padrão 7,0 — escala 0–10).
+    </div>
 
     <table class="dados">
         <tr>
@@ -125,6 +132,14 @@
             </tbody>
         </table>
     @endif
+
+    <table class="assinatura">
+        <tr>
+            <td style="width:42%;"><span class="linha">{{ $aluno->escola->nome ?? 'Escola' }}<br>Direção / Secretaria</span></td>
+            <td style="width:16%;"></td>
+            <td style="width:42%;"><span class="linha">Responsável legal<br>{{ $aluno->responsaveis->first()?->pessoa?->nome ?? '____________________' }}</span></td>
+        </tr>
+    </table>
 
     <div class="rodape">
         Documento gerado pelo sistema Declass em {{ now()->format('d/m/Y \à\s H:i') }} — registro cumulativo do aluno.

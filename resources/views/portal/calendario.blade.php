@@ -3,6 +3,7 @@
 @section('title', $titulo)
 
 @section('content_header')
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
     <x-page-title :title="$titulo" subtitle="Veja quando há aula, feriados e eventos — sem precisar perguntar à escola" />
 @stop
 

@@ -45,8 +45,10 @@ class AvisoController extends BaseController implements FiltroInterface, Resourc
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
+        $busca = $itensFiltered['busca']['valor'] ?? null;
         $avisos = $this->avisoService->getAllWithFiltersAndPagination(
-            $itensFiltered, $perPage, ['escola', 'turma'], 'data_publicacao', 'desc'
+            $itensFiltered, $perPage, ['escola', 'turma', 'turmas'], 'data_publicacao', 'desc',
+            $busca ? fn ($q) => $q->where(fn ($s) => $s->where('titulo', 'like', "%{$busca}%")->orWhere('mensagem', 'like', "%{$busca}%")) : null
         );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Avisos', 'Comunicação');
@@ -75,7 +77,8 @@ class AvisoController extends BaseController implements FiltroInterface, Resourc
 
     public function store(StoreAvisoRequest $request)
     {
-        $this->avisoService->create($request->validated());
+        $aviso = $this->avisoService->create($request->validated());
+        $aviso->turmas()->sync($request->input('turma_ids', []));
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Aviso criado com sucesso.');
     }
@@ -94,6 +97,7 @@ class AvisoController extends BaseController implements FiltroInterface, Resourc
     public function update(UpdateAvisoRequest $request, $id)
     {
         $aviso = $this->avisoService->update($id, $request->validated());
+        $aviso->turmas()->sync($request->input('turma_ids', []));
         abort_if(! $aviso, 403, 'Sem acesso para editar este aviso.');
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Aviso atualizado com sucesso.');
@@ -137,7 +141,17 @@ class AvisoController extends BaseController implements FiltroInterface, Resourc
     public function obterFiltrosPrincipais()
     {
         return [
-            ['name' => 'titulo', 'label' => 'Título', 'type' => 'text', 'typeWhere' => 'like'],
+            ['name' => 'busca', 'label' => 'Buscar (título ou mensagem)', 'type' => 'text', 'typeWhere' => 'like'],
+            [
+                'name' => 'tipo', 'label' => 'Tipo', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => Aviso::TIPOS,
+            ],
+            [
+                'name' => 'ativo', 'label' => 'Status', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => ['S' => 'Ativo', 'N' => 'Inativo'],
+            ],
         ];
     }
 
@@ -155,19 +169,12 @@ class AvisoController extends BaseController implements FiltroInterface, Resourc
                 'options' => $this->turmasOpcoesFiltro(),
             ],
             [
-                'name' => 'tipo', 'label' => 'Tipo', 'type' => 'select',
-                'typeWhere' => 'where',
-                'options' => Aviso::TIPOS,
-            ],
-            [
                 'name' => 'destino', 'label' => 'Público', 'type' => 'select',
                 'typeWhere' => 'where',
                 'options' => Aviso::DESTINOS,
             ],
             [
-                'name' => 'ativo', 'label' => 'Status', 'type' => 'select',
-                'typeWhere' => 'where',
-                'options' => ['S' => 'Ativo', 'N' => 'Inativo'],
+                'name' => 'data_publicacao', 'label' => 'Publicação', 'type' => 'date', 'typeWhere' => 'between',
             ],
         ];
     }

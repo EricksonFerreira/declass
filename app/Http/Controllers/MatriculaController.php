@@ -68,10 +68,20 @@ class MatriculaController extends BaseController implements FiltroInterface, Res
 
     public function create()
     {
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Matrículas', 'matricula.index', 'Nova Matrícula', 'Vida Acadêmica');
+        $turmaRota = request()->route('turma');
+        $turma = $turmaRota ? Turma::find($turmaRota) : null;
 
-        return view('matricula.add-edit', array_merge(compact('breadcrumb'), $this->opcoesFormulario()))
-            ->with('titulo', $this->titulo);
+        $breadcrumb = $turma
+            ? $this->breadcrumbService->prepararBreadcrumbCustom([
+                ['Turmas', route('turma.index')],
+                [$turma->nome, route('turma.show', $turma->id)],
+                ['Nova Matrícula', null],
+            ])
+            : $this->breadcrumbService->prepararBreadcrumbCreate('Matrículas', 'matricula.index', 'Nova Matrícula', 'Vida Acadêmica');
+
+        return view('matricula.add-edit', array_merge(compact('breadcrumb'), $this->opcoesFormulario(), [
+            'turmaPreId' => (int) request()->query('turma_id', 0) ?: $turma?->id,
+        ]))->with('titulo', $this->titulo);
     }
 
     public function store(StoreMatriculaRequest $request)
@@ -109,43 +119,66 @@ class MatriculaController extends BaseController implements FiltroInterface, Res
     }
 
     /**
-     * Rematricula em lote: passo 1 escolhe ano origem/destino,
-     * passo 2 lista alunos elegiveis com a turma de destino.
+     * Rematricula em lote: passo 1 escolhe escola/ano/turma de origem
+     * e escola/ano de destino em cascata; passo 2 lista os alunos
+     * elegiveis da turma com a turma de destino por aluno.
      */
     public function rematricula(Request $request)
     {
         $empresaId = (int) $request->user()->empresa_id;
-        $anoOrigemId = (int) $request->query('ano_origem', 0);
+        $turmaOrigemId = (int) $request->query('turma_origem', 0);
         $anoDestinoId = (int) $request->query('ano_destino', 0);
+
+        $selecao = [
+            'escola_origem' => (int) $request->query('escola_origem', 0),
+            'ano_origem' => (int) $request->query('ano_origem', 0),
+            'turma_origem' => $turmaOrigemId,
+            'escola_destino' => (int) $request->query('escola_destino', 0),
+            'ano_destino' => $anoDestinoId,
+        ];
+
+        $escolas = \App\Models\Escola::query()
+            ->where('empresa_id', $empresaId)
+            ->orderBy('nome')
+            ->get(['id', 'nome']);
 
         $anosLetivos = \App\Models\AnoLetivo::query()
             ->where('empresa_id', $empresaId)
-            ->with('escola:id,nome')
             ->orderByDesc('ano')
-            ->get(['id', 'escola_id', 'ano']);
+            ->get(['id', 'escola_id', 'ano', 'status'])
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'escola_id' => (int) $a->escola_id,
+                'rotulo' => $a->ano,
+                'status' => $a->status ?: 'letivo',
+            ])->values();
+
+        $turmas = $this->rematriculaService->turmasComOcupacao($empresaId)
+            ->map(fn ($t) => [
+                'id' => $t->id,
+                'ano_letivo_id' => (int) $t->ano_letivo_id,
+                'rotulo' => $t->nome
+                    .($t->etapa?->nome ? ' ('.$t->etapa->nome.')' : '')
+                    .' — '.$t->alunos_ativos_count.($t->capacidade_maxima ? '/'.$t->capacidade_maxima : '').' aluno(s)',
+            ])->values();
 
         $dados = null;
-        $erroAnos = null;
+        $erroSelecao = null;
 
-        if ($anoOrigemId && $anoDestinoId) {
+        if ($turmaOrigemId && $anoDestinoId) {
             try {
-                [$anoOrigem, $anoDestino] = $this->rematriculaService->validarAnos($anoOrigemId, $anoDestinoId, $empresaId);
+                [$turmaOrigem, $anoDestino] = $this->rematriculaService->validarSelecao($turmaOrigemId, $anoDestinoId, $empresaId);
             } catch (\Illuminate\Validation\ValidationException $e) {
-                $erroAnos = collect($e->errors())->flatten()->first();
-                $anoOrigem = $anoDestino = null;
+                $erroSelecao = collect($e->errors())->flatten()->first();
+                $turmaOrigem = $anoDestino = null;
             }
 
-            if ($anoOrigem && $anoDestino) {
-                $elegiveis = $this->rematriculaService->matriculasElegiveis($anoOrigemId, $anoDestinoId, $empresaId);
-                $turmasDestino = $this->rematriculaService->turmasDestino(
-                    $anoDestinoId, (int) $anoOrigem->escola_id, $empresaId
-                );
-
+            if ($turmaOrigem && $anoDestino) {
                 $dados = [
-                    'anoOrigem' => $anoOrigem,
+                    'turmaOrigem' => $turmaOrigem,
                     'anoDestino' => $anoDestino,
-                    'elegiveis' => $elegiveis,
-                    'turmasDestino' => $turmasDestino,
+                    'elegiveis' => $this->rematriculaService->matriculasElegiveis($turmaOrigemId, $anoDestinoId, $empresaId),
+                    'turmasDestino' => $this->rematriculaService->turmasDestino($anoDestinoId, $empresaId),
                 ];
             }
         }
@@ -153,26 +186,29 @@ class MatriculaController extends BaseController implements FiltroInterface, Res
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Rematrícula em lote', 'Vida Acadêmica');
 
         return view('matricula.rematricula', compact(
-            'anosLetivos', 'anoOrigemId', 'anoDestinoId', 'dados', 'erroAnos', 'breadcrumb'
+            'escolas', 'anosLetivos', 'turmas', 'selecao',
+            'dados', 'erroSelecao', 'breadcrumb'
         ))->with('titulo', 'Rematrícula em lote');
     }
 
     public function rematricular(Request $request)
     {
         $request->validate([
-            'ano_origem' => ['required', 'integer'],
+            'turma_origem' => ['required', 'integer'],
             'ano_destino' => ['required', 'integer'],
             'itens' => ['required', 'array', 'min:1'],
             'itens.*' => ['integer'],
+            'escola_origem' => ['nullable', 'integer'],
+            'ano_origem' => ['nullable', 'integer'],
+            'escola_destino' => ['nullable', 'integer'],
         ]);
 
         $empresaId = (int) $request->user()->empresa_id;
+        $turmaOrigemId = (int) $request->input('turma_origem');
         $anoDestinoId = (int) $request->input('ano_destino');
 
-        // garante que os anos sao validos antes de gravar
-        $this->rematriculaService->validarAnos(
-            (int) $request->input('ano_origem'), $anoDestinoId, $empresaId
-        );
+        // garante que turma de origem e ano de destino sao validos antes de gravar
+        $this->rematriculaService->validarSelecao($turmaOrigemId, $anoDestinoId, $empresaId);
 
         $resultado = $this->rematriculaService->rematricular(
             $request->input('itens'), $anoDestinoId, $empresaId
@@ -186,7 +222,10 @@ class MatriculaController extends BaseController implements FiltroInterface, Res
 
         return redirect()
             ->route('matricula.rematricula', [
+                'escola_origem' => $request->input('escola_origem'),
                 'ano_origem' => $request->input('ano_origem'),
+                'turma_origem' => $turmaOrigemId,
+                'escola_destino' => $request->input('escola_destino'),
                 'ano_destino' => $anoDestinoId,
             ])
             ->with('success', $mensagem)
@@ -254,9 +293,34 @@ class MatriculaController extends BaseController implements FiltroInterface, Res
 
     private function opcoesFormulario(): array
     {
+        $alunos = Aluno::query()->with(['pessoa', 'escola'])->orderBy('id')->get();
+        $turmas = Turma::query()->with(['escola', 'anoLetivo', 'etapa'])->orderBy('nome')->get();
+
         return [
-            'alunos' => $this->alunosOpcoes(),
-            'turmas' => $this->turmasOpcoes(),
+            'alunos' => $alunos->mapWithKeys(fn (Aluno $a) => [
+                $a->id => $a->pessoa?->nome ?? ('Aluno #'.$a->id),
+            ])->all(),
+            'turmas' => $turmas->mapWithKeys(fn (Turma $t) => [
+                $t->id => $t->nome.' — '.($t->escola->nome ?? '').' — '.($t->anoLetivo->ano ?? ''),
+            ])->all(),
+            // Dados estruturados para o modal de busca (picker) do formulario.
+            'alunosPicker' => $alunos->map(fn (Aluno $a) => [
+                'id' => $a->id,
+                'rotulo' => $a->pessoa?->nome ?? ('Aluno #'.$a->id),
+                'detalhe' => trim(($a->registro_academico ? 'RA '.$a->registro_academico.' · ' : '').($a->escola->nome ?? ''), ' ·'),
+                'escola_id' => $a->escola_id,
+                'escola' => $a->escola->nome ?? '',
+            ])->values()->all(),
+            'turmasPicker' => $turmas->map(fn (Turma $t) => [
+                'id' => $t->id,
+                'rotulo' => $t->nome.' — '.($t->escola->nome ?? '').' — '.($t->anoLetivo->ano ?? ''),
+                'nome' => $t->nome,
+                'detalhe' => trim(($t->etapa->nome ?? '').' · '.($t->anoLetivo->ano ?? '').' · '.($t->escola->nome ?? ''), ' ·'),
+                'escola_id' => $t->escola_id,
+                'escola' => $t->escola->nome ?? '',
+                'ano_letivo_id' => $t->ano_letivo_id,
+                'ano' => $t->anoLetivo?->ano,
+            ])->values()->all(),
             'status' => Matricula::STATUS,
             'planos' => \App\Models\PlanoMensalidade::query()
                 ->where('ativo', 'S')

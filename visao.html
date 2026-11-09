@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+
+    
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="ecALLU8qEjx3AiTquESjz7eD0eOEVdbGkTTsbuXs">
+
+    
+            <link rel="shortcut icon" href="http://declass.test/assets/imgs/logo-sem-texto.png" />
+    <meta name="theme-color" content="#0a1628">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DECLASS">
+
+    
+    <title>
+                Visão Geral do Financeiro            </title>
+
+    
+    
+    
+            <link rel="stylesheet" href="http://declass.test/vendor/fontawesome-free/css/all.min.css">
+        <link rel="stylesheet" href="http://declass.test/vendor/overlayScrollbars/css/OverlayScrollbars.min.css">
+        <link rel="stylesheet" href="http://declass.test/vendor/adminlte/dist/css/adminlte.min.css">
+
+                    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+            
+    
+    <link rel="stylesheet" href="http://declass.test/css/app-custom.css">
+            
+            
+
+    
+
+    
+    
+
+    
+
+    
+    
+    
+            
+    
+            <link rel="shortcut icon" href="http://declass.test/favicons/favicon.ico" />
+    
+</head>
+
+<body class="" >
+
+    
+        <div class="wrapper">
+
+        
+        
+        
+                    <style>
+    :root {
+        --empresa-cor-primaria: #FFFFFF;
+        --empresa-cor-secundaria: #F8FAFC;
+        --empresa-cor-terciaria: #CBD5E1;
+
+        --empresa-cor-primaria-contraste: #0F172A;
+        --empresa-cor-secundaria-contraste: #0F172A;
+        --empresa-cor-terciaria-contraste: #0F172A;
+    }
+
+    /* Sidebar search: keep typed match text readable on light results panel */
+    .main-sidebar .sidebar-search-results .search-title,
+    .main-sidebar .sidebar-search-results .search-path {
+        color: #111827 !important;
+    }
+
+    .main-sidebar .sidebar-search-results .search-title .text-light,
+    .main-sidebar .sidebar-search-results .search-path .text-light,
+    .main-sidebar .sidebar-search-results .search-title strong,
+    .main-sidebar .sidebar-search-results .search-path strong {
+        color: #000 !important;
+        font-weight: 700 !important;
+    }
+
+    /* Breadcrumb no menu superior (x-breadcrumb injeta via content_top_nav_left) */
+    .main-header .navbar-breadcrumb .breadcrumb {
+        font-size: .875rem;
+        line-height: 1.5;
+    }
+
+    .main-header .navbar-breadcrumb .breadcrumb-item a {
+        color: var(--empresa-cor-primaria-contraste, #495057);
+        opacity: .8;
+        font-weight: 500;
+    }
+
+    .main-header .navbar-breadcrumb .breadcrumb-item a:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    .main-header .navbar-breadcrumb .breadcrumb-item.active {
+        color: var(--empresa-cor-primaria-contraste, #343a40);
+        font-weight: 700;
+    }
+
+    .main-header .navbar-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+        color: var(--empresa-cor-primaria-contraste, #6c757d);
+        opacity: .55;
+    }
+
+    .user-menu .dropdown-menu {
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+        border-radius: 14px;
+        padding: 0.35rem 0.4rem;
+    }
+
+    .user-menu .dropdown-menu .user-footer {
+        border-top: 1px solid #e2e8f0;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .user-menu .dropdown-menu .user-footer .btn {
+        border-radius: 999px;
+        font-weight: 600;
+    }
+
+    .user-menu .user-footer .empresa-context-select {
+        margin-top: 10px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px;
+    }
+
+    .user-menu .empresa-context-body {
+        padding: 12px 12px 0;
+    }
+
+    .user-menu .empresa-context-select label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #64748b;
+        margin-bottom: 6px;
+        display: block;
+        font-weight: 700;
+    }
+
+    .user-menu .empresa-context-current {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        margin-bottom: 8px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: #f8fafc;
+        color: #0f172a;
+        font-weight: 700;
+        font-size: 13px;
+    }
+
+    .user-menu .empresa-context-select select {
+        border-radius: 10px;
+        font-size: 13px;
+    }
+
+    .user-menu .empresa-context-link {
+        display: inline-flex;
+        margin-top: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--empresa-cor-primaria, #2563eb);
+    }
+
+    .user-menu .empresa-context-link:hover {
+        text-decoration: underline;
+    }
+
+    .main-header.navbar .escola-context-select {
+        min-width: 170px;
+        max-width: 220px;
+        height: 32px;
+        padding: 4px 10px;
+        font-size: 12.5px;
+        font-weight: 600;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--empresa-cor-primaria) 45%, transparent 55%);
+        background: color-mix(in srgb, var(--empresa-cor-primaria) 82%, #fff 18%);
+        color: var(--empresa-cor-primaria-contraste, #fff);
+    }
+
+    .main-header.navbar .escola-context-select option {
+        color: #0f172a;
+        background: #fff;
+    }
+</style>
+
+
+<nav class="main-header navbar
+    navbar-expand
+    navbar-white navbar-light">
+
+    
+    <ul class="navbar-nav">
+        
+        <li class="nav-item">
+    <a class="nav-link" data-widget="pushmenu" href="#"
+                        >
+        <i class="fas fa-bars"></i>
+        <span class="sr-only">Trocar navegação</span>
+    </a>
+</li>
+        
+        
+        
+            <li class="nav-item navbar-breadcrumb d-none d-sm-flex align-items-center">
+        <ol class="breadcrumb mb-0 flex-nowrap navbar-breadcrumb-badge">
+                                            <li class="breadcrumb-item ">
+                                            <a href="http://declass.test/admin/home">Home</a>
+                                    </li>
+                                            <li class="breadcrumb-item ">
+                                            Financeiro
+                                    </li>
+                                            <li class="breadcrumb-item active">
+                                            Visão Geral do Financeiro
+                                    </li>
+                    </ol>
+    </li>
+    <style>
+        .navbar-breadcrumb-badge {
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 999px;
+            padding: .3rem .95rem;
+        }
+        .main-header .navbar-breadcrumb-badge,
+        .main-header .navbar-breadcrumb-badge .breadcrumb-item { font-weight: 700 !important; }
+        /* Links: preto puro */
+        .main-header .navbar-breadcrumb-badge .breadcrumb-item a { color: #000 !important; font-weight: 700 !important; opacity: 1 !important; }
+        /* Item atual e itens sem link: cinza mais claro */
+        .main-header .navbar-breadcrumb-badge .breadcrumb-item,
+        .main-header .navbar-breadcrumb-badge .breadcrumb-item.active { color: #6b7280 !important; font-weight: 700 !important; }
+        .main-header .navbar-breadcrumb-badge .breadcrumb-item + .breadcrumb-item::before { color: #000 !important; font-weight: 700 !important; opacity: 1 !important; }
+    </style>
+    </ul>
+    
+    <ul class="navbar-nav ml-auto">
+        
+        
+        
+        
+        
+        
+        <li class="nav-item dropdown" id="navbar-notificacoes">
+
+    
+    <a  href=""  class="nav-link" data-toggle="dropdown" href="http://declass.test/admin/notificacoes">
+
+        
+        <i class="far fa-bell text-secondary"></i>
+
+        
+        <span class="badge navbar-badge text-bold text-xs badge-pill badge-warning">0</span>
+
+    </a>
+
+    
+    
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+
+            
+            <div class="adminlte-dropdown-content"></div>
+
+            
+            <div class="dropdown-divider"></div>
+
+            
+            <a href="http://declass.test/admin/notificacoes" class="dropdown-item dropdown-footer">
+                                    Ver todas
+                            </a>
+
+        </div>
+
+    
+</li>
+
+
+
+
+
+
+
+
+        
+                                    <li class="nav-item dropdown user-menu">
+
+    
+    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+        
+                    <img src="https://ui-avatars.com/api/?name=Super+Admin&amp;background=FFFFFF&amp;color=#0F172A&amp;size=256"
+                 class="user-image img-circle elevation-2"
+                 alt="Super Admin">
+                <span  class="d-none d-md-inline" >
+            Super Admin
+        </span>
+    </a>
+
+    
+    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+
+        
+                            
+        
+        
+        
+        
+                    
+            <li class="user-body empresa-context-body">
+                <div class="empresa-context-select">
+                    <label>Empresa da sessão</label>
+                    <div class="empresa-context-current">
+                        <i class="fas fa-building mr-1"></i>
+                        <span>Todas as empresas</span>
+                    </div>
+                    <form method="POST" action="http://declass.test/admin/empresa-contexto" class="mb-0">
+                        <input type="hidden" name="_token" value="ecALLU8qEjx3AiTquESjz7eD0eOEVdbGkTTsbuXs" autocomplete="off">                        <select
+                            name="empresa_id"
+                            class="form-control form-control-sm"
+                            onchange="this.form.submit()"
+                            title="Empresa da sessão"
+                        >
+                            <option value="0" selected>Todas as empresas</option>
+                                                            <option value="2" >
+                                    DeClass
+                                </option>
+                                                            <option value="1" >
+                                    Escola Vila Nova
+                                </option>
+                                                    </select>
+                    </form>
+                    <a href="http://declass.test/admin/empresa-contexto" class="empresa-context-link">
+                        Abrir tela de troca
+                    </a>
+                </div>
+            </li>
+        
+        
+        <li class="user-footer">
+                            <a href="http://declass.test/admin/profile" class="nav-link btn btn-default btn-flat d-inline-block">
+                    <i class="fa fa-fw fa-user text-lightblue"></i>
+                    Perfil
+                </a>
+                        <a class="btn btn-default btn-flat float-right "
+               href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fa fa-fw fa-power-off text-red"></i>
+                Sair
+            </a>
+            <form id="logout-form" action="http://declass.test/admin/logout" method="POST" style="display: none;">
+                                <input type="hidden" name="_token" value="ecALLU8qEjx3AiTquESjz7eD0eOEVdbGkTTsbuXs" autocomplete="off">
+            </form>
+        </li>
+
+    </ul>
+
+</li>
+                    
+        
+            </ul>
+
+</nav>
+
+        
+        
+        
+        
+                    <aside class="main-sidebar sidebar-light-secondary">
+
+    
+            <a href="http://declass.test/admin/home"
+            class="brand-link "
+    >
+
+    
+    <img src="http://declass.test/assets/imgs/logo-sem-texto.png"
+         alt="Logo DECLASS"
+         class="brand-image"
+         style="opacity:.8">
+
+    
+    <span class="brand-text font-weight-light ">
+        <b>DECLASS</b>
+    </span>
+
+</a>
+    
+    
+    <div class="sidebar">
+        <nav class="pt-2">
+            <ul class="nav nav-pills nav-sidebar flex-column nav-child-indent nav-compact text-sm"
+                data-widget="treeview" role="menu"
+                                >
+                
+                <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/home"        >
+
+        <i class="fas fa-home "></i>
+
+        <p>
+            Início
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-cogs "></i>
+
+        <p>
+            Organização Administrativa
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/escola"        >
+
+        <i class="fas fa-school "></i>
+
+        <p>
+            Escolas
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-sitemap "></i>
+
+        <p>
+            Estrutura Acadêmica
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/ano-letivo"        >
+
+        <i class="fas fa-calendar-alt "></i>
+
+        <p>
+            Anos Letivos
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/periodo-letivo"        >
+
+        <i class="fas fa-calendar-week "></i>
+
+        <p>
+            Períodos Letivos
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/etapa"        >
+
+        <i class="fas fa-layer-group "></i>
+
+        <p>
+            Etapas
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/disciplina"        >
+
+        <i class="fas fa-book "></i>
+
+        <p>
+            Disciplinas
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-chalkboard-teacher "></i>
+
+        <p>
+            Turmas e Horários
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/turma"        >
+
+        <i class="fas fa-chalkboard-teacher "></i>
+
+        <p>
+            Turmas
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/horarios"        >
+
+        <i class="fas fa-calendar-week "></i>
+
+        <p>
+            Grades de Horário
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/horario-matriz"        >
+
+        <i class="fas fa-clock "></i>
+
+        <p>
+            Matriz de Horários
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-id-card "></i>
+
+        <p>
+            Matrículas
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/matricula"        >
+
+        <i class="fas fa-id-card "></i>
+
+        <p>
+            Matrículas
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/matricula/rematricula"        >
+
+        <i class="fas fa-exchange-alt "></i>
+
+        <p>
+            Rematrícula em Lote
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/solicitacao-matricula"        >
+
+        <i class="fas fa-user-plus "></i>
+
+        <p>
+            Solicitações de Matrícula
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-users "></i>
+
+        <p>
+            Pessoas
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/usuario"        >
+
+        <i class="fas fa-user-cog "></i>
+
+        <p>
+            Usuários
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/regra"        >
+
+        <i class="fas fa-user-shield "></i>
+
+        <p>
+            Perfis de Acesso
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-user-graduate "></i>
+
+        <p>
+            Alunos e Família
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/aluno"        >
+
+        <i class="fas fa-user-graduate "></i>
+
+        <p>
+            Alunos
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/responsavel"        >
+
+        <i class="fas fa-user-friends "></i>
+
+        <p>
+            Responsáveis
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/portal"        >
+
+        <i class="fas fa-home "></i>
+
+        <p>
+            Portal Familiar
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/saude"        >
+
+        <i class="fas fa-notes-medical "></i>
+
+        <p>
+            Saúde dos Alunos
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-tasks "></i>
+
+        <p>
+            Acompanhamento
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/ocorrencia"        >
+
+        <i class="fas fa-exclamation-circle "></i>
+
+        <p>
+            Ocorrências
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/plano-atendimento"        >
+
+        <i class="fas fa-hands-helping "></i>
+
+        <p>
+            Planos de Atendimento
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/justificativas"        >
+
+        <i class="fas fa-file-medical "></i>
+
+        <p>
+            Atestados e Abonos
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/tarefa"        >
+
+        <i class="fas fa-tasks "></i>
+
+        <p>
+            Tarefas
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/documentos"        >
+
+        <i class="fas fa-folder-open "></i>
+
+        <p>
+            Documentos
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-chalkboard "></i>
+
+        <p>
+            Operação Pedagógica
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-calendar-check "></i>
+
+        <p>
+            Calendário
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/calendario"        >
+
+        <i class="fas fa-calendar-alt "></i>
+
+        <p>
+            Calendário Letivo
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/feriado"        >
+
+        <i class="fas fa-umbrella-beach "></i>
+
+        <p>
+            Feriados
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/evento"        >
+
+        <i class="fas fa-calendar-alt "></i>
+
+        <p>
+            Agenda
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-clipboard-check "></i>
+
+        <p>
+            Diário e Avaliações
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/diario"        >
+
+        <i class="fas fa-clipboard-list "></i>
+
+        <p>
+            Diário de Classe
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/avaliacao"        >
+
+        <i class="fas fa-star-half-alt "></i>
+
+        <p>
+            Avaliações
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/agenda-avaliacoes"        >
+
+        <i class="fas fa-calendar-check "></i>
+
+        <p>
+            Agenda de Avaliações
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/boletim"        >
+
+        <i class="fas fa-file-alt "></i>
+
+        <p>
+            Boletim
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-chart-bar "></i>
+
+        <p>
+            Relatórios
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/relatorio-frequencia"        >
+
+        <i class="fas fa-clipboard-check "></i>
+
+        <p>
+            Frequência
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/relatorio-inadimplencia"        >
+
+        <i class="fas fa-money-bill-wave "></i>
+
+        <p>
+            Inadimplência
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/relatorio-transporte"        >
+
+        <i class="fas fa-route "></i>
+
+        <p>
+            Transporte
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/relatorio-aproveitamento"        >
+
+        <i class="fas fa-chart-line "></i>
+
+        <p>
+            Aproveitamento
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-bullhorn "></i>
+
+        <p>
+            Comunicação
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/aviso"        >
+
+        <i class="fas fa-bullhorn "></i>
+
+        <p>
+            Avisos
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/pesquisa"        >
+
+        <i class="fas fa-clipboard-question "></i>
+
+        <p>
+            Pesquisas
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-concierge-bell "></i>
+
+        <p>
+            Operações
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-book-open "></i>
+
+        <p>
+            Biblioteca
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/emprestimo"        >
+
+        <i class="fas fa-book-reader "></i>
+
+        <p>
+            Empréstimos
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/livro"        >
+
+        <i class="fas fa-book "></i>
+
+        <p>
+            Acervo
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-bus "></i>
+
+        <p>
+            Transporte
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/transporte-aluno"        >
+
+        <i class="fas fa-user-friends "></i>
+
+        <p>
+            Passageiros
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/rota-transporte"        >
+
+        <i class="fas fa-route "></i>
+
+        <p>
+            Rotas
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/veiculo"        >
+
+        <i class="fas fa-truck "></i>
+
+        <p>
+            Veículos
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-utensils "></i>
+
+        <p>
+            Alimentação
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/cardapio"        >
+
+        <i class="fas fa-concierge-bell "></i>
+
+        <p>
+            Cardápios
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-boxes "></i>
+
+        <p>
+            Estoque
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/material"        >
+
+        <i class="fas fa-box-open "></i>
+
+        <p>
+            Materiais
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/material/movimentacao"        >
+
+        <i class="fas fa-exchange-alt "></i>
+
+        <p>
+            Movimentação de Materiais
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview menu-open">
+
+    
+    <a class="nav-link active "
+       href="" >
+
+        <i class="fas fa-hand-holding-usd "></i>
+
+        <p>
+            Financeiro
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/mensalidade"        >
+
+        <i class="fas fa-file-invoice-dollar "></i>
+
+        <p>
+            Mensalidades
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/plano-mensalidade"        >
+
+        <i class="fas fa-tags "></i>
+
+        <p>
+            Planos de Mensalidade
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/despesa"        >
+
+        <i class="fas fa-file-invoice "></i>
+
+        <p>
+            Contas a Pagar
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/conta-receber"        >
+
+        <i class="fas fa-hand-holding-usd "></i>
+
+        <p>
+            Contas a Receber
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item has-treeview menu-open">
+
+    
+    <a class="nav-link active "
+       href="" >
+
+        <i class="fas fa-chart-pie "></i>
+
+        <p>
+            Análises
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link active "
+       href="http://declass.test/admin/financeiro/visao-geral"        >
+
+        <i class="fas fa-chart-line "></i>
+
+        <p>
+            Visão Geral
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/fluxo-caixa"        >
+
+        <i class="fas fa-chart-line "></i>
+
+        <p>
+            Fluxo de Caixa
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/dre"        >
+
+        <i class="fas fa-balance-scale "></i>
+
+        <p>
+            DRE
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+    </ul>
+
+</li>
+
+<li  class="nav-item has-treeview ">
+
+    
+    <a class="nav-link  "
+       href="" >
+
+        <i class="fas fa-cogs "></i>
+
+        <p>
+            Configurações
+            <i class="fas fa-angle-left right"></i>
+
+                    </p>
+
+    </a>
+
+    
+    <ul class="nav nav-treeview">
+        <li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/empresa"        >
+
+        <i class="fas fa-building "></i>
+
+        <p>
+            Empresas
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/espelhamento"        >
+
+        <i class="fas fa-user-secret "></i>
+
+        <p>
+            Espelhar acesso
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/comandos"        >
+
+        <i class="fas fa-terminal "></i>
+
+        <p>
+            Comandos
+
+                    </p>
+
+    </a>
+
+</li>
+
+<li  class="nav-item">
+
+    <a class="nav-link  "
+       href="http://declass.test/admin/logs"        >
+
+        <i class="fas fa-file-alt "></i>
+
+        <p>
+            Logs
+
+                    </p>
+
+    </a>
+
+</li>
+
+    </ul>
+
+</li>
+
+            </ul>
+        </nav>
+    </div>
+
+</aside>
+        
+        
+                    <div class="content-wrapper position-relative">
+
+    
+            <div class="preloader flex-column justify-content-center align-items-center position-absolute" style="z-index:1000">
+
+    
+        
+        <img src="http://declass.test/assets/imgs/logo-sem-texto.png"
+             class="img-circle animation__shake"
+             alt="Imagem de Pré-carregamento DECLASS"
+             width="160"
+             height="160"
+             style="animation-iteration-count:infinite; object-fit: contain;">
+
+    
+</div>
+    
+    
+            <div class="content-header">
+            <div class="container-fluid">
+                        <div class="page-title d-flex justify-content-between align-items-start flex-wrap" style="gap:.5rem;">
+    <div>
+        <h3 class="mb-0 font-weight-bold">Visão Geral do Financeiro</h3>
+                    <div class="text-muted" style="font-size:.86rem;">Indicadores financeiros da rede — por escola e ano</div>
+            </div>
+
+    <div class="d-flex align-items-center flex-wrap" style="gap:.35rem;">
+        
+
+            </div>
+</div>
+            </div>
+        </div>
+    
+    
+    <div class="content">
+        <div class="container-fluid">
+                        <form method="GET" action="http://declass.test/admin/financeiro/visao-geral" class="mb-3">
+    <div class="row justify-content-end">
+                <div class="col-md-3 col-6">
+            <select name="escola_id" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">Todas as escolas</option>
+                                    <option value="3" >Campus Sul</option>
+                                    <option value="1" >Unidade Central</option>
+                                    <option value="2" >Unidade Norte</option>
+                            </select>
+        </div>
+                <div class="col-md-2 col-4">
+            <select name="ano" class="form-control form-control-sm" onchange="this.form.submit()">
+                                    <option value="2026" selected>2026</option>
+                            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-filter"></i> Filtrar</button>
+        </div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box">
+            <span class="info-box-icon bg-danger"><i class="fas fa-arrow-trend-down"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Saídas no ano</span>
+                <span class="info-box-number">R$ 0,00</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box">
+            <span class="info-box-icon bg-info"><i class="fas fa-calendar-check"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">A receber no ano</span>
+                <span class="info-box-number">R$ 2.014.350,00</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box">
+            <span class="info-box-icon bg-success"><i class="fas fa-circle-check"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Recebido hoje</span>
+                <span class="info-box-number">R$ 0,00</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box">
+            <span class="info-box-icon bg-warning"><i class="fas fa-exclamation-triangle"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Em atraso</span>
+                <span class="info-box-number text-danger">R$ 568.150,00</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-chart-bar mr-1"></i> Inadimplência por Turma</h3>
+                <div class="card-tools">
+                    <a href="http://declass.test/admin/relatorio-inadimplencia" class="btn btn-tool">Ver detalhes</a>
+                </div>
+            </div>
+            <div class="card-body">
+                                                                                <div class="mb-3">
+                            <div class="d-flex justify-content-between" style="font-size:.85rem">
+                                <strong>1º Ano A</strong>
+                                <span class="text-muted">15 parcelas</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1" style="height:10px">
+                                    <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                </div>
+                                <span class="ml-2 text-danger font-weight-bold" style="font-size:.85rem;white-space:nowrap">
+                                    R$ 8.250,00
+                                </span>
+                            </div>
+                        </div>
+                                            <div class="mb-3">
+                            <div class="d-flex justify-content-between" style="font-size:.85rem">
+                                <strong>2º Ano A</strong>
+                                <span class="text-muted">15 parcelas</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1" style="height:10px">
+                                    <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                </div>
+                                <span class="ml-2 text-danger font-weight-bold" style="font-size:.85rem;white-space:nowrap">
+                                    R$ 8.250,00
+                                </span>
+                            </div>
+                        </div>
+                                            <div class="mb-3">
+                            <div class="d-flex justify-content-between" style="font-size:.85rem">
+                                <strong>2º Ano A</strong>
+                                <span class="text-muted">15 parcelas</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1" style="height:10px">
+                                    <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                </div>
+                                <span class="ml-2 text-danger font-weight-bold" style="font-size:.85rem;white-space:nowrap">
+                                    R$ 8.250,00
+                                </span>
+                            </div>
+                        </div>
+                                            <div class="mb-3">
+                            <div class="d-flex justify-content-between" style="font-size:.85rem">
+                                <strong>9º Ano A</strong>
+                                <span class="text-muted">15 parcelas</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1" style="height:10px">
+                                    <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                </div>
+                                <span class="ml-2 text-danger font-weight-bold" style="font-size:.85rem;white-space:nowrap">
+                                    R$ 8.250,00
+                                </span>
+                            </div>
+                        </div>
+                                            <div class="mb-3">
+                            <div class="d-flex justify-content-between" style="font-size:.85rem">
+                                <strong>5º Ano A</strong>
+                                <span class="text-muted">15 parcelas</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1" style="height:10px">
+                                    <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                </div>
+                                <span class="ml-2 text-danger font-weight-bold" style="font-size:.85rem;white-space:nowrap">
+                                    R$ 8.250,00
+                                </span>
+                            </div>
+                        </div>
+                                            <div class="mb-3">
+                            <div class="d-flex justify-content-between" style="font-size:.85rem">
+                                <strong>3º Ano A</strong>
+                                <span class="text-muted">15 parcelas</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1" style="height:10px">
+                                    <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                </div>
+                                <span class="ml-2 text-danger font-weight-bold" style="font-size:.85rem;white-space:nowrap">
+                                    R$ 8.250,00
+                                </span>
+                            </div>
+                        </div>
+                                            <div class="mb-3">
+                            <div class="d-flex justify-content-between" style="font-size:.85rem">
+                                <strong>4º Ano B</strong>
+                                <span class="text-muted">15 parcelas</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1" style="height:10px">
+                                    <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                </div>
+                                <span class="ml-2 text-danger font-weight-bold" style="font-size:.85rem;white-space:nowrap">
+                                    R$ 8.250,00
+                                </span>
+                            </div>
+                        </div>
+                                            <div class="mb-3">
+                            <div class="d-flex justify-content-between" style="font-size:.85rem">
+                                <strong>9º Ano A</strong>
+                                <span class="text-muted">15 parcelas</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1" style="height:10px">
+                                    <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                </div>
+                                <span class="ml-2 text-danger font-weight-bold" style="font-size:.85rem;white-space:nowrap">
+                                    R$ 8.250,00
+                                </span>
+                            </div>
+                        </div>
+                                                </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-clock mr-1"></i> Maiores atrasos</h3>
+            </div>
+            <div class="card-body p-0">
+                                    <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Edson Estrada</strong><br>
+                                    <small class="text-muted">
+                                        Pré II A · 28.82128880794 dias de atraso
+                                    </small>
+                                </div>
+                                <span class="badge badge-danger" style="font-size:.85rem">R$ 550,00</span>
+                            </li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Noa Pena Sobrinho</strong><br>
+                                    <small class="text-muted">
+                                        Pré II A · 28.821288809653 dias de atraso
+                                    </small>
+                                </div>
+                                <span class="badge badge-danger" style="font-size:.85rem">R$ 550,00</span>
+                            </li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Sra. Simone Martines</strong><br>
+                                    <small class="text-muted">
+                                        Pré II A · 28.82128881044 dias de atraso
+                                    </small>
+                                </div>
+                                <span class="badge badge-danger" style="font-size:.85rem">R$ 550,00</span>
+                            </li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Leo Benez da Rosa</strong><br>
+                                    <small class="text-muted">
+                                        Pré II A · 28.821288811204 dias de atraso
+                                    </small>
+                                </div>
+                                <span class="badge badge-danger" style="font-size:.85rem">R$ 550,00</span>
+                            </li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Sra. Mônica Bezerra</strong><br>
+                                    <small class="text-muted">
+                                        Pré II A · 28.821288811863 dias de atraso
+                                    </small>
+                                </div>
+                                <span class="badge badge-danger" style="font-size:.85rem">R$ 550,00</span>
+                            </li>
+                                            </ul>
+                            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-chart-column mr-1"></i> Receita Prevista × Realizada — 2026</h3>
+        <div class="card-tools">
+            <a href="http://declass.test/admin/fluxo-caixa" class="btn btn-tool">Ver fluxo de caixa</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row text-center mb-3">
+            <div class="col-md-3 col-6 mb-2">
+                <small class="text-muted d-block">Previsto no ano</small>
+                <strong>R$ 2.892.400,00</strong>
+            </div>
+            <div class="col-md-3 col-6 mb-2">
+                <small class="text-muted d-block">Realizado</small>
+                <strong class="text-success">R$ 878.050,00</strong>
+            </div>
+            <div class="col-md-3 col-6 mb-2">
+                <small class="text-muted d-block">Diferença</small>
+                <strong class="text-danger">R$ -2.014.350,00</strong>
+            </div>
+            <div class="col-md-3 col-6 mb-2">
+                <small class="text-muted d-block">Realização</small>
+                <strong>30,4%</strong>
+            </div>
+        </div>
+        <div style="height:320px">
+            <canvas id="chartReceita"></canvas>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+
+</div>
+        
+        
+        
+        
+        
+        
+        <nav class="mobile-bottom-nav d-md-none" aria-label="Menu inferior">
+            <a href="http://declass.test/admin/home" class="mbn-item active">
+            <i class="fas fa-home"></i>
+            <span>Início</span>
+        </a>
+            <a href="http://declass.test/admin/menu/institucional" class="mbn-item ">
+            <i class="fas fa-school"></i>
+            <span>Institucional</span>
+        </a>
+            <a href="http://declass.test/admin/menu/pessoas" class="mbn-item ">
+            <i class="fas fa-users"></i>
+            <span>Pessoas</span>
+        </a>
+            <a href="http://declass.test/admin/menu/documentos" class="mbn-item ">
+            <i class="fas fa-folder-open"></i>
+            <span>Documentos</span>
+        </a>
+            <a href="http://declass.test/admin/menu" class="mbn-item ">
+            <i class="fas fa-bars"></i>
+            <span>Menu</span>
+        </a>
+    </nav>
+<style>
+    .mobile-bottom-nav {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        z-index: 1035;
+        display: flex;
+        background: #fff;
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -4px 16px rgba(15, 23, 42, .08);
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .mbn-item {
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        padding: 8px 2px 7px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #64748b;
+        text-decoration: none !important;
+        min-width: 0;
+    }
+    .mbn-item i { font-size: 17px; }
+    .mbn-item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .mbn-item:active { background: #f1f5f9; }
+    .mbn-item.active { color: #0a1628; }
+    .mbn-item.active i { color: #0284c7; }
+    .mbn-item.active::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 50%;
+        transform: translateX(-50%);
+        width: 34px; height: 3px;
+        border-radius: 0 0 4px 4px;
+        background: #0284c7;
+    }
+    .mbn-item { position: relative; }
+
+    @media (max-width: 767.98px) {
+        .content-wrapper { padding-bottom: 64px; }
+    }
+</style>
+
+    </div>
+
+    
+            <script src="http://declass.test/vendor/jquery/jquery.min.js"></script>
+        <script src="http://declass.test/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="http://declass.test/vendor/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+        <script src="http://declass.test/vendor/adminlte/dist/js/adminlte.min.js"></script>
+    
+    
+    <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js" ></script>
+            
+            
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+    
+
+            
+            
+
+            
+            
+
+            
+            
+
+    
+
+    
+    
+
+    
+
+    
+    
+    
+        <script>
+
+    $(() => {
+
+        // Method to get new notification data from the configured url.
+
+        let updateNotification = (nLink) =>
+        {
+            // Make an ajax call to the configured url. The response should be
+            // an object with the new data. The supported properties are:
+            // 'label', 'label_color', 'icon_color' and 'dropdown'.
+
+            $.ajax({
+                url: "http://declass.test/admin/notificacoes/navbar"
+            })
+            .done((data) => {
+                nLink.update(data);
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR, textStatus, errorThrown);
+            });
+        };
+
+        // First load of the notification data.
+
+        let nLink = new _AdminLTE_NavbarNotification("navbar-notificacoes");
+        updateNotification(nLink);
+
+        // Periodically update the notification.
+
+        setInterval(updateNotification, 60000, nLink);
+    })
+
+</script>
+<script>
+
+    class _AdminLTE_NavbarNotification {
+
+        /**
+         * Constructor.
+         *
+         * target: The id of the target notification link.
+         */
+        constructor(target)
+        {
+            this.target = target;
+        }
+
+        /**
+         * Update the notification link.
+         *
+         * data: An object with the new data.
+         */
+        update(data)
+        {
+            // Check if target and data exists.
+
+            let t = $(`li#${this.target}`);
+
+            if (t.length <= 0 || ! data) {
+                return;
+            }
+
+            let badge = t.find(".navbar-badge");
+            let icon = t.find(".nav-link > i");
+            let dropdown = t.find(".adminlte-dropdown-content");
+
+            // Update the badge label.
+
+            if (data.label && data.label > 0) {
+                badge.html(data.label);
+            } else {
+                badge.empty();
+            }
+
+            // Update the badge color.
+
+            if (data.label_color) {
+                badge.removeClass((idx, classes) => {
+                    return (classes.match(/(^|\s)badge-\S+/g) || []).join(' ');
+                }).addClass(`badge-${data.label_color} badge-pill`);
+            }
+
+            // Update the icon color.
+
+            if (data.icon_color) {
+                icon.removeClass((idx, classes) => {
+                    return (classes.match(/(^|\s)text-\S+/g) || []).join(' ');
+                }).addClass(`text-${data.icon_color}`);
+            }
+
+            // Update the dropdown content.
+
+            if (data.dropdown && dropdown.length > 0) {
+                dropdown.html(data.dropdown);
+            }
+        }
+    }
+
+</script>
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    var ctx = document.getElementById('chartReceita');
+    if (!ctx || typeof Chart === 'undefined') return;
+    new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"],
+            datasets: [
+                {
+                    label: 'Previsto',
+                    backgroundColor: '#d9a441',
+                    data: [0,0,0,0,0,0,0,0,0,1446200,1446200,0]                },
+                {
+                    label: 'Realizado',
+                    backgroundColor: '#4e7a5b',
+                    data: [0,0,0,0,0,0,0,0,0,878050,0,0]                }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            legend: { position: 'bottom' },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function (v) {
+                            return 'R$ ' + Number(v).toLocaleString('pt-BR', {maximumFractionDigits: 0});
+                        }
+                    }
+                }],
+                xAxes: [{ gridLines: { display: false } }]
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (item, data) {
+                        return data.datasets[item.datasetIndex].label + ': R$ ' +
+                            Number(item.yLabel).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+    <script src="http://declass.test/js/sweetAlert.min.js"></script>
+    <script src="http://declass.test/js/form-ux.js"></script>
+        
+    <script>
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('http://declass.test/sw.js', { scope: '/' }).catch(function (error) {
+                    console.warn('Service worker registration failed:', error);
+                });
+            });
+        }
+    </script>
+
+</body>
+
+</html>

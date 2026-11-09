@@ -47,7 +47,15 @@
                         <input type="hidden" name="turma_id" value="{{ $turmaFixa->id }}">
                         <small class="text-muted"><i class="fa fa-info-circle"></i> Turma definida pelo contexto</small>
                     @else
-                        <x-form-select name="turma_id" label="Turma" :options="$turmas ?? []" :selected="old('turma_id', request('turma_id'))" placeholder="Selecionar" required />
+                        <label class="form-label">Turma <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" id="dr_turma_display" class="form-control" placeholder="Buscar turma..." readonly tabindex="-1">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-primary" id="btnBuscarTurma"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                        @error('turma_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        <input type="hidden" name="turma_id" id="turma_id" value="{{ old('turma_id', request('turma_id')) }}">
                     @endif
                 </div>
                 <div class="col-md-4">
@@ -87,12 +95,45 @@
 </div>
 
 @if(! isset($diario) && ! ($turmaFixa ?? null))
+@include('partials.entity-picker')
 @push('js')
 <script>
 (function () {
-    var selectTurma = document.querySelector('select[name="turma_id"]');
+    var selectTurma = document.querySelector('input[name="turma_id"]');
+    var displayTurma = document.getElementById('dr_turma_display');
     var selectDisc = document.querySelector('select[name="disciplina_id"]');
     if (!selectTurma || !selectDisc) return;
+
+    var TURMAS = @json($turmasPicker ?? []);
+    var ANO_PADRAO = @json($anoLetivoAtualId);
+    TURMAS.forEach(function (t) {
+        t.extraHtml = t.encerrado
+            ? ' <span class="badge badge-danger ml-1">Encerrado</span>'
+            : ' <span class="badge badge-success ml-1">Letivo</span>';
+    });
+
+    EntityPicker.registrar('turma', {
+        titulo: 'Buscar turma',
+        dados: TURMAS,
+        filtros: [
+            { campo: 'escola_id', campoRotulo: 'escola', label: 'Escola' },
+            { campo: 'ano_letivo_id', campoRotulo: 'ano', label: 'Ano letivo', padrao: ANO_PADRAO },
+        ],
+        onSelect: function (d) {
+            selectTurma.value = d.id;
+            displayTurma.value = d.rotulo + ' — ' + d.escola;
+            displayTurma.classList.remove('is-invalid');
+            selectTurma.dispatchEvent(new Event('change'));
+        },
+    });
+    document.getElementById('btnBuscarTurma').addEventListener('click', function () {
+        EntityPicker.abrir('turma');
+    });
+    // pre-selecionada (?turma_id= ou volta de validacao)
+    if (selectTurma.value) {
+        var t = TURMAS.find(function (x) { return String(x.id) === String(selectTurma.value); });
+        if (t) displayTurma.value = t.rotulo + ' — ' + t.escola;
+    }
 
     var urlDisciplinas = @json(route('diario.disciplinas'));
     var disciplinaAtual = @json((string) old('disciplina_id', request('disciplina_id')));

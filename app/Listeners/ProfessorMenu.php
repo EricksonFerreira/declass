@@ -84,16 +84,10 @@ class ProfessorMenu
                 'icon' => 'fas fa-book-open',
                 'submenu' => [
                     [
-                        'text' => 'Empréstimos',
-                        'route' => 'emprestimo.index',
-                        'can' => 'emprestimo.index',
+                        'text' => 'Meus Empréstimos',
+                        'route' => 'portal.emprestimos',
+                        'can' => 'portal.emprestimos',
                         'icon' => 'fas fa-book-reader',
-                    ],
-                    [
-                        'text' => 'Acervo',
-                        'route' => 'livro.index',
-                        'can' => 'livro.index',
-                        'icon' => 'fas fa-book',
                     ],
                 ],
             ],

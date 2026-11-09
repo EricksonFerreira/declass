@@ -71,7 +71,19 @@ class AvaliacaoController extends BaseController implements FiltroInterface, Res
 
     public function create()
     {
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Avaliações', 'avaliacao.index', 'Nova Avaliação', 'Vida Acadêmica');
+        $turmaRota = request()->route('turma');
+        $turma = $turmaRota ? \App\Models\Turma::find($turmaRota) : null;
+        if ($turma) {
+            request()->merge(['turma_id' => $turma->id]);
+        }
+
+        $breadcrumb = $turma
+            ? $this->breadcrumbService->prepararBreadcrumbCustom([
+                ['Turmas', route('turma.index')],
+                [$turma->nome, route('turma.show', $turma->id)],
+                ['Nova Avaliação', null],
+            ])
+            : $this->breadcrumbService->prepararBreadcrumbCreate('Avaliações', 'avaliacao.index', 'Nova Avaliação', 'Vida Acadêmica');
 
         return view('avaliacao.add-edit', array_merge(compact('breadcrumb'), $this->opcoesFormulario()))
             ->with('titulo', $this->titulo);
@@ -209,10 +221,42 @@ class AvaliacaoController extends BaseController implements FiltroInterface, Res
 
     private function opcoesFormulario(): array
     {
+        $query = Turma::query()->with(['escola', 'anoLetivo', 'disciplinas', 'atribuicoes'])->orderBy('nome');
+        $user = auth()->user();
+        if ($user && $user->isProfessor()) {
+            $query->whereHas('atribuicoes', fn ($q) => $q->where('user_id', $user->id)->where('ativo', 'S'));
+        }
+        $turmas = $query->get();
+        $isProfessor = $user && $user->isProfessor();
+
         return [
-            'turmas' => $this->turmasOpcoes(),
+            'turmas' => $turmas->mapWithKeys(fn (Turma $t) => [
+                $t->id => $t->nome.' — '.($t->escola->nome ?? '').' — '.($t->anoLetivo->ano ?? ''),
+            ])->all(),
+            'turmasPicker' => $turmas->map(fn (Turma $t) => [
+                'id' => $t->id,
+                'rotulo' => $t->nome.' — '.($t->escola->nome ?? '').' — '.($t->anoLetivo->ano ?? ''),
+                'detalhe' => trim(($t->etapa->nome ?? '').' · '.($t->anoLetivo->ano ?? '').' · '.($t->escola->nome ?? ''), ' ·'),
+                'escola_id' => $t->escola_id,
+                'escola' => $t->escola->nome ?? '',
+                'ano_letivo_id' => $t->ano_letivo_id,
+                'ano' => $t->anoLetivo?->ano,
+                'encerrado' => $t->anoLetivo?->status === 'encerrado',
+            ])->values()->all(),
             'disciplinas' => Disciplina::query()->where('ativo', 'S')->orderBy('nome')
                 ->pluck('nome', 'id')->all(),
+            // Professor: por turma, somente as disciplinas que ele leciona.
+            'disciplinasPorTurma' => $turmas->mapWithKeys(function ($t) use ($user, $isProfessor) {
+                $disciplinas = $t->disciplinas;
+                if ($isProfessor) {
+                    $minhas = $t->atribuicoes
+                        ->where('user_id', $user->id)->where('ativo', 'S')
+                        ->pluck('disciplina_id');
+                    $disciplinas = $disciplinas->whereIn('id', $minhas);
+                }
+
+                return [$t->id => $disciplinas->mapWithKeys(fn ($d) => [$d->id => $d->nome])->all()];
+            })->toJson(),
             'tipos' => Avaliacao::TIPOS,
             'periodosJson' => $this->periodosPorTurmaJson(),
         ];

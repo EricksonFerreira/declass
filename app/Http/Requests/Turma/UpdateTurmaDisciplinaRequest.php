@@ -10,6 +10,7 @@ class UpdateTurmaDisciplinaRequest extends StoreTurmaDisciplinaRequest
         // a disciplina e identificada pela rota.
         return [
             'carga_horaria_semanal' => ['nullable', 'integer', 'min:1', 'max:40'],
+            'media_aprovacao' => ['nullable', 'numeric', 'min:0', 'max:10'],
         ];
     }
 }

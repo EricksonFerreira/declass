@@ -41,8 +41,10 @@ class EventoController extends BaseController implements FiltroInterface, Resour
     {
         $this->configurarSessao();
 
-        $mes = request()->input('mes', now()->format('Y-m'));
-        $mesCarbon = \Carbon\Carbon::parse($mes.'-01')->startOfMonth();
+        $mesParam = (string) request('mes', '');
+        $mesCarbon = preg_match('/^\d{4}-\d{2}$/', $mesParam)
+            ? \Carbon\Carbon::createFromFormat('Y-m-d', $mesParam.'-01')->startOfMonth()
+            : now()->startOfMonth();
 
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $filtros = collect($itensFiltered)
@@ -51,6 +53,36 @@ class EventoController extends BaseController implements FiltroInterface, Resour
             ->all();
 
         $eventos = $this->eventoService->agendaDoMes($mesCarbon, $filtros);
+
+        // Grade do mes para a visao de calendario: eventos de varios
+        // dias aparecem em cada dia coberto pelo periodo.
+        $inicio = $mesCarbon->copy();
+        $fim = $mesCarbon->copy()->endOfMonth();
+        $eventosPorDia = [];
+        foreach ($eventos as $evento) {
+            $de = $evento->data_inicio->copy()->max($inicio);
+            $ate = $evento->periodoFim()->copy()->min($fim);
+
+            for ($dia = $de->copy(); $dia->lte($ate); $dia->addDay()) {
+                $eventosPorDia[$dia->toDateString()][] = $evento;
+            }
+        }
+
+        $semanas = [];
+        $cursor = $inicio->copy()->startOfWeek();
+        $ultimo = $fim->copy()->endOfWeek();
+
+        while ($cursor->lte($ultimo)) {
+            $semana = [];
+            for ($i = 0; $i < 7; $i++, $cursor->addDay()) {
+                $semana[] = [
+                    'data' => $cursor->copy(),
+                    'do_mes' => $cursor->month === $mesCarbon->month,
+                    'eventos' => collect($eventosPorDia[$cursor->toDateString()] ?? []),
+                ];
+            }
+            $semanas[] = $semana;
+        }
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Agenda', 'Comunicação');
         $filters = $this->obterFiltrosPrincipais();
@@ -64,11 +96,13 @@ class EventoController extends BaseController implements FiltroInterface, Resour
         $mesAnterior = $mesCarbon->copy()->subMonth()->format('Y-m');
         $mesProximo = $mesCarbon->copy()->addMonth()->format('Y-m');
         $mesAtual = now()->format('Y-m');
+        $ehMesAtual = $mesCarbon->isSameMonth(now());
 
         return view('evento.index', compact(
             'eventos', 'breadcrumb', 'filters', 'itensFiltered',
             'additionalFilters', 'perPages', 'nomeFiltro',
-            'mesCarbon', 'mesAnterior', 'mesProximo', 'mesAtual'
+            'mesCarbon', 'mesAnterior', 'mesProximo', 'mesAtual',
+            'semanas', 'ehMesAtual'
         ))->with('titulo', $this->titulo);
     }
 
@@ -150,7 +184,7 @@ class EventoController extends BaseController implements FiltroInterface, Resour
 
     public function configurarSessao()
     {
-        session()->put("$this->nomeFiltro.urlPadrao", 'evento');
+        session()->put("$this->nomeFiltro.urlPadrao", 'agenda');
         session()->put("$this->nomeFiltro.rotaRedirect", 'evento.index');
     }
 
@@ -158,16 +192,14 @@ class EventoController extends BaseController implements FiltroInterface, Resour
     {
         return [
             [
+                'name' => 'titulo', 'label' => 'Título', 'type' => 'text',
+                'typeWhere' => 'like', 'placeholder' => 'Buscar evento...',
+            ],
+            [
                 'name' => 'tipo', 'label' => 'Tipo', 'type' => 'select',
                 'typeWhere' => 'where',
                 'options' => Evento::TIPOS,
             ],
-        ];
-    }
-
-    public function obterFiltrosSecundarios()
-    {
-        return [
             [
                 'name' => 'escola_id', 'label' => 'Escola', 'type' => 'select',
                 'typeWhere' => 'where',
@@ -179,6 +211,17 @@ class EventoController extends BaseController implements FiltroInterface, Resour
                 'name' => 'status', 'label' => 'Status', 'type' => 'select',
                 'typeWhere' => 'where',
                 'options' => Evento::STATUS,
+            ],
+        ];
+    }
+
+    public function obterFiltrosSecundarios()
+    {
+        return [
+            [
+                'name' => 'suspende_aulas', 'label' => 'Aulas', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => ['S' => 'Suspende aulas', 'N' => 'Aula normal'],
             ],
         ];
     }

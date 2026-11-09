@@ -2,53 +2,84 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Requests\Mensalidade\GerarMensalidadesRequest;
 use App\Http\Requests\Mensalidade\StoreMensalidadeRequest;
 use App\Http\Requests\Mensalidade\UpdateMensalidadeRequest;
-use App\Models\Aluno;
 use App\Models\Matricula;
 use App\Models\Mensalidade;
 use App\Models\Turma;
 use App\Services\BreadcrumbService;
 use App\Services\MensalidadeService;
+use App\Traits\AtualizaFiltrosTrait;
+use App\Traits\FiltroTrait;
 use Illuminate\Http\Request;
 
-class MensalidadeController extends BaseController
+class MensalidadeController extends BaseController implements FiltroInterface
 {
+    use AtualizaFiltrosTrait;
+    use FiltroTrait;
+
     public function __construct(
         protected MensalidadeService $service,
         protected BreadcrumbService $breadcrumbService,
     ) {
         $this->titulo = 'Mensalidades';
+        $this->nomeFiltro = 'mensalidade';
 
         $this->middleware('can:mensalidade.index')->only('index');
         $this->middleware('can:mensalidade.create')->only(['create', 'store']);
-        $this->middleware('can:mensalidade.edit')->only(['edit', 'update', 'baixar']);
+        $this->middleware('can:mensalidade.edit')->only(['edit', 'update', 'baixar', 'boleto']);
         $this->middleware('can:mensalidade.destroy')->only('destroy');
         $this->middleware('can:mensalidade.gerar')->only('gerar');
         $this->middleware('can:mensalidade.recibo')->only('recibo');
+        $this->middleware('can:mensalidade.filtro')->only('filtro');
+        $this->middleware('can:mensalidade.removerFiltro')->only('removerFiltro');
+        $this->middleware('can:mensalidade.setPerPage')->only('setPerPage');
     }
 
-    public function index(Request $request)
+    public function index()
     {
-        $filters = $request->only(['aluno_id', 'turma_id', 'competencia', 'status', 'inadimplente']);
-        $mensalidades = $this->service->listarComFiltros($filters, 15);
+        $this->configurarSessao();
+
+        $itensFiltered = session("$this->nomeFiltro.filtro", []);
+        $perPage = session()->get("$this->nomeFiltro.perPage", 15);
+
+        $mensalidades = $this->service->listarComFiltros($itensFiltered, (int) $perPage);
+        $resumo = $this->service->resumoIndex($itensFiltered);
 
         $inadimplencia = $this->service->inadimplentes();
         $totalInadimplente = $inadimplencia->flatten()->count();
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Mensalidades', 'Financeiro');
+        // Extrato individual: quando o filtro aluno_id esta ativo
+        // (escolhido pelo modal de busca), mostramos o banner do aluno.
+        $alunoSel = null;
+        if ($alunoId = ($itensFiltered['aluno_id']['valor'] ?? null)) {
+            $alunoSel = \App\Models\Aluno::with('pessoa')->find($alunoId);
+        }
 
-        return view('mensalidade.index', [
-            'titulo' => $this->titulo,
-            'mensalidades' => $mensalidades,
-            'filters' => $filters,
-            'alunos' => $this->alunosOpcoes(),
-            'turmas' => $this->turmasOpcoes(),
-            'statuses' => ['pendente' => 'Pendente', 'vencida' => 'Vencida', 'paga' => 'Paga', 'cancelada' => 'Cancelada'],
-            'totalInadimplente' => $totalInadimplente,
-            'breadcrumb' => $breadcrumb,
-        ]);
+        $alunosPicker = Aluno::query()->with('pessoa')->orderBy('id')->get()
+            ->map(fn (Aluno $a) => [
+                'id' => $a->id,
+                'rotulo' => $a->pessoa->nome ?? ('Aluno #'.$a->id),
+                'detalhe' => 'RA '.($a->registro_academico ?? '—'),
+            ])->values()->all();
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Mensalidades', 'Financeiro');
+        $filters = $this->obterFiltrosPrincipais();
+        $additionalFilters = $this->obterFiltrosSecundarios();
+
+        $this->atualizarFiltros($itensFiltered, $filters);
+        $this->atualizarFiltros($itensFiltered, $additionalFilters);
+
+        $perPages = [5, 10, 15, 25, 50, 100];
+        $nomeFiltro = $this->nomeFiltro;
+
+        return view('mensalidade.index', compact(
+            'mensalidades', 'breadcrumb', 'filters', 'itensFiltered',
+            'additionalFilters', 'perPages', 'perPage', 'nomeFiltro', 'totalInadimplente',
+            'resumo', 'alunosPicker', 'alunoSel'
+        ))->with('titulo', $this->titulo);
     }
 
     public function create()
@@ -62,10 +93,15 @@ class MensalidadeController extends BaseController
     public function store(StoreMensalidadeRequest $request)
     {
         $data = $request->validated();
+        unset($data['boleto']);
         $data['status'] = $data['status'] ?? 'pendente';
         $data['plano_mensalidade_id'] = Matricula::find($data['matricula_id'])?->plano_mensalidade_id;
 
-        $this->service->create($data);
+        $mensalidade = $this->service->create($data);
+
+        if ($request->hasFile('boleto')) {
+            $this->service->salvarBoleto($mensalidade, $request->file('boleto'));
+        }
 
         return redirect()->route('mensalidade.index')->with('success', 'Mensalidade criada com sucesso.');
     }
@@ -83,9 +119,32 @@ class MensalidadeController extends BaseController
 
     public function update(UpdateMensalidadeRequest $request, $id)
     {
-        $this->service->update($id, $request->validated());
+        $data = $request->validated();
+        unset($data['boleto'], $data['remover_boleto']);
+
+        $mensalidade = $this->service->update($id, $data);
+
+        if ($mensalidade) {
+            if ($request->boolean('remover_boleto')) {
+                $this->service->removerBoleto($mensalidade);
+            }
+
+            if ($request->hasFile('boleto')) {
+                $this->service->salvarBoleto($mensalidade, $request->file('boleto'));
+            }
+        }
 
         return redirect()->route('mensalidade.index')->with('success', 'Mensalidade atualizada com sucesso.');
+    }
+
+    /** Abre o PDF do boleto anexado a mensalidade. */
+    public function boleto($id)
+    {
+        $mensalidade = $this->service->getById($id);
+        abort_if(! $mensalidade?->boleto_path, 404, 'Boleto não encontrado.');
+
+        return \Illuminate\Support\Facades\Storage::disk('public')
+            ->response($mensalidade->boleto_path, $mensalidade->boletoNomeDownload());
     }
 
     public function destroy($id)
@@ -141,6 +200,77 @@ class MensalidadeController extends BaseController
             ->with('success', "Competência {$data['competencia']}: {$resultado['criadas']} mensalidade(s) gerada(s), {$resultado['ignoradas']} já existente(s).");
     }
 
+    public function filtro(Request $request)
+    {
+        $this->criarFiltros($request, $this->nomeFiltro);
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function removerFiltro(Request $request)
+    {
+        $this->removeSessao($this->nomeFiltro, $request->input('atributo'));
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function setPerPage(Request $request)
+    {
+        $request->session()->put("$this->nomeFiltro.perPage", $request->input('perPage'));
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function configurarSessao()
+    {
+        session()->put("$this->nomeFiltro.urlPadrao", 'mensalidade');
+        session()->put("$this->nomeFiltro.rotaRedirect", 'mensalidade.index');
+    }
+
+    public function obterFiltrosPrincipais()
+    {
+        return [
+            ['name' => 'busca', 'label' => 'Buscar', 'type' => 'text', 'typeWhere' => 'like',
+                'placeholder' => 'Aluno ou RA...'],
+            [
+                'name' => 'competencia', 'label' => 'Competência', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todas', 'selected' => false]],
+                    Mensalidade::query()->select('competencia')->distinct()
+                        ->orderByDesc('competencia')->limit(24)->pluck('competencia')
+                        ->map(fn ($c) => ['value' => $c, 'label' => $c, 'selected' => false])
+                        ->values()->all()
+                ),
+            ],
+            [
+                'name' => 'status', 'label' => 'Status', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todos', 'selected' => false]],
+                    collect(['pendente' => 'Pendente', 'vencida' => 'Vencida', 'paga' => 'Paga', 'cancelada' => 'Cancelada'])
+                        ->map(fn ($label, $v) => ['value' => $v, 'label' => $label, 'selected' => false])
+                        ->values()->all()
+                ),
+            ],
+            [
+                'name' => 'turma_id', 'label' => 'Turma', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todas', 'selected' => false]],
+                    Turma::query()->orderBy('nome')->get(['id', 'nome'])
+                        ->map(fn ($t) => ['value' => $t->id, 'label' => $t->nome, 'selected' => false])
+                        ->values()->all()
+                ),
+            ],
+        ];
+    }
+
+    public function obterFiltrosSecundarios()
+    {
+        return [];
+    }
+
     private function opcoesFormulario(): array
     {
         return [
@@ -154,18 +284,5 @@ class MensalidadeController extends BaseController
             'statuses' => Mensalidade::STATUS,
             'formasPagamento' => Mensalidade::FORMAS_PAGAMENTO,
         ];
-    }
-
-    private function alunosOpcoes(): array
-    {
-        return Aluno::query()->with('pessoa')->orderBy('id')->get()
-            ->mapWithKeys(fn (Aluno $a) => [
-                $a->id => $a->pessoa?->nome ?? ('Aluno #'.$a->id),
-            ])->all();
-    }
-
-    private function turmasOpcoes(): array
-    {
-        return Turma::query()->orderBy('nome')->pluck('nome', 'id')->all();
     }
 }

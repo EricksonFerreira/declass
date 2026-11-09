@@ -41,6 +41,19 @@
     .grade-horarios .celula-aula { min-height: 52px; border-radius: 3px; padding: 4px 5px; }
     .grade-horarios .celula-aula.vazia { border: 1px dashed #cbd5e1; background: #f8fafc; }
     .card-header[data-toggle="modal"]:hover { background: #f4f6f9; }
+    .gd-disc-table thead th { font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:#6b7280; border-top:0; }
+    .gd-disc-table tbody tr { transition:background .12s; }
+    .gd-disc-table tbody tr:hover { background:#f8fafc; }
+    .gd-disc-chip { display:inline-flex; align-items:center; justify-content:center; min-width:46px; padding:.25em .5em; border-radius:6px; font-size:.72rem; font-weight:700; letter-spacing:.03em; }
+    .gd-disc-progress { height:7px; border-radius:99px; background:#e5e7eb; }
+    .gd-disc-rest { font-size:.85rem; min-width:34px; padding:.4em .6em; }
+    .gd-disc-rest.badge-danger { box-shadow:0 0 0 3px rgba(220,38,38,.12); }
+    .gd-picker { display:flex; flex-wrap:wrap; gap:.4rem; max-height:220px; overflow-y:auto; }
+    .gd-pick { display:flex; align-items:center; gap:.4rem; padding:.35rem .6rem; border-radius:8px; border:1.5px solid #e5e7eb; background:#fff; font-size:.8rem; cursor:pointer; transition:all .12s; }
+    .gd-pick:hover { border-color:#94a3b8; background:#f8fafc; }
+    .gd-pick.selecionada { background:var(--pb, #eff6ff); border-color:var(--pt, #3b82f6); box-shadow:0 0 0 3px color-mix(in srgb, var(--pt, #3b82f6) 18%, transparent); font-weight:700; }
+    .gd-pick-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .gd-pick-uso { font-size:.7rem; color:#94a3b8; margin-left:auto; }
 </style>
 
 <div class="row">
@@ -194,23 +207,41 @@
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body p-0">
-                <table class="table table-sm mb-0">
-                    <thead class="thead-light">
-                        <tr><th>Disciplina</th><th class="text-center">Aulas</th><th class="text-center">Restam</th></tr>
+                <table class="table mb-0 gd-disc-table">
+                    <thead>
+                        <tr>
+                            <th>Disciplina</th>
+                            <th style="width:190px;">Aulas na grade</th>
+                            <th class="text-center" style="width:90px;">Restam</th>
+                        </tr>
                     </thead>
                     <tbody id="tbody-restantes">
                         @forelse($disciplinas as $d)
+                            @php
+                                $pct = $d['carga'] ? min(100, round($d['usadas'] * 100 / $d['carga'])) : null;
+                                $corBarra = $d['carga'] ? ($d['usadas'] >= $d['carga'] ? '#10b981' : '#3b82f6') : '#94a3b8';
+                            @endphp
                             <tr data-disciplina="{{ $d['id'] }}">
-                                <td>
-                                    <span class="badge" style="background:{{ $coresJson[$d['id']]['bg'] }};color:{{ $coresJson[$d['id']]['tx'] }};">{{ $d['sigla'] ?: \Illuminate\Support\Str::limit($d['nome'], 12) }}</span>
-                                    {{ $d['nome'] }}
-                                    <br><small class="text-muted">{{ $d['usadas'] }}/{{ $d['carga'] ?: '∞' }} aulas</small>
+                                <td class="align-middle">
+                                    <div class="d-flex align-items-center" style="gap:.6rem;">
+                                        <span class="gd-disc-chip" style="background:{{ $coresJson[$d['id']]['bg'] }};color:{{ $coresJson[$d['id']]['tx'] }};">{{ $d['sigla'] ?: \Illuminate\Support\Str::limit($d['nome'], 12) }}</span>
+                                        <span class="font-weight-bold">{{ $d['nome'] }}</span>
+                                    </div>
                                 </td>
-                                <td class="text-center text-muted">{{ $d['usadas'] }}</td>
-                                <td class="text-center font-weight-bold restante{{ $d['restante'] > 0 ? ' text-danger' : '' }}" data-id="{{ $d['id'] }}">{{ $d['restante'] ?? '∞' }}</td>
+                                <td class="align-middle">
+                                    <div class="d-flex align-items-center" style="gap:.5rem;">
+                                        <div class="progress flex-grow-1 gd-disc-progress">
+                                            <div class="progress-bar" role="progressbar" style="width:{{ $pct ?? 0 }}%;background:{{ $corBarra }};"></div>
+                                        </div>
+                                        <small class="text-muted text-nowrap">{{ $d['usadas'] }}/{{ $d['carga'] ?: '∞' }}</small>
+                                    </div>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <span class="gd-disc-rest badge restante{{ $d['restante'] > 0 ? ' badge-danger' : ' badge-light border' }}" data-id="{{ $d['id'] }}">{{ $d['restante'] ?? '∞' }}</span>
+                                </td>
                             </tr>
                         @empty
-                            <tr><td colspan="3" class="text-center text-muted py-3">Nenhuma disciplina ofertada.</td></tr>
+                            <tr><td colspan="3" class="text-center text-muted py-4">Nenhuma disciplina ofertada.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -266,14 +297,19 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="font-weight-bold">Disciplina <span class="text-danger">*</span></label>
-                        <select name="disciplina_id" id="cel-disciplina" class="form-control" required>
-                            <option value="">Selecione…</option>
+                        <input type="hidden" name="disciplina_id" id="cel-disciplina">
+                        <div id="cel-disc-lista" class="gd-picker">
                             @foreach($disciplinas as $d)
-                                <option value="{{ $d['id'] }}" data-restante="{{ $d['restante'] ?? '' }}">
-                                    {{ $d['nome'] }}{{ $d['carga'] ? " ({$d['usadas']}/{$d['carga']})" : '' }}
-                                </option>
+                                <button type="button" class="gd-pick" data-id="{{ $d['id'] }}" data-restante="{{ $d['restante'] ?? '' }}" data-bg="{{ $coresJson[$d['id']]['bg'] }}" data-tx="{{ $coresJson[$d['id']]['tx'] }}">
+                                    <span class="gd-pick-dot" style="background:{{ $coresJson[$d['id']]['tx'] }};"></span>
+                                    <span class="gd-pick-nome">{{ $d['nome'] }}</span>
+                                    <span class="gd-pick-uso">{{ $d['carga'] ? $d['usadas'].'/'.$d['carga'] : '∞' }}</span>
+                                </button>
                             @endforeach
-                        </select>
+                            @if($disciplinas->isEmpty())
+                                <p class="text-muted text-center py-3 mb-0 w-100">Nenhuma disciplina ofertada.</p>
+                            @endif
+                        </div>
                         <small class="text-danger" id="cel-erro-disciplina"></small>
                     </div>
                     <div class="form-group">
@@ -351,10 +387,29 @@
 
         var sel = document.getElementById('cel-disciplina');
         sel.value = aula && aula.disciplina_id ? aula.disciplina_id : '';
+        marcarDisciplina();
         preencherProfessores(sel.value ? parseInt(sel.value, 10) : null, aula ? aula.user_id : null);
         document.getElementById('cel-sala').value = aula && aula.sala ? aula.sala : '';
         $(modal).modal('show');
     }
+
+    function marcarDisciplina() {
+        var val = document.getElementById('cel-disciplina').value;
+        document.querySelectorAll('#cel-disc-lista .gd-pick').forEach(function (b) {
+            var ativa = b.dataset.id === String(val);
+            b.classList.toggle('selecionada', ativa);
+            b.style.setProperty('--pb', ativa ? b.dataset.bg : '');
+            b.style.setProperty('--pt', ativa ? b.dataset.tx : '');
+        });
+    }
+
+    document.getElementById('cel-disc-lista').addEventListener('click', function (e) {
+        var btn = e.target.closest('.gd-pick');
+        if (!btn) return;
+        var sel = document.getElementById('cel-disciplina');
+        sel.value = btn.dataset.id;
+        sel.dispatchEvent(new Event('change'));
+    });
 
     document.getElementById('grade-tabela').addEventListener('click', function (e) {
         var cel = e.target.closest('.celula-aula');
@@ -364,7 +419,9 @@
     });
 
     document.getElementById('cel-disciplina').addEventListener('change', function () {
+        marcarDisciplina();
         preencherProfessores(this.value ? parseInt(this.value, 10) : null, null);
+        document.getElementById('cel-erro-disciplina').textContent = '';
     });
 
     function htmlCelula(disciplinaId, professor, sala) {
@@ -405,14 +462,20 @@
         d.usadas += delta;
         d.restante = Math.max(0, (d.carga || 0) - d.usadas);
         row.textContent = d.restante;
-        row.classList.toggle('text-danger', d.restante > 0);
-        var opt = document.querySelector('#cel-disciplina option[value="' + disciplinaId + '"]');
-        if (opt) opt.textContent = d.nome + ' (' + d.usadas + '/' + d.carga + ')';
+        row.classList.toggle('badge-danger', d.restante > 0);
+        row.classList.toggle('badge-light', d.restante <= 0);
+        row.classList.toggle('border', d.restante <= 0);
+        var chip = document.querySelector('#cel-disc-lista .gd-pick[data-id="' + disciplinaId + '"] .gd-pick-uso');
+        if (chip) chip.textContent = d.usadas + '/' + d.carga;
     }
 
     document.getElementById('form-celula').addEventListener('submit', function (e) {
         e.preventDefault();
         var fd = new FormData(this);
+        if (!fd.get('disciplina_id')) {
+            document.getElementById('cel-erro-disciplina').textContent = 'Selecione uma disciplina na lista.';
+            return;
+        }
         var btn = document.getElementById('btn-salvar-celula');
         btn.disabled = true;
         fetch(storeUrl, {

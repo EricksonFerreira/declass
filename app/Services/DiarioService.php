@@ -48,7 +48,8 @@ class DiarioService extends AbstractBaseService
         $filters = $this->sanitizeEscolaContextFilter($filters);
 
         $query = $this->applyEmpresaScope($this->model->newQuery())
-            ->with(['turma.escola', 'turma.anoLetivo', 'disciplina', 'professor']);
+            ->with(['turma.escola', 'turma.anoLetivo', 'disciplina', 'professor'])
+            ->withCount('frequencias');
 
         $user = auth()->user();
         if ($user && self::ehProfessor($user)) {

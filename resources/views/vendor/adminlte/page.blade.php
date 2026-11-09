@@ -10,6 +10,11 @@
     $appName = $empresaAtual?->nome ?: config('app.name', 'DECLASS');
 @endphp
 
+{{-- Conta de portal (aluno/responsavel): a logo aponta para o Portal Familiar --}}
+@if(Auth::check() && Auth::user()->isPortalAccount())
+    @section('dashboard_url', trim((string) config('app.admin_prefix', 'admin'), '/').'/portal')
+@endif
+
 @section('meta_tags')
     @parent
     <link rel="shortcut icon" href="{{ $faviconUrl }}" />
@@ -97,11 +102,11 @@
             });
         </script>
     @endif
-    @if (session('success') || session('error'))
+    @if (session('success') || session('error') || session('toast_success') || session('toast_error'))
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                const flashSuccess = @json(session('success'));
-                const flashError = @json(session('error'));
+                const flashSuccess = @json(session('success') ?? session('toast_success'));
+                const flashError = @json(session('error') ?? session('toast_error'));
 
                 const showFlash = (title, message, icon) => {
                     if (!message || typeof Swal === 'undefined' || typeof Swal.fire !== 'function') return;

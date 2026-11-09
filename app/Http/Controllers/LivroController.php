@@ -44,8 +44,15 @@ class LivroController extends BaseController implements FiltroInterface, Resourc
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
+        // 'busca' e filtro composto (varios campos) — sai do motor
+        // generico e entra no escopo da query como busca profunda.
+        $busca = $itensFiltered['busca']['valor'] ?? null;
+        $itensConsulta = $itensFiltered;
+        unset($itensConsulta['busca']);
+
         $livros = $this->livroService->getAllWithFiltersAndPagination(
-            $itensFiltered, $perPage, ['escola'], 'titulo', 'asc'
+            $itensConsulta, $perPage, ['escola', 'emprestimosAtivos.aluno.pessoa'], 'titulo', 'asc',
+            fn ($q) => $this->livroService->buscaProfunda($q, $busca)
         );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Livros', 'Biblioteca');
@@ -136,8 +143,8 @@ class LivroController extends BaseController implements FiltroInterface, Resourc
     public function obterFiltrosPrincipais()
     {
         return [
-            ['name' => 'titulo', 'label' => 'Título', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'autor', 'label' => 'Autor', 'type' => 'text', 'typeWhere' => 'like'],
+            ['name' => 'busca', 'label' => 'Buscar', 'type' => 'text', 'typeWhere' => 'like',
+                'placeholder' => 'Título, autor, editora, ISBN, estante...'],
         ];
     }
 

@@ -195,6 +195,24 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
         $presencas = $this->turmaService->presencasDaTurma($turma, $viewer, $filtroDisciplinaPresenca);
         $disciplinasVisiveis = $this->turmaService->disciplinasVisiveisNaTurma($turma, $viewer);
 
+        // Atividades da turma com entregas aguardando correcao —
+        // professor ve so as das disciplinas que leciona (ou que criou).
+        $tarefasCorrecao = \App\Models\Tarefa::query()
+            ->where('turma_id', $turma->id)
+            ->where('ativo', 'S')
+            ->when($viewer->isProfessor(), fn ($q) => $q->where(fn ($q2) => $q2
+                ->whereIn('disciplina_id', $disciplinasVisiveis->pluck('id'))
+                ->orWhere('user_id', $viewer->id)))
+            ->with('disciplina:id,nome')
+            ->withCount([
+                'entregas as pendentes_count' => fn ($q) => $q->where('status', 'entregue'),
+                'entregas as total_count',
+            ])
+            ->orderByDesc('pendentes_count')
+            ->orderBy('data_entrega')
+            ->limit(60)
+            ->get();
+
         // Professor: aulas/semana que ELE da em cada disciplina
         // visivel (grade semanal), exibidas no lugar da carga
         // horaria ofertada da turma.
@@ -209,11 +227,21 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Turmas', 'turma.index', $turma->nome);
 
+        // Aba "Materiais": conteudo postado para os alunos no portal.
+        // O forum ficou na tela da disciplina (turma.disciplina.show).
+        $materiais = \App\Models\TurmaMaterial::query()
+            ->where('turma_id', $turma->id)
+            ->with('disciplina:id,nome', 'autor:id,nome')
+            ->orderByDesc('id')
+            ->limit(100)
+            ->get();
+
         return view('turma.show', compact(
             'turma', 'disciplinasOpcoes', 'disciplinasOfertadas',
             'professoresOpcoes', 'papeis', 'turnos', 'breadcrumb',
             'diarioHoje', 'registros', 'presencas', 'disciplinasVisiveis',
-            'periodosLetivos', 'filtrosRegistros', 'minhasAulas'
+            'periodosLetivos', 'filtrosRegistros', 'minhasAulas',
+            'materiais', 'tarefasCorrecao'
         ))->with('titulo', $turma->nome);
     }
 
@@ -310,7 +338,7 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
                 ),
             ],
             [
-                'name' => 'ano_letivo_id', 'label' => 'Ano', 'type' => 'select',
+                'name' => 'ano_letivo_id', 'label' => 'Ano letivo', 'type' => 'select',
                 'typeWhere' => 'where',
                 'options' => array_merge(
                     [['value' => '', 'label' => 'Todos', 'selected' => false]],

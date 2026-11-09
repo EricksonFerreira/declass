@@ -25,6 +25,37 @@ test('professor can access own profile area', function () {
     $this->actingAs($user)->get('/admin/profile')->assertOk();
 });
 
+test('professor e aluno so alteram a foto no perfil', function () {
+    \Illuminate\Support\Facades\Storage::fake('public');
+
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+    $aluno = usuarioTenant($empresa, 'aluno');
+
+    $this->actingAs($professor)->put('/admin/profile', ['telefone' => '11999999999'])
+        ->assertForbidden();
+    $this->actingAs($aluno)->put('/admin/profile', ['telefone' => '11999999999'])
+        ->assertForbidden();
+
+    $this->actingAs($professor)->put('/admin/profile/foto', [
+        'foto' => \Illuminate\Http\UploadedFile::fake()->image('foto.jpg'),
+    ])->assertRedirect(route('profile.edit'));
+
+    $path = $professor->fresh()->foto_perfil;
+    expect($path)->not->toBeNull();
+    \Illuminate\Support\Facades\Storage::disk('public')->assertExists($path);
+});
+
+test('administrador ainda edita dados de contato no perfil', function () {
+    $empresa = tenant();
+    $user = usuarioTenant($empresa, 'administrador');
+
+    $this->actingAs($user)->put('/admin/profile', ['telefone' => '1133334444'])
+        ->assertRedirect(route('profile.edit'));
+
+    expect($user->fresh()->telefone)->toBe('1133334444');
+});
+
 test('user without role has no permissions', function () {
     $empresa = tenant();
     sincronizarPerfis($empresa);

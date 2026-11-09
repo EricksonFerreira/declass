@@ -26,7 +26,12 @@ class RelatorioAproveitamentoController extends BaseController
      */
     public function index(Request $request)
     {
-        $filtros = $request->only(['escola_id', 'ano_letivo_id', 'etapa_id', 'turma_id']);
+        $filtros = $request->only(['escola_id', 'ano_letivo_id', 'etapa_id', 'turma_id', 'turno', 'situacao']);
+
+        // Padrao: ano letivo em curso quando o usuario nao filtrou nada.
+        if (empty($filtros['ano_letivo_id'])) {
+            $filtros['ano_letivo_id'] = AnoLetivo::query()->where('status', 'letivo')->orderByDesc('ano')->value('id');
+        }
 
         // O service usa DB::table (sem escopo global): com escola ativa no
         // contexto, forca o filtro para a unidade selecionada.
@@ -36,6 +41,19 @@ class RelatorioAproveitamentoController extends BaseController
         }
 
         $dados = $this->relatorioService->porTurma($filtros);
+
+        // Situacao para decisao: em risco (<60% aprovacao) vs boas (>=80%)
+        $situacao = $filtros['situacao'] ?? null;
+        if ($situacao) {
+            $dados['linhas'] = $dados['linhas']->filter(function ($l) use ($situacao) {
+                $pct = $l['pct_aprovacao'];
+                if ($situacao === 'risco') {
+                    return $pct !== null && $pct < 60;
+                }
+
+                return $pct !== null && $pct >= 80;
+            })->values();
+        }
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Relatório de Aproveitamento', 'Relatórios');
 
@@ -48,6 +66,7 @@ class RelatorioAproveitamentoController extends BaseController
             'escolas' => Escola::query()->orderBy('nome')->get(['id', 'nome']),
             'anosLetivos' => AnoLetivo::query()->orderBy('ano', 'desc')->get(['id', 'ano']),
             'etapas' => Etapa::query()->orderBy('nome')->get(['id', 'nome']),
+            'turnos' => \App\Models\Turma::query()->whereNotNull('turno')->distinct()->orderBy('turno')->pluck('turno')->filter()->values(),
             'turmas' => Turma::query()->orderBy('nome')->get(['id', 'nome']),
             'notaAprovacao' => RelatorioAproveitamentoService::NOTA_APROVACAO,
         ]);

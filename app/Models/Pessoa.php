@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Pessoa: entidade base de identidade (dados pessoais).
@@ -70,5 +71,20 @@ class Pessoa extends Model
     public function nomeExibicao(): string
     {
         return trim((string) ($this->nome_social ?: $this->nome));
+    }
+
+    /**
+     * URL da foto cadastral; null quando nao ha arquivo no disco
+     * publico — a view decide o fallback (iniciais, icone etc.).
+     */
+    public function getFotoUrlAttribute(): ?string
+    {
+        $path = trim((string) ($this->foto_path ?? ''));
+
+        if ($path === '' || ! Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        return Storage::url($path);
     }
 }

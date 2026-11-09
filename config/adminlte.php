@@ -341,6 +341,115 @@ return [
             'can' => 'meus_horarios.index',
         ],
 
+        // PORTAL DO ALUNO/FAMILIA — itens soltos da sidebar de contas
+        // de portal (somente_portal — PortalMenuFilter esconde dos
+        // colaboradores e limita a sidebar do aluno a estes itens).
+        [
+            'text' => 'Meus Horários',
+            'route' => 'portal.horarios',
+            'can' => 'portal.horarios',
+            'icon' => 'fas fa-calendar-week',
+            'somente_portal' => true,
+        ],
+        [
+            'text' => 'Minhas Disciplinas',
+            'route' => 'portal.disciplinas',
+            'can' => 'portal.disciplinas',
+            'icon' => 'fas fa-book-open',
+            'somente_portal' => true,
+        ],
+        [
+            'text' => 'Turmas',
+            'route' => 'portal.turmas',
+            'can' => 'portal.turmas',
+            'icon' => 'fas fa-chalkboard',
+            'somente_portal' => true,
+        ],
+        [
+            'text' => 'Frequência',
+            'route' => 'portal.frequencia',
+            'can' => 'portal.frequencia',
+            'icon' => 'fas fa-calendar-check',
+            'somente_portal' => true,
+        ],
+        [
+            'text' => 'Notas',
+            'route' => 'portal.notas',
+            'can' => 'portal.notas',
+            'icon' => 'fas fa-star',
+            'somente_portal' => true,
+        ],
+        [
+            'text' => 'Alertas',
+            'route' => 'portal.alertas',
+            'can' => 'portal.alertas',
+            'icon' => 'fas fa-exclamation-circle',
+            'somente_portal' => true,
+        ],
+        [
+            'text' => 'Avisos',
+            'route' => 'portal.avisos',
+            'can' => 'portal.avisos',
+            'icon' => 'fas fa-bullhorn',
+            'somente_portal' => true,
+        ],
+        [
+            'text' => 'Agenda',
+            'route' => 'portal.agenda',
+            'can' => 'portal.agenda',
+            'icon' => 'fas fa-calendar-alt',
+            'somente_portal' => true,
+        ],
+        [
+            'text' => 'Solicitações',
+            'icon' => 'fas fa-inbox',
+            'somente_portal' => true,
+            'submenu' => [
+                [
+                    'text' => 'Nova Solicitação',
+                    'route' => 'portal.solicitacoes.create',
+                    'can' => 'portal.solicitacoes',
+                    'icon' => 'fas fa-plus',
+                    'somente_portal' => true,
+                ],
+                [
+                    'text' => 'Minhas Solicitações',
+                    'route' => 'portal.solicitacoes',
+                    'can' => 'portal.solicitacoes',
+                    'icon' => 'fas fa-list',
+                    'somente_portal' => true,
+                ],
+            ],
+        ],
+        [
+            'text' => 'Biblioteca',
+            'icon' => 'fas fa-book-open',
+            'somente_portal' => true,
+            'submenu' => [
+                [
+                    'text' => 'Meus Empréstimos',
+                    'route' => 'portal.emprestimos',
+                    'can' => 'portal.emprestimos',
+                    'icon' => 'fas fa-book-reader',
+                    'somente_portal' => true,
+                ],
+            ],
+        ],
+        [
+            'text' => 'Pagamentos',
+            'route' => 'portal.financeiro',
+            'can' => 'portal.financeiro',
+            'icon' => 'fas fa-wallet',
+            'somente_portal' => true,
+        ],
+        [
+            'text' => 'Documentos',
+            'route' => 'portal.documentos',
+            'can' => 'portal.documentos',
+            'icon' => 'fas fa-file-alt',
+            'somente_portal' => true,
+        ],
+
         // ORGANIZAÇÃO ADMINISTRATIVA — cadastros e configuração
         // definidos pela coordenação/secretaria/administração.
         // Oculta para professores (eles tem a Operação Pedagógica).
@@ -475,6 +584,24 @@ return [
                             'icon' => 'fas fa-home',
                         ],
                         [
+                            'text' => 'Solicitações das Famílias',
+                            'route' => 'solicitacao.index',
+                            'can' => 'solicitacao.index',
+                            'icon' => 'fas fa-inbox',
+                        ],
+                        [
+                            'text' => 'Tipos de Solicitação',
+                            'route' => 'tipo_solicitacao.index',
+                            'can' => 'tipo_solicitacao.index',
+                            'icon' => 'fas fa-list-ul',
+                        ],
+                        [
+                            'text' => 'Documentos Solicitados',
+                            'route' => 'documento_solicitacao.index',
+                            'can' => 'documento_solicitacao.index',
+                            'icon' => 'fas fa-file-import',
+                        ],
+                        [
                             'text' => 'Saúde dos Alunos',
                             'route' => 'saude.index',
                             'can' => 'saude.index',
@@ -511,12 +638,6 @@ return [
                             'icon' => 'fas fa-tasks',
                         ],
                     ],
-                ],
-                [
-                    'text' => 'Documentos',
-                    'route' => 'documentos.index',
-                    'icon' => 'fas fa-folder-open',
-                    'can' => 'documentos.index',
                 ],
             ],
         ],
@@ -634,7 +755,7 @@ return [
                     'text' => 'Pesquisas',
                     'route' => 'pesquisa.index',
                     'can' => 'pesquisa.index',
-                    'icon' => 'fas fa-clipboard-question',
+                    'icon' => 'fas fa-poll',
                 ],
             ],
         ],
@@ -755,6 +876,12 @@ return [
                     'icon' => 'fas fa-chart-pie',
                     'submenu' => [
                         [
+                            'text' => 'Visão Geral',
+                            'route' => 'financeiro_visao_geral.index',
+                            'can' => 'financeiro_visao_geral.index',
+                            'icon' => 'fas fa-chart-line',
+                        ],
+                        [
                             'text' => 'Fluxo de Caixa',
                             'route' => 'fluxo_caixa.index',
                             'can' => 'fluxo_caixa.index',
@@ -779,7 +906,12 @@ return [
             'can' => 'acessar-superadmin',
             'submenu' => [
                 [
-                    'text' => 'Tenants',
+                    'text' => 'Painel da Rede',
+                    'route' => 'rede.index',
+                    'icon' => 'fas fa-network-wired',
+                ],
+                [
+                    'text' => 'Empresas',
                     'route' => 'empresa.index',
                     'icon' => 'fas fa-building',
                 ],
@@ -819,6 +951,7 @@ return [
         JeroenNoten\LaravelAdminLte\Menu\Filters\GateFilter::class,
         App\Menu\Filters\RoutePermissionVisibilityFilter::class,
         App\Menu\Filters\ProfessorMenuFilter::class,
+        App\Menu\Filters\PortalMenuFilter::class,
         App\Menu\Filters\RemoveEmptySubmenuFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\HrefFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\SearchFilter::class,
@@ -903,6 +1036,21 @@ return [
                     'type' => 'css',
                     'asset' => true,
                     'location' => 'css/app-custom.css',
+                ],
+                [
+                    'type' => 'js',
+                    'asset' => true,
+                    'location' => 'js/app-custom.js',
+                ],
+            ],
+        ],
+        'IcheckBootstrap' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'css',
+                    'asset' => true,
+                    'location' => 'vendor/adminlte/plugins/icheck-bootstrap/icheck-bootstrap.min.css',
                 ],
             ],
         ],

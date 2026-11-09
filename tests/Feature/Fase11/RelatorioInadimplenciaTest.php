@@ -92,8 +92,13 @@ test('filtro por situacao vencida retorna apenas dividas em atraso', function ()
     setupInadimplencia($empresa);
     $user = usuarioTenant($empresa, 'administrador');
 
+    $this->actingAs($user)->get(route('relatorio_inadimplencia.index'))->assertOk();
+    $this->actingAs($user)
+        ->get(route('relatorio_inadimplencia.filtro', ['situacao' => 'vencida']))
+        ->assertRedirect(route('relatorio_inadimplencia.index'));
+
     $response = $this->actingAs($user)
-        ->get(route('relatorio_inadimplencia.index', ['situacao' => 'vencida']));
+        ->get(route('relatorio_inadimplencia.index'));
 
     $response->assertOk()
         ->assertSee('Davi Alves')
@@ -106,8 +111,13 @@ test('filtro por competencia restringe o relatorio', function () {
     setupInadimplencia($empresa);
     $user = usuarioTenant($empresa, 'administrador');
 
+    $this->actingAs($user)->get(route('relatorio_inadimplencia.index'))->assertOk();
+    $this->actingAs($user)
+        ->get(route('relatorio_inadimplencia.filtro', ['competencia' => '2026-02']))
+        ->assertRedirect(route('relatorio_inadimplencia.index'));
+
     $response = $this->actingAs($user)
-        ->get(route('relatorio_inadimplencia.index', ['competencia' => '2026-02']));
+        ->get(route('relatorio_inadimplencia.index'));
 
     $response->assertOk()
         ->assertSee('Elisa Prado')

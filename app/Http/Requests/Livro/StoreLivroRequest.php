@@ -30,6 +30,8 @@ class StoreLivroRequest extends FormRequest
             'ano_publicacao' => ['nullable', 'integer', 'min:1400', 'max:2100'],
             'exemplares' => ['required', 'integer', 'min:1', 'max:500'],
             'descricao' => ['nullable', 'string', 'max:2000'],
+            'localizacao' => ['nullable', 'string', 'max:60'],
+            'capa' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'ativo' => ['nullable', Rule::in(['S', 'N'])],
         ];
     }

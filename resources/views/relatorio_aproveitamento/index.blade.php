@@ -48,6 +48,44 @@
     </div>
 </div>
 
+{{-- Graficos de apoio a decisao --}}
+@if($linhas->isNotEmpty())
+<div class="card">
+    <div class="card-header font-weight-bold"><i class="fa fa-chart-bar mr-1"></i> Panorama por turma</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 d-flex align-items-center justify-content-center">
+                @php $pctG = $resumo['pct_aprovacao'] ?? 0; @endphp
+                <div style="width:130px;height:130px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                    background:conic-gradient(#22c55e {{ $pctG }}%, #ef4444 {{ $pctG }}%);">
+                    <div style="width:95px;height:95px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                        <strong style="font-size:1.3rem;color:#1e3a8a;">{{ $pctG }}%</strong>
+                        <small class="text-muted" style="font-size:.62rem;">aprovação</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-9">
+                @foreach($linhas as $l)
+                    <div class="d-flex align-items-center mb-1">
+                        <div style="width:130px;font-size:.72rem;font-weight:600;" class="text-truncate" title="{{ $l['turma'] }}">{{ $l['turma'] }}</div>
+                        <div class="flex-grow-1">
+                            <div style="height:8px;border-radius:4px;background:#e5e7eb;">
+                                <div style="height:8px;border-radius:4px;width:{{ $l['pct_aprovacao'] ?? 0 }}%;
+                                    background:{{ ($l['pct_aprovacao'] ?? 0) >= 70 ? '#22c55e' : (($l['pct_aprovacao'] ?? 0) >= 40 ? '#f59e0b' : '#ef4444') }};"></div>
+                            </div>
+                        </div>
+                        <div style="width:110px;font-size:.72rem;" class="text-right">
+                            {{ $l['pct_aprovacao'] !== null ? $l['pct_aprovacao'].'%' : '—' }}
+                            @if($l['media_geral'] !== null)· média {{ number_format($l['media_geral'], 1, ',', '') }}@endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="card">
     <div class="card-header">
         <form method="GET" action="{{ route('relatorio_aproveitamento.index') }}" class="form-inline flex-wrap" style="gap:.5rem;">
@@ -76,6 +114,17 @@
                 @foreach($turmas as $turma)
                     <option value="{{ $turma->id }}" {{ ($filtros['turma_id'] ?? '') == $turma->id ? 'selected' : '' }}>{{ $turma->nome }}</option>
                 @endforeach
+            </select>
+            <select name="turno" class="form-control form-control-sm">
+                <option value="">Todos os turnos</option>
+                @foreach($turnos as $turno)
+                    <option value="{{ $turno }}" {{ ($filtros['turno'] ?? '') == $turno ? 'selected' : '' }}>{{ $turno }}</option>
+                @endforeach
+            </select>
+            <select name="situacao" class="form-control form-control-sm">
+                <option value="">Todas as situações</option>
+                <option value="risco" {{ ($filtros['situacao'] ?? '') === 'risco' ? 'selected' : '' }}>⚠ Em risco (&lt;60%)</option>
+                <option value="boas" {{ ($filtros['situacao'] ?? '') === 'boas' ? 'selected' : '' }}>✓ Boas (≥80%)</option>
             </select>
             <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-filter"></i> Filtrar</button>
             <a href="{{ route('relatorio_aproveitamento.index') }}" class="btn btn-sm btn-secondary">Limpar</a>

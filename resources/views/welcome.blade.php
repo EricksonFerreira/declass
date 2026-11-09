@@ -88,6 +88,21 @@
         .dash-table div{display:flex;justify-content:space-between;padding:.42rem .7rem;font-size:.68rem;color:#475569;border-top:1px solid #f1f5f9}
         .dash-table div:first-child{border-top:0;font-weight:700;color:#94a3b8;text-transform:uppercase;font-size:.58rem}
 
+        /* screenshots reais */
+        .shots{background:#0b1530;color:#fff}
+        .shots .lead{color:#b6c2dd}
+        .shots-grid{display:grid;grid-template-columns:1.7fr .7fr;gap:2.2rem;align-items:center;margin-top:2.8rem}
+        .shot-browser{background:#0d1830;border:1px solid rgba(255,255,255,.12);border-radius:14px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.5)}
+        .shot-browser img{display:block;width:100%}
+        .shot-caption{display:flex;align-items:center;gap:.5rem;padding:.7rem 1rem;font-size:.75rem;color:#94a3b8;border-top:1px solid rgba(255,255,255,.08)}
+        .shot-caption i{color:var(--accent)}
+        .shot-phone{background:#0f172a;border:7px solid #1e293b;border-radius:26px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.5);position:relative}
+        .shot-phone::before{content:'';position:absolute;top:8px;left:50%;transform:translateX(-50%);width:70px;height:14px;background:#1e293b;border-radius:8px;z-index:2}
+        .shot-phone img{display:block;width:100%;padding-top:18px}
+        .shots-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:1.8rem}
+        .shots-row .shot-caption{font-size:.68rem}
+        @media(max-width:900px){.shots-grid{grid-template-columns:1fr}.shots-row{grid-template-columns:1fr}.shot-phone{max-width:280px;margin:0 auto}}
+
         /* stats strip */
         .stats{background:#fff;border-bottom:1px solid var(--line)}
         .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;padding:2.2rem 1.25rem;text-align:center}
@@ -481,6 +496,46 @@
 </section>
 
 {{-- ================= PLANOS ================= --}}
+<section class="shots" id="telas">
+    <div class="wrap">
+        <div class="center">
+            <div class="eyebrow"><i class="fas fa-desktop"></i> Telas reais do sistema</div>
+            <h2>O sistema <span class="hl">por dentro</span>, no PC e no celular</h2>
+            <p class="lead">Capturas reais do Declass em produção — a secretaria no controle da rotina e a família acompanhando tudo pelo portal, em qualquer dispositivo.</p>
+        </div>
+
+        <div class="shots-grid">
+            <div class="shot-browser">
+                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">declass.test/admin</span></div>
+                <img src="{{ asset('img/mockups/desktop-secretaria-home.png') }}" alt="Painel da secretaria no computador" loading="lazy">
+                <div class="shot-caption"><i class="fas fa-desktop"></i> Painel da secretaria — fila de atendimento, resumo da escola e ações rápidas</div>
+            </div>
+            <div class="shot-phone">
+                <img src="{{ asset('img/mockups/mobile-portal-home.png') }}" alt="Portal da família no celular" loading="lazy">
+                <div class="shot-caption"><i class="fas fa-mobile-alt"></i> Portal da família — notas, frequência e avisos no bolso</div>
+            </div>
+        </div>
+
+        <div class="shots-row">
+            <div class="shot-browser">
+                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">admin/turma</span></div>
+                <img src="{{ asset('img/mockups/desktop-secretaria-turmas.png') }}" alt="Gestão de turmas" loading="lazy">
+                <div class="shot-caption"><i class="fas fa-users"></i> Gestão de turmas</div>
+            </div>
+            <div class="shot-browser">
+                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">admin/aluno</span></div>
+                <img src="{{ asset('img/mockups/desktop-secretaria-alunos.png') }}" alt="Gestão de alunos" loading="lazy">
+                <div class="shot-caption"><i class="fas fa-user-graduate"></i> Cadastro de alunos</div>
+            </div>
+            <div class="shot-browser">
+                <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">portal/notas</span></div>
+                <img src="{{ asset('img/mockups/desktop-portal-notas.png') }}" alt="Boletim no portal da família" loading="lazy">
+                <div class="shot-caption"><i class="fas fa-file-alt"></i> Boletim no portal da família</div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <section class="plans" id="planos">
     <div class="wrap center">
         <span class="eyebrow" style="background:rgba(245,158,11,.15);color:#fbbf24"><i class="fas fa-tag"></i> Planos</span>

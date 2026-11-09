@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" subtitle="Tenants da plataforma (escolas e redes)" :create-url="route('empresa.create')" create-can="gerenciar-empresa" />
+    <x-page-title :title="$titulo" subtitle="Empresas da plataforma (escolas e redes)" :create-url="route('empresa.create')" create-can="gerenciar-empresa" />
 @stop
 
 @section('content')
@@ -33,7 +33,16 @@
                 <tbody>
                     @forelse($empresas as $empresa)
                         <tr>
-                            <td><a href="{{ route('empresa.show', $empresa->id) }}" class="font-weight-bold">{{ $empresa->nome }}</a></td>
+                            <td>
+                                <a href="{{ route('empresa.show', $empresa->id) }}" class="d-inline-flex align-items-center font-weight-bold">
+                                    @if($empresa->logo_url)
+                                        <img src="{{ $empresa->logo_url }}" alt="" class="mr-2 rounded" style="width:34px;height:34px;object-fit:contain;background:#f8f9fa;border:1px solid #e9ecef;">
+                                    @else
+                                        <span class="mr-2 rounded d-inline-flex align-items-center justify-content-center text-muted" style="width:34px;height:34px;background:#f8f9fa;border:1px solid #e9ecef;"><i class="fas fa-building"></i></span>
+                                    @endif
+                                    {{ $empresa->nome }}
+                                </a>
+                            </td>
                             <td>
                                 <code>{{ $empresa->slug }}</code>
                                 @if($empresa->dominio)<div class="text-muted" style="font-size:.75rem;">{{ $empresa->dominio }}</div>@endif
@@ -51,14 +60,15 @@
                             <td class="text-right">
                                 <a href="{{ route('empresa.show', $empresa->id) }}" class="btn btn-xs btn-info" title="Ver"><i class="fa fa-eye"></i></a>
                                 <a href="{{ route('empresa.edit', $empresa->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
-                                <x-delete-button :action="route('empresa.destroy', $empresa->id)" titulo="Excluir" mensagem="Excluir o tenant &quot;{{ $empresa->nome }}&quot;? Os dados são preservados (exclusão lógica)." />
+                                <a href="{{ route('empresa.site.edit', $empresa->id) }}" class="btn btn-xs btn-secondary" title="Site público"><i class="fa fa-globe"></i></a>
+                                <x-delete-button :action="route('empresa.destroy', $empresa->id)" titulo="Excluir" mensagem="Excluir a empresa &quot;{{ $empresa->nome }}&quot;? Os dados são preservados (exclusão lógica)." />
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="7" class="text-center text-muted py-4">
                                 <i class="fas fa-building fa-2x mb-2 d-block"></i>
-                                Nenhum tenant encontrado.
+                                Nenhuma empresa encontrada.
                             </td>
                         </tr>
                     @endforelse

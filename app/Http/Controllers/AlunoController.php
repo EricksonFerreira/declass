@@ -25,6 +25,7 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
     public function __construct(
         protected AlunoService $alunoService,
         protected BreadcrumbService $breadcrumbService,
+        protected \App\Services\SaudeAlunoService $saudeAlunoService,
     ) {
         $this->titulo = 'Alunos';
         $this->nomeFiltro = 'aluno';
@@ -93,13 +94,22 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
         abort_if(! $aluno, 404, 'Aluno não encontrado.');
 
         $vinculos = $this->alunoService->vinculosDoAluno($aluno);
-        $responsaveisOpcoes = $this->responsaveisOpcoes();
+        $responsaveis = Responsavel::query()->with('pessoa')->withCount('alunos')->where('ativo', 'S')->orderBy('id')->get();
+        $responsaveisOpcoes = $responsaveis->mapWithKeys(fn (Responsavel $r) => [$r->id => $r->nome ?? ('#'.$r->id)])->all();
+        $responsaveisPicker = $responsaveis->map(fn (Responsavel $r) => [
+            'id' => $r->id,
+            'rotulo' => $r->nome ?? ('#'.$r->id),
+            'detalhe' => trim(($r->pessoa?->cpf ? 'CPF '.$r->pessoa->cpf.' · ' : '').($r->pessoa?->celular ?? $r->pessoa?->telefone ?? ''), ' ·'),
+            'alunos' => $r->alunos_count,
+        ])->values()->all();
         $tiposResponsavel = Aluno::TIPOS_RESPONSAVEL;
         $tiposDocumento = \App\Models\AlunoDocumento::TIPOS;
+        $ficha = $this->saudeAlunoService->paraAluno($aluno->id);
+        $tiposSanguineos = \App\Models\SaudeAluno::TIPOS_SANGUINEOS;
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Alunos', 'aluno.index', $aluno->nome ?? 'Aluno');
 
-        return view('aluno.show', compact('aluno', 'vinculos', 'responsaveisOpcoes', 'tiposResponsavel', 'tiposDocumento', 'breadcrumb'))
+        return view('aluno.show', compact('aluno', 'vinculos', 'responsaveisOpcoes', 'responsaveisPicker', 'tiposResponsavel', 'tiposDocumento', 'ficha', 'tiposSanguineos', 'breadcrumb'))
             ->with('titulo', $aluno->nome ?? 'Aluno');
     }
 
@@ -237,8 +247,12 @@ class AlunoController extends BaseController implements FiltroInterface, Resourc
         ]);
         abort_if(! $aluno, 404, 'Aluno não encontrado.');
 
-        $matricula = $aluno->matriculas->sortByDesc('id')->first();
-        abort_if(! $matricula, 404, 'Aluno não possui matrícula concluída.');
+        // Certificado e emitido apenas em etapa final de ciclo (ex.: 9o EF, 3o EM, ABC).
+        $matricula = $aluno->matriculas
+            ->filter(fn ($m) => $m->turma?->etapa?->emite_certificado)
+            ->sortByDesc('id')
+            ->first();
+        abort_if(! $matricula, 404, 'Aluno não possui matrícula concluída em etapa final de ciclo.');
 
         $responsavel = $aluno->responsaveis
             ->sortByDesc(fn ($r) => ($r->pivot->principal ? 2 : 0) + ($r->pivot->tipo === 'legal' ? 1 : 0))

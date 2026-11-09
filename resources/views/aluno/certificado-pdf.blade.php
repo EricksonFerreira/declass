@@ -31,6 +31,7 @@
 
     <div class="borda">
         <div class="cab">
+            @include('pdf._logo', ['escola' => $escolaDoc])
             <h1>{{ $escolaDoc->nome ?? 'Escola' }}</h1>
             @if($escolaDoc->endereco)<div class="sub">{{ $escolaDoc->endereco }}</div>@endif
             @if($escolaDoc->telefone)<div class="sub">Tel: {{ $escolaDoc->telefone }}</div>@endif

@@ -16,6 +16,7 @@
         ['icone' => 'fas fa-clipboard-check', 'cor' => 'bg-success', 'valor' => $chamadasHoje.' de '.$totalAulasHoje, 'label' => 'Chamadas feitas', 'url' => '#aulas-hoje'],
         ['icone' => 'fas fa-chalkboard-teacher', 'cor' => 'bg-warning', 'valor' => $totalTurmas, 'label' => 'Minhas turmas', 'url' => route('turma.index')],
         ['icone' => 'fas fa-star-half-alt', 'cor' => 'bg-danger', 'valor' => $avaliacoesSemana, 'label' => 'Avaliações (7 dias)', 'url' => route('avaliacao.agenda')],
+        ['icone' => 'fas fa-check-double', 'cor' => 'bg-secondary', 'valor' => $totalCorrecoes, 'label' => 'Para corrigir', 'url' => '#correcoes'],
     ];
 @endphp
 
@@ -31,7 +32,7 @@
 {{-- Resumo do dia (padrao small-box do AdminLTE) --}}
 <div class="row">
     @foreach($tiles as $t)
-        <div class="col-md-3 col-6">
+        <div class="col-md col-6">
             <div class="small-box {{ $t['cor'] }}">
                 <div class="inner">
                     <h3>{{ $t['valor'] }}</h3>
@@ -77,6 +78,40 @@
                             <i class="fas fa-mug-hot mb-1 d-block" style="font-size:1.4rem;opacity:.4;"></i>
                             <strong>Sem aulas hoje</strong><br>
                             <small>Sua grade está livre neste dia.</small>
+                        </td>
+                    </tr>
+                @endforelse
+            </table>
+        </div>
+    </div>
+</div>
+
+{{-- Atividades entregues pelos alunos aguardando correcao, por turma --}}
+<div class="card" id="correcoes">
+    <div class="card-header font-weight-bold d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-check-double mr-1"></i> Correções pendentes</span>
+        @if($totalCorrecoes > 0)
+            <span class="badge badge-danger">{{ $totalCorrecoes }}</span>
+        @endif
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                @forelse($turmasComCorrecao as $item)
+                    <tr onclick="window.location='{{ route('turma.show', $item['turma']->id) }}#tab-tarefas'" style="cursor:pointer;">
+                        <td class="font-weight-bold">{{ $item['turma']->nome }}</td>
+                        <td class="text-muted">{{ $item['turma']->escola->nome ?? '' }}</td>
+                        <td class="text-right text-nowrap" style="width:140px;">
+                            <span class="badge badge-danger">{{ $item['pendentes'] }} para corrigir</span>
+                            <i class="fas fa-chevron-right text-muted ml-1"></i>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td class="text-center text-muted py-4">
+                            <i class="fas fa-check-circle mb-1 d-block" style="font-size:1.4rem;opacity:.4;"></i>
+                            <strong>Nada para corrigir</strong><br>
+                            <small>Nenhuma atividade entregue aguardando correção.</small>
                         </td>
                     </tr>
                 @endforelse

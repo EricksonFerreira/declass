@@ -30,7 +30,8 @@ class CalendarioController extends BaseController
         $user = $request->user();
         $turmas = $this->turmasOpcoes($user);
 
-        $turmaId = (int) $request->input('turma_id', $turmas->keys()->first() ?: 0);
+        $turmaId = (int) $request->input('turma_id',
+            (int) request()->route('turma') ?: ($turmas->keys()->first() ?: 0));
         $turma = $turmaId ? Turma::query()->with(['escola', 'anoLetivo.periodos', 'horario'])->find($turmaId) : null;
 
         // Professor so enxerga turmas com atribuicao ativa.
@@ -66,14 +67,22 @@ class CalendarioController extends BaseController
         $mesExibido = collect($meses)->firstWhere('chave', $mesSelecionado);
 
         // Professor: aulas que leciona na turma para destacar seus dias.
+        // Feriados nao sao exibidos na visao do professor (so eventos).
         $aulasProfessor = collect();
         $somenteMinhas = false;
+        $ocultarFeriados = $user->isProfessor();
         if ($turma && $user->isProfessor()) {
             $aulasProfessor = $this->calendarioService->aulasDoProfessor($turma, $user->id);
             $somenteMinhas = $request->boolean('minhas_aulas');
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Calendário Letivo', 'Vida Acadêmica');
+        $breadcrumb = $request->routeIs('turma.calendario') && $turma
+            ? $this->breadcrumbService->prepararBreadcrumbCustom([
+                ['Turmas', route('turma.index')],
+                [$turma->nome, route('turma.show', $turma->id)],
+                ['Calendário Letivo', null],
+            ])
+            : $this->breadcrumbService->prepararBreadcrumbIndex('Calendário Letivo', 'Vida Acadêmica');
 
         return view('calendario.index', [
             'turma' => $turma,
@@ -88,6 +97,7 @@ class CalendarioController extends BaseController
             'aulasProfessor' => $aulasProfessor,
             'diasProfessor' => $aulasProfessor->keys()->all(),
             'somenteMinhas' => $somenteMinhas,
+            'ocultarFeriados' => $ocultarFeriados,
             'alteracoes' => $alteracoes,
             'inicio' => $inicio,
             'fim' => $fim,

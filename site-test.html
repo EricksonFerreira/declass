@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Escola Vila Nova</title>
+    <meta name="description" content="Escola Vila Nova — rede de escolas">
+            <link rel="icon" href="/storage/empresas/logo/K5PhxORkAnXI4ty72dtcjAkUImd8kt2Mqpc4zmHx.png">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
+        :root{
+            --c1:#1E3A8A; --c2:#F59E0B;
+            --ink:#0f172a; --muted:#64748b; --bg:#f6f8fb; --card:#fff; --line:#e6ebf2;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        html{scroll-behavior:smooth}
+        body{font-family:'Figtree',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+        a{text-decoration:none;color:inherit}
+        .wrap{max-width:1140px;margin:0 auto;padding:0 1.25rem}
+        .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.72rem 1.5rem;border-radius:999px;font-weight:700;font-size:.92rem;transition:transform .15s,box-shadow .15s;border:0}
+        .btn:hover{transform:translateY(-2px)}
+        .btn-p{background:var(--c1);color:#fff;box-shadow:0 8px 22px color-mix(in srgb,var(--c1) 30%,transparent)}
+        .btn-a{background:var(--c2);color:#fff;box-shadow:0 8px 22px color-mix(in srgb,var(--c2) 35%,transparent)}
+        .btn-g{background:#fff;color:var(--c1);border:1.5px solid var(--line)}
+        .btn-g:hover{border-color:var(--c1)}
+
+        header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+        .nav{display:flex;align-items:center;justify-content:space-between;height:72px;gap:1rem}
+        .brand{display:flex;align-items:center;gap:.65rem;font-weight:800;font-size:1.12rem;color:var(--c1);white-space:nowrap}
+        .brand img{height:42px;width:auto;object-fit:contain}
+        .nav-links{display:flex;align-items:center;gap:1.4rem;font-size:.9rem;font-weight:600;color:#334155}
+        .nav-links a:hover{color:var(--c1)}
+        .nav-cta{display:flex;align-items:center;gap:.55rem;flex-shrink:0}
+
+        .hero{padding:4.2rem 0 3.4rem;position:relative;overflow:hidden}
+        .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(900px 420px at 85% -10%,color-mix(in srgb,var(--c1) 9%,transparent),transparent 65%),radial-gradient(700px 380px at -10% 110%,color-mix(in srgb,var(--c2) 10%,transparent),transparent 60%);pointer-events:none}
+        .hero-in{position:relative;display:flex;align-items:center;gap:3rem;flex-wrap:wrap}
+        .hero-txt{flex:1;min-width:300px}
+        .hero-tag{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c2);margin-bottom:1.05rem}
+        .hero-tag::before{content:'★'}
+        .hero h1{font-size:clamp(2rem,4.6vw,3.35rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;color:var(--c1)}
+        .hero h1 em{font-style:normal;color:var(--c2)}
+        .hero .lead{margin-top:1.05rem;font-size:1.06rem;color:var(--muted);max-width:540px}
+        .hero-ctas{display:flex;gap:.7rem;margin-top:1.8rem;flex-wrap:wrap}
+        .hero-img{flex:0 0 42%;max-width:460px;min-width:280px}
+        .hero-img img{width:100%;border-radius:22px;object-fit:cover;aspect-ratio:4/4.6;box-shadow:0 22px 55px rgba(15,23,42,.18)}
+        .hero-img .sem-foto{width:100%;aspect-ratio:4/4.6;border-radius:22px;background:linear-gradient(150deg,color-mix(in srgb,var(--c1) 14%,#fff),color-mix(in srgb,var(--c2) 18%,#fff));display:flex;align-items:center;justify-content:center;color:var(--c1);font-size:4rem}
+        .chips{display:flex;gap:.8rem;margin-top:1.9rem;flex-wrap:wrap}
+        .chip{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:.65rem 1rem;display:flex;flex-direction:column;min-width:120px}
+        .chip b{font-size:1.15rem;color:var(--c1);line-height:1.15}
+        .chip span{font-size:.74rem;color:var(--muted);font-weight:600}
+        .scroll-hint{display:inline-flex;align-items:center;gap:.45rem;margin-top:1.6rem;font-size:.8rem;color:var(--muted)}
+        .scroll-hint i{animation:bounce 1.6s infinite}
+        @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+
+        section{padding:3.8rem 0}
+        .kicker{font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--c2);margin-bottom:.5rem}
+        .sec-head{margin-bottom:2.3rem}
+        .sec-head.center{text-align:center}
+        .sec-head h2{font-size:clamp(1.6rem,3.2vw,2.3rem);font-weight:800;letter-spacing:-.02em;line-height:1.15;color:var(--c1)}
+        .sec-head h2 em{font-style:normal;color:var(--c2)}
+        .sec-head p{color:var(--muted);margin-top:.55rem;max-width:560px}
+        .sec-head.center p{margin-left:auto;margin-right:auto}
+
+        .sobre-in{display:flex;align-items:center;gap:3rem;flex-wrap:wrap}
+        .sobre-txt{flex:1;min-width:290px;color:#334155;font-size:1.02rem}
+        .sobre-txt p+p{margin-top:.9rem}
+        .sobre-feats{display:grid;grid-template-columns:1fr 1fr;gap:.75rem 1.2rem;margin-top:1.4rem}
+        .feat{display:flex;align-items:center;gap:.55rem;font-size:.92rem;font-weight:600;color:var(--ink)}
+        .feat i{color:var(--c2);font-size:.95rem}
+        .sobre-img{flex:0 0 38%;min-width:270px}
+        .sobre-img img{width:100%;border-radius:18px;object-fit:cover;box-shadow:0 16px 42px rgba(15,23,42,.14)}
+
+        .grid-unidades{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.1rem}
+        .unidade{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.35rem;display:flex;flex-direction:column;gap:.45rem;transition:transform .15s,box-shadow .15s;position:relative}
+        .unidade:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(15,23,42,.1)}
+        .unidade h3{font-size:1.05rem;font-weight:800;color:var(--c1)}
+        .unidade .meta{font-size:.85rem;color:var(--muted);display:flex;gap:.45rem;align-items:flex-start}
+        .unidade .meta i{color:var(--c2);margin-top:.2rem}
+        .unidade .btn{margin-top:auto;align-self:flex-start;padding:.5rem 1.05rem;font-size:.82rem}
+
+        .contato-cards{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+        .contato-card{display:flex;align-items:center;gap:.8rem;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1rem 1.25rem;transition:transform .15s}
+        .contato-card:hover{transform:translateY(-2px)}
+        .contato-card i{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;background:color-mix(in srgb,var(--c1) 10%,#fff);color:var(--c1);flex-shrink:0}
+        .contato-card .lbl{font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+        .contato-card .val{font-size:.93rem;font-weight:700;color:var(--ink)}
+
+        .cta-final{margin-top:3rem;background:linear-gradient(120deg,var(--c1),color-mix(in srgb,var(--c1) 72%,#312e81));border-radius:20px;padding:2.6rem;text-align:center;color:#fff}
+        .cta-final h3{font-size:clamp(1.4rem,2.6vw,1.9rem);font-weight:800;letter-spacing:-.02em}
+        .cta-final p{opacity:.88;margin:.6rem auto 1.4rem;max-width:460px;font-size:.95rem}
+
+        footer{background:#0b1530;color:#94a3b8;padding:1.7rem 0;text-align:center;font-size:.83rem}
+        footer .brand-f{color:#e2e8f0;font-weight:800;font-size:1rem;margin-bottom:.3rem}
+        footer .declass{color:#cbd5e1;font-weight:700}
+
+        @media (max-width:840px){
+            .nav-links{display:none}
+            .hero{padding:3rem 0 2.6rem}
+            .hero-img{flex:1 1 100%;order:-1}
+            .sobre-in{flex-direction:column}
+            .sobre-img{flex:1 1 100%}
+            section{padding:2.8rem 0}
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="wrap nav">
+        <span class="brand">
+            <img src="/storage/empresas/logo/K5PhxORkAnXI4ty72dtcjAkUImd8kt2Mqpc4zmHx.png" alt="Escola Vila Nova">            Escola Vila Nova
+        </span>
+        <nav class="nav-links">
+            <a href="#unidades">Unidades</a>                        <a href="#contato">Contato</a>        </nav>
+        <div class="nav-cta">
+            <a href="http://declass.test/login" class="btn btn-p"><i class="fas fa-right-to-bracket"></i> Portal</a>
+        </div>
+    </div>
+</header>
+
+<div class="hero">
+    <div class="wrap hero-in">
+        <div class="hero-txt">
+            <span class="hero-tag">Rede de escolas</span>
+            <h1>Escola Vila Nova</h1>
+                        <div class="hero-ctas">
+                                    <a href="#contato" class="btn btn-a"><i class="fas fa-phone"></i> Fale conosco</a>
+                                                    <a href="#unidades" class="btn btn-g"><i class="fas fa-school"></i> Nossas unidades</a>
+                            </div>
+            <div class="chips">
+                                    <div class="chip"><b><i class="fas fa-location-dot" style="font-size:.85rem;color:var(--c2)"></i> São Paulo — SP</b><span>onde estamos</span></div>
+                                                    <div class="chip"><b>3</b><span>unidades</span></div>
+                                <div class="chip"><b>desde 2026</b><span>com você</span></div>
+            </div>
+            <span class="scroll-hint"><i class="fas fa-chevron-down"></i> Role a tela</span>
+        </div>
+        <div class="hero-img">
+                            <div class="sem-foto"><img src="/storage/empresas/logo/K5PhxORkAnXI4ty72dtcjAkUImd8kt2Mqpc4zmHx.png" alt="Escola Vila Nova" style="aspect-ratio:auto;max-height:180px;box-shadow:none"></div>
+                    </div>
+    </div>
+</div>
+
+
+<section id="unidades" style="background:#fff;border-top:1px solid var(--line)">
+    <div class="wrap">
+        <div class="sec-head center">
+            <div class="kicker">Nossas unidades</div>
+            <h2>Perto de você,<br><em>de verdade</em></h2>
+            <p>3 unidades atendendo sua família</p>
+        </div>
+        <div class="grid-unidades">
+                            <div class="unidade">
+                    <h3><i class="fas fa-school" style="color:var(--c2);margin-right:.35rem;"></i>Campus Sul</h3>
+                                            <div class="meta"><i class="fas fa-location-dot"></i><span>São Paulo — SP</span></div>
+                                                                                                        <a href="http://declass.test/matricula/escola-demo/unidade-sul" class="btn btn-p"><i class="fas fa-user-plus"></i> Matrícula</a>
+                                    </div>
+                            <div class="unidade">
+                    <h3><i class="fas fa-school" style="color:var(--c2);margin-right:.35rem;"></i>Unidade Central</h3>
+                                            <div class="meta"><i class="fas fa-location-dot"></i><span>São Paulo — SP</span></div>
+                                                                                                        <a href="http://declass.test/matricula/escola-demo/unidade-central" class="btn btn-p"><i class="fas fa-user-plus"></i> Matrícula</a>
+                                    </div>
+                            <div class="unidade">
+                    <h3><i class="fas fa-school" style="color:var(--c2);margin-right:.35rem;"></i>Unidade Norte</h3>
+                                            <div class="meta"><i class="fas fa-location-dot"></i><span>São Paulo — SP</span></div>
+                                                                                                        <a href="http://declass.test/matricula/escola-demo/unidade-norte" class="btn btn-p"><i class="fas fa-user-plus"></i> Matrícula</a>
+                                    </div>
+                    </div>
+    </div>
+</section>
+
+<section id="contato">
+    <div class="wrap">
+        <div class="sec-head center">
+            <div class="kicker">Entre em contato</div>
+            <h2>Estamos prontos para<br><em>atendê-lo</em></h2>
+            <p>Tire suas dúvidas, agende uma visita ou faça a matrícula. Será um prazer recebê-lo.</p>
+        </div>
+        <div class="contato-cards">
+                                                    <a class="contato-card" href="mailto:contato@escolademo.test">
+                    <i class="fas fa-envelope"></i>
+                    <span><span class="lbl">E-mail</span><br><span class="val">contato@escolademo.test</span></span>
+                </a>
+                                            </div>
+
+            </div>
+</section>
+
+<footer>
+    <div class="wrap">
+        <div class="brand-f">Escola Vila Nova</div>
+        © 2026 Escola Vila Nova · Plataforma <span class="declass">DeClass</span> — Gestão Escolar
+    </div>
+</footer>
+
+</body>
+</html>

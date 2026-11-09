@@ -243,3 +243,35 @@ test('professor sem atribuicao nao baixa pdf da turma', function () {
         ->get(route('boletim.turma.pdf', $ids['turma']->id))
         ->assertForbidden();
 });
+
+test('boletim sinaliza aprovado conforme media de aprovacao da disciplina', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $ids = setupBoletim($empresa);
+
+    // media = (8+5)/2 = 6,5: abaixo do padrao 7, acima do corte 6,0
+    avaliarComNota($ids, $admin, 8);
+    avaliarComNota($ids, $admin, 5);
+
+    $this->actingAs($admin)
+        ->get(route('boletim.turma', $ids['turma']->id))
+        ->assertOk()
+        ->assertSee('badge-danger');
+
+    DB::table('turma_disciplina')
+        ->where('turma_id', $ids['turma']->id)
+        ->where('disciplina_id', $ids['disciplina']->id)
+        ->update(['media_aprovacao' => 6.0]);
+
+    $this->actingAs($admin)
+        ->get(route('boletim.turma', $ids['turma']->id))
+        ->assertOk()
+        ->assertSee('badge-success')
+        ->assertSee('Aprovação a partir de 6,0')
+        ->assertDontSee('badge-danger');
+
+    $this->actingAs($admin)
+        ->get(route('boletim.aluno', $ids['aluno']->id))
+        ->assertOk()
+        ->assertSee('badge-success');
+});

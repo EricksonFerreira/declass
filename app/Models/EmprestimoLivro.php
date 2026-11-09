@@ -6,6 +6,7 @@ use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -57,6 +58,12 @@ class EmprestimoLivro extends Model
     public function aluno(): BelongsTo
     {
         return $this->belongsTo(Aluno::class, 'aluno_id');
+    }
+
+    /** Fotos de avaria registradas na devolucao. */
+    public function anexos(): HasMany
+    {
+        return $this->hasMany(EmprestimoLivroAnexo::class, 'emprestimo_id');
     }
 
     public function estaAtivo(): bool

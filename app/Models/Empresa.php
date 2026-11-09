@@ -37,13 +37,36 @@ class Empresa extends Model
         'cor_terciaria',
         'site_titulo',
         'site_descricao',
+        'site_aviso',
         'site_whatsapp',
         'site_instagram',
         'site_ativo',
         'site_unidades',
         'site_matricula',
+        'site_matricula_ano',
         'site_contato',
+        'site_modelo',
+        'site_banner',
+        'site_imagem_sobre',
+        'site_galeria',
+        'site_depoimentos',
         'ativo',
+    ];
+
+    /**
+     * Modelos de layout disponiveis para o site publico da empresa
+     * (chave => rotulo para a tela de configuracao).
+     */
+    public const SITE_MODELOS = [
+        'classico' => 'Clássico',
+        'escola' => 'Escola moderna',
+        'gandolfi' => 'Tradicional',
+        'hero' => 'Destaque com imagem',
+        'minimal' => 'Minimalista',
+    ];
+
+    protected $casts = [
+        'site_galeria' => 'array',
     ];
 
     /**
@@ -85,7 +108,49 @@ class Empresa extends Model
 
     public function getLogoUrlAttribute(): ?string
     {
-        $path = is_string($this->logo_path) ? trim($this->logo_path) : '';
+        return $this->imagemPublicaUrl($this->logo_path);
+    }
+
+    public function getSiteBannerUrlAttribute(): ?string
+    {
+        return $this->imagemPublicaUrl($this->site_banner);
+    }
+
+    public function getSiteImagemSobreUrlAttribute(): ?string
+    {
+        return $this->imagemPublicaUrl($this->site_imagem_sobre);
+    }
+
+    public function getSiteGaleriaUrlsAttribute(): array
+    {
+        $paths = $this->site_galeria;
+        if (is_string($paths)) {
+            $paths = json_decode($paths, true) ?: [];
+        }
+
+        return collect(is_array($paths) ? $paths : [])
+            ->map(fn ($path) => $this->imagemPublicaUrl($path))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Depoimentos do site — um por linha no formato "Nome | Texto".
+     */
+    public function getDepoimentosAttribute(): array
+    {
+        return collect(preg_split('/\r?\n/', (string) $this->site_depoimentos))
+            ->map(fn ($linha) => array_map('trim', explode('|', $linha, 2)))
+            ->filter(fn ($partes) => ($partes[0] ?? '') !== '')
+            ->map(fn ($partes) => ['nome' => $partes[0], 'texto' => $partes[1] ?? ''])
+            ->values()
+            ->all();
+    }
+
+    private function imagemPublicaUrl(?string $path): ?string
+    {
+        $path = is_string($path) ? trim($path) : '';
 
         if ($path === '' || ! Storage::disk('public')->exists($path)) {
             return null;

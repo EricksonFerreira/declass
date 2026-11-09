@@ -22,6 +22,7 @@
 </style>
 </head>
 <body>
+    @include('pdf._logo', ['empresa' => ($turmas->first()['turma'] ?? null)?->escola?->empresa, 'style' => 'display:block;max-height:44px;max-width:140px;margin-bottom:4px;'])
     <h1>Grades horárias — todas as turmas</h1>
     <div class="sub">
         {{ $comProfessor ? 'Exibição: disciplina + professor' : 'Exibição: somente disciplinas' }}

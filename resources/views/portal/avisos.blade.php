@@ -3,44 +3,56 @@
 @section('title', $titulo)
 
 @section('content_header')
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
     <x-page-title :title="$titulo" subtitle="Comunicados das escolas dos alunos vinculados à sua conta" />
 @stop
 
 @section('content')
-@if($avisos->isEmpty())
+@php
+    $corTipo = ['info' => 'info', 'urgente' => 'danger', 'evento' => 'success'];
+    $iconeTipo = ['info' => 'fa-info-circle', 'urgente' => 'fa-exclamation-triangle', 'evento' => 'fa-calendar-check'];
+@endphp
+
+<x-filter :filters="$filters" :additional-filters="$additionalFilters" :itens-filtered="$itensFiltered" :nome-filtro="$nomeFiltro" />
+
+@forelse($avisos as $aviso)
+    @php
+        $cor = $corTipo[$aviso->tipo] ?? 'secondary';
+        $icone = $iconeTipo[$aviso->tipo] ?? 'fa-bullhorn';
+        $novo = $aviso->data_publicacao && $aviso->data_publicacao->gte(now()->subDays(7)->startOfDay());
+    @endphp
+    <div class="card card-outline card-{{ $cor }}">
+        <div class="card-header py-2 d-flex flex-wrap align-items-center" style="gap:.75rem;">
+            <div class="flex-grow-1" style="min-width:200px;">
+                <i class="fas {{ $icone }} text-{{ $cor }}"></i>
+                <strong>{{ $aviso->titulo }}</strong>
+                <div>
+                    <span class="badge badge-{{ $cor }}">{{ \App\Models\Aviso::TIPOS[$aviso->tipo] ?? $aviso->tipo }}</span>
+                    @if($novo)
+                        <span class="badge badge-warning">Novo</span>
+                    @endif
+                    <span class="badge badge-secondary">{{ $aviso->escola->nome ?? '' }}</span>
+                    <span class="badge badge-light border">
+                        {{ $aviso->turma ? 'Turma '.$aviso->turma->nome : 'Todos os alunos' }}
+                    </span>
+                </div>
+            </div>
+            <div class="text-right text-nowrap">
+                <small class="text-muted">
+                    <i class="far fa-calendar-alt mr-1"></i>{{ optional($aviso->data_publicacao)->format('d/m/Y') }}
+                </small>
+            </div>
+        </div>
+        <div class="card-body py-2">
+            <p class="mb-0" style="white-space: pre-line;"><small>{{ $aviso->mensagem }}</small></p>
+        </div>
+    </div>
+@empty
     <div class="card">
         <div class="card-body text-center text-muted py-5">
             <i class="fas fa-bullhorn fa-3x mb-3 d-block"></i>
-            Nenhum aviso no momento.
+            Nenhum aviso no momento. Quando a escola publicar um comunicado, ele aparece aqui.
         </div>
     </div>
-@else
-    @foreach($avisos as $aviso)
-        @php
-            $badgeTipo = ['info' => 'primary', 'urgente' => 'danger', 'evento' => 'success'][$aviso->tipo] ?? 'secondary';
-        @endphp
-        <div class="card card-outline card-{{ $badgeTipo }} mb-3">
-            <div class="card-header d-flex flex-wrap align-items-center" style="gap:.5rem;">
-                <h3 class="card-title font-weight-bold mb-0">{{ $aviso->titulo }}</h3>
-                <span class="badge badge-{{ $badgeTipo }} ml-auto">{{ \App\Models\Aviso::TIPOS[$aviso->tipo] ?? $aviso->tipo }}</span>
-            </div>
-            <div class="card-body">
-                <p class="text-muted mb-2" style="font-size:.85rem;">
-                    <i class="far fa-calendar-alt"></i> {{ optional($aviso->data_publicacao)->format('d/m/Y') }}
-                    &nbsp;·&nbsp; {{ $aviso->escola->nome ?? '' }}
-                    @if($aviso->turma)
-                        &nbsp;·&nbsp; Turma {{ $aviso->turma->nome }}
-                    @else
-                        &nbsp;·&nbsp; Todos os alunos
-                    @endif
-                </p>
-                <div style="white-space:pre-line;">{{ $aviso->mensagem }}</div>
-            </div>
-        </div>
-    @endforeach
-@endif
-
-<div class="mt-2">
-    <a href="{{ route('portal.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left"></i> Voltar ao portal</a>
-</div>
+@endforelse
 @stop

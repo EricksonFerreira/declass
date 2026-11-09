@@ -20,6 +20,7 @@ class StoreEtapaRequest extends FormRequest
             'segmento' => ['required', Rule::in(array_keys(Etapa::SEGMENTOS))],
             'ordem' => ['nullable', 'integer', 'min:0', 'max:999'],
             'descricao' => ['nullable', 'string', 'max:2000'],
+            'emite_certificado' => ['nullable', 'boolean'],
             'ativo' => ['nullable', Rule::in(['S', 'N'])],
         ];
     }

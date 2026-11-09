@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Hash;
 
 class SetupProducaoCommand extends Command
 {
-    protected $signature = 'declass:setup-producao {--demo : Popula tambem os dados de demonstracao escolar} {--reset-demo : Remove a massa academica demo antes de recriar}';
+    protected $signature = 'declass:setup-producao {--demo : Popula tambem os dados de demonstracao escolar} {--reset-demo : Remove a massa academica demo antes de recriar} {--fresh : Derruba todas as tabelas e recria do zero (migrate:fresh)}';
 
     protected $description = 'Sobe a producao: optimize:clear + migrate + seed, tenant declass e superadmins com troca de senha no primeiro acesso';
 
@@ -34,7 +34,7 @@ class SetupProducaoCommand extends Command
         $this->line(Artisan::output());
 
         $this->info('=== migrate ===');
-        Artisan::call('migrate', ['--force' => true]);
+        Artisan::call($this->option('fresh') ? 'migrate:fresh' : 'migrate', ['--force' => true]);
         $this->line(Artisan::output());
 
         $this->info('=== db:seed ===');

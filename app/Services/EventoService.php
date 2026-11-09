@@ -44,9 +44,11 @@ class EventoService extends AbstractBaseService
             ->with('escola:id,nome', 'turmas:id,nome')
             ->whereDate('data_inicio', '<=', $fim->toDateString())
             ->whereRaw('COALESCE(data_fim, data_inicio) >= ?', [$inicio->toDateString()])
+            ->when(! empty($filtros['titulo']), fn ($q) => $q->where('titulo', 'like', '%'.$filtros['titulo'].'%'))
             ->when(! empty($filtros['escola_id']), fn ($q) => $q->where('escola_id', (int) $filtros['escola_id']))
             ->when(! empty($filtros['tipo']), fn ($q) => $q->where('tipo', $filtros['tipo']))
             ->when(! empty($filtros['status']), fn ($q) => $q->where('status', $filtros['status']))
+            ->when(! empty($filtros['suspende_aulas']), fn ($q) => $q->where('suspende_aulas', $filtros['suspende_aulas']))
             ->orderBy('data_inicio')
             ->orderBy('hora_inicio')
             ->get();
@@ -55,10 +57,14 @@ class EventoService extends AbstractBaseService
     /**
      * Eventos visiveis no portal para os alunos informados:
      * publico "todos", nao cancelados, sobrepostos ao periodo
-     * futuro, de escolas onde o aluno tem vinculo.
+     * informado (padrao: de hoje em diante), de escolas onde
+     * o aluno tem vinculo.
      */
-    public function eventosParaAlunos(Collection $alunos): Collection
-    {
+    public function eventosParaAlunos(
+        Collection $alunos,
+        ?\DateTimeInterface $inicio = null,
+        ?\DateTimeInterface $fim = null
+    ): Collection {
         $escolaIds = $alunos->pluck('escola_id')->filter()->unique();
 
         if ($escolaIds->isEmpty()) {
@@ -73,11 +79,14 @@ class EventoService extends AbstractBaseService
             ->pluck('turma_id')
             ->unique();
 
+        $inicio = $inicio ? \Carbon\Carbon::parse($inicio) : now();
+
         return Evento::query()
             ->with('escola:id,nome')
             ->where('publico', 'todos')
             ->where('status', '!=', 'cancelado')
-            ->whereRaw('COALESCE(data_fim, data_inicio) >= ?', [now()->toDateString()])
+            ->whereRaw('COALESCE(data_fim, data_inicio) >= ?', [$inicio->toDateString()])
+            ->when($fim, fn ($q) => $q->whereDate('data_inicio', '<=', \Carbon\Carbon::parse($fim)->toDateString()))
             ->where(fn ($q) => $q->whereNull('escola_id')->orWhereIn('escola_id', $escolaIds))
             ->where(fn ($q) => $q->whereDoesntHave('turmas')
                 ->orWhereHas('turmas', fn ($t) => $t->whereIn('turmas.id', $turmaIds)))

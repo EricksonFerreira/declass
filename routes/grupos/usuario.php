@@ -11,5 +11,6 @@ Route::prefix('usuario')->name('usuario.')->group(function () {
     Route::get('buscar', [UsuarioController::class, 'buscar'])->name('buscar');
     Route::get('{id}/alterarsenha', [UsuarioController::class, 'alterarSenha'])->name('alterarSenha');
     Route::put('{id}/alterarsenha', [UsuarioController::class, 'salvarNovaSenha'])->name('salvarNovaSenha');
+    Route::put('{id}/permissoes', [UsuarioController::class, 'permissoes'])->name('permissoes');
 });
 Route::resource('usuario', UsuarioController::class);

@@ -153,3 +153,45 @@ test('filtros por tipo e gravidade funcionam', function () {
     $this->actingAs($user)->get(route('ocorrencia.index'))
         ->assertOk()->assertSee('ELOGIO-FILTRO')->assertDontSee('SUSPENSAO-FILTRO');
 });
+
+test('notificar responsavel envia aviso para a conta do responsavel', function () {
+    \Illuminate\Support\Facades\Notification::fake();
+    $empresa = tenant();
+    $ids = setupOcorrencia($empresa);
+    $user = usuarioTenant($empresa, 'secretario');
+
+    // responsavel com conta vinculada ao aluno
+    $resp = usuarioTenant($empresa, 'responsavel_legal');
+    $pessoaResp = Pessoa::create(['nome' => 'Resp Teste', 'empresa_id' => $empresa->id]);
+    $responsavel = \App\Models\Responsavel::create([
+        'pessoa_id' => $pessoaResp->id, 'empresa_id' => $empresa->id, 'user_id' => $resp->id,
+    ]);
+    $ids['aluno']->responsaveis()->attach($responsavel->id, [
+        'tipo' => 'legal', 'principal' => true, 'pode_retirar' => true, 'autoriza_contato' => true,
+    ]);
+
+    $this->actingAs($user)->post(route('ocorrencia.store'), [
+        'aluno_id' => $ids['aluno']->id, 'escola_id' => $ids['escola']->id,
+        'data' => now()->toDateString(), 'tipo' => 'advertencia', 'gravidade' => 'media',
+        'descricao' => 'Ocorrido no patio', 'notifica_responsavel' => '1', 'ativo' => 'S',
+    ])->assertRedirect();
+
+    \Illuminate\Support\Facades\Notification::assertSentTo(
+        $resp, \App\Notifications\AvisoSistemaNotification::class
+    );
+});
+
+test('ocorrencia sem notificacao nao envia aviso', function () {
+    \Illuminate\Support\Facades\Notification::fake();
+    $empresa = tenant();
+    $ids = setupOcorrencia($empresa);
+    $user = usuarioTenant($empresa, 'secretario');
+
+    $this->actingAs($user)->post(route('ocorrencia.store'), [
+        'aluno_id' => $ids['aluno']->id, 'escola_id' => $ids['escola']->id,
+        'data' => now()->toDateString(), 'tipo' => 'elogio', 'gravidade' => 'leve',
+        'descricao' => 'Bom comportamento', 'notifica_responsavel' => '0', 'ativo' => 'S',
+    ])->assertRedirect();
+
+    \Illuminate\Support\Facades\Notification::assertNothingSent();
+});

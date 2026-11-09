@@ -172,6 +172,40 @@ test('oferta duplicada e atualizada (upsert)', function () {
         ->and((int) $turma->fresh()->disciplinas->first()->pivot->carga_horaria_semanal)->toBe(8);
 });
 
+test('oferta de disciplina aceita media de aprovacao customizada', function () {
+    $empresa = tenant();
+    $admin = usuarioTenant($empresa, 'administrador');
+    $ids = setupEstrutura($empresa);
+
+    $this->actingAs($admin)->post(route('turma.store'), payloadTurma($ids));
+    app(EmpresaContext::class)->setEmpresaId($empresa->id);
+    $turma = Turma::first();
+    $disc = $ids['disciplina'];
+
+    $this->actingAs($admin)->post(route('turma.disciplina.store', $turma->id), [
+        'disciplina_id' => $disc->id, 'media_aprovacao' => 6.5,
+    ])->assertRedirect(route('turma.show', $turma->id));
+
+    $oferta = $turma->fresh()->disciplinas->first();
+    expect((float) $oferta->pivot->media_aprovacao)->toBe(6.5)
+        ->and($oferta->mediaAprovacaoNaTurma())->toBe(6.5);
+
+    $this->actingAs($admin)->put(route('turma.disciplina.update', [$turma->id, $disc->id]), [
+        'carga_horaria_semanal' => 4, 'media_aprovacao' => 5,
+    ]);
+
+    $oferta = $turma->fresh()->disciplinas->first();
+    expect((float) $oferta->pivot->media_aprovacao)->toBe(5.0)
+        ->and((int) $oferta->pivot->carga_horaria_semanal)->toBe(4);
+
+    // vazio volta ao padrao do sistema
+    $this->actingAs($admin)->put(route('turma.disciplina.update', [$turma->id, $disc->id]), [
+        'carga_horaria_semanal' => 4,
+    ]);
+
+    expect($turma->fresh()->disciplinas->first()->mediaAprovacaoNaTurma())->toBe(7.0);
+});
+
 test('professor pode ser atribuido a turma', function () {
     $empresa = tenant();
     $admin = usuarioTenant($empresa, 'administrador');

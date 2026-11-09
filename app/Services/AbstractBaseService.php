@@ -304,6 +304,17 @@ abstract class AbstractBaseService implements BaseServiceInterface
         return $empresaContext->empresaId();
     }
 
+    /**
+     * Valor de um item do filtro de sessao
+     * (['valor' => ..., 'typeWhere' => ...]) — null quando ausente.
+     */
+    protected function filtroValor(array $filtros, string $key)
+    {
+        $valor = $filtros[$key]['valor'] ?? null;
+
+        return $valor === '' ? null : $valor;
+    }
+
     protected function sanitizeEmpresaFilter(array $filters): array
     {
         if (! array_key_exists('empresa_id', $filters)) {

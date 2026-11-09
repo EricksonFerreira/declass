@@ -15,15 +15,22 @@ class StoreSolicitacaoPublicaRequest extends FormRequest
 
     public function rules(): array
     {
-        // empresa vem dos slugs da rota — o controller resolve de novo
+        // empresa/escola vem dos slugs da rota — o controller resolve de novo
         $empresaId = \App\Models\Empresa::query()
             ->where('slug', $this->route('empresaSlug'))
+            ->value('id');
+        $escolaId = \App\Models\Escola::query()
+            ->where('slug', $this->route('escolaSlug'))
             ->value('id');
 
         return [
             'ano_letivo_id' => [
                 'nullable', 'integer',
-                Rule::exists('anos_letivos', 'id')->where('empresa_id', $empresaId),
+                Rule::exists('anos_letivos', 'id')
+                    ->where('empresa_id', $empresaId)
+                    ->where('escola_id', $escolaId)
+                    ->where('ativo', 'S')
+                    ->whereIn('status', ['letivo', 'planejamento']),
             ],
             'etapa_id' => [
                 'nullable', 'integer',

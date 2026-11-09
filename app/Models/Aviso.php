@@ -59,8 +59,39 @@ class Aviso extends Model
         return $this->ativo === 'S';
     }
 
+    public function turmas(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\Turma::class, 'aviso_turma');
+    }
+
     public function ehGeral(): bool
     {
-        return $this->turma_id === null;
+        return $this->turma_id === null && $this->turmas->isEmpty();
+    }
+
+    /** Nome exibido na coluna Publico. */
+    public function publicoLabel(): string
+    {
+        if ($this->turma_id !== null) {
+            return $this->turma->nome ?? 'Turma #'.$this->turma_id;
+        }
+        $nomes = $this->turmas->pluck('nome');
+
+        return $nomes->isEmpty() ? 'Escola toda' : $nomes->take(3)->implode(', ')
+            .($nomes->count() > 3 ? ' +'.($nomes->count() - 3) : '');
+    }
+
+    /**
+     * Comunicados visiveis no site publico: publicados para familias
+     * e ja no ar. Avisos internos (staff) nunca entram.
+     */
+    public function scopePublicosSite($query)
+    {
+        return $query
+            ->where('destino', 'familias')
+            ->where('ativo', 'S')
+            ->whereDate('data_publicacao', '<=', today())
+            ->orderByDesc('data_publicacao')
+            ->orderByDesc('id');
     }
 }

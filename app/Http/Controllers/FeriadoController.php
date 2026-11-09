@@ -13,8 +13,11 @@ use Illuminate\Http\Request;
  * Feriados e dias sem aula da escola: alimentam o calendario
  * letivo com suspensao (S) ou registro convivente (N).
  */
-class FeriadoController extends BaseController
+class FeriadoController extends BaseController implements Interfaces\FiltroInterface
 {
+    use \App\Traits\AtualizaFiltrosTrait;
+    use \App\Traits\FiltroTrait;
+
     public function __construct(
         protected FeriadoService $feriadoService,
         protected BreadcrumbService $breadcrumbService,
@@ -27,24 +30,75 @@ class FeriadoController extends BaseController
         $this->middleware('can:feriado.edit')->only('edit');
         $this->middleware('can:feriado.update')->only('update');
         $this->middleware('can:feriado.destroy')->only('destroy');
+        $this->middleware('can:feriado.filtro')->only('filtro');
+        $this->middleware('can:feriado.removerFiltro')->only('removerFiltro');
     }
 
     public function index(Request $request)
     {
-        $feriados = $this->feriadoService->listarComEscola([
-            'escola_id' => $request->input('escola_id'),
-            'ano' => $request->input('ano'),
-        ]);
+        $this->configurarSessao();
+
+        $itensFiltered = session("$this->nomeFiltro.filtro", []);
+        $filtros = collect($itensFiltered)
+            ->mapWithKeys(fn ($f) => [$f['name'] => $f['valor']])
+            ->all();
+
+        $feriados = $this->feriadoService->listarComEscola($filtros);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Feriados', 'Vida Acadêmica');
+        $filters = $this->obterFiltrosPrincipais();
+        $additionalFilters = $this->obterFiltrosSecundarios();
 
-        return view('feriado.index', [
-            'feriados' => $feriados,
-            'escolas' => Escola::query()->orderBy('nome')->pluck('nome', 'id')->all(),
-            'anos' => $this->anosDisponiveis(),
-            'filtros' => $request->only(['escola_id', 'ano']),
-            'breadcrumb' => $breadcrumb,
-        ])->with('titulo', $this->titulo);
+        $this->atualizarFiltros($itensFiltered, $filters);
+        $this->atualizarFiltros($itensFiltered, $additionalFilters);
+
+        $nomeFiltro = $this->nomeFiltro;
+
+        return view('feriado.index', compact(
+            'feriados', 'breadcrumb', 'filters', 'itensFiltered',
+            'additionalFilters', 'nomeFiltro'
+        ))->with('titulo', $this->titulo);
+    }
+
+    public function filtro(Request $request)
+    {
+        $this->criarFiltros($request, $this->nomeFiltro);
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function removerFiltro(Request $request)
+    {
+        $this->removeSessao($this->nomeFiltro, $request->input('atributo'));
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function configurarSessao()
+    {
+        session()->put("$this->nomeFiltro.urlPadrao", 'feriado');
+        session()->put("$this->nomeFiltro.rotaRedirect", 'feriado.index');
+    }
+
+    public function obterFiltrosPrincipais()
+    {
+        return [
+            [
+                'name' => 'escola_id', 'label' => 'Escola', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => Escola::query()->orderBy('nome')->pluck('nome', 'id')->all(),
+            ],
+            [
+                'name' => 'ano', 'label' => 'Ano', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => $this->anosDisponiveis(),
+            ],
+        ];
+    }
+
+    public function obterFiltrosSecundarios()
+    {
+        return [];
     }
 
     public function create()

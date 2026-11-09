@@ -29,6 +29,8 @@ class Livro extends Model
         'ano_publicacao',
         'exemplares',
         'descricao',
+        'localizacao',
+        'capa_path',
         'ativo',
     ];
 
@@ -50,6 +52,12 @@ class Livro extends Model
     public function escola(): BelongsTo
     {
         return $this->belongsTo(Escola::class, 'escola_id');
+    }
+
+    /** URL publica da capa cadastrada (null quando nao ha foto). */
+    public function capaUrl(): ?string
+    {
+        return $this->capa_path ? asset('storage/'.$this->capa_path) : null;
     }
 
     public function emprestimos(): HasMany

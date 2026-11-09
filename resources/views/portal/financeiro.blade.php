@@ -3,10 +3,13 @@
 @section('title', $titulo)
 
 @section('content_header')
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
     <x-page-title :title="$titulo" subtitle="Mensalidades dos alunos vinculados à sua conta" />
 @stop
 
 @section('content')
+<x-filter :filters="$filters" :additional-filters="$additionalFilters" :itens-filtered="$itensFiltered" :nome-filtro="$nomeFiltro" />
+
 @foreach($alunos as $aluno)
     @php $cobrancas = $mensalidades->get($aluno->id, collect()); @endphp
     <div class="card">
@@ -50,6 +53,9 @@
                                 <span class="badge badge-{{ $cor }}">{{ ucfirst($situacao) }}</span>
                             </td>
                             <td class="text-right">
+                                @if($c->boleto_path && $c->status === 'pendente')
+                                    <a href="{{ route('portal.mensalidade.boleto', $c->id) }}" class="btn btn-xs btn-primary" title="Baixar boleto para pagamento"><i class="fa fa-barcode"></i> Boleto</a>
+                                @endif
                                 @if($c->status === 'paga')
                                     <a href="{{ route('portal.mensalidade.recibo', $c->id) }}" class="btn btn-xs btn-outline-primary" title="Recibo de pagamento"><i class="fa fa-file-invoice"></i></a>
                                 @endif
@@ -63,8 +69,4 @@
         </div>
     </div>
 @endforeach
-
-<div class="mt-2">
-    <a href="{{ route('portal.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
-</div>
 @stop

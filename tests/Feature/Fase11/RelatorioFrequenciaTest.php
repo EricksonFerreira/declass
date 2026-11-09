@@ -113,8 +113,14 @@ test('filtro apenas risco retorna somente alunos abaixo de 75%', function () {
     setupRelatorioFrequencia($empresa);
     $user = usuarioTenant($empresa, 'administrador');
 
+    // index configura urlPadrao/rotaRedirect na sessao
+    $this->actingAs($user)->get(route('relatorio_frequencia.index'))->assertOk();
+    $this->actingAs($user)
+        ->get(route('relatorio_frequencia.filtro', ['apenas_risco' => 1]))
+        ->assertRedirect(route('relatorio_frequencia.index'));
+
     $response = $this->actingAs($user)
-        ->get(route('relatorio_frequencia.index', ['apenas_risco' => 1]));
+        ->get(route('relatorio_frequencia.index'));
 
     $response->assertOk()
         ->assertSee('Bruno Lima')
@@ -127,10 +133,33 @@ test('filtro por turma restringe o relatorio', function () {
     $ids = setupRelatorioFrequencia($empresa);
     $user = usuarioTenant($empresa, 'administrador');
 
+    $this->actingAs($user)->get(route('relatorio_frequencia.index'))->assertOk();
+    $this->actingAs($user)
+        ->get(route('relatorio_frequencia.filtro', ['turma_id' => $ids['turma']->id]))
+        ->assertRedirect(route('relatorio_frequencia.index'));
+
     $response = $this->actingAs($user)
-        ->get(route('relatorio_frequencia.index', ['turma_id' => $ids['turma']->id]));
+        ->get(route('relatorio_frequencia.index'));
     $response->assertOk();
     expect($response->viewData('resumo')['alunos'])->toBe(3);
+});
+
+test('filtro por nome de aluno restringe o relatorio', function () {
+    $empresa = tenant();
+    setupRelatorioFrequencia($empresa);
+    $user = usuarioTenant($empresa, 'administrador');
+
+    $this->actingAs($user)->get(route('relatorio_frequencia.index'))->assertOk();
+    $this->actingAs($user)
+        ->get(route('relatorio_frequencia.filtro', ['nome_like' => 'Carla']))
+        ->assertRedirect(route('relatorio_frequencia.index'));
+
+    $response = $this->actingAs($user)->get(route('relatorio_frequencia.index'));
+
+    $response->assertOk()
+        ->assertSee('Carla Reis')
+        ->assertDontSee('Bruno Lima')
+        ->assertDontSee('Ana Souza');
 });
 
 test('professor nao acessa relatorio consolidado', function () {

@@ -22,6 +22,7 @@ class StoreTurmaDisciplinaRequest extends FormRequest
                 Rule::exists('disciplinas', 'id')->where('empresa_id', $empresaId),
             ],
             'carga_horaria_semanal' => ['nullable', 'integer', 'min:1', 'max:40'],
+            'media_aprovacao' => ['nullable', 'numeric', 'min:0', 'max:10'],
         ];
     }
 }

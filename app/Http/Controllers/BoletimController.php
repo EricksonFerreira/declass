@@ -24,9 +24,36 @@ class BoletimController extends BaseController
         $turmas = $this->boletimService->turmasVisiveis(auth()->user());
         $alunos = $this->boletimService->alunosComMatricula(auth()->user());
 
+        // Dados estruturados para os modais de busca (EntityPicker):
+        // turma filtra por escola + ano; aluno filtra por escola + turma.
+        $turmasPicker = $turmas->map(fn (Turma $t) => [
+            'id' => $t->id,
+            'rotulo' => $t->nome,
+            'detalhe' => trim(($t->escola->nome ?? '').' · '.($t->anoLetivo->ano ?? ''), ' ·'),
+            'escola_id' => $t->escola_id,
+            'escola' => $t->escola->nome ?? '',
+            'ano_letivo_id' => $t->ano_letivo_id,
+            'ano' => $t->anoLetivo->ano ?? '',
+        ])->values()->all();
+
+        $alunosPicker = $alunos->map(function (Aluno $a) {
+            $mat = $a->matriculas->first();
+            $escolaNome = $mat?->turma?->escola?->nome ?? ($a->escola?->nome ?? '');
+
+            return [
+                'id' => $a->id,
+                'rotulo' => $a->pessoa->nome ?? 'Aluno #'.$a->id,
+                'detalhe' => trim(($a->registro_academico ? 'RA '.$a->registro_academico.' · ' : '').($mat?->turma?->nome ?? ''), ' ·'),
+                'escola_id' => $mat?->turma?->escola_id ?? $a->escola_id,
+                'escola' => $escolaNome,
+                'turma_id' => $mat?->turma_id,
+                'turma' => $mat?->turma?->nome ?? '',
+            ];
+        })->values()->all();
+
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Boletim', 'Vida Acadêmica');
 
-        return view('boletim.index', compact('turmas', 'alunos', 'breadcrumb'))
+        return view('boletim.index', compact('turmasPicker', 'alunosPicker', 'breadcrumb'))
             ->with('titulo', 'Boletim');
     }
 

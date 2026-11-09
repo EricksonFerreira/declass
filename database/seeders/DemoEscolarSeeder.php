@@ -70,12 +70,24 @@ use Illuminate\Support\Facades\Hash;
  *  coordenador@escolademo.test    coordenador    — visao academica
  *                                                 (sem escrita em
  *                                                 diarios/notas)
- *  responsavel@escolademo.test    responsavel    — PORTAL: ve o
- *                                                 boletim e o
- *                                                 financeiro dos
- *                                                 filhos vinculados
- *  aluno@escolademo.test          aluno          — PORTAL: ve o
- *                                                 proprio boletim
+ *  responsavel@escolademo.test    responsavel    — PORTAL: pai dos
+ *                                                 dois alunos demo
+ *                                                 (RA-DEMO-01/02):
+ *                                                 boletim,
+ *                                                 frequencia e
+ *                                                 financeiro deles
+ *  aluno@escolademo.test          aluno          — PORTAL: irmao
+ *                                                 mais velho
+ *                                                 (RA-DEMO-01):
+ *                                                 matriculas
+ *                                                 2022-2026 em
+ *                                                 progressao de
+ *                                                 serie (3º->7º Ano)
+ *                                                 com frequencia e
+ *                                                 notas retroativas;
+ *                                                 a irma tem 4 anos
+ *                                                 a menos e segue
+ *                                                 1º->3º Ano
  *  financeiro@escolademo.test     financeiro     — mensalidades,
  *                                                 planos, baixas e
  *                                                 inadimplencia
@@ -93,6 +105,8 @@ use Illuminate\Support\Facades\Hash;
  *  - responsavel/aluno caem direto no "Portal Familiar"
  *  - professor so ve as proprias turmas no diario/avaliacoes
  *  - boletim mostra medias, frequencia e notas por disciplina
+ *  - pagina da turma lista colegas de classe e tarefas
+ *    (atividades/trabalhos/provas) com entregas dos alunos
  *  - periodo-letivo mostra 4 bimestres (Central/Norte) e
  *    2 semestres (Unidade Sul)
  *  - escolas, anos letivos e turmas das 3 unidades em
@@ -144,6 +158,9 @@ class DemoEscolarSeeder extends Seeder
     /** Cache de etapa_id por trilha (o tenant e unico neste seeder). */
     private array $etapaCache = [];
 
+    /** Maior sequencia de RA ja usada por escola (para colegas novos). */
+    private array $seqAlunos = [];
+
     public function run(): void
     {
         // A massa e grande (~15 mil registros); garante tempo de execucao.
@@ -167,6 +184,7 @@ class DemoEscolarSeeder extends Seeder
         // Massa academica: processada por escola — se a execucao
         // for interrompida, uma nova rodada retoma so o que falta.
         $this->massaAcademica($empresa, $escolas, $usuarios);
+        $this->alunosPortalDemo($empresa, $escolas, $usuarios);
         $this->vincularPortalContas($empresa, $usuarios);
 
         // Modulos complementares: idempotentes, reexecutaveis.
@@ -945,48 +963,59 @@ class DemoEscolarSeeder extends Seeder
                         }
                     }
                     foreach (array_chunk($freqRows, 400) as $chunk) {
-                        DB::table('frequencias')->insert($chunk);
+                        DB::table('frequencias')->insertOrIgnore($chunk);
                     }
                 }
 
-                // Avaliacoes ligadas aos periodos letivos + notas.
-                foreach ([
-                    ['prova', 'Avaliação 1', $periodo1],
-                    ['trabalho', 'Trabalho Prático', $periodo2],
-                ] as [$tipo, $nome, $periodo]) {
-                    $avaliacao = Avaliacao::firstOrCreate(
-                        [
-                            'empresa_id' => $empresa->id,
-                            'turma_id' => $turma->id,
-                            'disciplina_id' => $disciplina->id,
-                            'nome' => $nome,
-                        ],
-                        [
-                            'user_id' => $prof?->id ?? $usuarios['prof1']->id,
-                            'tipo' => $tipo,
-                            'periodo' => $periodo?->nome ?? '1º Período',
-                            'periodo_letivo_id' => $periodo?->id,
-                            'data' => '2026-04-08',
-                            'nota_maxima' => 10,
-                        ]
-                    );
+                // Avaliacoes ligadas aos periodos letivos + notas. Um mesmo
+                // periodo pode ter mais de uma (prova + trabalho, seminario...).
+                $periodosSeed = collect([$periodo1, $periodo2])->filter()->unique('id')->values();
+                if ($periodosSeed->isEmpty()) {
+                    $periodosSeed = collect([null]);
+                }
 
-                    $notaRows = [];
-                    foreach ($matriculas as $matricula) {
-                        $nota = fake()->boolean(75)
-                            ? fake()->randomFloat(1, 5, 10)
-                            : fake()->randomFloat(1, 0, 4.9);
-                        $notaRows[] = [
-                            'empresa_id' => $empresa->id,
-                            'avaliacao_id' => $avaliacao->id,
-                            'matricula_id' => $matricula->id,
-                            'nota' => $nota,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
-                    }
-                    foreach (array_chunk($notaRows, 400) as $chunk) {
-                        DB::table('notas')->insert($chunk);
+                foreach ($periodosSeed as $periodo) {
+                    $nomePeriodo = $periodo?->nome ?? '1º Período';
+                    $fimPeriodo = \Carbon\Carbon::parse($periodo?->data_fim ?? self::ANO_ATUAL.'-04-15');
+
+                    foreach ([
+                        ['trabalho', 'Trabalho', 15],
+                        ['prova', 'Prova', 7],
+                    ] as [$tipo, $rotulo, $diasAntes]) {
+                        $avaliacao = Avaliacao::firstOrCreate(
+                            [
+                                'empresa_id' => $empresa->id,
+                                'turma_id' => $turma->id,
+                                'disciplina_id' => $disciplina->id,
+                                'nome' => $rotulo.' '.$nomePeriodo,
+                            ],
+                            [
+                                'user_id' => $prof?->id ?? $usuarios['prof1']->id,
+                                'tipo' => $tipo,
+                                'periodo' => $nomePeriodo,
+                                'periodo_letivo_id' => $periodo?->id,
+                                'data' => $fimPeriodo->copy()->subDays($diasAntes)->toDateString(),
+                                'nota_maxima' => 10,
+                            ]
+                        );
+
+                        $notaRows = [];
+                        foreach ($matriculas as $matricula) {
+                            $nota = fake()->boolean(75)
+                                ? fake()->randomFloat(1, 5, 10)
+                                : fake()->randomFloat(1, 0, 4.9);
+                            $notaRows[] = [
+                                'empresa_id' => $empresa->id,
+                                'avaliacao_id' => $avaliacao->id,
+                                'matricula_id' => $matricula->id,
+                                'nota' => $nota,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+                        foreach (array_chunk($notaRows, 400) as $chunk) {
+                            DB::table('notas')->insertOrIgnore($chunk);
+                        }
                     }
                 }
             }
@@ -994,36 +1023,532 @@ class DemoEscolarSeeder extends Seeder
     }
 
     /**
-     * Vincula as contas de portal demo: o responsavel passa a ver
-     * o boletim/financeiro dos primeiros filhos e o aluno demo ve
-     * o proprio boletim. Idempotente — so preenche user_id vazio.
+     * Familia demo do portal na Unidade Central: dois irmaos com
+     * 4 anos de diferenca (refletida na serie). O mais velho —
+     * dono da conta aluno@ — tem matriculas em todos os anos da
+     * janela em progressao de serie (3º Ano 2022 -> 7º Ano 2026,
+     * cruzando Fundamental I -> II); a irma entrou em 2024 e segue
+     * 1º -> 3º Ano. Ambos sao filhos do responsavel@. As turmas
+     * do trajeto recebem colegas de classe, frequencia,
+     * avaliacoes, notas retroativas e tarefas com entregas — o
+     * historico escolar dos dois sai completo e o portal mostra
+     * atividades/provas para responder e acompanhar.
      */
-    private function vincularPortalContas(Empresa $empresa, array $usuarios): void
+    private function alunosPortalDemo(Empresa $empresa, array $escolas, array $usuarios): void
     {
-        $alunos = Aluno::query()->where('empresa_id', $empresa->id)
-            ->orderBy('id')->limit(10)->get();
-        if ($alunos->isEmpty()) {
+        $escola = $escolas['unidade-central'] ?? null;
+        if (! $escola) {
             return;
         }
 
-        // responsavel@ ve os primeiros 5 alunos vinculados
-        $vinculados = 0;
-        foreach ($alunos as $aluno) {
-            foreach ($aluno->responsaveis as $resp) {
-                if ($vinculados >= 5) {
-                    break 2;
+        $respPessoa = Pessoa::firstOrCreate(
+            ['empresa_id' => $empresa->id, 'cpf' => '900.000.000-01'],
+            [
+                'nome' => 'Responsável Demo',
+                'data_nascimento' => '1985-06-15',
+                'sexo' => 'M',
+                'email' => 'responsavel.demo@escolademo.test',
+                'celular' => '11990000001',
+            ]
+        );
+
+        $responsavel = Responsavel::firstOrCreate(
+            ['empresa_id' => $empresa->id, 'pessoa_id' => $respPessoa->id],
+            ['profissao' => 'Contador', 'local_trabalho' => 'Escritório próprio', 'ativo' => 'S']
+        );
+
+        $filhos = [
+            [
+                'cpf' => '900.000.000-02',
+                'nome' => 'Aluno Demo Portal',
+                'nascimento' => '2013-03-20',
+                'sexo' => 'M',
+                'registro' => 'RA-DEMO-01',
+                'trajeto' => [
+                    2022 => '3º Ano A', 2023 => '4º Ano A', 2024 => '5º Ano A',
+                    2025 => '6º Ano A', 2026 => '7º Ano A',
+                ],
+            ],
+            [
+                'cpf' => '900.000.000-03',
+                'nome' => 'Aluna Demo Portal',
+                'nascimento' => '2017-09-08',
+                'sexo' => 'F',
+                'registro' => 'RA-DEMO-02',
+                'trajeto' => [
+                    2024 => '1º Ano A', 2025 => '2º Ano A', 2026 => '3º Ano A',
+                ],
+            ],
+        ];
+
+        $turmasOperadas = [];
+
+        foreach ($filhos as $filho) {
+            $pessoa = Pessoa::firstOrCreate(
+                ['empresa_id' => $empresa->id, 'cpf' => $filho['cpf']],
+                [
+                    'nome' => $filho['nome'],
+                    'data_nascimento' => $filho['nascimento'],
+                    'sexo' => $filho['sexo'],
+                    'email' => strtolower($filho['registro']).'@escolademo.test',
+                    'telefone' => '11990000002',
+                ]
+            );
+
+            $aluno = Aluno::firstOrCreate(
+                ['empresa_id' => $empresa->id, 'registro_academico' => $filho['registro']],
+                [
+                    'pessoa_id' => $pessoa->id,
+                    'escola_id' => $escola->id,
+                    'data_ingresso' => min(array_keys($filho['trajeto'])).'-02-05',
+                    'turno_preferencial' => 'matutino',
+                    'ativo' => 'S',
+                ]
+            );
+
+            $aluno->responsaveis()->syncWithoutDetaching([
+                $responsavel->id => [
+                    'tipo' => 'legal',
+                    'principal' => true,
+                    'pode_retirar' => true,
+                    'autoriza_contato' => true,
+                ],
+            ]);
+
+            foreach ($filho['trajeto'] as $ano => $nomeTurma) {
+                // Ano letivo/turma sao criados se faltarem: a massa de
+                // coortes normalmente ja cobre, mas bases populadas por
+                // versao antiga do seeder podem nao ter a estrutura.
+                $anoLetivo = \App\Models\AnoLetivo::firstOrCreate(
+                    ['empresa_id' => $empresa->id, 'escola_id' => $escola->id, 'ano' => $ano],
+                    [
+                        'data_inicio' => $ano.'-02-01',
+                        'data_fim' => $ano.'-12-15',
+                        'status' => $ano === self::ANO_ATUAL ? 'letivo' : 'encerrado',
+                        'periodicidade' => 'bimestral',
+                        'ativo' => 'S',
+                    ]
+                );
+
+                if (! $anoLetivo->periodos()->exists()) {
+                    $this->criarPeriodos($empresa, $escola, $anoLetivo, false);
                 }
-                if (! $resp->user_id) {
-                    $resp->update(['user_id' => $usuarios['responsavel']->id]);
-                    $vinculados++;
+
+                $turma = Turma::firstOrCreate(
+                    ['empresa_id' => $empresa->id, 'nome' => $nomeTurma, 'ano_letivo_id' => $anoLetivo->id],
+                    [
+                        'escola_id' => $escola->id,
+                        'etapa_id' => $this->etapaIdPorPosicao($empresa, $nomeTurma),
+                        'turno' => 'matutino',
+                        'sala' => 'Sala '.fake()->numberBetween(1, 30),
+                        'capacidade_maxima' => 35,
+                        'ativo' => 'S',
+                    ]
+                );
+
+                if (! $turma->disciplinas()->exists()) {
+                    foreach (Disciplina::query()->where('empresa_id', $empresa->id)->get() as $disciplina) {
+                        DB::table('turma_disciplina')->updateOrInsert(
+                            ['turma_id' => $turma->id, 'disciplina_id' => $disciplina->id],
+                            [
+                                'carga_horaria_semanal' => fake()->numberBetween(3, 6),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                    }
+                }
+
+                $status = $ano === self::ANO_ATUAL ? 'ativa' : 'concluida';
+
+                $matricula = Matricula::firstOrCreate(
+                    ['aluno_id' => $aluno->id, 'ano_letivo_id' => $anoLetivo->id],
+                    [
+                        'empresa_id' => $empresa->id,
+                        'turma_id' => $turma->id,
+                        'status' => $status,
+                        'numero_chamada' => (int) Matricula::query()
+                            ->where('turma_id', $turma->id)->max('numero_chamada') + 1,
+                        'data_matricula' => $ano.'-02-05',
+                        'data_saida' => $status === 'concluida' ? $ano.'-12-10' : null,
+                    ]
+                );
+
+                // Matricula do ano ja existente em outra turma (base
+                // populada por versao antiga) e movida para a turma
+                // do trajeto demo.
+                if ($matricula->turma_id !== $turma->id
+                    && ! Matricula::query()
+                        ->where('aluno_id', $aluno->id)
+                        ->where('turma_id', $turma->id)
+                        ->exists()) {
+                    $matricula->update([
+                        'turma_id' => $turma->id,
+                        'numero_chamada' => (int) DB::table('matriculas')
+                            ->where('turma_id', $turma->id)->max('numero_chamada') + 1,
+                    ]);
+                }
+
+                $turmasOperadas[$turma->id] = $turma;
+            }
+        }
+
+        // Anos anteriores: cria diarios/avaliacoes retroativos.
+        // Ano atual: so completa as lacunas dos dois alunos nos
+        // registros ja criados pela operacao regular.
+        $professores = collect([$usuarios['prof1'], $usuarios['prof2']])->filter()->values();
+        foreach ($turmasOperadas as $turma) {
+            $this->garantirColegas($empresa, $turma);
+            $this->operacaoTurmaHistorica($empresa, $turma, $professores, $usuarios['prof1']->id);
+        }
+        $this->tarefasPortalDemo($empresa, $turmasOperadas, $usuarios);
+    }
+
+    /** Etapa da turma pelo nome da posicao ("7º Ano A" -> Fundamental II). */
+    private function etapaIdPorPosicao(Empresa $empresa, string $nomeTurma): ?int
+    {
+        $posicao = trim((string) preg_replace('/\s+[A-Z]$/', '', $nomeTurma));
+
+        foreach (self::TRILHAS as $key => $trilha) {
+            if (in_array($posicao, $trilha['posicoes'], true)) {
+                return $this->etapaId($empresa, $key);
+            }
+        }
+
+        return Etapa::query()
+            ->where('empresa_id', $empresa->id)
+            ->orderBy('ordem')
+            ->value('id');
+    }
+
+    /**
+     * Completa a turma do trajeto demo com colegas de classe ate o
+     * minimo: as coortes ja trazem 20-30 alunos, mas bases populadas
+     * por versao antiga do seeder podem ter a turma quase vazia.
+     * Idempotente — so cria o que falta para bater o minimo.
+     */
+    private function garantirColegas(Empresa $empresa, Turma $turma, int $minimo = 20): void
+    {
+        $total = Matricula::query()->where('turma_id', $turma->id)->count();
+        if ($total >= $minimo) {
+            return;
+        }
+
+        $turma->loadMissing(['escola', 'anoLetivo']);
+        $escola = $turma->escola;
+        if (! $escola) {
+            return;
+        }
+
+        $ano = (int) ($turma->anoLetivo->ano ?? self::ANO_ATUAL);
+        $status = $ano === self::ANO_ATUAL ? 'ativa' : 'concluida';
+        $chamada = (int) DB::table('matriculas')->where('turma_id', $turma->id)->max('numero_chamada');
+
+        // Sequencia de RA continua apos o maior sufixo ja usado na escola.
+        $cacheKey = $empresa->id.'|'.$turma->escola_id;
+        $this->seqAlunos[$cacheKey] ??= (int) Aluno::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('registro_academico', 'like', 'RA-'.$turma->escola_id.'-%')
+            ->max(DB::raw("CAST(SUBSTRING_INDEX(registro_academico, '-', -1) AS UNSIGNED)"));
+
+        $rows = [];
+        $agora = now();
+        for ($i = $total; $i < $minimo; $i++) {
+            [$aluno] = $this->criarAlunoComResponsavel(
+                $empresa, $escola, ++$this->seqAlunos[$cacheKey], $ano
+            );
+            $rows[] = [
+                'empresa_id' => $empresa->id,
+                'escola_id' => $turma->escola_id,
+                'aluno_id' => $aluno->id,
+                'turma_id' => $turma->id,
+                'ano_letivo_id' => $turma->ano_letivo_id,
+                'status' => $status,
+                'numero_chamada' => ++$chamada,
+                'data_matricula' => $ano.'-02-05',
+                'data_saida' => $status === 'concluida' ? $ano.'-12-10' : null,
+                'created_at' => $agora,
+                'updated_at' => $agora,
+            ];
+        }
+
+        foreach (array_chunk($rows, 200) as $chunk) {
+            DB::table('matriculas')->insertOrIgnore($chunk);
+        }
+    }
+
+    /**
+     * Atividades, trabalhos e provas (tarefas) das turmas do trajeto
+     * demo + entregas de todos os matriculados — o portal do aluno e
+     * do responsavel passa a listar tarefas pendentes e avaliadas.
+     * Tambem cobre tarefas criadas antes dos alunos demo existirem
+     * (backfill por insertOrIgnore).
+     */
+    private function tarefasPortalDemo(Empresa $empresa, array $turmasOperadas, array $usuarios): void
+    {
+        $autorId = $usuarios['prof1']->id ?? null;
+        $agora = now();
+        $descricoes = [
+            'atividade' => 'Resolver os exercícios indicados em aula e enviar pelo portal.',
+            'trabalho' => 'Produzir o trabalho em grupo conforme o roteiro entregue.',
+            'prova' => 'Avaliação do conteúdo do período — consultar data na agenda.',
+        ];
+
+        foreach ($turmasOperadas as $turma) {
+            $turma->loadMissing(['anoLetivo', 'disciplinas', 'matriculas']);
+            $ano = (int) ($turma->anoLetivo->ano ?? self::ANO_ATUAL);
+            $disciplinas = $turma->disciplinas->values();
+
+            // Ano atual: datas em volta de hoje (pendente e vencida).
+            // Anos anteriores: datas dentro do proprio ano letivo.
+            $defs = $ano === self::ANO_ATUAL
+                ? [
+                    ['atividade', 'Atividade de fixação', 'texto', $agora->copy()->addDays(7)],
+                    ['atividade', 'Atividade de revisão', 'leitura', $agora->copy()->subDays(6)],
+                    ['trabalho', 'Trabalho em grupo', 'foto', $agora->copy()->addDays(14)],
+                    ['prova', 'Prova bimestral', 'nenhuma', $agora->copy()->addDays(20)],
+                ]
+                : [
+                    ['atividade', 'Atividade de fixação', 'texto', \Carbon\Carbon::create($ano, 5, 20)],
+                    ['trabalho', 'Trabalho em grupo', 'foto', \Carbon\Carbon::create($ano, 8, 15)],
+                    ['prova', 'Prova bimestral', 'nenhuma', \Carbon\Carbon::create($ano, 10, 20)],
+                ];
+
+            foreach ($defs as $idx => [$tipo, $titulo, $tipoEntrega, $dataEntrega]) {
+                Tarefa::firstOrCreate(
+                    ['empresa_id' => $empresa->id, 'turma_id' => $turma->id, 'titulo' => $titulo],
+                    [
+                        'escola_id' => $turma->escola_id,
+                        'disciplina_id' => $disciplinas->isNotEmpty()
+                            ? $disciplinas[$idx % $disciplinas->count()]->id
+                            : null,
+                        'user_id' => $autorId,
+                        'tipo' => $tipo,
+                        'descricao' => $descricoes[$tipo],
+                        'data_entrega' => $dataEntrega->toDateString(),
+                        'nota_maxima' => 10,
+                        'tipo_entrega' => $tipoEntrega,
+                        'ativo' => 'S',
+                    ]
+                );
+            }
+
+            // Entrega de cada matriculado em TODAS as tarefas da turma.
+            $matriculas = $turma->matriculas->whereIn('status', ['ativa', 'concluida']);
+            $tarefas = Tarefa::query()->where('turma_id', $turma->id)->get();
+            $jaEntregues = EntregaTarefa::query()
+                ->whereIn('tarefa_id', $tarefas->pluck('id'))
+                ->get(['tarefa_id', 'matricula_id'])
+                ->keyBy(fn ($e) => $e->tarefa_id.'|'.$e->matricula_id);
+
+            $rows = [];
+            foreach ($tarefas as $tarefa) {
+                $vencida = $tarefa->data_entrega?->isPast() ?? false;
+                foreach ($matriculas as $matricula) {
+                    if (isset($jaEntregues[$tarefa->id.'|'.$matricula->id])) {
+                        continue;
+                    }
+                    $status = $vencida
+                        ? fake()->randomElement(['entregue', 'entregue', 'avaliada', 'avaliada', 'pendente'])
+                        : 'pendente';
+                    $rows[] = [
+                        'empresa_id' => $empresa->id,
+                        'escola_id' => $turma->escola_id,
+                        'tarefa_id' => $tarefa->id,
+                        'matricula_id' => $matricula->id,
+                        'status' => $status,
+                        'nota' => $status === 'avaliada'
+                            ? fake()->randomFloat(1, 5, $tarefa->nota_maxima ?? 10)
+                            : null,
+                        'data_entrega' => in_array($status, ['entregue', 'avaliada'])
+                            ? $tarefa->data_entrega->copy()->subDays(fake()->numberBetween(0, 3))->toDateString()
+                            : null,
+                        'observacoes' => $status === 'pendente' && $vencida ? 'Entrega em atraso' : null,
+                        'created_at' => $agora,
+                        'updated_at' => $agora,
+                    ];
+                }
+            }
+            foreach (array_chunk($rows, 400) as $chunk) {
+                DB::table('entregas_tarefa')->insertOrIgnore($chunk);
+            }
+        }
+    }
+
+    /**
+     * Operacao retroativa de UMA turma por onde passou um aluno
+     * demo: garante atribuicao titular e um diario + prova e
+     * trabalho por periodo letivo (todos nos anos encerrados; no
+     * ano atual, so os periodos ja encerrados e apenas quando a
+     * turma ficou sem diario/avaliacao); depois preenche
+     * frequencias/notas de todos os matriculados. O insertOrIgnore
+     * preserva registros existentes, entao e seguro reexecutar.
+     */
+    private function operacaoTurmaHistorica(Empresa $empresa, Turma $turma, $professores, int $fallbackUserId): void
+    {
+        $turma->loadMissing(['anoLetivo.periodos', 'disciplinas']);
+
+        $periodos = $turma->anoLetivo?->periodos?->sortBy('ordem')->values() ?? collect();
+        $matriculas = Matricula::query()->where('turma_id', $turma->id)->get();
+
+        if ($matriculas->isEmpty() || $turma->disciplinas->isEmpty()) {
+            return;
+        }
+
+        $retroativa = (int) ($turma->anoLetivo->ano ?? 0) !== self::ANO_ATUAL;
+        $agora = now();
+        $conteudos = [
+            'Revisão de conteúdo', 'Exercícios práticos', 'Leitura e interpretação',
+            'Apresentação de projeto', 'Dinâmica em grupo', 'Correção de atividade',
+        ];
+
+        // Ano atual: a operacao regular (operacaoEscola) normalmente
+        // ja criou diarios/avaliacoes; so gera o que faltar quando a
+        // turma ficou sem (ex.: base populada por versao antiga do
+        // seeder) — limitado aos periodos ja encerrados.
+        $temDiarios = Diario::query()->where('turma_id', $turma->id)->exists();
+        $temAvaliacoes = Avaliacao::query()->where('turma_id', $turma->id)->exists();
+        $periodosOp = $retroativa
+            ? $periodos
+            : $periodos->filter(fn ($p) => \Carbon\Carbon::parse($p->data_fim)->isPast())->values();
+
+        foreach ($turma->disciplinas as $i => $disciplina) {
+            $prof = $professores->isNotEmpty() ? $professores[$i % $professores->count()] : null;
+
+            Atribuicao::firstOrCreate(
+                ['empresa_id' => $empresa->id, 'turma_id' => $turma->id, 'disciplina_id' => $disciplina->id],
+                ['user_id' => $prof?->id, 'papel' => 'titular', 'ativo' => 'S']
+            );
+
+            if (! $retroativa && $temDiarios && $temAvaliacoes) {
+                continue;
+            }
+
+            foreach ($periodosOp as $periodo) {
+                $dataAula = \Carbon\Carbon::parse($periodo->data_inicio)->addDays(15);
+                $fim = \Carbon\Carbon::parse($periodo->data_fim);
+                if ($dataAula->gt($fim)) {
+                    $dataAula = $fim->copy();
+                }
+
+                if ($retroativa || ! $temDiarios) {
+                    Diario::firstOrCreate(
+                        [
+                            'empresa_id' => $empresa->id,
+                            'turma_id' => $turma->id,
+                            'disciplina_id' => $disciplina->id,
+                            'data' => $dataAula->toDateString(),
+                        ],
+                        [
+                            'user_id' => $prof?->id ?? $fallbackUserId,
+                            'conteudo' => fake()->randomElement($conteudos),
+                        ]
+                    );
+                }
+
+                if ($retroativa || ! $temAvaliacoes) {
+                    foreach (['prova' => 'Prova', 'trabalho' => 'Trabalho'] as $tipo => $rotulo) {
+                        Avaliacao::firstOrCreate(
+                            [
+                                'empresa_id' => $empresa->id,
+                                'turma_id' => $turma->id,
+                                'disciplina_id' => $disciplina->id,
+                                'nome' => $rotulo.' '.$periodo->nome,
+                            ],
+                            [
+                                'user_id' => $prof?->id ?? $fallbackUserId,
+                                'tipo' => $tipo,
+                                'periodo' => $periodo->nome,
+                                'periodo_letivo_id' => $periodo->id,
+                                'data' => $fim->copy()->subDays(7)->toDateString(),
+                                'nota_maxima' => 10,
+                            ]
+                        );
+                    }
                 }
             }
         }
 
-        // aluno@ ve a si mesmo
-        $primeiro = $alunos->first();
-        if ($primeiro && ! $primeiro->user_id) {
-            $primeiro->update(['user_id' => $usuarios['aluno']->id]);
+        $diarioIds = Diario::query()->where('turma_id', $turma->id)->pluck('id');
+        $avaliacaoIds = Avaliacao::query()->where('turma_id', $turma->id)->pluck('id');
+
+        $freqRows = [];
+        foreach ($diarioIds as $diarioId) {
+            foreach ($matriculas as $matricula) {
+                $status = fake()->randomElement(
+                    ['presente', 'presente', 'presente', 'presente', 'presente', 'falta', 'justificada']
+                );
+                $freqRows[] = [
+                    'empresa_id' => $empresa->id,
+                    'diario_id' => $diarioId,
+                    'matricula_id' => $matricula->id,
+                    'status' => $status,
+                    'justificativa' => $status === 'justificada' ? 'Atestado médico' : null,
+                    'created_at' => $agora,
+                    'updated_at' => $agora,
+                ];
+            }
+        }
+        foreach (array_chunk($freqRows, 400) as $chunk) {
+            DB::table('frequencias')->insertOrIgnore($chunk);
+        }
+
+        $notaRows = [];
+        foreach ($avaliacaoIds as $avaliacaoId) {
+            foreach ($matriculas as $matricula) {
+                $notaRows[] = [
+                    'empresa_id' => $empresa->id,
+                    'avaliacao_id' => $avaliacaoId,
+                    'matricula_id' => $matricula->id,
+                    'nota' => fake()->boolean(75)
+                        ? fake()->randomFloat(1, 5, 10)
+                        : fake()->randomFloat(1, 0, 4.9),
+                    'created_at' => $agora,
+                    'updated_at' => $agora,
+                ];
+            }
+        }
+        foreach (array_chunk($notaRows, 400) as $chunk) {
+            DB::table('notas')->insertOrIgnore($chunk);
+        }
+    }
+
+    /**
+     * Vincula as contas de portal demo: responsavel@ fica sendo
+     * o pai dos dois irmaos demo (RA-DEMO-01/02) e aluno@ e o
+     * irmao mais velho. Deterministico — limpa vinculos antigos
+     * do mesmo usuario para o portal mostrar so essa familia.
+     */
+    private function vincularPortalContas(Empresa $empresa, array $usuarios): void
+    {
+        $responsavel = Responsavel::query()
+            ->where('empresa_id', $empresa->id)
+            ->whereHas('pessoa', fn ($q) => $q->where('cpf', '900.000.000-01'))
+            ->first();
+
+        if ($responsavel) {
+            Responsavel::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('user_id', $usuarios['responsavel']->id)
+                ->where('id', '!=', $responsavel->id)
+                ->update(['user_id' => null]);
+
+            $responsavel->update(['user_id' => $usuarios['responsavel']->id]);
+        }
+
+        $aluno = Aluno::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('registro_academico', 'RA-DEMO-01')
+            ->first();
+
+        if ($aluno) {
+            Aluno::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('user_id', $usuarios['aluno']->id)
+                ->where('id', '!=', $aluno->id)
+                ->update(['user_id' => null]);
+
+            $aluno->update(['user_id' => $usuarios['aluno']->id]);
         }
     }
 
@@ -1300,34 +1825,119 @@ class DemoEscolarSeeder extends Seeder
             return;
         }
 
-        if (\App\Models\EmprestimoLivro::query()->where('empresa_id', $empresa->id)->exists()) {
+        if (! \App\Models\EmprestimoLivro::query()->where('empresa_id', $empresa->id)->exists()) {
+            foreach (range(0, 9) as $i) {
+                $aluno = $alunos[$i % $alunos->count()];
+                $livro = $livros[$i % count($livros)];
+
+                $dados = [
+                    'empresa_id' => $empresa->id,
+                    'livro_id' => $livro->id,
+                    'aluno_id' => $aluno->id,
+                    'data_emprestimo' => now()->subDays(20)->toDateString(),
+                    'data_devolucao_prevista' => now()->subDays(5)->toDateString(),
+                    'status' => 'ativo',
+                ];
+
+                if ($i % 3 === 0) {
+                    $dados['data_devolucao'] = now()->subDays(6)->toDateString();
+                    $dados['status'] = 'devolvido';
+                } elseif ($i % 3 === 1) {
+                    $dados['observacoes'] = 'Aluno avisado para regularizar.';
+                } else {
+                    $dados['data_emprestimo'] = now()->subDays(2)->toDateString();
+                    $dados['data_devolucao_prevista'] = now()->addDays(13)->toDateString();
+                }
+
+                \App\Models\EmprestimoLivro::create($dados);
+            }
+        }
+
+        $this->emprestimosPortalDemo($empresa, $escola, $livros);
+    }
+
+    /**
+     * Historico de emprestimos dos alunos demo do portal
+     * (RA-DEMO-01/02). Cobre os cenarios exibidos em
+     * /portal/emprestimos e na gestao de emprestimos:
+     * devolvidos em dia / no limite / com atraso ao longo dos
+     * anos, um antigo nunca devolvido (atraso > 1 ano), um
+     * atrasado recente, um no prazo vencendo em breve e um
+     * recem-emprestado. Idempotente: o marcador e o emprestimo
+     * de 2022 do RA-DEMO-01.
+     */
+    private function emprestimosPortalDemo(Empresa $empresa, Escola $escola, array $livros): void
+    {
+        $porTitulo = collect($livros)->keyBy('titulo');
+
+        $alunosDemo = Aluno::query()
+            ->where('empresa_id', $empresa->id)
+            ->whereIn('registro_academico', ['RA-DEMO-01', 'RA-DEMO-02'])
+            ->get()
+            ->keyBy('registro_academico');
+
+        $aluno = $alunosDemo->get('RA-DEMO-01');
+        if (! $aluno) {
             return;
         }
 
-        foreach (range(0, 9) as $i) {
-            $aluno = $alunos[$i % $alunos->count()];
-            $livro = $livros[$i % count($livros)];
+        $jaSemeado = \App\Models\EmprestimoLivro::query()
+            ->where('aluno_id', $aluno->id)
+            ->whereYear('data_emprestimo', 2022)
+            ->exists();
+        if ($jaSemeado) {
+            return;
+        }
 
-            $dados = [
-                'empresa_id' => $empresa->id,
-                'livro_id' => $livro->id,
-                'aluno_id' => $aluno->id,
-                'data_emprestimo' => now()->subDays(20)->toDateString(),
-                'data_devolucao_prevista' => now()->subDays(5)->toDateString(),
-                'status' => 'ativo',
-            ];
+        // [livro, emprestimo, prevista, devolucao|null, status, observacao|null]
+        $historicoAluno = [
+            // Devolvidos ao longo da trajetoria 2022-2025.
+            ['O Pequeno Príncipe', '2022-03-10', '2022-03-24', '2022-03-21', 'devolvido', null],
+            ['Diário de um Banana', '2022-05-05', '2022-05-19', '2022-06-03', 'devolvido', 'Devolvido com atraso; família orientada.'],
+            ['A Revolução dos Bichos', '2023-04-12', '2023-04-26', '2023-04-26', 'devolvido', null],
+            ['Dom Casmurro', '2023-08-18', '2023-09-01', '2023-09-12', 'devolvido', null],
+            ['O Alquimista', '2024-03-14', '2024-03-28', '2024-03-25', 'devolvido', null],
+            ['História Geral', '2025-05-09', '2025-05-23', '2025-05-30', 'devolvido', null],
+            ['Gramática Reflexiva', '2025-10-02', '2025-10-16', '2025-10-16', 'devolvido', null],
+            // Nunca devolvido: ativo ha mais de 2 anos (extravio).
+            ['Memórias Póstumas de Brás Cubas', '2024-09-10', '2024-09-24', null, 'ativo', 'Aluno relatou extravio do exemplar; caso em aberto.'],
+            // Atrasado recente (~3 semanas).
+            ['Atlas Geográfico Escolar', now()->subDays(35)->toDateString(), now()->subDays(21)->toDateString(), null, 'ativo', 'Família avisada do atraso.'],
+            // No prazo, vencendo em breve.
+            ['Cem Anos de Solidão', now()->subDays(10)->toDateString(), now()->addDays(4)->toDateString(), null, 'ativo', null],
+            // Recem-emprestado (retirado hoje).
+            ['Matemática para o Ensino Fundamental', now()->toDateString(), now()->addDays(15)->toDateString(), null, 'ativo', null],
+        ];
 
-            if ($i % 3 === 0) {
-                $dados['data_devolucao'] = now()->subDays(6)->toDateString();
-                $dados['status'] = 'devolvido';
-            } elseif ($i % 3 === 1) {
-                $dados['observacoes'] = 'Aluno avisado para regularizar.';
-            } else {
-                $dados['data_emprestimo'] = now()->subDays(2)->toDateString();
-                $dados['data_devolucao_prevista'] = now()->addDays(13)->toDateString();
+        $historicoIrma = [
+            ['O Pequeno Príncipe', '2025-04-10', '2025-04-24', '2025-04-22', 'devolvido', null],
+            ['Diário de um Banana', now()->subDays(3)->toDateString(), now()->addDays(11)->toDateString(), null, 'ativo', null],
+        ];
+
+        foreach (['RA-DEMO-01' => $historicoAluno, 'RA-DEMO-02' => $historicoIrma] as $ra => $emprestimos) {
+            $dono = $alunosDemo->get($ra);
+            if (! $dono) {
+                continue;
             }
 
-            \App\Models\EmprestimoLivro::create($dados);
+            foreach ($emprestimos as [$titulo, $retirada, $prevista, $devolucao, $status, $observacao]) {
+                $livro = $porTitulo->get($titulo);
+                if (! $livro) {
+                    continue;
+                }
+
+                \App\Models\EmprestimoLivro::create([
+                    'empresa_id' => $empresa->id,
+                    'escola_id' => $escola->id,
+                    'livro_id' => $livro->id,
+                    'aluno_id' => $dono->id,
+                    'data_emprestimo' => $retirada,
+                    'data_devolucao_prevista' => $prevista,
+                    'data_devolucao' => $devolucao,
+                    'status' => $status,
+                    'observacoes' => $observacao,
+                ]);
+            }
         }
     }
 

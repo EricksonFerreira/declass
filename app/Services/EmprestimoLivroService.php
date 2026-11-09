@@ -68,7 +68,7 @@ class EmprestimoLivroService extends AbstractBaseService
      * Baixa do emprestimo: marca devolvido com a data atual.
      * Retorna false quando ja estava devolvido.
      */
-    public function devolver($id)
+    public function devolver($id, array $dados = [], array $fotos = [])
     {
         $this->ensureEmpresaSelectedForWrite();
         $item = $this->applyEmpresaScope($this->model->newQuery())->find($id);
@@ -82,7 +82,23 @@ class EmprestimoLivroService extends AbstractBaseService
         $item->update([
             'status' => 'devolvido',
             'data_devolucao' => now()->toDateString(),
+            'observacoes' => $dados['observacoes'] ?? $item->observacoes,
         ]);
+
+        // Fotos de avaria enviadas na devolucao ficam ligadas
+        // ao emprestimo (e, por ele, ao livro e ao aluno).
+        foreach ($fotos as $foto) {
+            if (! $foto instanceof \Illuminate\Http\UploadedFile || ! $foto->isValid()) {
+                continue;
+            }
+
+            $path = $foto->store('emprestimos/'.$item->id, 'public');
+            $item->anexos()->create([
+                'empresa_id' => $item->empresa_id,
+                'arquivo_path' => $path,
+                'nome_original' => $foto->getClientOriginalName(),
+            ]);
+        }
 
         return $item;
     }

@@ -4,7 +4,6 @@ use Opcodes\LogViewer\Enums\SortingMethod;
 use Opcodes\LogViewer\Enums\SortingOrder;
 use Opcodes\LogViewer\Enums\Theme;
 use Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer;
-use Opcodes\LogViewer\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return [
 
@@ -117,8 +116,11 @@ return [
     |
     */
 
+    // 'web' em vez de EnsureFrontendRequestsAreStateful: a API e chamada pela
+    // propria UI no mesmo dominio, e a lista stateful do Sanctum nao cobre os
+    // dominios personalizados das empresas.
     'api_middleware' => [
-        EnsureFrontendRequestsAreStateful::class,
+        'web',
         'auth',
         AuthorizeLogViewer::class,
     ],

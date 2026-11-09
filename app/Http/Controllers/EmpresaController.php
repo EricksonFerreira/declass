@@ -9,10 +9,13 @@ use App\Http\Requests\Empresa\UpdateEmpresaRequest;
 use App\Models\Empresa;
 use App\Services\BreadcrumbService;
 use App\Services\EmpresaService;
+use App\Support\UploadStorage;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class EmpresaController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -27,7 +30,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     {
         $this->middleware('can:gerenciar-empresa', ['except' => ['minhaEmpresa', 'editarEmpresa', 'atualizarEmpresa']]);
 
-        $this->titulo = 'Tenants';
+        $this->titulo = 'Empresas';
         $this->nomeFiltro = 'empresa';
         $this->empresaService = $empresaService;
         $this->breadcrumbService = $breadcrumbService;
@@ -47,7 +50,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         $empresas = $this->empresaService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Tenants', 'Configurações');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Empresas', 'Configurações');
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -71,7 +74,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         }
 
         $status = ['S' => 'Ativo', 'N' => 'Inativo'];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Tenants', 'empresa.index', 'Criar', 'Configurações');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Empresas', 'empresa.index', 'Criar', 'Configurações');
         [$metodo, $rota] = $this->getFormMethodAndRoute();
 
         return view('empresa.add-edit', compact('breadcrumb', 'status', 'metodo', 'rota'))
@@ -101,7 +104,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             return redirect()->route('empresa.index')->with('error', 'Tenant nao encontrado.');
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Tenants', 'empresa.index', $empresa->nome, 'Configurações');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome, 'Configurações');
 
         return view('empresa.show', compact('empresa', 'breadcrumb'))->with('titulo', $empresa->nome);
     }
@@ -115,11 +118,11 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         $empresa = $this->empresaService->getById($id);
         if (! $empresa) {
-            abort(403, 'Sem acesso a este tenant.');
+            abort(403, 'Sem acesso a esta empresa.');
         }
 
         $status = ['S' => 'Ativo', 'N' => 'Inativo'];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Tenants', 'empresa.index', "Editar: $empresa->nome", 'Configurações');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', "Editar: $empresa->nome", 'Configurações');
         [$metodo, $rota] = $this->getFormMethodAndRoute($empresa);
 
         return view('empresa.add-edit', compact('empresa', 'breadcrumb', 'status', 'metodo', 'rota'))
@@ -135,14 +138,14 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         $empresaAtual = $this->empresaService->getById($id);
         if (! $empresaAtual) {
-            abort(403, 'Sem acesso para editar este tenant.');
+            abort(403, 'Sem acesso para editar esta empresa.');
         }
 
         $data = $request->validated();
         $data = $this->handleLogoUpload($request, $data, $empresaAtual);
         $updated = $this->empresaService->update($id, $data);
         if (! $updated) {
-            abort(403, 'Sem acesso para editar este tenant.');
+            abort(403, 'Sem acesso para editar esta empresa.');
         }
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
@@ -156,7 +159,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         }
 
         $success = $this->empresaService->delete($id);
-        abort_if(! $success, 403, 'Sem acesso para excluir este tenant.');
+        abort_if(! $success, 403, 'Sem acesso para excluir esta empresa.');
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
@@ -168,7 +171,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     {
         $user = auth()->user();
         if (! $user || ! $user->empresa_id) {
-            return redirect()->route('home')->with('error', 'Voce nao esta vinculado a um tenant.');
+            return redirect()->route('home')->with('error', 'Voce nao esta vinculado a uma empresa.');
         }
 
         $empresa = $this->empresaService->getById($user->empresa_id);
@@ -185,7 +188,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     {
         $user = auth()->user();
         if (! $user || ! $user->empresa_id) {
-            return redirect()->route('home')->with('error', 'Voce nao esta vinculado a um tenant.');
+            return redirect()->route('home')->with('error', 'Voce nao esta vinculado a uma empresa.');
         }
 
         $empresa = $this->empresaService->getById($user->empresa_id);
@@ -203,7 +206,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     {
         $user = auth()->user();
         if (! $user || ! $user->empresa_id) {
-            return redirect()->route('home')->with('error', 'Voce nao esta vinculado a um tenant.');
+            return redirect()->route('home')->with('error', 'Voce nao esta vinculado a uma empresa.');
         }
 
         $empresa = $this->empresaService->getById($user->empresa_id);
@@ -222,15 +225,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             'logo' => 'nullable|image|mimes:png,jpeg,jpg,webp|max:2048',
         ]);
 
-        if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('empresas/logo', 'public');
-            if ($path) {
-                if ($empresa->logo_path) {
-                    Storage::disk('public')->delete($empresa->logo_path);
-                }
-                $data['logo_path'] = $path;
-            }
-        }
+        $data = $this->handleLogoUpload($request, $data, $empresa);
 
         $empresa->update($data);
 
@@ -304,9 +299,19 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             return $data;
         }
 
-        $path = $request->file('logo')->store('empresas/logo', 'public');
+        $logo = $request->file('logo');
+
+        if (! $logo instanceof UploadedFile || ! $logo->isValid()) {
+            throw ValidationException::withMessages([
+                'logo' => 'O arquivo de logo nao foi enviado corretamente. Tente novamente.',
+            ]);
+        }
+
+        $path = UploadStorage::putFile($logo, 'empresas/logo', null, 'public');
         if (! $path) {
-            return $data;
+            throw ValidationException::withMessages([
+                'logo' => 'O arquivo de logo nao foi enviado corretamente. Tente novamente.',
+            ]);
         }
 
         if ($empresa?->logo_path) {

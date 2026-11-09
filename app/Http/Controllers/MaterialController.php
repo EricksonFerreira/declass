@@ -179,12 +179,18 @@ class MaterialController extends BaseController implements FiltroInterface, Reso
             ->orderBy('nome')
             ->get(['id', 'empresa_id', 'escola_id', 'nome', 'estoque_atual', 'estoque_minimo', 'unidade_medida', 'categoria', 'localizacao']);
 
+        $filtros = request()->only(['material_id', 'tipo', 'de', 'ate', 'usuario_id']);
         $movimentacoes = MovimentacaoEstoque::query()
             ->with(['material:id,nome', 'usuario:id,name'])
+            ->when($filtros['material_id'] ?? null, fn ($q, $v) => $q->where('material_id', $v))
+            ->when($filtros['tipo'] ?? null, fn ($q, $v) => $q->where('tipo', $v))
+            ->when($filtros['usuario_id'] ?? null, fn ($q, $v) => $q->where('user_id', $v))
+            ->when($filtros['de'] ?? null, fn ($q, $v) => $q->whereDate('data', '>=', $v))
+            ->when($filtros['ate'] ?? null, fn ($q, $v) => $q->whereDate('data', '<=', $v))
             ->orderBy('data', 'desc')
             ->orderBy('id', 'desc')
-            ->limit(30)
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Movimentação de Materiais', 'Estoque');
 
@@ -194,6 +200,11 @@ class MaterialController extends BaseController implements FiltroInterface, Reso
             'movimentacoes' => $movimentacoes,
             'breadcrumb' => $breadcrumb,
             'tipos' => MovimentacaoEstoque::TIPOS,
+            'filtros' => $filtros,
+            'usuariosFiltro' => \App\Models\User::query()
+                ->whereIn('id', MovimentacaoEstoque::query()->select('user_id')->distinct())
+                ->orderBy('name')->pluck('name', 'id'),
+            'aba' => request('aba', 'listar'),
         ]);
     }
 
@@ -253,17 +264,22 @@ class MaterialController extends BaseController implements FiltroInterface, Reso
                 'name' => 'nome', 'label' => 'Nome do material', 'type' => 'text',
                 'typeWhere' => 'like',
             ],
+            [
+                'name' => 'categoria', 'label' => 'Categoria', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => Material::CATEGORIAS,
+            ],
+            [
+                'name' => 'baixo_estoque', 'label' => 'Estoque', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => [['value' => '1', 'label' => 'Somente baixo estoque']],
+            ],
         ];
     }
 
     public function obterFiltrosSecundarios()
     {
         return [
-            [
-                'name' => 'categoria', 'label' => 'Categoria', 'type' => 'select',
-                'typeWhere' => 'where',
-                'options' => Material::CATEGORIAS,
-            ],
             [
                 'name' => 'escola_id', 'label' => 'Escola', 'type' => 'select',
                 'typeWhere' => 'where',
@@ -275,11 +291,6 @@ class MaterialController extends BaseController implements FiltroInterface, Reso
                 'name' => 'ativo', 'label' => 'Status', 'type' => 'select',
                 'typeWhere' => 'where',
                 'options' => ['S' => 'Ativo', 'N' => 'Inativo'],
-            ],
-            [
-                'name' => 'baixo_estoque', 'label' => 'Estoque', 'type' => 'select',
-                'typeWhere' => 'where',
-                'options' => [['value' => '1', 'label' => 'Somente baixo estoque']],
             ],
         ];
     }

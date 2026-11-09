@@ -106,6 +106,7 @@ class MenuSecoesService
                 'cards' => [
                     ['Empréstimos', 'fas fa-book-reader', 'emprestimo.index', 'Circulação do acervo e devoluções', '#b45309'],
                     ['Acervo', 'fas fa-book', 'livro.index', 'Livros e exemplares das escolas', '#0f766e'],
+                    ['Meus Empréstimos', 'fas fa-book-open', 'portal.emprestimos', 'Livros emprestados aos alunos vinculados', '#0891b2'],
                 ],
             ],
             [

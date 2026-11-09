@@ -22,8 +22,7 @@ class MatriculaPublicaController extends BaseController
     {
         [$empresa, $escola] = $this->resolverEscola($empresaSlug, $escolaSlug);
 
-        $anosLetivos = \App\Models\AnoLetivo::query()
-            ->where('escola_id', $escola->id)->orderByDesc('ano')->get(['id', 'ano']);
+        $anosLetivos = $this->anosPossiveis($escola);
         $etapas = \App\Models\Etapa::query()
             ->where('empresa_id', $empresa->id)->orderBy('nome')->get(['id', 'nome']);
 
@@ -65,8 +64,7 @@ class MatriculaPublicaController extends BaseController
 
         $this->notificarEquipe($solicitacao, $escola);
 
-        $anosLetivos = \App\Models\AnoLetivo::query()
-            ->where('escola_id', $escola->id)->orderByDesc('ano')->get(['id', 'ano']);
+        $anosLetivos = $this->anosPossiveis($escola);
         $etapas = \App\Models\Etapa::query()
             ->where('empresa_id', $empresa->id)->orderBy('nome')->get(['id', 'nome']);
 
@@ -85,13 +83,30 @@ class MatriculaPublicaController extends BaseController
     private function resolverEscola(string $empresaSlug, string $escolaSlug): array
     {
         $empresa = Empresa::query()->where('slug', $empresaSlug)->where('ativo', 'S')->firstOrFail();
+        // Formulario publico: o escopo 'escola' nao pode limitar as
+        // unidades quando quem acessa e um usuario logado restrito.
         $escola = Escola::query()
+            ->withoutGlobalScope('escola')
             ->where('empresa_id', $empresa->id)
             ->where('slug', $escolaSlug)
             ->where('ativa', 'S')
             ->firstOrFail();
 
         return [$empresa, $escola];
+    }
+
+    /**
+     * Anos letivos que aceitam matricula: ativos e nao encerrados
+     * (letivo = ano em curso; planejamento = proximo ano aberto).
+     */
+    private function anosPossiveis(Escola $escola)
+    {
+        return \App\Models\AnoLetivo::query()
+            ->where('escola_id', $escola->id)
+            ->where('ativo', 'S')
+            ->whereIn('status', ['letivo', 'planejamento'])
+            ->orderByDesc('ano')
+            ->get(['id', 'ano']);
     }
 
     /** Avisa os usuarios do tenant que podem analisar a fila. */

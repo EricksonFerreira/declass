@@ -84,6 +84,7 @@ class HistoricoEscolarService
             return [
                 'disciplina' => $disc,
                 'carga_horaria' => $pivot?->carga_horaria_semanal,
+                'corte' => $pivot?->media_aprovacao ?? Disciplina::MEDIA_APROVACAO_PADRAO,
                 'medias' => $medias,
                 'media_geral' => $mediasGeral[$disc->id] ?? null,
                 'avaliacoes' => $avals->count(),

@@ -163,6 +163,11 @@ class DiarioController extends BaseController implements FiltroInterface, Resour
      */
     public function chamada(Request $request)
     {
+        // Rota aninhada turma/{turma}/chamada/create: turma vem do caminho.
+        if ($request->route('turma')) {
+            $request->merge(['turma_id' => (int) $request->route('turma')]);
+        }
+
         $dados = $request->validate([
             'turma_id' => ['required', 'integer'],
             'disciplina_id' => ['nullable', 'integer'],
@@ -368,8 +373,26 @@ class DiarioController extends BaseController implements FiltroInterface, Resour
 
     private function opcoesFormulario(): array
     {
+        $turmasPicker = Turma::query()->with(['escola:id,nome', 'anoLetivo:id,ano,status'])
+            ->when(\App\Services\DiarioService::ehProfessor(auth()->user()), function ($q) {
+                $q->whereHas('atribuicoes', fn ($a) => $a->where('user_id', auth()->id())->where('ativo', 'S'));
+            })
+            ->orderBy('nome')->get()
+            ->map(fn (Turma $t) => [
+                'id' => $t->id,
+                'rotulo' => $t->nome,
+                'detalhe' => ($t->anoLetivo?->ano ?? '').' · '.($t->escola?->nome ?? ''),
+                'escola_id' => $t->escola_id,
+                'escola' => $t->escola?->nome ?? '',
+                'ano_letivo_id' => $t->ano_letivo_id,
+                'ano' => $t->anoLetivo?->ano ?? '',
+                'encerrado' => $t->anoLetivo?->status === 'encerrado',
+            ])->values()->all();
+
         return [
             'turmas' => $this->turmasOpcoes(),
+            'turmasPicker' => $turmasPicker,
+            'anoLetivoAtualId' => \App\Models\AnoLetivo::query()->where('status', 'letivo')->orderByDesc('ano')->value('id'),
             'disciplinas' => $this->disciplinasOpcoes(),
         ];
     }

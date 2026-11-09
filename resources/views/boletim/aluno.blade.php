@@ -48,7 +48,8 @@
                     <span>
                         @php $media = $medias[$disciplina->id] ?? null; @endphp
                         @if($media !== null)
-                            <span class="badge badge-{{ $media >= 7 ? 'success' : ($media >= 5 ? 'warning' : 'danger') }}">Média {{ number_format($media, 1, ',', '.') }}</span>
+                            @php $corte = $disciplina->mediaAprovacaoNaTurma(); @endphp
+                            <span class="badge badge-{{ $media >= $corte ? 'success' : 'danger' }}" title="Aprovação a partir de {{ number_format($corte, 1, ',', '.') }}">Média {{ number_format($media, 1, ',', '.') }}</span>
                         @endif
                     </span>
                 </div>

@@ -3,6 +3,7 @@
 @section('title', $titulo)
 
 @section('content_header')
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
     <x-page-title :title="$titulo" subtitle="Livros emprestados pela biblioteca" />
 @stop
 
@@ -61,8 +62,4 @@
         </div>
     </div>
 @endforelse
-
-<div class="mt-2">
-    <a href="{{ route('portal.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
-</div>
 @stop

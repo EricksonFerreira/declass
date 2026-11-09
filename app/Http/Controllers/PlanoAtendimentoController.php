@@ -176,10 +176,19 @@ class PlanoAtendimentoController extends BaseController implements FiltroInterfa
 
     private function opcoesFormulario(): array
     {
+        $alunosAll = Aluno::query()->with(['pessoa:id,nome', 'escola:id,nome'])->orderBy('id')->get();
+
         return [
-            'alunos' => Aluno::query()->with('pessoa')->orderBy('id')->get()
+            'alunos' => $alunosAll
                 ->mapWithKeys(fn ($a) => [$a->id => ($a->pessoa->nome ?? 'Aluno #'.$a->id).' — '.$a->registro_academico])
                 ->all(),
+            'alunosPicker' => $alunosAll->values()->map(fn ($a) => [
+                'id' => $a->id,
+                'rotulo' => $a->pessoa->nome ?? 'Aluno #'.$a->id,
+                'detalhe' => trim(($a->registro_academico ? 'RA '.$a->registro_academico.' · ' : '').($a->escola->nome ?? ''), ' ·'),
+                'escola_id' => $a->escola_id,
+                'escola' => $a->escola->nome ?? '',
+            ])->all(),
             'escolas' => Escola::query()->orderBy('nome')->pluck('nome', 'id')->all(),
             'profissionais' => User::query()->orderBy('name')->limit(200)->pluck('name', 'id')->all(),
             'tipos' => PlanoAtendimento::TIPOS,

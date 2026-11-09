@@ -23,6 +23,7 @@ class Etapa extends Model
         'segmento',
         'ordem',
         'descricao',
+        'emite_certificado',
         'ativo',
     ];
 

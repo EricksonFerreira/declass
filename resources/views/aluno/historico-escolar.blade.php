@@ -19,24 +19,16 @@
 <div class="row">
     <div class="col-md-4">
         <div class="card">
-            <div class="card-header font-weight-bold">Aluno</div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-5">Nome</dt><dd class="col-sm-7">{{ $p->nome ?? $aluno->nome ?? '—' }}</dd>
-                    <dt class="col-sm-5">RA</dt><dd class="col-sm-7">{{ $aluno->registro_academico ?? '—' }}</dd>
+            <div class="card-header font-weight-bold"><i class="fa fa-user mr-1"></i> Matrícula</div>
+            <div class="card-body pb-2">
+                <div class="mb-2">
+                    <strong>{{ $p->nome ?? $aluno->nome ?? '—' }}</strong>
+                    <div class="text-muted small">RA {{ $aluno->registro_academico ?? '—' }} · {{ $escola->nome ?? '—' }}</div>
+                    <span class="badge badge-{{ $statusBadge[$matricula->status] ?? 'secondary' }}">{{ $statusMatricula[$matricula->status] ?? $matricula->status }}</span>
+                </div>
+                <dl class="row mb-0 small">
                     <dt class="col-sm-5">Nascimento</dt><dd class="col-sm-7">{{ optional($p->data_nascimento)->format('d/m/Y') ?? '—' }}</dd>
-                    <dt class="col-sm-5">Escola</dt><dd class="col-sm-7">{{ $escola->nome ?? '—' }}</dd>
                     <dt class="col-sm-5">Matrícula</dt><dd class="col-sm-7">{{ optional($matricula->data_matricula)->format('d/m/Y') ?? '—' }}</dd>
-                    <dt class="col-sm-5">Situação</dt>
-                    <dd class="col-sm-7"><span class="badge badge-{{ $statusBadge[$matricula->status] ?? 'secondary' }}">{{ $statusMatricula[$matricula->status] ?? $matricula->status }}</span></dd>
-                </dl>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header font-weight-bold">Turma</div>
-            <div class="card-body">
-                <dl class="row mb-0">
                     <dt class="col-sm-5">Turma</dt><dd class="col-sm-7">{{ $turma->nome ?? '—' }}</dd>
                     <dt class="col-sm-5">Etapa</dt><dd class="col-sm-7">{{ $etapa->nome ?? '—' }}</dd>
                     <dt class="col-sm-5">Turno</dt><dd class="col-sm-7">{{ \App\Models\Turma::TURNOS[$turma->turno] ?? $turma->turno ?? '—' }}</dd>
@@ -94,6 +86,7 @@
                                 @if($tem_sem_periodo)
                                     <th class="text-center text-muted">Sem período</th>
                                 @endif
+                                <th rowspan="2" class="text-center text-muted" style="width:60px;" title="Nota mínima (0–10) para aprovação na disciplina">Min.</th>
                                 <th rowspan="2" class="text-center" style="width:90px;">Média final</th>
                             </tr>
                         </thead>
@@ -112,13 +105,16 @@
                                             {{ $fmtPct($linha['medias']['__sem_periodo__'] ?? null) }}
                                         </td>
                                     @endif
+                                    <td class="text-center text-muted" title="Nota mínima (0–10) para aprovação">
+                                        {{ number_format($linha['corte'], 1, ',', '.') }}
+                                    </td>
                                     <td class="text-center font-weight-bold {{ $cellClass($linha['media_geral']) }}">
                                         {{ $fmtPct($linha['media_geral']) }}
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ 3 + $periodos->count() + ($tem_sem_periodo ? 1 : 0) }}" class="text-center text-muted py-4">
+                                    <td colspan="{{ 4 + $periodos->count() + ($tem_sem_periodo ? 1 : 0) }}" class="text-center text-muted py-4">
                                         Nenhuma disciplina ofertada nesta turma.
                                     </td>
                                 </tr>
@@ -127,7 +123,8 @@
                     </table>
                 </div>
                 <div class="card-footer text-muted small">
-                    Médias calculadas sobre as avaliações lançadas (nota convertida para % da nota máxima). Células em branco = disciplina sem avaliação no período.
+                    Células exibem % da nota máxima lançada nas avaliações; em branco = sem avaliação no período.
+                    <strong>Min.</strong> = nota mínima (0–10) de aprovação da disciplina nesta turma — para ser aprovado no ano, o aluno precisa atingir a mínima em <strong>todas</strong> as disciplinas.
                 </div>
             </div>
         </div>

@@ -45,7 +45,7 @@ class EmprestimoLivroController extends BaseController implements FiltroInterfac
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
         $emprestimos = $this->emprestimoService->getAllWithFiltersAndPagination(
-            $this->filtrosParaConsulta($itensFiltered), $perPage, ['livro', 'aluno.pessoa'], 'data_emprestimo', 'desc'
+            $this->filtrosParaConsulta($itensFiltered), $perPage, ['livro', 'aluno.pessoa', 'anexos'], 'data_emprestimo', 'desc'
         );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Empréstimos', 'Biblioteca');
@@ -79,9 +79,15 @@ class EmprestimoLivroController extends BaseController implements FiltroInterfac
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Empréstimo registrado com sucesso.');
     }
 
-    public function devolver($id)
+    public function devolver(Request $request, $id)
     {
-        $emprestimo = $this->emprestimoService->devolver($id);
+        $dados = $request->validate([
+            'observacoes' => ['nullable', 'string', 'max:1000'],
+            'fotos' => ['nullable', 'array', 'max:5'],
+            'fotos.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+        ]);
+
+        $emprestimo = $this->emprestimoService->devolver($id, $dados, $request->file('fotos', []));
         abort_if($emprestimo === null, 404, 'Empréstimo não encontrado.');
         abort_if($emprestimo === false, 422, 'Este empréstimo já foi devolvido.');
 
@@ -128,22 +134,25 @@ class EmprestimoLivroController extends BaseController implements FiltroInterfac
         return [
             ['name' => 'aluno_id', 'label' => 'Aluno', 'type' => 'select', 'typeWhere' => 'where', 'options' => $this->alunosOpcoesFiltro()],
             ['name' => 'livro_id', 'label' => 'Livro', 'type' => 'select', 'typeWhere' => 'where', 'options' => $this->livrosOpcoesFiltro()],
-        ];
-    }
-
-    public function obterFiltrosSecundarios()
-    {
-        return [
             [
                 'name' => 'situacao', 'label' => 'Situação', 'type' => 'select',
                 'typeWhere' => 'where',
                 'options' => EmprestimoLivro::SITUACOES,
             ],
             [
-                'name' => 'data_emprestimo', 'label' => 'Data do empréstimo', 'type' => 'date',
+                'name' => 'data_emprestimo', 'label' => 'Empréstimo', 'type' => 'date',
+                'typeWhere' => 'where',
+            ],
+            [
+                'name' => 'data_devolucao_prevista', 'label' => 'Devolução prevista', 'type' => 'date',
                 'typeWhere' => 'where',
             ],
         ];
+    }
+
+    public function obterFiltrosSecundarios()
+    {
+        return [];
     }
 
     /**

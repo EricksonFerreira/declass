@@ -12,6 +12,7 @@
     $diasProfessor = $diasProfessor ?? [];
     $aulasProfessor = $aulasProfessor ?? collect();
     $somenteMinhas = $somenteMinhas ?? false;
+    $ocultarFeriados = $ocultarFeriados ?? false;
 @endphp
 
 @foreach($meses as $mes)
@@ -59,11 +60,13 @@
                                                 <i class="fas fa-chalkboard-teacher"></i> {{ $aulaProf['disciplina'] }}{{ $aulaProf['inicio'] ? ' '.$aulaProf['inicio'] : '' }}
                                             </div>
                                         @endforeach
-                                        @foreach($dia['feriados'] as $f)
-                                            <div class="cal-item text-danger" title="{{ $f->nome }}{{ $f->suspende_aulas === 'S' ? ' (sem aula)' : ' (aula normal)' }}">
-                                                <i class="fas fa-umbrella-beach"></i> {{ \Illuminate\Support\Str::limit($f->nome, 22) }}
-                                            </div>
-                                        @endforeach
+                                        @if(! $ocultarFeriados)
+                                            @foreach($dia['feriados'] as $f)
+                                                <div class="cal-item text-danger" title="{{ $f->nome }}{{ $f->suspende_aulas === 'S' ? ' (sem aula)' : ' (aula normal)' }}">
+                                                    <i class="fas fa-umbrella-beach"></i> {{ \Illuminate\Support\Str::limit($f->nome, 22) }}
+                                                </div>
+                                            @endforeach
+                                        @endif
                                         @foreach($dia['eventos'] as $e)
                                             <div class="cal-item text-info" title="{{ $e->titulo }}{{ $e->suspende_aulas === 'S' ? ' (sem aula)' : '' }}">
                                                 <i class="fas fa-calendar-check"></i> {{ \Illuminate\Support\Str::limit($e->titulo, 22) }}

@@ -16,8 +16,10 @@
         : $disciplinasVisiveis->sum(fn ($d) => (int) $d->pivot->carga_horaria_semanal);
     $professoresAtivos = $turma->atribuicoes->filter->estaAtiva()->pluck('user_id')->unique()->count();
     $larguraStat = $isProfessor ? 4 : 3;
+    $ocultarStats = $isProfessor || auth()->user()->isSecretaria();
 @endphp
 
+@unless($ocultarStats)
 <div class="row mb-3">
     <div class="col-md-{{ $larguraStat }} col-6">
         <div class="small-box bg-info">
@@ -58,13 +60,14 @@
         </div>
     </div>
 </div>
+@endunless
 
 <div class="mb-3 d-flex flex-wrap align-items-center" style="gap:.5rem;">
     @can('diario.frequencia')
-        <a href="{{ route('diario.chamada', ['turma_id' => $turma->id]) }}" class="btn btn-success"><i class="fa fa-clipboard-check"></i> {{ $diarioHoje ? 'Chamada de hoje' : 'Fazer chamada' }}</a>
+        <a href="{{ route('turma.chamada.create', $turma->id) }}" class="btn btn-success"><i class="fa fa-clipboard-check"></i> {{ $diarioHoje ? 'Chamada de hoje' : 'Fazer chamada' }}</a>
     @endcan
     @can('avaliacao.create')
-        <a href="{{ route('avaliacao.create') }}?turma_id={{ $turma->id }}" class="btn btn-outline-danger btn-sm"><i class="fa fa-star"></i> Nova avaliação</a>
+        <a href="{{ route('turma.avaliacao.create', $turma->id) }}" class="btn btn-outline-danger btn-sm"><i class="fa fa-star"></i> Nova avaliação</a>
     @endcan
     <div class="dropdown">
         <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-toggle="dropdown">
@@ -75,16 +78,16 @@
                 <a href="{{ route('turma.grade', $turma->id) }}" class="dropdown-item"><i class="fa fa-calendar-week mr-1"></i> Grade horária</a>
             @endcan
             @can('calendario.index')
-                <a href="{{ route('calendario.index', ['turma_id' => $turma->id]) }}" class="dropdown-item"><i class="fa fa-calendar-check mr-1"></i> Calendário letivo</a>
+                <a href="{{ route('turma.calendario', $turma->id) }}" class="dropdown-item"><i class="fa fa-calendar-check mr-1"></i> Calendário letivo</a>
             @endcan
             @can('turma.grade.pdf')
                 <a href="{{ route('turma.grade.pdf', $turma->id) }}" class="dropdown-item"><i class="fa fa-file-pdf mr-1"></i> Quadro em PDF</a>
             @endcan
             @can('matricula.create')
-                <a href="{{ route('matricula.create') }}?turma_id={{ $turma->id }}" class="dropdown-item"><i class="fa fa-user-plus mr-1"></i> Nova matrícula</a>
+                <a href="{{ route('turma.matricula.create', $turma->id) }}" class="dropdown-item"><i class="fa fa-user-plus mr-1"></i> Nova matrícula</a>
             @endcan
             @can('justificativa.index')
-                <a href="{{ route('justificativa.index', ['turma_id' => $turma->id]) }}" class="dropdown-item"><i class="fa fa-file-medical mr-1"></i> Atestados e abonos</a>
+                <a href="{{ route('turma.justificativas', $turma->id) }}" class="dropdown-item"><i class="fa fa-file-medical mr-1"></i> Atestados e abonos</a>
             @endcan
             @can('turma.edit')
                 <div class="dropdown-divider"></div>
@@ -94,7 +97,7 @@
     </div>
 </div>
 
-<ul class="nav nav-tabs" id="turmaTabs" role="tablist">
+<ul class="nav nav-tabs nav-tabs-app" id="turmaTabs" role="tablist">
     <li class="nav-item">
         <a class="nav-link active" id="tab-visao-link" data-toggle="tab" href="#tab-visao" role="tab"><i class="fas fa-info-circle mr-1"></i> Visão geral</a>
     </li>
@@ -103,6 +106,12 @@
     </li>
     <li class="nav-item">
         <a class="nav-link" id="tab-registros-link" data-toggle="tab" href="#tab-registros" role="tab"><i class="fas fa-book-open mr-1"></i> Diário e avaliações <span class="badge badge-light border ml-1">{{ $registros->count() }}</span></a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="tab-tarefas-link" data-toggle="tab" href="#tab-tarefas" role="tab"><i class="fas fa-tasks mr-1"></i> Atividades <span class="badge badge-{{ $tarefasCorrecao->sum('pendentes_count') > 0 ? 'danger' : 'light border' }} ml-1">{{ $tarefasCorrecao->sum('pendentes_count') > 0 ? $tarefasCorrecao->sum('pendentes_count').' pendentes' : $tarefasCorrecao->count() }}</span></a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="tab-materiais-link" data-toggle="tab" href="#tab-materiais" role="tab"><i class="fas fa-folder-open mr-1"></i> Materiais <span class="badge badge-light border ml-1">{{ $materiais->count() }}</span></a>
     </li>
 </ul>
 
@@ -131,9 +140,6 @@
                     </dd>
                 </dl>
             </div>
-            <div class="card-footer">
-                <a href="{{ route('turma.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
-            </div>
         </div>
     </div>
 
@@ -145,7 +151,7 @@
                     <thead class="thead-light">
                         <tr>
                             <th>Disciplina</th>
-                            <th>{{ $isProfessor ? 'Minhas aulas/semana' : 'Carga horária semanal' }}</th>
+                            <th>{{ $isProfessor ? 'Minhas aulas/semana' : 'Carga horária · Média aprovação' }}</th>
                             @unless($isProfessor)
                                 <th class="text-right">Ações</th>
                             @endunless
@@ -154,7 +160,7 @@
                     <tbody>
                         @forelse($disciplinasVisiveis as $disciplina)
                             <tr>
-                                <td>{{ $disciplina->nome }} @if($disciplina->sigla)<span class="badge badge-info ml-1">{{ $disciplina->sigla }}</span>@endif</td>
+                                <td><a href="{{ route('turma.disciplina.show', [$turma->id, $disciplina->id]) }}">{{ $disciplina->nome }}</a> @if($disciplina->sigla)<span class="badge badge-info ml-1">{{ $disciplina->sigla }}</span>@endif</td>
                                 <td>
                                     @if($isProfessor)
                                         <span class="font-weight-bold">{{ (int) ($minhasAulas[$disciplina->id] ?? 0) }}</span>
@@ -162,7 +168,8 @@
                                     @else
                                         <form method="POST" action="{{ route('turma.disciplina.update', [$turma->id, $disciplina->id]) }}" class="d-flex align-items-center" style="gap:.4rem;">
                                             @csrf @method('PUT')
-                                            <input type="number" name="carga_horaria_semanal" class="form-control form-control-sm" style="width:90px;" min="1" max="40" value="{{ $disciplina->pivot->carga_horaria_semanal }}" @cannot('turma.disciplina.update') disabled @endcannot>
+                                            <input type="number" name="carga_horaria_semanal" class="form-control form-control-sm" style="width:80px;" min="1" max="40" value="{{ $disciplina->pivot->carga_horaria_semanal }}" title="Carga horária semanal" @cannot('turma.disciplina.update') disabled @endcannot>
+                                            <input type="number" name="media_aprovacao" class="form-control form-control-sm" style="width:80px;" min="0" max="10" step="0.1" value="{{ $disciplina->pivot->media_aprovacao }}" placeholder="{{ $disciplina::MEDIA_APROVACAO_PADRAO }}" title="Média de aprovação (vazio = {{ $disciplina::MEDIA_APROVACAO_PADRAO }})" @cannot('turma.disciplina.update') disabled @endcannot>
                                             @can('turma.disciplina.update')
                                                 <button class="btn btn-xs btn-outline-primary">OK</button>
                                             @endcan
@@ -205,7 +212,11 @@
                         </div>
                         <div>
                             <label class="form-label mb-0">C.H. semanal</label>
-                            <input type="number" name="carga_horaria_semanal" class="form-control form-control-sm" style="width:90px;" min="1" max="40" placeholder="—">
+                            <input type="number" name="carga_horaria_semanal" class="form-control form-control-sm" style="width:80px;" min="1" max="40" placeholder="—">
+                        </div>
+                        <div>
+                            <label class="form-label mb-0">Média aprovação</label>
+                            <input type="number" name="media_aprovacao" class="form-control form-control-sm" style="width:80px;" min="0" max="10" step="0.1" placeholder="{{ \App\Models\Disciplina::MEDIA_APROVACAO_PADRAO }}">
                         </div>
                         <button class="btn btn-sm btn-primary">Ofertar</button>
                     </form>
@@ -405,7 +416,7 @@
         </div>
         @can('avaliacao.create')
             <div class="card-footer">
-                <a href="{{ route('avaliacao.create') }}?turma_id={{ $turma->id }}" class="btn btn-sm btn-outline-primary"><i class="fa fa-plus"></i> Nova avaliação</a>
+                <a href="{{ route('turma.avaliacao.create', $turma->id) }}" class="btn btn-sm btn-outline-primary"><i class="fa fa-plus"></i> Nova avaliação</a>
             </div>
         @endcan
     </div>
@@ -454,7 +465,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($turma->matriculas->sortBy('numero_chamada') as $matricula)
+                        @forelse($turma->matriculas->where('status', 'ativa')->sortBy('numero_chamada') as $matricula)
                             @php
                                 $freq = $presencas[$matricula->id] ?? null;
                                 $pct = $freq && (int) $freq->total > 0
@@ -497,10 +508,127 @@
             </div>
             @can('matricula.create')
                 <div class="card-footer">
-                    <a href="{{ route('matricula.create') }}?turma_id={{ $turma->id }}" class="btn btn-sm btn-primary">Nova matrícula nesta turma</a>
+                    <a href="{{ route('turma.matricula.create', $turma->id) }}" class="btn btn-sm btn-primary">Nova matrícula nesta turma</a>
                 </div>
             @endcan
         </div>
+</div>
+
+<div class="tab-pane fade" id="tab-tarefas" role="tabpanel">
+    <div class="card">
+        <div class="card-header font-weight-bold d-flex justify-content-between align-items-center flex-wrap">
+            <span><i class="fas fa-tasks mr-1"></i> Atividades e provas da turma</span>
+            @can('tarefa.create')
+                <a href="{{ route('turma.tarefa.create', $turma->id) }}" class="btn btn-outline-primary btn-sm"><i class="fa fa-plus mr-1"></i> Nova tarefa</a>
+            @endcan
+        </div>
+        <div class="list-group list-group-flush">
+            @forelse($tarefasCorrecao as $tarefa)
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap:.5rem;">
+                        <div class="min-w-0">
+                            <strong>{{ $tarefa->titulo }}</strong>
+                            @if($tarefa->tipo !== 'atividade')
+                                <span class="badge badge-{{ $tarefa->tipo === 'prova' ? 'danger' : 'warning' }}">{{ $tarefa->tipoLabel() }}</span>
+                            @endif
+                            <small class="text-muted d-block">
+                                {{ $tarefa->disciplina->nome ?? 'Geral' }} · entrega até {{ $tarefa->data_entrega->format('d/m/Y') }}
+                                · {{ $tarefa->total_count }} entrega(s)
+                            </small>
+                        </div>
+                        <div class="d-flex align-items-center text-nowrap" style="gap:.5rem;">
+                            @if($tarefa->pendentes_count > 0)
+                                <span class="badge badge-danger">{{ $tarefa->pendentes_count }} aguardando</span>
+                            @else
+                                <span class="badge badge-success">em dia</span>
+                            @endif
+                            @can('tarefa.entregas')
+                                <a href="{{ route('tarefa.entregas', $tarefa->id) }}" class="btn btn-sm btn-{{ $tarefa->pendentes_count > 0 ? 'danger' : 'outline-secondary' }}"><i class="fa fa-check-double mr-1"></i> Corrigir</a>
+                            @endcan
+                            @can('tarefa.edit')
+                                <a href="{{ route('tarefa.edit', $tarefa->id) }}" class="btn btn-sm btn-outline-warning" title="Editar"><i class="fa fa-edit"></i></a>
+                            @endcan
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="list-group-item text-muted text-center py-4">Nenhuma atividade publicada nesta turma.</div>
+            @endforelse
+        </div>
+    </div>
+</div>
+
+<div class="tab-pane fade" id="tab-materiais" role="tabpanel">
+    <div class="row">
+        <div class="col-lg-5">
+            <div class="card card-outline card-primary">
+                <div class="card-header"><h3 class="card-title font-weight-bold">Publicar material</h3></div>
+                <div class="card-body">
+                    <form method="POST" action="{{ route('turma.material.store', $turma->id) }}" enctype="multipart/form-data">
+                        @csrf
+                        <div class="form-group">
+                            <label>Título</label>
+                            <input type="text" name="titulo" class="form-control" maxlength="200" required placeholder="Ex.: Lista de exercícios — cap. 3">
+                        </div>
+                        <div class="form-group">
+                            <label>Disciplina</label>
+                            <select name="disciplina_id" class="form-control">
+                                <option value="">Geral (todas)</option>
+                                @foreach($disciplinasVisiveis as $d)
+                                    <option value="{{ $d->id }}">{{ $d->nome }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Descrição <small class="text-muted">(opcional)</small></label>
+                            <textarea name="descricao" class="form-control" rows="2" maxlength="2000"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Arquivo</label>
+                            <input type="file" name="arquivo" class="form-control-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip,.txt">
+                            <small class="text-muted">PDF, Office, imagem ou ZIP — até 15MB. Ou informe um link:</small>
+                        </div>
+                        <div class="form-group">
+                            <input type="url" name="url" class="form-control" maxlength="500" placeholder="https://…">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-upload mr-1"></i> Publicar material</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header"><h3 class="card-title font-weight-bold">Materiais publicados</h3></div>
+                <div class="list-group list-group-flush">
+                    @forelse($materiais as $material)
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap">
+                                <div>
+                                    <strong>{{ $material->titulo }}</strong>
+                                    <small class="text-muted d-block">{{ $material->disciplina->nome ?? 'Geral' }} · {{ $material->autor->nome ?? '' }} · {{ $material->created_at?->format('d/m/Y') }}</small>
+                                    @if($material->descricao)<small>{{ $material->descricao }}</small>@endif
+                                </div>
+                                <div class="d-flex align-items-center" style="gap:.4rem;">
+                                    @if($material->arquivo_path)
+                                        <a href="{{ asset('storage/'.$material->arquivo_path) }}" target="_blank" class="btn btn-xs btn-outline-primary"><i class="fa fa-download"></i></a>
+                                    @elseif($material->url)
+                                        <a href="{{ $material->url }}" target="_blank" rel="noopener" class="btn btn-xs btn-outline-primary"><i class="fa fa-external-link-alt"></i></a>
+                                    @endif
+                                    <form method="POST" action="{{ route('turma.material.destroy', [$turma->id, $material->id]) }}" onsubmit="return confirm('Remover este material?');" class="d-inline">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-xs btn-outline-danger"><i class="fa fa-trash"></i></button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="list-group-item text-muted text-center py-4">Nenhum material publicado ainda.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 </div>
 @stop

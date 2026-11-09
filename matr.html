@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Solicitar matrícula — Campus Sul</title>
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet">
+        <style>
+        :root {
+            --cor-primaria: #1e3a8a;
+            --cor-secundaria: #312e81;
+            --cor-foco: #b0bad6;
+            --cor-btn-hover: #1a3175;
+            --cor-protocolo-bg: #edeff6;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Figtree',sans-serif; background:#f1f5f9; color:#0f172a; }
+        .topo { background:linear-gradient(135deg,var(--cor-primaria),var(--cor-secundaria)); color:#fff; padding:2rem 1rem 2.5rem; text-align:center; }
+        .topo .logo { max-height:56px; max-width:200px; background:#fff; padding:.45rem .9rem; border-radius:10px; margin-bottom:.9rem; }
+        .topo .logo-inicial { width:56px; height:56px; margin:0 auto .9rem; border-radius:50%; background:rgba(255,255,255,.18); border:2px solid rgba(255,255,255,.5); display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:700; }
+        .topo h1 { font-size:1.6rem; font-weight:700; }
+        .topo p { opacity:.85; margin-top:.4rem; font-size:.95rem; }
+        .card-box { max-width:720px; margin:-1.5rem auto 2rem; padding:0 1rem; }
+        .card { background:#fff; border-radius:14px; box-shadow:0 10px 30px rgba(15,23,42,.08); padding:1.75rem; }
+        h2 { font-size:1.15rem; color:var(--cor-primaria); margin-bottom:1.25rem; }
+        .secao { font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#64748b; margin:1.5rem 0 .75rem; border-bottom:1px solid #e2e8f0; padding-bottom:.4rem; }
+        .grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+        .grid .full { grid-column:1/-1; }
+        label { display:block; font-size:.82rem; font-weight:600; margin-bottom:.3rem; color:#334155; }
+        label .req { color:#dc2626; }
+        input, select, textarea { width:100%; padding:.6rem .75rem; border:1px solid #cbd5e1; border-radius:8px; font-size:.9rem; font-family:inherit; background:#fff; }
+        input:focus, select:focus, textarea:focus { outline:2px solid var(--cor-foco); border-color:var(--cor-primaria); }
+        .erro { color:#dc2626; font-size:.78rem; margin-top:.25rem; }
+        .btn { display:inline-block; width:100%; padding:.8rem; border:none; border-radius:10px; background:var(--cor-primaria); color:#fff; font-weight:600; font-size:.95rem; cursor:pointer; margin-top:1.25rem; }
+        .btn:hover { background:var(--cor-btn-hover); }
+        .sucesso { text-align:center; padding:2rem 1rem; }
+        .sucesso .ico { font-size:3rem; margin-bottom:1rem; }
+        .sucesso h2 { margin-bottom:.75rem; }
+        .sucesso p { color:#64748b; font-size:.9rem; line-height:1.6; }
+        .protocolo { display:inline-block; background:var(--cor-protocolo-bg); color:var(--cor-primaria); font-weight:700; padding:.4rem 1rem; border-radius:8px; margin:.75rem 0; }
+        footer { text-align:center; padding:1.5rem; color:#94a3b8; font-size:.78rem; }
+        @media (max-width:640px) { .grid { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+    <div class="topo">
+                    <img src="/storage/empresas/logo/K5PhxORkAnXI4ty72dtcjAkUImd8kt2Mqpc4zmHx.png" alt="Logo Campus Sul" class="logo">
+                <h1>Escola Vila Nova</h1>
+        <p>Campus Sul — Solicitação de matrícula 2026</p>
+    </div>
+
+    <div class="card-box">
+        <div class="card">
+                            <h2>Dados do aluno</h2>
+                <form method="POST" action="http://declass.test/matricula/escola-demo/unidade-sul">
+                    <input type="hidden" name="_token" value="3mbBaIdu8uwUw5qcJHTS4wKnTGhIvlAtMCt7QQLJ" autocomplete="off">
+                    <div class="secao">Período pretendido</div>
+                    <div class="grid">
+                        <div>
+                            <label>Ano letivo</label>
+                            <select name="ano_letivo_id">
+                                <option value="">—</option>
+                                                                    <option value="30" >2026</option>
+                                                            </select>
+                        </div>
+                        <div>
+                            <label>Etapa pretendida</label>
+                            <select name="etapa_id">
+                                <option value="">—</option>
+                                                                    <option value="1" >Educação Infantil</option>
+                                                                    <option value="4" >Ensino Médio</option>
+                                                                    <option value="2" >Fundamental I</option>
+                                                                    <option value="3" >Fundamental II</option>
+                                                            </select>
+                        </div>
+                    </div>
+
+                    <div class="secao">Aluno</div>
+                    <div class="grid">
+                        <div class="full">
+                            <label>Nome completo <span class="req">*</span></label>
+                            <input type="text" name="nome_aluno" value="" required maxlength="255" placeholder="Nome completo do aluno">
+                                                    </div>
+                        <div>
+                            <label>Data de nascimento</label>
+                            <input type="date" name="data_nascimento_aluno" value="">
+                                                    </div>
+                        <div>
+                            <label>Sexo</label>
+                            <select name="sexo_aluno">
+                                <option value="">—</option>
+                                <option value="masculino" >Masculino</option>
+                                <option value="feminino" >Feminino</option>
+                                <option value="outro" >Outro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="secao">Responsável</div>
+                    <div class="grid">
+                        <div class="full">
+                            <label>Nome completo <span class="req">*</span></label>
+                            <input type="text" name="nome_responsavel" value="" required maxlength="255" placeholder="Nome de quem responde pelo aluno">
+                                                    </div>
+                        <div>
+                            <label>Parentesco</label>
+                            <select name="parentesco">
+                                <option value="">—</option>
+                                                                    <option value="mae" >Mãe</option>
+                                                                    <option value="pai" >Pai</option>
+                                                                    <option value="responsavel_legal" >Responsável legal</option>
+                                                                    <option value="avó" >Avó</option>
+                                                                    <option value="avô" >Avô</option>
+                                                                    <option value="tio" >Tio(a)</option>
+                                                                    <option value="outro" >Outro</option>
+                                                            </select>
+                        </div>
+                        <div>
+                            <label>CPF</label>
+                            <input type="text" name="cpf_responsavel" value="" maxlength="20" placeholder="000.000.000-00">
+                        </div>
+                        <div>
+                            <label>Telefone / WhatsApp</label>
+                            <input type="text" name="telefone_responsavel" value="" maxlength="30" placeholder="(11) 99999-0000">
+                        </div>
+                        <div>
+                            <label>E-mail</label>
+                            <input type="email" name="email_responsavel" value="" maxlength="190" placeholder="voce@email.com">
+                                                    </div>
+                    </div>
+
+                    <div class="secao">Observações</div>
+                    <div class="grid">
+                        <div class="full">
+                            <label>Informações adicionais</label>
+                            <textarea name="observacoes" rows="3" maxlength="4000" placeholder="Alguma informação relevante para a análise?"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">Enviar solicitação</button>
+                </form>
+                    </div>
+    </div>
+
+    <footer>Escola Vila Nova · Campus Sul</footer>
+</body>
+</html>

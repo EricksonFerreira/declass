@@ -17,6 +17,7 @@ class UpdateMensalidadeRequest extends StoreMensalidadeRequest
         unset($rules['matricula_id'], $rules['competencia']);
 
         $rules['status'] = ['nullable', Rule::in(array_keys(Mensalidade::STATUS))];
+        $rules['remover_boleto'] = ['nullable', 'boolean'];
 
         return $rules;
     }

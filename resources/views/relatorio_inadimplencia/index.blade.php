@@ -48,40 +48,11 @@
 </div>
 
 <div class="card">
-    <div class="card-header">
-        <form method="GET" action="{{ route('relatorio_inadimplencia.index') }}" class="form-inline flex-wrap" style="gap:.5rem;">
-            @unless(app(\App\Support\EscolaContext::class)->filtrar())
-            <select name="escola_id" class="form-control form-control-sm">
-                <option value="">Todas as escolas</option>
-                @foreach($escolas as $escola)
-                    <option value="{{ $escola->id }}" {{ ($filtros['escola_id'] ?? '') == $escola->id ? 'selected' : '' }}>{{ $escola->nome }}</option>
-                @endforeach
-            </select>
-            @endunless
-            <select name="turma_id" class="form-control form-control-sm">
-                <option value="">Todas as turmas</option>
-                @foreach($turmas as $turma)
-                    <option value="{{ $turma->id }}" {{ ($filtros['turma_id'] ?? '') == $turma->id ? 'selected' : '' }}>
-                        {{ $turma->nome }} — {{ $turma->escola->nome ?? '' }}
-                    </option>
-                @endforeach
-            </select>
-            <select name="competencia" class="form-control form-control-sm">
-                <option value="">Todas as competências</option>
-                @foreach($competencias as $comp)
-                    <option value="{{ $comp }}" {{ ($filtros['competencia'] ?? '') == $comp ? 'selected' : '' }}>{{ $comp }}</option>
-                @endforeach
-            </select>
-            <select name="situacao" class="form-control form-control-sm">
-                <option value="">Todas as situações</option>
-                <option value="vencida" {{ ($filtros['situacao'] ?? '') == 'vencida' ? 'selected' : '' }}>Vencida</option>
-                <option value="a_vencer" {{ ($filtros['situacao'] ?? '') == 'a_vencer' ? 'selected' : '' }}>A vencer</option>
-                <option value="paga" {{ ($filtros['situacao'] ?? '') == 'paga' ? 'selected' : '' }}>Paga</option>
-                <option value="cancelada" {{ ($filtros['situacao'] ?? '') == 'cancelada' ? 'selected' : '' }}>Cancelada</option>
-            </select>
-            <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-filter"></i> Filtrar</button>
-            <a href="{{ route('relatorio_inadimplencia.index') }}" class="btn btn-sm btn-secondary">Limpar</a>
-        </form>
+    <div class="card-header d-flex flex-wrap align-items-center" style="gap:.5rem;">
+        <div class="flex-grow-1">
+            <x-filter :filters="$filters" :additional-filters="$additionalFilters" :itens-filtered="$itensFiltered" :nome-filtro="$nomeFiltro" />
+        </div>
+        <x-per-page-selector :per-pages="$perPages" :selected-per-page="$perPage" />
     </div>
 
     <div class="card-body p-0">

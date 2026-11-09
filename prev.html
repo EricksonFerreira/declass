@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Escola Vila Nova</title>
+    <meta name="description" content="Escola Vila Nova — rede de escolas">
+            <link rel="icon" href="/storage/empresas/logo/K5PhxORkAnXI4ty72dtcjAkUImd8kt2Mqpc4zmHx.png">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
+        :root{
+            --c1:#1E3A8A; --c2:#F59E0B;
+            --ink:#1c2733; --muted:#5b6b7c; --bg:#f4f1ea; --card:#fff; --line:#e6e0d2;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        html{scroll-behavior:smooth}
+        body{font-family:'Figtree',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+        a{text-decoration:none;color:inherit}
+        .wrap{max-width:1140px;margin:0 auto;padding:0 1.25rem}
+        .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.72rem 1.5rem;font-weight:700;font-size:.92rem;transition:transform .15s,box-shadow .15s;border:1.5px solid transparent}
+        .btn:hover{transform:translateY(-2px)}
+        .btn-p{background:var(--c1);color:#fff}
+        .btn-a{background:var(--c2);color:#fff;box-shadow:0 8px 20px color-mix(in srgb,var(--c2) 30%,transparent)}
+        .btn-g{background:transparent;color:var(--c1);border-color:color-mix(in srgb,var(--c1) 35%,transparent)}
+        .btn-g:hover{border-color:var(--c1)}
+
+        .topbar{background:var(--c1);color:#dfe7ef;font-size:.8rem}
+        .topbar-in{display:flex;align-items:center;justify-content:space-between;height:38px;gap:1rem}
+        .topbar a{opacity:.9}.topbar a:hover{opacity:1}
+        .topbar .sep{opacity:.35;margin:0 .55rem}
+        .topbar-right{display:flex;align-items:center;gap:.7rem}
+
+        header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 2px 14px rgba(28,39,51,.05)}
+        .nav{display:flex;align-items:center;justify-content:space-between;height:76px;gap:1rem}
+        .brand{display:flex;align-items:center;gap:.65rem;white-space:nowrap}
+        .brand img{height:46px;width:auto;object-fit:contain}
+        .brand .nome{font-weight:800;font-size:1.15rem;color:var(--c1);line-height:1.1}
+        .brand .tag{display:block;font-size:.7rem;font-weight:600;color:var(--muted);letter-spacing:.03em}
+        .nav-links{display:flex;align-items:center;gap:1.35rem;font-size:.9rem;font-weight:600;color:#3c4b5c}
+        .nav-links a:hover{color:var(--c1)}
+
+        .hero{padding:4rem 0 3.4rem;position:relative}
+        .hero-in{display:flex;align-items:center;gap:3rem;flex-wrap:wrap}
+        .hero-txt{flex:1;min-width:300px}
+        .eyebrow{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--c2);margin-bottom:1rem}
+        .eyebrow::before{content:'';width:26px;height:2px;background:var(--c2)}
+        .hero h1{font-size:clamp(1.9rem,4.2vw,3.05rem);font-weight:800;line-height:1.12;letter-spacing:-.02em;color:var(--c1)}
+        .hero h1 em{font-style:normal;color:var(--c2)}
+        .hero .lead{margin-top:1rem;font-size:1.04rem;color:var(--muted);max-width:540px}
+        .hero-ctas{display:flex;gap:.7rem;margin-top:1.7rem;flex-wrap:wrap}
+        .hero-img{flex:0 0 42%;max-width:470px;min-width:280px}
+        .hero-img img{width:100%;object-fit:cover;aspect-ratio:4/4.4;box-shadow:14px 14px 0 color-mix(in srgb,var(--c2) 55%,#fff)}
+        .hero-img .sem-foto{width:100%;aspect-ratio:4/4.4;background:linear-gradient(150deg,var(--c1),color-mix(in srgb,var(--c1) 70%,var(--c2)));display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.9);font-size:4rem}
+
+        .aviso-strip{background:var(--c2);color:#fff;padding:.85rem 0}
+        .aviso-in{display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;font-weight:600;font-size:.95rem}
+        .aviso-in .btn{background:#fff;color:var(--c1);padding:.45rem 1.15rem;font-size:.82rem}
+
+        section{padding:3.8rem 0}
+        .kicker{font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c2);margin-bottom:.5rem;display:flex;align-items:center;gap:.45rem}
+        .kicker::before{content:'';width:22px;height:2px;background:var(--c2)}
+        .sec-head{margin-bottom:2.2rem}
+        .sec-head.center{text-align:center}
+        .sec-head.center .kicker{justify-content:center}
+        .sec-head.center .kicker::before{display:none}
+        .sec-head h2{font-size:clamp(1.55rem,3vw,2.2rem);font-weight:800;letter-spacing:-.02em;line-height:1.15;color:var(--c1)}
+        .sec-head h2 em{font-style:normal;color:var(--c2)}
+        .sec-head p{color:var(--muted);margin-top:.55rem;max-width:580px}
+        .sec-head.center p{margin-left:auto;margin-right:auto}
+
+        .grid-unidades{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:1.1rem}
+        .unidade{background:var(--card);border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+        .unidade:hover{transform:translateY(-4px);box-shadow:0 16px 36px rgba(28,39,51,.12)}
+        .unidade .topo{height:120px;background:linear-gradient(140deg,color-mix(in srgb,var(--c1) 12%,#fff),color-mix(in srgb,var(--c2) 20%,#fff));display:flex;align-items:center;justify-content:center;color:var(--c1);font-size:2.4rem;position:relative}
+        .unidade .topo img{max-height:70px;max-width:70%;object-fit:contain}
+        .unidade .topo .etapa{position:absolute;top:.6rem;left:.6rem;background:var(--c1);color:#fff;font-size:.68rem;font-weight:700;padding:.18rem .6rem;letter-spacing:.05em;text-transform:uppercase}
+        .unidade .corpo{padding:1.15rem;display:flex;flex-direction:column;gap:.4rem;flex:1}
+        .unidade h3{font-size:1.05rem;font-weight:800;color:var(--c1)}
+        .unidade .meta{font-size:.85rem;color:var(--muted);display:flex;gap:.45rem;align-items:flex-start}
+        .unidade .meta i{color:var(--c2);margin-top:.2rem}
+        .unidade .btn{margin-top:auto;align-self:flex-start;padding:.5rem 1.05rem;font-size:.82rem}
+
+        .sobre-in{display:flex;align-items:center;gap:3rem;flex-wrap:wrap}
+        .sobre-txt{flex:1;min-width:290px;color:#3c4b5c;font-size:1.01rem}
+        .sobre-txt p+p{margin-top:.9rem}
+        .sobre-feats{margin-top:1.4rem;display:flex;flex-direction:column;gap:.65rem}
+        .feat{display:flex;align-items:center;gap:.6rem;font-size:.93rem;font-weight:600}
+        .feat i{color:var(--c2)}
+        .sobre-img{flex:0 0 40%;min-width:270px}
+        .sobre-img img{width:100%;object-fit:cover;box-shadow:12px 12px 0 color-mix(in srgb,var(--c1) 80%,#fff)}
+
+        .stats{background:var(--c1);color:#fff;padding:2.6rem 0}
+        .stats-in{display:flex;justify-content:center;gap:3.5rem;flex-wrap:wrap;text-align:center}
+        .stat b{display:block;font-size:2.1rem;font-weight:800;color:var(--c2);line-height:1.1}
+        .stat span{font-size:.85rem;opacity:.85}
+
+        .grid-dif{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.1rem}
+        .dif{background:var(--card);border:1px solid var(--line);padding:1.35rem;transition:transform .15s}
+        .dif:hover{transform:translateY(-3px)}
+        .dif i{width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;background:color-mix(in srgb,var(--c1) 8%,#fff);color:var(--c1);margin-bottom:.8rem}
+        .dif h3{font-size:1rem;font-weight:800;color:var(--c1);margin-bottom:.35rem}
+        .dif p{font-size:.86rem;color:var(--muted)}
+
+        .grid-acesso{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1.1rem}
+        .acesso{display:flex;align-items:center;gap:.85rem;background:var(--card);border:1px solid var(--line);padding:1.15rem 1.25rem;transition:transform .15s,box-shadow .15s}
+        .acesso:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(28,39,51,.1)}
+        .acesso i{width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;background:var(--c1);color:#fff;flex-shrink:0}
+        .acesso .t{font-weight:800;font-size:.95rem;color:var(--c1);line-height:1.2}
+        .acesso .s{font-size:.8rem;color:var(--muted)}
+        .acesso .seta{margin-left:auto;color:var(--c2);font-weight:700}
+
+        .contato-in{display:flex;gap:2.6rem;flex-wrap:wrap}
+        .contato-info{flex:1;min-width:280px}
+        .contato-item{display:flex;gap:.8rem;padding:.85rem 0;border-bottom:1px solid var(--line);align-items:flex-start}
+        .contato-item:last-child{border-bottom:0}
+        .contato-item i{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--c1) 8%,#fff);color:var(--c1);flex-shrink:0;font-size:1rem}
+        .contato-item .lbl{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+        .contato-item .val{font-size:.95rem;font-weight:700}
+        .contato-cta{flex:0 0 38%;min-width:260px;background:var(--c1);color:#fff;padding:2rem;display:flex;flex-direction:column;justify-content:center}
+        .contato-cta h3{font-size:1.5rem;font-weight:800;line-height:1.2}
+        .contato-cta p{opacity:.85;font-size:.92rem;margin:.7rem 0 1.3rem}
+
+        footer{background:#101c28;color:#8fa1b3;padding:2.2rem 0 1.6rem;font-size:.85rem}
+        footer .brand-f{color:#e8eef5;font-weight:800;font-size:1.05rem}
+        footer .tagline{color:#a7b7c7;font-size:.82rem;margin:.3rem 0 1rem;max-width:520px}
+        footer .foot-nav{display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:1.2rem}
+        footer .foot-nav a:hover{color:#fff}
+        footer .copy{border-top:1px solid rgba(255,255,255,.08);padding-top:1rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;font-size:.78rem}
+        footer .declass{color:#c3cfdb;font-weight:700}
+
+        @media (max-width:860px){
+            .topbar-in{justify-content:center}.topbar-right .lbl-txt{display:none}
+            .nav-links{display:none}
+            .hero{padding:2.8rem 0}
+            .hero-img{flex:1 1 100%;order:-1}
+            .sobre-in{flex-direction:column}.sobre-img{flex:1 1 100%}
+            .contato-cta{flex:1 1 100%}
+            section{padding:2.8rem 0}
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="wrap topbar-in">
+        <div>
+                        <span class="sep">·</span><a href="mailto:contato@escolademo.test"><i class="fas fa-envelope"></i> <span class="lbl-txt">contato@escolademo.test</span></a>        </div>
+        <div class="topbar-right">
+            <a href="http://declass.test/login"><i class="fas fa-right-to-bracket"></i> Portal</a>
+                                </div>
+    </div>
+</div>
+
+<header>
+    <div class="wrap nav">
+        <span class="brand">
+            <img src="/storage/empresas/logo/K5PhxORkAnXI4ty72dtcjAkUImd8kt2Mqpc4zmHx.png" alt="Escola Vila Nova">            <span>
+                <span class="nome">Escola Vila Nova</span>
+                            </span>
+        </span>
+        <nav class="nav-links">
+                        <a href="#unidades">Unidades</a>            <a href="#diferenciais">Diferenciais</a>
+            <a href="#contato">Contato</a>        </nav>
+                    <a href="#contato" class="btn btn-a"><i class="fas fa-phone"></i> Agende uma visita</a>
+            </div>
+</header>
+
+<div class="hero">
+    <div class="wrap hero-in">
+        <div class="hero-txt">
+            <span class="eyebrow">Escola em São Paulo</span>
+            <h1>Escola Vila Nova</h1>
+                        <div class="hero-ctas">
+                                            </div>
+        </div>
+        <div class="hero-img">
+                            <div class="sem-foto"><i class="fas fa-school"></i></div>
+                    </div>
+    </div>
+</div>
+
+<div class="aviso-strip">
+    <div class="wrap aviso-in">
+        <span><i class="fas fa-bullhorn"></i> <strong>Matrículas abertas:</strong> venha conhecer a escola e converse com a secretaria.</span>
+        <a href="#unidades" class="btn">Escolha a unidade →</a>
+    </div>
+</div>
+
+<section id="unidades">
+    <div class="wrap">
+        <div class="sec-head">
+            <div class="kicker">Unidades</div>
+            <h2>Nossas escolas,<br><em>um só caminho</em></h2>
+            <p>3 unidades com a mesma proposta pedagógica</p>
+        </div>
+        <div class="grid-unidades">
+                            <div class="unidade">
+                    <div class="topo">
+                                                    <span class="etapa">São Paulo</span>
+                                                                            <i class="fas fa-school"></i>
+                                            </div>
+                    <div class="corpo">
+                        <h3>Campus Sul</h3>
+                                                                                                    <a href="http://declass.test/matricula/escola-demo/unidade-sul" class="btn btn-p"><i class="fas fa-user-plus"></i> Matrícula</a>
+                                            </div>
+                </div>
+                            <div class="unidade">
+                    <div class="topo">
+                                                    <span class="etapa">São Paulo</span>
+                                                                            <i class="fas fa-school"></i>
+                                            </div>
+                    <div class="corpo">
+                        <h3>Unidade Central</h3>
+                                                                                                    <a href="http://declass.test/matricula/escola-demo/unidade-central" class="btn btn-p"><i class="fas fa-user-plus"></i> Matrícula</a>
+                                            </div>
+                </div>
+                            <div class="unidade">
+                    <div class="topo">
+                                                    <span class="etapa">São Paulo</span>
+                                                                            <i class="fas fa-school"></i>
+                                            </div>
+                    <div class="corpo">
+                        <h3>Unidade Norte</h3>
+                                                                                                    <a href="http://declass.test/matricula/escola-demo/unidade-norte" class="btn btn-p"><i class="fas fa-user-plus"></i> Matrícula</a>
+                                            </div>
+                </div>
+                    </div>
+    </div>
+</section>
+
+
+<div class="stats">
+    <div class="wrap stats-in">
+        <div class="stat"><b>desde 2026</b><span>educando com você</span></div>
+                    <div class="stat"><b>3</b><span>unidades</span></div>
+                    </div>
+</div>
+
+<section id="diferenciais">
+    <div class="wrap">
+        <div class="sec-head center">
+            <div class="kicker">Diferenciais</div>
+            <h2>Por que escolher<br>a <em>Escola Vila Nova</em></h2>
+        </div>
+        <div class="grid-dif">
+            <div class="dif">
+                <i class="fas fa-mobile-screen"></i>
+                <h3>Portal da família</h3>
+                <p>Boletim, frequência, tarefas e financeiro acessíveis para pais e alunos a qualquer hora.</p>
+            </div>
+            <div class="dif">
+                <i class="fas fa-book-open"></i>
+                <h3>Acompanhamento próximo</h3>
+                <p>Registro de aulas, avaliações e ocorrências — a escola acompanha cada aluno de perto.</p>
+            </div>
+            <div class="dif">
+                <i class="fas fa-comments"></i>
+                <h3>Comunicação direta</h3>
+                <p>Avisos e recados da escola chegam à família sem intermediários.</p>
+            </div>
+                        <div class="dif">
+                <i class="fas fa-shield-halved"></i>
+                <h3>Ambiente seguro</h3>
+                <p>Rotinas e acompanhamento que garantem um espaço seguro para o aluno aprender.</p>
+            </div>
+                    </div>
+    </div>
+</section>
+
+<section id="acesso" style="background:#fff;border-top:1px solid var(--line)">
+    <div class="wrap">
+        <div class="sec-head">
+            <div class="kicker">Para alunos e famílias</div>
+            <h2>Acesso <em>rápido</em></h2>
+        </div>
+        <div class="grid-acesso">
+            <a href="http://declass.test/login" class="acesso">
+                <i class="fas fa-right-to-bracket"></i>
+                <span><span class="t">Portal</span><br><span class="s">Área do aluno e da família</span></span>
+                <span class="seta">→</span>
+            </a>
+                        <a href="#unidades" class="acesso">
+                <i class="fas fa-user-plus"></i>
+                <span><span class="t">Matrícula</span><br><span class="s">Inicie pelo site, sem fila</span></span>
+                <span class="seta">→</span>
+            </a>
+                                                <a href="#contato" class="acesso">
+                <i class="fas fa-location-dot"></i>
+                <span><span class="t">Como chegar</span><br><span class="s">Endereços e telefones</span></span>
+                <span class="seta">→</span>
+            </a>
+                    </div>
+    </div>
+</section>
+
+<section id="contato">
+    <div class="wrap">
+        <div class="sec-head">
+            <div class="kicker">Contato</div>
+            <h2>Fale com <em>a gente</em></h2>
+        </div>
+        <div class="contato-in">
+            <div class="contato-info">
+                                <div class="contato-item">
+                    <i class="fas fa-location-dot"></i>
+                    <div><span class="lbl">Endereço</span><br><span class="val">São Paulo/SP</span></div>
+                </div>
+                                                                                <div class="contato-item">
+                    <i class="fas fa-envelope"></i>
+                    <div><span class="lbl">E-mail</span><br><a class="val" href="mailto:contato@escolademo.test">contato@escolademo.test</a></div>
+                </div>
+                                            </div>
+            <div class="contato-cta">
+                <h3>Venha conhecer Escola Vila Nova</h3>
+                <p>Agende uma visita e veja de perto a estrutura, a equipe e a proposta pedagógica.</p>
+                            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="wrap">
+        <div class="brand-f">Escola Vila Nova</div>
+                <nav class="foot-nav">
+                        <a href="#unidades">Unidades</a>            <a href="#diferenciais">Diferenciais</a>
+            <a href="http://declass.test/login">Portal</a>
+            <a href="#contato">Contato</a>        </nav>
+        <div class="copy">
+            <span>© 2026 Escola Vila Nova</span>
+            <span>Plataforma <span class="declass">DeClass</span> — Gestão Escolar</span>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

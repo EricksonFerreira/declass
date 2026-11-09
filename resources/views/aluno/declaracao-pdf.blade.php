@@ -29,6 +29,7 @@
     @endphp
 
     <div class="cab">
+        @include('pdf._logo', ['escola' => $escolaDoc])
         <h1>{{ $escolaDoc->nome ?? 'Escola' }}</h1>
         @if($escolaDoc->endereco)<div class="end">{{ $escolaDoc->endereco }}</div>@endif
         @if($escolaDoc->telefone)<div class="end">Tel: {{ $escolaDoc->telefone }}</div>@endif

@@ -4,9 +4,12 @@ namespace App\Services;
 
 use App\Models\Matricula;
 use App\Models\Mensalidade;
+use App\Support\UploadStorage;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class MensalidadeService extends AbstractBaseService
 {
@@ -31,41 +34,83 @@ class MensalidadeService extends AbstractBaseService
     }
 
     /**
-     * Lista mensalidades com filtros: aluno, turma, competencia,
-     * status (inclui 'vencida' derivada) e situacao financeira.
+     * Lista mensalidades com filtros de sessao: aluno ('nome' busca
+     * em pessoa via matricula), turma, competencia e status
+     * (inclui 'vencida' derivada).
      */
     public function listarComFiltros(array $filters, int $perPage = 15)
     {
+        return $this->queryComFiltros($filters)->paginate($perPage);
+    }
+
+    /** Totais em R$ do escopo filtrado (independente da paginacao). */
+    public function resumoIndex(array $filters): array
+    {
+        $base = $this->queryComFiltros($filters)
+            ->reorder()
+            ->select(\Illuminate\Support\Facades\DB::raw("
+                COUNT(*) as cobrancas,
+                COALESCE(SUM(valor),0) as total,
+                SUM(CASE WHEN status = 'paga' THEN valor ELSE 0 END) as recebido,
+                SUM(CASE WHEN status = 'pendente' AND vencimento < CURDATE() THEN valor ELSE 0 END) as vencido,
+                SUM(CASE WHEN status = 'pendente' AND vencimento >= CURDATE() THEN valor ELSE 0 END) as a_receber
+            "))
+            ->first();
+
+        return [
+            'cobrancas' => (int) ($base->cobrancas ?? 0),
+            'total' => (float) ($base->total ?? 0),
+            'recebido' => (float) ($base->recebido ?? 0),
+            'vencido' => (float) ($base->vencido ?? 0),
+            'a_receber' => (float) ($base->a_receber ?? 0),
+        ];
+    }
+
+    private function queryComFiltros(array $filters)
+    {
+        $nome = $this->filtroValor($filters, 'nome');
+        $busca = $this->filtroValor($filters, 'busca') ?? $nome;
+        $alunoId = $this->filtroValor($filters, 'aluno_id');
+        $turmaId = $this->filtroValor($filters, 'turma_id');
+        $competencia = $this->filtroValor($filters, 'competencia');
+        $status = $this->filtroValor($filters, 'status');
+
         $query = Mensalidade::query()
             ->with(['matricula.aluno.pessoa', 'matricula.turma', 'planoMensalidade'])
             ->orderBy('competencia', 'desc')
             ->orderBy('vencimento', 'asc');
 
-        if (! empty($filters['aluno_id'])) {
-            $query->whereHas('matricula', fn ($q) => $q->where('aluno_id', $filters['aluno_id']));
+        if ($alunoId) {
+            $query->whereHas('matricula', fn ($q) => $q->where('aluno_id', (int) $alunoId));
         }
 
-        if (! empty($filters['turma_id'])) {
-            $query->whereHas('matricula', fn ($q) => $q->where('turma_id', $filters['turma_id']));
-        }
-
-        if (! empty($filters['competencia'])) {
-            $query->where('competencia', $filters['competencia']);
-        }
-
-        if (! empty($filters['status'])) {
-            if ($filters['status'] === 'vencida') {
-                $query->where('status', 'pendente')->whereDate('vencimento', '<', now()->toDateString());
-            } else {
-                $query->where('status', $filters['status']);
+        // Busca "estilo cartorio": cada palavra digitada precisa
+        // bater no nome do aluno ou no RA, em qualquer ordem.
+        if ($busca) {
+            $tokens = collect(preg_split('/\s+/u', trim($busca)))
+                ->filter(fn ($t) => mb_strlen($t) > 0)->unique()->take(6);
+            foreach ($tokens as $token) {
+                $query->whereHas('matricula.aluno', fn ($q) => $q
+                    ->where('registro_academico', 'like', '%'.$token.'%')
+                    ->orWhereHas('pessoa', fn ($p) => $p->where('nome', 'like', '%'.$token.'%')));
             }
         }
 
-        if (! empty($filters['inadimplente']) && $filters['inadimplente'] === 'S') {
-            $query->where('status', 'pendente')->whereDate('vencimento', '<', now()->toDateString());
+        if ($turmaId) {
+            $query->whereHas('matricula', fn ($q) => $q->where('turma_id', (int) $turmaId));
         }
 
-        return $query->paginate($perPage)->withQueryString();
+        if ($competencia) {
+            $query->where('competencia', $competencia);
+        }
+
+        if ($status === 'vencida') {
+            $query->where('status', 'pendente')->whereDate('vencimento', '<', now()->toDateString());
+        } elseif ($status) {
+            $query->where('status', $status);
+        }
+
+        return $query;
     }
 
     /**
@@ -73,13 +118,13 @@ class MensalidadeService extends AbstractBaseService
      * dados do aluno/escola/turma e situacao derivada
      * (vencida = pendente com vencimento passado). Ordenado pelas
      * dividas mais antigas primeiro.
-     * Filtros: escola_id, turma_id, competencia, situacao.
+     * Filtros de sessao: nome (aluno), escola_id, turma_id,
+     * competencia e situacao.
      */
     public function relatorioInadimplencia(array $filtros = [], int $perPage = 25)
     {
         return $this->queryRelatorio($filtros)
-            ->paginate($perPage)
-            ->withQueryString();
+            ->paginate($perPage);
     }
 
     /** Totais do relatorio por situacao (independentes da paginacao). */
@@ -159,17 +204,22 @@ class MensalidadeService extends AbstractBaseService
             $query->where('mensalidades.empresa_id', (int) $empresaId);
         }
 
-        if (! empty($filtros['escola_id'])) {
-            $query->where('turmas.escola_id', (int) $filtros['escola_id']);
+        $filtros = $this->sanitizeEscolaContextFilter($filtros);
+
+        if ($nome = $this->filtroValor($filtros, 'nome')) {
+            $query->where('pessoas.nome', 'like', '%'.$nome.'%');
         }
-        if (! empty($filtros['turma_id'])) {
-            $query->where('matriculas.turma_id', (int) $filtros['turma_id']);
+        if ($escolaId = $this->filtroValor($filtros, 'escola_id')) {
+            $query->where('turmas.escola_id', (int) $escolaId);
         }
-        if (! empty($filtros['competencia'])) {
-            $query->where('mensalidades.competencia', $filtros['competencia']);
+        if ($turmaId = $this->filtroValor($filtros, 'turma_id')) {
+            $query->where('matriculas.turma_id', (int) $turmaId);
         }
-        if (! empty($filtros['situacao'])) {
-            match ($filtros['situacao']) {
+        if ($competencia = $this->filtroValor($filtros, 'competencia')) {
+            $query->where('mensalidades.competencia', $competencia);
+        }
+        if ($situacao = $this->filtroValor($filtros, 'situacao')) {
+            match ($situacao) {
                 'vencida' => $query->where('mensalidades.status', 'pendente')->whereDate('mensalidades.vencimento', '<', $hoje),
                 'a_vencer' => $query->where('mensalidades.status', 'pendente')->whereDate('mensalidades.vencimento', '>=', $hoje),
                 'paga' => $query->where('mensalidades.status', 'paga'),
@@ -231,6 +281,33 @@ class MensalidadeService extends AbstractBaseService
 
             return ['criadas' => $criadas, 'ignoradas' => $ignoradas];
         });
+    }
+
+    /** Anexa/substitui o boleto (PDF) da mensalidade no disco public. */
+    public function salvarBoleto(Mensalidade $mensalidade, UploadedFile $arquivo): void
+    {
+        $this->removerBoleto($mensalidade);
+
+        $mensalidade->update([
+            'boleto_path' => UploadStorage::putFile(
+                $arquivo,
+                "empresas/{$mensalidade->empresa_id}/boletos/{$mensalidade->id}",
+                null,
+                'public'
+            ),
+            'boleto_nome' => $arquivo->getClientOriginalName(),
+        ]);
+    }
+
+    /** Remove o boleto anexado (arquivo e referencia). */
+    public function removerBoleto(Mensalidade $mensalidade): void
+    {
+        if (! $mensalidade->boleto_path) {
+            return;
+        }
+
+        Storage::disk('public')->delete($mensalidade->boleto_path);
+        $mensalidade->update(['boleto_path' => null, 'boleto_nome' => null]);
     }
 
     /** Baixa (recebimento) de uma mensalidade pendente. */

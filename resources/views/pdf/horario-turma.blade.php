@@ -21,6 +21,7 @@
 </style>
 </head>
 <body>
+    @include('pdf._logo', ['escola' => $turma->escola, 'style' => 'display:block;max-height:44px;max-width:140px;margin-bottom:4px;'])
     <h1>Grade horária — {{ $turma->nome }}</h1>
     <div class="sub">
         {{ $turma->escola->nome ?? '' }} · Ano letivo {{ $turma->anoLetivo->ano ?? '' }}

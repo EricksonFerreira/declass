@@ -51,8 +51,9 @@ class PermissaoRotaService
     ];
 
     /**
-     * Rotas de listagem que o professor acompanha pela tela da turma:
-     * continuam acessiveis, mas ficam fora do menu (sidebar e hub).
+     * Rotas que o professor pode acessar pela URL, mas que ficam fora
+     * do menu (sidebar e hub de cards) — a rotina dele nao passa por
+     * estas listagens administrativas.
      *
      * @var string[]
      */
@@ -61,6 +62,8 @@ class PermissaoRotaService
         'avaliacao.index',
         'avaliacao.agenda',
         'cardapio.index',
+        'emprestimo.index',
+        'livro.index',
     ];
 
     public function usuarioPodeAcessarRota(User $user, string $routeName): bool

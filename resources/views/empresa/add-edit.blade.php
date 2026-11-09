@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="isset($empresa) ? 'Editar Tenant' : 'Novo Tenant'" subtitle="Cliente independente da plataforma" />
+    <x-page-title :title="isset($empresa) ? 'Editar Empresa' : 'Nova Empresa'" subtitle="Cliente independente da plataforma" />
 @stop
 
 @section('content')
@@ -73,48 +73,16 @@
                 </div>
             </div>
 
-            <hr>
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <h6 class="font-weight-bold mb-0">Site público ("rede de escolas")</h6>
-                @if(!empty($empresa))
-                    <small class="text-muted">
-                        URL do site: <a href="{{ $empresa->site_url }}" target="_blank" rel="noopener">{{ $empresa->site_url }}</a>
-                    </small>
-                @endif
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-3">
-                    <x-form-select name="site_ativo" label="Site no ar?" :options="['N' => 'Não', 'S' => 'Sim']" :selected="old('site_ativo', $empresa->site_ativo ?? 'N')" />
-                </div>
-                <div class="col-md-9">
-                    <x-form-input name="site_titulo" label="Título / tagline" :value="old('site_titulo', $empresa->site_titulo ?? '')" maxlength="255" placeholder="Ex.: Educação que transforma" />
-                </div>
-            </div>
+            @if(!empty($empresa))
             <div class="row">
                 <div class="col-md-12">
-                    <label class="text-xs">Descrição (apresentação no site)</label>
-                    <textarea name="site_descricao" class="form-control" rows="3" maxlength="2000" placeholder="Texto de apresentação da rede">{{ old('site_descricao', $empresa->site_descricao ?? '') }}</textarea>
+                    <small class="text-muted">
+                        O site público ("rede de escolas") desta empresa é configurado na
+                        <a href="{{ route('empresa.site.edit', $empresa->id) }}">tela Site público</a>.
+                    </small>
                 </div>
             </div>
-            <div class="row mt-2">
-                <div class="col-md-6">
-                    <x-form-input name="site_whatsapp" label="WhatsApp" :value="old('site_whatsapp', $empresa->site_whatsapp ?? '')" maxlength="30" placeholder="(00) 90000-0000" />
-                </div>
-                <div class="col-md-6">
-                    <x-form-input name="site_instagram" label="Instagram" :value="old('site_instagram', $empresa->site_instagram ?? '')" maxlength="100" placeholder="@minhaescola" />
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4">
-                    <x-form-select name="site_unidades" label="Mostrar unidades" :options="['S' => 'Sim', 'N' => 'Não']" :selected="old('site_unidades', $empresa->site_unidades ?? 'S')" />
-                </div>
-                <div class="col-md-4">
-                    <x-form-select name="site_matricula" label="Botão de matrícula" :options="['S' => 'Sim', 'N' => 'Não']" :selected="old('site_matricula', $empresa->site_matricula ?? 'S')" />
-                </div>
-                <div class="col-md-4">
-                    <x-form-select name="site_contato" label="Mostrar contato" :options="['S' => 'Sim', 'N' => 'Não']" :selected="old('site_contato', $empresa->site_contato ?? 'S')" />
-                </div>
-            </div>
+            @endif
 
             <div class="mt-3">
                 <a href="{{ route('empresa.index') }}" class="btn btn-secondary">Cancelar</a>

@@ -207,11 +207,67 @@ class BoletimService
         ];
     }
 
+    /**
+     * Situacao de aprovacao por matricula, em lote:
+     *  - 'reprovado': alguma disciplina ofertada tem media abaixo
+     *    da sua media de aprovacao (turma_disciplina);
+     *  - 'aprovado': todas as disciplinas ofertadas tem media
+     *    maior ou igual ao respectivo corte;
+     *  - null: dados insuficientes (sem notas ou disciplinas
+     *    sem media lancada).
+     *
+     * @return array<int, string|null> matricula_id => resultado
+     */
+    public function resultadoAprovacaoPorMatricula(Collection $matriculas): array
+    {
+        $matriculas = $matriculas->filter(fn ($m) => $m->turma)->values();
+        if ($matriculas->isEmpty()) {
+            return [];
+        }
+
+        $medias = DB::table('notas')
+            ->join('avaliacoes', 'notas.avaliacao_id', '=', 'avaliacoes.id')
+            ->whereIn('avaliacoes.turma_id', $matriculas->pluck('turma_id')->unique())
+            ->whereIn('notas.matricula_id', $matriculas->pluck('id'))
+            ->whereNull('avaliacoes.deleted_at')
+            ->whereNull('notas.deleted_at')
+            ->whereNotNull('notas.nota')
+            ->groupBy('notas.matricula_id', 'avaliacoes.disciplina_id')
+            ->selectRaw('notas.matricula_id, avaliacoes.disciplina_id, AVG(notas.nota) as media')
+            ->get()
+            ->groupBy('matricula_id')
+            ->map(fn ($rows) => $rows->mapWithKeys(
+                fn ($r) => [$r->disciplina_id => round((float) $r->media, 1)]
+            ));
+
+        $resultado = [];
+        foreach ($matriculas as $matricula) {
+            $disciplinas = $matricula->turma->disciplinas;
+            $mediasAluno = $medias->get($matricula->id, collect());
+
+            $abaixo = $disciplinas->contains(
+                fn ($d) => isset($mediasAluno[$d->id]) && $mediasAluno[$d->id] < $d->mediaAprovacaoNaTurma()
+            );
+            if ($abaixo) {
+                $resultado[$matricula->id] = 'reprovado';
+
+                continue;
+            }
+
+            $completa = $disciplinas->isNotEmpty()
+                && $disciplinas->every(fn ($d) => isset($mediasAluno[$d->id]));
+
+            $resultado[$matricula->id] = $completa ? 'aprovado' : null;
+        }
+
+        return $resultado;
+    }
+
     /** Alunos com matricula ativa (para o seletor do boletim individual). */
     public function alunosComMatricula(User $user): Collection
     {
         $query = Aluno::query()
-            ->with(['pessoa', 'matriculas' => fn ($q) => $q->where('status', 'ativa')->with('turma')])
+            ->with(['pessoa', 'matriculas' => fn ($q) => $q->where('status', 'ativa')->with('turma.escola')])
             ->whereHas('matriculas', fn ($q) => $q->where('status', 'ativa'))
             ->orderBy('id');
 

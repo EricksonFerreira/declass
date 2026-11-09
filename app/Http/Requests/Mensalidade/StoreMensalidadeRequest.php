@@ -29,6 +29,7 @@ class StoreMensalidadeRequest extends FormRequest
             'data_pagamento' => ['nullable', 'date'],
             'forma_pagamento' => ['nullable', Rule::in(array_keys(Mensalidade::FORMAS_PAGAMENTO))],
             'observacoes' => ['nullable', 'string', 'max:2000'],
+            'boleto' => ['nullable', 'file', 'mimes:pdf', 'max:8192'],
         ];
     }
 }

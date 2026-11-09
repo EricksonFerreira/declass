@@ -2,6 +2,7 @@
 
 use App\Models\Aluno;
 use App\Models\AnoLetivo;
+use App\Models\Atribuicao;
 use App\Models\Escola;
 use App\Models\Etapa;
 use App\Models\Matricula;
@@ -120,10 +121,10 @@ test('escola de outro tenant e rejeitada', function () {
 
 test('usuario com vinculo em user_escolas so seleciona escolas atribuidas', function () {
     $empresa = tenant();
-    $user = usuarioTenant($empresa, 'professor');
+    $user = usuarioTenant($empresa, 'membro');
     ['escolaA' => $escolaA, 'escolaB' => $escolaB] = escolaContextoFixture($empresa);
 
-    // Professor so atua na unidade A.
+    // Usuario so atua na unidade A.
     $user->escolas()->sync([$escolaA->id]);
 
     $this->actingAs($user)
@@ -139,7 +140,7 @@ test('usuario com vinculo em user_escolas so seleciona escolas atribuidas', func
 
 test('sessao com escola nao atribuida e ignorada na resolucao', function () {
     $empresa = tenant();
-    $user = usuarioTenant($empresa, 'professor');
+    $user = usuarioTenant($empresa, 'membro');
     ['escolaA' => $escolaA, 'escolaB' => $escolaB] = escolaContextoFixture($empresa);
 
     $user->escolas()->sync([$escolaA->id]);
@@ -149,6 +150,57 @@ test('sessao com escola nao atribuida e ignorada na resolucao', function () {
     $this->actingAs($user)->get('/admin/home')->assertOk();
 
     expect(app(EscolaContext::class)->escolaId())->toBeNull();
+});
+
+test('professor so seleciona escolas onde leciona', function () {
+    $empresa = tenant();
+    $user = usuarioTenant($empresa, 'professor');
+    ['escolaA' => $escolaA, 'escolaB' => $escolaB, 'turmaB' => $turmaB] = escolaContextoFixture($empresa);
+
+    // Vinculado as duas unidades, mas so leciona na B.
+    $user->escolas()->sync([$escolaA->id, $escolaB->id]);
+    Atribuicao::create([
+        'empresa_id' => $empresa->id,
+        'escola_id' => $escolaB->id,
+        'turma_id' => $turmaB->id,
+        'user_id' => $user->id,
+        'papel' => 'titular',
+        'ativo' => 'S',
+    ]);
+
+    $this->actingAs($user)
+        ->post('/admin/escola-contexto', ['escola_id' => $escolaA->id])
+        ->assertSessionHas('error');
+    expect(session('escola_contexto_id'))->toBeNull();
+
+    $this->actingAs($user)
+        ->post('/admin/escola-contexto', ['escola_id' => $escolaB->id])
+        ->assertSessionHas('success');
+    expect(session('escola_contexto_id'))->toBe($escolaB->id);
+});
+
+test('professor sem atribuicao ativa nao tem escola selecionavel', function () {
+    $empresa = tenant();
+    $user = usuarioTenant($empresa, 'professor');
+    ['escolaA' => $escolaA, 'turmaA' => $turmaA] = escolaContextoFixture($empresa);
+
+    // Vinculo em user_escolas nao basta: sem atribuicao ativa,
+    // nenhuma unidade entra no seletor do professor.
+    $user->escolas()->sync([$escolaA->id]);
+    Atribuicao::create([
+        'empresa_id' => $empresa->id,
+        'escola_id' => $escolaA->id,
+        'turma_id' => $turmaA->id,
+        'user_id' => $user->id,
+        'papel' => 'titular',
+        'ativo' => 'N',
+    ]);
+
+    expect($user->escolasContextoIds())->toBe([]);
+
+    $this->actingAs($user)
+        ->post('/admin/escola-contexto', ['escola_id' => $escolaA->id])
+        ->assertSessionHas('error');
 });
 
 test('rotas de organizacao nao existem mais', function () {

@@ -23,6 +23,8 @@ class Mensalidade extends Model
         'data_pagamento',
         'forma_pagamento',
         'observacoes',
+        'boleto_path',
+        'boleto_nome',
         'lembrete_a_vencer_em',
         'lembrete_vencida_em',
     ];
@@ -73,5 +75,11 @@ class Mensalidade extends Model
         }
 
         return $this->status;
+    }
+
+    /** Nome amigavel do arquivo de boleto para download. */
+    public function boletoNomeDownload(): string
+    {
+        return 'boleto-'.$this->competencia.'.pdf';
     }
 }

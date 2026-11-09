@@ -15,16 +15,47 @@
     <div class="alert alert-danger">{{ session('error') }}</div>
 @endif
 
+@php($din = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.'))
 <div class="row">
-    <div class="col-md-3">
-        <div class="card card-outline card-danger">
-            <div class="card-body text-center">
-                <h5 class="mb-0">{{ $totalInadimplente }}</h5>
-                <small class="text-muted">cobranças vencidas</small>
-            </div>
-        </div>
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card mb-0 border"><div class="card-body py-2 px-3 text-center">
+            <div class="h4 mb-0 text-success">{{ $din($resumo['recebido']) }}</div>
+            <small class="text-muted">Recebido</small>
+        </div></div>
     </div>
-    <div class="col-md-9">
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card mb-0 border"><div class="card-body py-2 px-3 text-center">
+            <div class="h4 mb-0 text-info">{{ $din($resumo['a_receber']) }}</div>
+            <small class="text-muted">A receber</small>
+        </div></div>
+    </div>
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card mb-0 border"><div class="card-body py-2 px-3 text-center">
+            <div class="h4 mb-0 text-danger">{{ $din($resumo['vencido']) }}</div>
+            <small class="text-muted">Vencido (R$)</small>
+        </div></div>
+    </div>
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card mb-0 border"><div class="card-body py-2 px-3 text-center">
+            <div class="h4 mb-0 text-danger">{{ $totalInadimplente }}</div>
+            <small class="text-muted">Cobranças vencidas</small>
+        </div></div>
+    </div>
+</div>
+
+@if($alunoSel)
+    <div class="alert alert-info d-flex align-items-center" style="gap:.6rem;">
+        <i class="fas fa-user-graduate fa-lg"></i>
+        <div class="flex-grow-1">
+            <strong>Extrato: {{ $alunoSel->pessoa->nome ?? 'Aluno #'.$alunoSel->id }}</strong>
+            <div class="small">Mostrando apenas as mensalidades deste aluno.</div>
+        </div>
+        <a href="{{ route('mensalidade.removerFiltro', ['atributo' => 'aluno_id']) }}" class="btn btn-sm btn-outline-info">Ver todos</a>
+    </div>
+@endif
+
+<div class="row">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-header font-weight-bold">Gerar mensalidades de uma competência</div>
             <div class="card-body">
@@ -49,30 +80,14 @@
 </div>
 
 <div class="card">
-    <div class="card-header">
-        <form method="GET" action="{{ route('mensalidade.index') }}" class="form-inline flex-wrap" style="gap:.5rem;">
-            <select name="aluno_id" class="form-control form-control-sm">
-                <option value="">Todos os alunos</option>
-                @foreach($alunos as $id => $nome)
-                    <option value="{{ $id }}" @selected(($filters['aluno_id'] ?? '') == $id)>{{ $nome }}</option>
-                @endforeach
-            </select>
-            <select name="turma_id" class="form-control form-control-sm">
-                <option value="">Todas as turmas</option>
-                @foreach($turmas as $id => $nome)
-                    <option value="{{ $id }}" @selected(($filters['turma_id'] ?? '') == $id)>{{ $nome }}</option>
-                @endforeach
-            </select>
-            <input type="month" name="competencia" class="form-control form-control-sm" value="{{ $filters['competencia'] ?? '' }}">
-            <select name="status" class="form-control form-control-sm">
-                <option value="">Todos os status</option>
-                @foreach($statuses as $valor => $label)
-                    <option value="{{ $valor }}" @selected(($filters['status'] ?? '') === $valor)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
-            <a href="{{ route('mensalidade.index') }}" class="btn btn-sm btn-secondary">Limpar</a>
-        </form>
+    <div class="card-header d-flex flex-wrap align-items-center" style="gap:.5rem;">
+        <div class="flex-grow-1">
+            <x-filter :filters="$filters" :additional-filters="$additionalFilters" :itens-filtered="$itensFiltered" :nome-filtro="$nomeFiltro" />
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="btnExtratoAluno">
+            <i class="fa fa-user-graduate mr-1"></i> Extrato do aluno
+        </button>
+        <x-per-page-selector :per-pages="$perPages" :selected-per-page="$perPage" />
     </div>
 
     <div class="card-body p-0">
@@ -127,6 +142,11 @@
                                         <a href="{{ route('mensalidade.recibo', $mensalidade->id) }}" class="btn btn-xs btn-outline-primary" title="Recibo de pagamento"><i class="fa fa-file-invoice"></i></a>
                                     @endcan
                                 @endif
+                                @if($mensalidade->boleto_path)
+                                    @can('mensalidade.edit')
+                                        <a href="{{ route('mensalidade.boleto', $mensalidade->id) }}" target="_blank" class="btn btn-xs btn-outline-secondary" title="Ver boleto anexado"><i class="fa fa-barcode"></i></a>
+                                    @endcan
+                                @endif
                                 @can('mensalidade.edit')
                                     <a href="{{ route('mensalidade.edit', $mensalidade->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                                 @endcan
@@ -154,4 +174,26 @@
         </div>
     @endif
 </div>
+
+@include('partials.entity-picker')
 @stop
+
+@push('js')
+<script>
+$(function () {
+    if (!window.EntityPicker) return;
+    EntityPicker.registrar('aluno', {
+        titulo: 'Extrato do aluno',
+        dados: @json($alunosPicker ?? []),
+        filtros: [],
+        onSelect: function (d) {
+            // aplica o filtro aluno_id na sessao e recarrega o extrato
+            window.location.href = "{{ route('mensalidade.filtro') }}?aluno_id=" + d.id;
+        },
+    });
+    document.getElementById('btnExtratoAluno').addEventListener('click', function () {
+        EntityPicker.abrir('aluno');
+    });
+});
+</script>
+@endpush

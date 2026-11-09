@@ -6,6 +6,7 @@ use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Entrega de uma tarefa por matricula (um aluno por tarefa).
@@ -28,6 +29,7 @@ class EntregaTarefa extends Model
         'tarefa_id',
         'matricula_id',
         'status',
+        'resposta',
         'nota',
         'data_entrega',
         'observacoes',
@@ -46,6 +48,16 @@ class EntregaTarefa extends Model
     public function matricula(): BelongsTo
     {
         return $this->belongsTo(Matricula::class, 'matricula_id');
+    }
+
+    public function respostas(): HasMany
+    {
+        return $this->hasMany(EntregaTarefaResposta::class, 'entrega_id');
+    }
+
+    public function anexos(): HasMany
+    {
+        return $this->hasMany(EntregaTarefaAnexo::class, 'entrega_id');
     }
 
     public function statusLabel(): string

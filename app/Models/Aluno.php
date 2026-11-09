@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Aluno: vinculo academico de uma pessoa com a escola/unidade.
@@ -59,6 +60,26 @@ class Aluno extends Model
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class, 'empresa_id');
+    }
+
+    /**
+     * Foto de exibicao do aluno: foto cadastral da pessoa; senao a
+     * foto de perfil da conta do proprio aluno; senao null — a
+     * view cai para iniciais/icone.
+     */
+    public function getFotoUrlAttribute(): ?string
+    {
+        if ($url = $this->pessoa?->foto_url) {
+            return $url;
+        }
+
+        $path = trim((string) ($this->user?->foto_perfil ?? ''));
+
+        if ($path !== '' && Storage::disk('public')->exists($path)) {
+            return Storage::url($path);
+        }
+
+        return null;
     }
 
     public function pessoa(): BelongsTo

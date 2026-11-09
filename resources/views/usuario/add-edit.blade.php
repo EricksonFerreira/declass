@@ -34,7 +34,7 @@
                     <x-form-input name="numero_identificacao" label="CPF / documento" :value="old('numero_identificacao', $usuario->numero_identificacao ?? '')" maxlength="30" />
                 </div>
                 <div class="col-md-3">
-                    <x-form-input name="data_nascimento" type="date" label="Data de nascimento" :value="old('data_nascimento', optional($usuario->data_nascimento)->format('Y-m-d') ?? '')" />
+                    <x-form-input name="data_nascimento" type="date" label="Data de nascimento" :value="old('data_nascimento', isset($usuario) ? optional($usuario->data_nascimento)->format('Y-m-d') : '')" />
                 </div>
                 <div class="col-md-3">
                     <x-form-select name="sexo" label="Sexo" :options="['M' => 'Masculino', 'F' => 'Feminino', 'NI' => 'Não informado']" :selected="old('sexo', $usuario->sexo ?? '')" placeholder="Selecionar" />

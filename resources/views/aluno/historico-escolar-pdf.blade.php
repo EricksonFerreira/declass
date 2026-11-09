@@ -23,8 +23,9 @@
     .media-mid { color: #854d0e; font-weight: bold; }
     .media-low { color: #991b1b; font-weight: bold; }
     .muted { color: #64748b; }
-    .assinatura { margin-top: 36px; display: flex; justify-content: space-between; }
-    .assinatura .linha { width: 45%; text-align: center; border-top: 1px solid #334155; padding-top: 4px; font-size: 8.5px; color: #475569; }
+    .assinatura { margin-top: 40px; }
+    .assinatura td { border: none; text-align: center; }
+    .assinatura .linha { display: inline-block; border-top: 1px solid #334155; padding-top: 5px; margin-top: 26px; width: 88%; font-size: 8.5px; color: #475569; }
     .rodape { margin-top: 18px; font-size: 7.5px; color: #94a3b8; text-align: center; }
 </style>
 </head>
@@ -38,6 +39,7 @@
     @endphp
 
     <div class="cab">
+        @include('pdf._logo', ['escola' => $primeiraEscola ?? $aluno->escola])
         <h1>{{ $primeiraEscola->nome ?? $aluno->escola->nome ?? 'Escola' }}</h1>
         @if($primeiraEscola)
             <h2>{{ collect([$primeiraEscola->endereco, $primeiraEscola->telefone, $primeiraEscola->email])->filter()->implode(' · ') }}</h2>
@@ -88,6 +90,7 @@
                         @if($ano['tem_sem_periodo'])
                             <th class="num muted">Sem período</th>
                         @endif
+                        <th class="num" style="width:7%;">Mín.</th>
                         <th class="num" style="width:10%;">Média final</th>
                     </tr>
                 </thead>
@@ -102,14 +105,16 @@
                             @if($ano['tem_sem_periodo'])
                                 <td class="num {{ $mediaClass($linha['medias']['__sem_periodo__'] ?? null) }}">{{ $fmtPct($linha['medias']['__sem_periodo__'] ?? null) }}</td>
                             @endif
+                            <td class="num muted">{{ number_format($linha['corte'], 1, ',', '.') }}</td>
                             <td class="num {{ $mediaClass($linha['media_geral']) }}"><strong>{{ $fmtPct($linha['media_geral']) }}</strong></td>
                         </tr>
                     @empty
-                        <tr><td colspan="{{ 3 + $ano['periodos']->count() + ($ano['tem_sem_periodo'] ? 1 : 0) }}" class="muted" style="text-align:center;">Nenhuma disciplina ofertada nesta turma.</td></tr>
+                        <tr><td colspan="{{ 4 + $ano['periodos']->count() + ($ano['tem_sem_periodo'] ? 1 : 0) }}" class="muted" style="text-align:center;">Nenhuma disciplina ofertada nesta turma.</td></tr>
                     @endforelse
                     <tr>
-                        <td colspan="{{ 2 + $ano['periodos']->count() + ($ano['tem_sem_periodo'] ? 1 : 0) }}" class="muted">
+                        <td colspan="{{ 3 + $ano['periodos']->count() + ($ano['tem_sem_periodo'] ? 1 : 0) }}" class="muted">
                             Frequência no ano: {{ $freq['total'] > 0 ? $freq['pct'].'% ('.($freq['presente'] + $freq['justificada']).' presenças, '.$freq['falta'].' faltas)' : 'sem registros' }}
+                            · <span title="Nota mínima (0–10) para aprovação em cada disciplina">Min. = média de aprovação</span>
                         </td>
                         <td class="num" style="background:#f8fafc;"><strong>Total de disciplinas: {{ $ano['linhas']->count() }}</strong></td>
                     </tr>
@@ -120,10 +125,13 @@
         <p class="muted" style="text-align:center;">Nenhuma matrícula registrada para este aluno.</p>
     @endforelse
 
-    <div class="assinatura">
-        <div class="linha">{{ $primeiraEscola->nome ?? 'Escola' }}<br>Direção / Secretaria</div>
-        <div class="linha">Responsável legal<br>{{ $aluno->responsaveis->first()?->pessoa?->nome ?? '____________________' }}</div>
-    </div>
+    <table class="assinatura">
+        <tr>
+            <td style="width:42%;"><span class="linha">{{ $primeiraEscola->nome ?? 'Escola' }}<br>Direção / Secretaria</span></td>
+            <td style="width:16%;"></td>
+            <td style="width:42%;"><span class="linha">Responsável legal<br>{{ $aluno->responsaveis->first()?->pessoa?->nome ?? '____________________' }}</span></td>
+        </tr>
+    </table>
 
     <div class="rodape">
         Histórico escolar completo emitido pelo sistema Declass em {{ now()->format('d/m/Y \à\s H:i') }} — registro cumulativo de todas as matrículas do aluno.

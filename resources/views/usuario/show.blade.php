@@ -85,4 +85,58 @@
         </div>
     </div>
 </div>
+
+@if($permissoesGrupos)
+<div class="card card-outline card-warning">
+    <div class="card-header">
+        <span class="font-weight-bold"><i class="fa fa-key mr-1"></i> Permissões de acesso</span>
+        <span class="badge badge-danger ml-2">somente superadmin</span>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('usuario.permissoes', $usuario->id) }}">
+            @csrf
+            @method('PUT')
+            <div class="alert alert-light border small mb-3">
+                <i class="fa fa-info-circle mr-1"></i>
+                <strong>Herdar do perfil</strong> mantém o padrão do perfil <em>{{ $usuario->regra->nome ?? '—' }}</em>;
+                <strong class="text-success">Permitir</strong> concede a tela/ação mesmo fora do perfil;
+                <strong class="text-danger">Negar</strong> remove mesmo que o perfil conceda.
+            </div>
+            <div class="row">
+                @foreach($permissoesGrupos as $modulo => $nomes)
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-2 h-100">
+                            <div class="font-weight-bold small text-uppercase text-muted mb-1">
+                                {{ str_replace('_', ' ', $modulo) }}
+                            </div>
+                            @foreach($nomes as $nome)
+                                @php
+                                    $acao = explode('.', $nome, 2)[1] ?? $nome;
+                                    $estado = in_array($nome, $permEstado['permitir']) ? 'permitir'
+                                        : (in_array($nome, $permEstado['negar']) ? 'negar' : 'herdar');
+                                    $noPerfil = $permPerfil->contains($nome);
+                                @endphp
+                                <div class="d-flex align-items-center mb-1" style="gap:.4rem;">
+                                    <span class="small flex-grow-1 {{ $noPerfil ? '' : 'text-muted' }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $nome }}">
+                                        {{ $acao }}
+                                        @if($noPerfil)
+                                            <i class="fa fa-user-check text-muted" title="vem do perfil" style="font-size:.65rem;"></i>
+                                        @endif
+                                    </span>
+                                    <select name="perm[{{ $nome }}]" class="form-control form-control-sm" style="width:6.2rem;font-size:.72rem;">
+                                        <option value="herdar" {{ $estado === 'herdar' ? 'selected' : '' }}>Herdar</option>
+                                        <option value="permitir" {{ $estado === 'permitir' ? 'selected' : '' }}>Permitir</option>
+                                        <option value="negar" {{ $estado === 'negar' ? 'selected' : '' }}>Negar</option>
+                                    </select>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            <button type="submit" class="btn btn-warning btn-sm"><i class="fa fa-save mr-1"></i> Salvar permissões diretas</button>
+        </form>
+    </div>
+</div>
+@endif
 @stop

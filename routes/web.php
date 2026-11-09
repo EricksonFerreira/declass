@@ -29,6 +29,13 @@ Route::get('/', function () {
     return view('welcome');
 })->name('site.apresentacao');
 
+// Login na raiz — o dominio/subdominio da empresa cai direto em /login,
+// sem o prefixo /admin (que segue valendo para as demais rotas autenticadas).
+Route::middleware('guest')->group(function (): void {
+    Route::get('login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'store']);
+});
+
 Route::get('/sobre', function () {
     return view('sobre');
 })->name('site.sobre');
@@ -81,6 +88,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
     Route::middleware('auth')->group(function (): void {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/foto', [ProfileController::class, 'updateFoto'])->name('profile.foto.update');
         Route::get('/profile/senha', [ProfileController::class, 'editPassword'])->name('profile.password.edit');
         Route::put('/profile/senha', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
         Route::get('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordEdit'])->name('profile.force-password.edit');
@@ -120,7 +128,6 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'regra',
         'usuario',
         'empresa',
-        'documentos',
         'escola',
         'aluno',
         'responsavel',
@@ -158,6 +165,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'relatorio_aproveitamento',
         'agenda_avaliacao',
         'solicitacao_matricula',
+        'solicitacao',
         'evento',
         'pesquisa',
         'saude',
@@ -166,6 +174,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'conta_receber',
         'fluxo_caixa',
         'dre',
+        'financeiro_visao_geral',
     ];
 
     foreach ($authGroupFiles as $groupFile) {

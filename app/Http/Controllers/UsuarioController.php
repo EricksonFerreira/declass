@@ -17,6 +17,7 @@ use App\Services\UsuarioService;
 use App\Support\SchemaCache;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class UsuarioController extends BaseController implements FiltroInterface, ResourceInterface
@@ -211,8 +212,71 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Usuários', 'usuario.index', $usuario->nome ?? 'Usuário');
 
-        return view('usuario.show', compact('usuario', 'breadcrumb'))
+        // Matriz de permissoes diretas — visivel apenas para o superadmin.
+        $permissoesGrupos = null;
+        $permEstado = ['permitir' => [], 'negar' => []];
+        $permPerfil = collect();
+        if (auth()->user()->isSuperAdmin()) {
+            $permissoesGrupos = DB::table('permissions')->orderBy('name')->pluck('name')
+                ->mapToGroups(fn ($n) => [explode('.', $n)[0] => $n]);
+            $permEstado['permitir'] = DB::table('model_has_permissions')
+                ->where('model_id', $usuario->id)->where('model_type', \App\Models\User::class)
+                ->join('permissions', 'model_has_permissions.permission_id', '=', 'permissions.id')
+                ->pluck('permissions.name')->all();
+            $permEstado['negar'] = DB::table('user_permission_denies')->where('user_id', $usuario->id)
+                ->join('permissions', 'user_permission_denies.permission_id', '=', 'permissions.id')
+                ->pluck('permissions.name')->all();
+            $permPerfil = $usuario->role_id ? DB::table('permissions')
+                ->join('role_has_permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
+                ->where('role_has_permissions.role_id', $usuario->role_id)->pluck('permissions.name') : collect();
+        }
+
+        return view('usuario.show', compact('usuario', 'breadcrumb', 'permissoesGrupos', 'permEstado', 'permPerfil'))
             ->with('titulo', $usuario->nome ?? 'Usuário');
+    }
+
+    /**
+     * Permissoes individuais: superadmin concede ('permitir' em
+     * model_has_permissions) ou remove ('negar' em user_permission_denies)
+     * telas/acoes especificas para um usuario, independente do perfil.
+     */
+    public function permissoes(Request $request, $id)
+    {
+        abort_unless(auth()->user()->isSuperAdmin(), 403, 'Somente o superadmin gerencia permissões diretas.');
+
+        $usuario = $this->usuarioService->getById($id);
+        abort_if(! $usuario, 404, 'Usuário não encontrado.');
+
+        $escolhas = $request->input('perm', []);
+        $permitir = collect($escolhas)->filter(fn ($v) => $v === 'permitir')->keys();
+        $negar = collect($escolhas)->filter(fn ($v) => $v === 'negar')->keys();
+        $permIds = DB::table('permissions')->whereIn('name', $permitir->merge($negar))->pluck('id', 'name');
+
+        DB::table('model_has_permissions')
+            ->where('model_id', $usuario->id)->where('model_type', \App\Models\User::class)->delete();
+        foreach ($permitir as $nome) {
+            if (isset($permIds[$nome])) {
+                DB::table('model_has_permissions')->insert([
+                    'permission_id' => $permIds[$nome],
+                    'model_type' => \App\Models\User::class,
+                    'model_id' => $usuario->id,
+                ]);
+            }
+        }
+
+        DB::table('user_permission_denies')->where('user_id', $usuario->id)->delete();
+        foreach ($negar as $nome) {
+            if (isset($permIds[$nome])) {
+                DB::table('user_permission_denies')->insert([
+                    'user_id' => $usuario->id,
+                    'permission_id' => $permIds[$nome],
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+        }
+
+        return redirect()->route('usuario.show', $usuario->id)
+            ->with('success', 'Permissões diretas atualizadas.');
     }
 
     public function edit($id)

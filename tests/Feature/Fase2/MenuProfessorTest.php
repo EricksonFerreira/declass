@@ -42,7 +42,7 @@ test('menu lateral do professor mostra apenas a rotina pedagogica', function () 
 
     expect($folhasDe('Calendário'))->toBe(['Calendário Letivo', 'Feriados']);
     expect($folhasDe('Comunicação'))->toBe(['Agenda', 'Avisos', 'Pesquisas']);
-    expect($folhasDe('Biblioteca'))->toBe(['Empréstimos', 'Acervo']);
+    expect($folhasDe('Biblioteca'))->toBe(['Meus Empréstimos']);
 });
 
 test('menu lateral do admin mantem diario e avaliacoes', function () {
@@ -90,6 +90,9 @@ test('hub de cards esconde diario, avaliacoes, agenda e alimentacao do professor
         ->not->toContain('avaliacao.index')
         ->not->toContain('avaliacao.agenda')
         ->not->toContain('cardapio.index')
+        ->not->toContain('emprestimo.index')
+        ->not->toContain('livro.index')
+        ->toContain('portal.emprestimos') // biblioteca do professor: so os proprios emprestimos
         ->toContain('turma.index'); // continua entrando pela turma
 
     $rotasAdmin = collect($service->secoes($admin))
@@ -99,7 +102,9 @@ test('hub de cards esconde diario, avaliacoes, agenda e alimentacao do professor
         ->toContain('diario.index')
         ->toContain('avaliacao.index')
         ->toContain('avaliacao.agenda')
-        ->toContain('cardapio.index');
+        ->toContain('cardapio.index')
+        ->toContain('emprestimo.index')
+        ->toContain('livro.index');
 });
 
 test('sidebar restringe itens de diario e avaliacoes so para professor', function () {

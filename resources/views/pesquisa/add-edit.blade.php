@@ -7,6 +7,27 @@
     <x-page-title :title="isset($pesquisa) ? 'Editar Pesquisa' : 'Nova Pesquisa'" />
 @stop
 
+@push('css')
+<style>
+    .frm-sec { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin: 1.1rem 0 .6rem; }
+    .frm-sec:first-child { margin-top: 0; }
+    .frm-sec i { margin-right: .3rem; }
+
+    .pq-item { border: 1px solid #e5e9f0; border-radius: 12px; padding: 10px 12px 8px; margin-bottom: 10px; background: #fbfcfe; }
+    .pq-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .pq-num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 24px; height: 24px; border-radius: 8px;
+        background: linear-gradient(135deg,#2563eb,#0ea5e9); color: #fff;
+        font-size: .72rem; font-weight: 800; flex-shrink: 0;
+    }
+    .pq-num-lbl { font-size: .72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .05em; }
+    .pq-del { margin-left: auto; }
+    .pq-item .form-label { font-size: .72rem; font-weight: 700; color: #64748b; margin-bottom: 3px; }
+    .pq-empty { border: 1px dashed #cbd5e1; border-radius: 12px; padding: 1.6rem; text-align: center; color: #94a3b8; font-size: .85rem; }
+</style>
+@endpush
+
 @section('content')
 @php
     $perguntasAntigas = old('perguntas', isset($pesquisa) ? $pesquisa->perguntas->map(fn ($p) => [
@@ -23,6 +44,7 @@
                 @method('PUT')
             @endif
 
+            <div class="frm-sec"><i class="fa fa-poll"></i>Dados da pesquisa</div>
             <div class="row">
                 <div class="col-md-8">
                     <x-form-input name="titulo" label="Título" :value="old('titulo', $pesquisa->titulo ?? '')" required maxlength="190" placeholder="Ex.: Pesquisa de satisfação — 2º semestre" />
@@ -31,7 +53,6 @@
                     <x-form-select name="status" label="Status" :options="$statusList ?? []" :selected="old('status', $pesquisa->status ?? 'rascunho')" required />
                 </div>
             </div>
-
             <div class="row">
                 <div class="col-md-4">
                     @if(isset($pesquisa))
@@ -47,7 +68,6 @@
                     <x-form-input name="data_fim" type="date" label="Fim das respostas" :value="old('data_fim', isset($pesquisa) ? $pesquisa->data_fim->format('Y-m-d') : '')" required />
                 </div>
             </div>
-
             <div class="row">
                 <div class="col-md-12">
                     <label class="form-label">Descrição / instruções</label>
@@ -56,37 +76,40 @@
                 </div>
             </div>
 
-            <hr>
-            <h5 class="font-weight-bold">Perguntas</h5>
+            <div class="frm-sec"><i class="fa fa-list-ol"></i>Perguntas</div>
             <p class="text-muted small mb-2">As perguntas aparecem na ordem listada. Marque "obrigatória" para exigir resposta.</p>
 
             <div id="perguntas-container">
                 @foreach($perguntasAntigas as $i => $p)
-                    <div class="row pergunta-item align-items-end mb-2" data-index="{{ $i }}">
-                        <div class="col-md-5">
-                            <label class="form-label">Pergunta {{ $i + 1 }}</label>
-                            <input type="text" name="perguntas[{{ $i }}][pergunta]" class="form-control" maxlength="500"
-                                value="{{ $p['pergunta'] ?? '' }}" placeholder="Ex.: Como você avalia o atendimento da secretaria?" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Tipo de resposta</label>
-                            <select name="perguntas[{{ $i }}][tipo]" class="form-control">
-                                @foreach($tiposPergunta ?? [] as $valor => $label)
-                                    <option value="{{ $valor }}" {{ ($p['tipo'] ?? 'nota') === $valor ? 'selected' : '' }}>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Obrigatória</label>
-                            <select name="perguntas[{{ $i }}][obrigatoria]" class="form-control">
-                                <option value="S" {{ ($p['obrigatoria'] ?? 'S') === 'S' ? 'selected' : '' }}>Sim</option>
-                                <option value="N" {{ ($p['obrigatoria'] ?? 'S') === 'N' ? 'selected' : '' }}>Não</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-outline-danger btn-remover-pergunta" title="Remover pergunta">
+                    <div class="pq-item" data-index="{{ $i }}">
+                        <div class="pq-head">
+                            <span class="pq-num">{{ $i + 1 }}</span>
+                            <span class="pq-num-lbl">Pergunta</span>
+                            <button type="button" class="btn btn-xs btn-outline-danger pq-del btn-remover-pergunta" title="Remover pergunta">
                                 <i class="fa fa-trash"></i>
                             </button>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Texto da pergunta</label>
+                                <input type="text" name="perguntas[{{ $i }}][pergunta]" class="form-control" maxlength="500"
+                                    value="{{ $p['pergunta'] ?? '' }}" placeholder="Ex.: Como você avalia o atendimento da secretaria?" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Tipo de resposta</label>
+                                <select name="perguntas[{{ $i }}][tipo]" class="form-control">
+                                    @foreach($tiposPergunta ?? [] as $valor => $label)
+                                        <option value="{{ $valor }}" {{ ($p['tipo'] ?? 'nota') === $valor ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Obrigatória</label>
+                                <select name="perguntas[{{ $i }}][obrigatoria]" class="form-control">
+                                    <option value="S" {{ ($p['obrigatoria'] ?? 'S') === 'S' ? 'selected' : '' }}>Sim</option>
+                                    <option value="N" {{ ($p['obrigatoria'] ?? 'S') === 'N' ? 'selected' : '' }}>Não</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 @endforeach
@@ -105,30 +128,34 @@
 </div>
 
 <template id="template-pergunta">
-    <div class="row pergunta-item align-items-end mb-2" data-index="__INDEX__">
-        <div class="col-md-5">
-            <label class="form-label">Pergunta</label>
-            <input type="text" name="perguntas[__INDEX__][pergunta]" class="form-control" maxlength="500" placeholder="Digite a pergunta..." required>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Tipo de resposta</label>
-            <select name="perguntas[__INDEX__][tipo]" class="form-control">
-                @foreach($tiposPergunta ?? [] as $valor => $label)
-                    <option value="{{ $valor }}">{{ $label }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Obrigatória</label>
-            <select name="perguntas[__INDEX__][obrigatoria]" class="form-control">
-                <option value="S">Sim</option>
-                <option value="N">Não</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button type="button" class="btn btn-outline-danger btn-remover-pergunta" title="Remover pergunta">
+    <div class="pq-item" data-index="__INDEX__">
+        <div class="pq-head">
+            <span class="pq-num">__NUM__</span>
+            <span class="pq-num-lbl">Pergunta</span>
+            <button type="button" class="btn btn-xs btn-outline-danger pq-del btn-remover-pergunta" title="Remover pergunta">
                 <i class="fa fa-trash"></i>
             </button>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label class="form-label">Texto da pergunta</label>
+                <input type="text" name="perguntas[__INDEX__][pergunta]" class="form-control" maxlength="500" placeholder="Digite a pergunta..." required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Tipo de resposta</label>
+                <select name="perguntas[__INDEX__][tipo]" class="form-control">
+                    @foreach($tiposPergunta ?? [] as $valor => $label)
+                        <option value="{{ $valor }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Obrigatória</label>
+                <select name="perguntas[__INDEX__][obrigatoria]" class="form-control">
+                    <option value="S">Sim</option>
+                    <option value="N">Não</option>
+                </select>
+            </div>
         </div>
     </div>
 </template>
@@ -139,14 +166,24 @@
 $(document).ready(function () {
     let proximoIndex = {{ count($perguntasAntigas) }};
 
+    function reordenar() {
+        $('#perguntas-container .pq-item').each(function (i) {
+            $(this).find('.pq-num').text(i + 1);
+        });
+    }
+
     $('#btn-add-pergunta').on('click', function () {
-        const html = $('#template-pergunta').html().replace(/__INDEX__/g, proximoIndex);
+        const html = $('#template-pergunta').html()
+            .replace(/__INDEX__/g, proximoIndex)
+            .replace(/__NUM__/g, proximoIndex + 1);
         $('#perguntas-container').append(html);
         proximoIndex++;
+        reordenar();
     });
 
     $(document).on('click', '.btn-remover-pergunta', function () {
-        $(this).closest('.pergunta-item').remove();
+        $(this).closest('.pq-item').remove();
+        reordenar();
     });
 });
 </script>

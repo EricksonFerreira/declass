@@ -8,6 +8,7 @@
 @stop
 
 @section('content')
+@php $corteGeral = $disciplinas->avg(fn ($d) => $d->mediaAprovacaoNaTurma()); @endphp
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span class="font-weight-bold">Médias por disciplina ({{ $disciplinas->count() }}) · {{ $total_aulas }} aula(s) registrada(s)</span>
@@ -48,16 +49,23 @@
                             </td>
                             @foreach($disciplinas as $disc)
                                 <td class="text-center">
-                                    @php $m = $mediasAluno[$disc->id]; @endphp
+                                    @php
+                                        $m = $mediasAluno[$disc->id];
+                                        $corteDisc = $disc->mediaAprovacaoNaTurma();
+                                    @endphp
                                     @if($m !== null)
-                                        <span class="badge badge-{{ $m >= 7 ? 'success' : ($m >= 5 ? 'warning' : 'danger') }}">{{ number_format($m, 1, ',', '.') }}</span>
+                                        <span class="badge badge-{{ $m >= $corteDisc ? 'success' : 'danger' }}" title="Aprovação a partir de {{ number_format($corteDisc, 1, ',', '.') }}">{{ number_format($m, 1, ',', '.') }}</span>
                                     @else
                                         <span class="text-muted">—</span>
                                     @endif
                                 </td>
                             @endforeach
                             <td class="text-center font-weight-bold">
-                                {{ $mediaGeral !== null ? number_format($mediaGeral, 1, ',', '.') : '—' }}
+                                @if($mediaGeral !== null)
+                                    <span class="badge badge-{{ $mediaGeral >= $corteGeral ? 'success' : 'danger' }}" title="Média geral — corte médio {{ number_format($corteGeral, 1, ',', '.') }}">{{ number_format($mediaGeral, 1, ',', '.') }}</span>
+                                @else
+                                    —
+                                @endif
                             </td>
                             <td class="text-center">
                                 @if($freq && $freq['pct'] !== null)

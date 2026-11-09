@@ -72,6 +72,33 @@ test('modulos do site respeitam os toggles da empresa', function () {
         ->assertDontSee('matricula/');
 });
 
+test('periodo de matricula encerrado avisa no site e esconde links de matricula', function () {
+    $empresa = empresaComSite([
+        'site_matricula' => 'F',
+        'site_matricula_ano' => '2027',
+    ]);
+    escolaDaRede($empresa);
+
+    $this->get(route('rede.site', $empresa->slug))
+        ->assertOk()
+        ->assertSee('Matrículas 2027 encerradas', false)
+        ->assertSee('s-aviso--encerrada', false)
+        ->assertDontSee('matricula/');
+});
+
+test('periodo de matricula aberto gera aviso automatico com o ano', function () {
+    $empresa = empresaComSite([
+        'site_matricula' => 'S',
+        'site_matricula_ano' => '2027',
+    ]);
+    escolaDaRede($empresa);
+
+    $this->get(route('rede.site', $empresa->slug))
+        ->assertOk()
+        ->assertSee('Matrículas 2027 abertas', false)
+        ->assertSee('matricula/');
+});
+
 test('raiz do dominio personalizado serve o site da empresa', function () {
     $empresa = empresaComSite(['dominio' => 'rede-exemplo.test']);
     escolaDaRede($empresa);

@@ -35,6 +35,11 @@
                 </div>
                 <div class="col-md-3">
                     <x-form-select name="ativo" label="Status" :options="['S' => 'Ativa', 'N' => 'Inativa']" :selected="old('ativo', $etapa->ativo ?? 'S')" />
+                    <div class="form-check mt-2">
+                        <input type="hidden" name="emite_certificado" value="0">
+                        <input type="checkbox" name="emite_certificado" value="1" class="form-check-input" id="emite_certificado" {{ old('emite_certificado', $etapa->emite_certificado ?? 0) ? 'checked' : '' }}>
+                        <label class="form-check-label small" for="emite_certificado" title="Marque apenas na etapa final do ciclo (ex.: 9º Ano EF, 3º Ano EM, ABC)">Emite certificado de conclusão</label>
+                    </div>
                 </div>
             </div>
 

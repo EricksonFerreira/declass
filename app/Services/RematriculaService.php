@@ -10,27 +10,31 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Rematricula em lote: copia as matriculas ativas de um ano letivo
- * para o ano seguinte, escolhendo a turma de destino por aluno.
+ * Rematricula em lote: copia as matriculas ativas de uma turma de
+ * origem para um ano letivo de destino, escolhendo a turma de
+ * destino por aluno.
  *
  * Regras:
- * - origem e destino precisam ser da mesma escola (transferencia
- *   entre unidades e uma operacao individual, nao em lote);
+ * - a escola de destino pode ser diferente da origem (a operacao
+ *   em lote cobre tambem transferencia entre unidades); a escola
+ *   de cadastro do aluno nao e alterada;
+ * - o ano letivo de destino precisa ser diferente do ano da turma
+ *   de origem;
  * - aluno que ja possui qualquer matricula no ano destino e pulado;
  * - numero_chamada recebe o proximo livre da turma de destino
  *   (considerando registros soft-deleted, como na aprovacao de
  *   solicitacao de matricula);
- * - plano de mensalidade e copiado da matricula de origem.
+ * - plano de mensalidade e bolsa sao copiados da matricula de origem.
  */
 class RematriculaService
 {
     public function __construct(protected EmpresaContext $empresaContext) {}
 
     /**
-     * Matriculas ativas do ano origem elegiveis para rematricula:
+     * Matriculas ativas da turma de origem elegiveis para rematricula:
      * o aluno ainda nao tem nenhuma matricula no ano destino.
      */
-    public function matriculasElegiveis(int $anoOrigemId, int $anoDestinoId, int $empresaId): Collection
+    public function matriculasElegiveis(int $turmaOrigemId, int $anoDestinoId, int $empresaId): Collection
     {
         $alunosComMatriculaDestino = Matricula::query()
             ->where('empresa_id', $empresaId)
@@ -39,25 +43,39 @@ class RematriculaService
 
         return Matricula::query()
             ->where('empresa_id', $empresaId)
-            ->where('ano_letivo_id', $anoOrigemId)
+            ->where('turma_id', $turmaOrigemId)
             ->where('status', 'ativa')
             ->whereNotIn('aluno_id', $alunosComMatriculaDestino)
-            ->with(['aluno.pessoa', 'turma.escola', 'planoMensalidade'])
+            ->with(['aluno.pessoa', 'planoMensalidade'])
             ->orderBy('numero_chamada')
             ->orderBy('id')
             ->get();
     }
 
     /**
-     * Turmas do ano letivo destino da escola informada.
+     * Todas as turmas do tenant com ocupacao (matriculas ativas),
+     * para os selects em cascata da tela.
      */
-    public function turmasDestino(int $anoDestinoId, int $escolaId, int $empresaId): Collection
+    public function turmasComOcupacao(int $empresaId): Collection
+    {
+        return Turma::query()
+            ->where('empresa_id', $empresaId)
+            ->with('etapa:id,nome')
+            ->withCount(['matriculas as alunos_ativos_count' => fn ($q) => $q->where('status', 'ativa')])
+            ->orderBy('nome')
+            ->get(['id', 'ano_letivo_id', 'etapa_id', 'nome', 'capacidade_maxima']);
+    }
+
+    /**
+     * Turmas do ano letivo destino com ocupacao (matriculas ativas).
+     */
+    public function turmasDestino(int $anoDestinoId, int $empresaId): Collection
     {
         return Turma::query()
             ->where('empresa_id', $empresaId)
             ->where('ano_letivo_id', $anoDestinoId)
-            ->where('escola_id', $escolaId)
             ->with('etapa:id,nome')
+            ->withCount(['matriculas as alunos_ativos_count' => fn ($q) => $q->where('status', 'ativa')])
             ->orderBy('nome')
             ->get();
     }
@@ -96,7 +114,7 @@ class RematriculaService
     {
         $origem = Matricula::query()
             ->where('empresa_id', $empresaId)
-            ->with(['aluno.pessoa', 'turma'])
+            ->with('aluno.pessoa')
             ->find($matriculaOrigemId);
 
         if (! $origem) {
@@ -115,10 +133,6 @@ class RematriculaService
 
         if (! $turma || (int) $turma->ano_letivo_id !== $anoDestinoId) {
             return "{$nomeAluno}: turma de destino inválida.";
-        }
-
-        if ((int) $turma->escola_id !== (int) $origem->turma?->escola_id) {
-            return "{$nomeAluno}: turma de destino é de outra escola.";
         }
 
         $jaMatriculado = Matricula::query()
@@ -152,39 +166,42 @@ class RematriculaService
     }
 
     /**
-     * Valida que os dois anos letivos existem no tenant e pertencem
-     * a mesma escola. Lanca ValidationException em caso contrario.
+     * Valida a selecao da tela: a turma de origem e o ano letivo de
+     * destino existem no tenant e o destino nao e o ano da propria
+     * turma. Lanca ValidationException em caso contrario.
+     *
+     * @return array{0: Turma, 1: \App\Models\AnoLetivo}
      */
-    public function validarAnos(int $anoOrigemId, int $anoDestinoId, int $empresaId): array
+    public function validarSelecao(int $turmaOrigemId, int $anoDestinoId, int $empresaId): array
     {
-        $anos = \App\Models\AnoLetivo::query()
+        $turmaOrigem = Turma::query()
             ->where('empresa_id', $empresaId)
-            ->whereIn('id', [$anoOrigemId, $anoDestinoId])
+            ->with(['anoLetivo.escola:id,nome', 'etapa:id,nome'])
+            ->find($turmaOrigemId);
+
+        if (! $turmaOrigem) {
+            throw ValidationException::withMessages([
+                'turma_origem' => 'Turma de origem não encontrada.',
+            ]);
+        }
+
+        $anoDestino = \App\Models\AnoLetivo::query()
+            ->where('empresa_id', $empresaId)
             ->with('escola:id,nome')
-            ->get()
-            ->keyBy('id');
+            ->find($anoDestinoId);
 
-        if ($anos->count() !== 2) {
+        if (! $anoDestino) {
             throw ValidationException::withMessages([
-                'ano_origem' => 'Ano letivo de origem ou destino não encontrado.',
+                'ano_destino' => 'Ano letivo de destino não encontrado.',
             ]);
         }
 
-        $origem = $anos[$anoOrigemId];
-        $destino = $anos[$anoDestinoId];
-
-        if ((int) $origem->escola_id !== (int) $destino->escola_id) {
+        if ((int) $turmaOrigem->ano_letivo_id === (int) $anoDestino->id) {
             throw ValidationException::withMessages([
-                'ano_destino' => 'Ano letivo de destino deve ser da mesma escola do ano de origem.',
+                'ano_destino' => 'Ano letivo de destino deve ser diferente do ano da turma de origem.',
             ]);
         }
 
-        if ($anoOrigemId === $anoDestinoId) {
-            throw ValidationException::withMessages([
-                'ano_destino' => 'Ano letivo de destino deve ser diferente do ano de origem.',
-            ]);
-        }
-
-        return [$origem, $destino];
+        return [$turmaOrigem, $anoDestino];
     }
 }

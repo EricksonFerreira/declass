@@ -175,10 +175,17 @@ class OcorrenciaController extends BaseController implements FiltroInterface, Re
 
     private function opcoesFormulario(): array
     {
+        $alunos = Aluno::query()->with(['pessoa', 'escola'])->orderBy('id')->get();
+
         return [
-            'alunos' => Aluno::query()->with('pessoa')->orderBy('id')->get()
-                ->mapWithKeys(fn ($a) => [$a->id => ($a->pessoa->nome ?? 'Aluno #'.$a->id).' — '.$a->registro_academico])
-                ->all(),
+            // Dados estruturados para o modal de busca (picker) do formulario.
+            'alunosPicker' => $alunos->map(fn (Aluno $a) => [
+                'id' => $a->id,
+                'rotulo' => $a->pessoa->nome ?? ('Aluno #'.$a->id),
+                'detalhe' => trim(($a->registro_academico ? 'RA '.$a->registro_academico.' · ' : '').($a->escola->nome ?? ''), ' ·'),
+                'escola_id' => $a->escola_id,
+                'escola' => $a->escola->nome ?? '',
+            ])->values()->all(),
             'escolas' => Escola::query()->orderBy('nome')->pluck('nome', 'id')->all(),
             'tipos' => Ocorrencia::TIPOS,
             'gravidades' => Ocorrencia::GRAVIDADES,
