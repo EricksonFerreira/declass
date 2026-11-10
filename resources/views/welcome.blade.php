@@ -202,6 +202,9 @@
         .plan-extra{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem 2.4rem;margin-top:2.2rem;padding:1.1rem 1.5rem;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(255,255,255,.04);font-size:.85rem;color:#cbd5e1}
         .plan-extra i{color:var(--accent);margin-right:.45rem}
         .plan-extra em{color:#e2e8f0;font-style:normal;font-weight:600}
+        .plan-demo-link{display:inline-flex;align-items:center;gap:.3rem;margin-left:.4rem;font-size:.72rem;font-weight:700;color:#fbbf24;background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.4);border-radius:999px;padding:.15rem .6rem;text-decoration:none;transition:background .2s}
+        .plan-demo-link:hover{background:rgba(245,158,11,.28);color:#fde68a}
+        .plan-demo-link i{font-size:.6rem}
 
         /* FAQ */
         .faq details{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:.8rem;overflow:hidden;transition:border-color .2s}
@@ -550,7 +553,9 @@
                 </div>
                 <ul>
                     <li><i class="fas fa-check"></i> Tudo do Essencial</li>
-                    <li><i class="fas fa-check"></i> <strong>Site de apresentação da escola</strong> (página pública com sua identidade)</li>
+                    <li><i class="fas fa-check"></i> <strong>Site de apresentação da escola</strong> (página pública com sua identidade)
+                        <a href="https://vilanova.ericksondev.online/" target="_blank" rel="noopener" class="plan-demo-link">ver exemplo ao vivo <i class="fas fa-external-link-alt"></i></a>
+                    </li>
                     <li><i class="fas fa-check"></i> Financeiro completo (DRE, fluxo de caixa, contas a pagar)</li>
                     <li><i class="fas fa-check"></i> Biblioteca, transporte, alimentação e estoque</li>
                     <li><i class="fas fa-check"></i> Saúde, inclusão, PEI/PDI e planos de atendimento</li>
