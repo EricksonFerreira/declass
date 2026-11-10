@@ -52,8 +52,8 @@ class MensalidadeService extends AbstractBaseService
                 COUNT(*) as cobrancas,
                 COALESCE(SUM(valor),0) as total,
                 SUM(CASE WHEN status = 'paga' THEN valor ELSE 0 END) as recebido,
-                SUM(CASE WHEN status = 'pendente' AND vencimento < CURDATE() THEN valor ELSE 0 END) as vencido,
-                SUM(CASE WHEN status = 'pendente' AND vencimento >= CURDATE() THEN valor ELSE 0 END) as a_receber
+                SUM(CASE WHEN status = 'pendente' AND vencimento < '".today()->toDateString()."' THEN valor ELSE 0 END) as vencido,
+                SUM(CASE WHEN status = 'pendente' AND vencimento >= '".today()->toDateString()."' THEN valor ELSE 0 END) as a_receber
             "))
             ->first();
 

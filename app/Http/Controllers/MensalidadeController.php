@@ -6,6 +6,7 @@ use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Requests\Mensalidade\GerarMensalidadesRequest;
 use App\Http\Requests\Mensalidade\StoreMensalidadeRequest;
 use App\Http\Requests\Mensalidade\UpdateMensalidadeRequest;
+use App\Models\Aluno;
 use App\Models\Matricula;
 use App\Models\Mensalidade;
 use App\Models\Turma;
