@@ -170,6 +170,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'pesquisa',
         'saude',
         'material',
+        'documentos',
         'despesa',
         'conta_receber',
         'fluxo_caixa',
