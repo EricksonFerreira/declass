@@ -156,7 +156,11 @@ class DiarioService extends AbstractBaseService
             return false;
         }
 
+        // Regente (sem disciplina) gerencia tudo; professor por
+        // disciplina gerencia os diarios da sua disciplina ou os
+        // que ele mesmo criou.
         return $atribuicoes->contains(fn ($a) => $a->disciplina_id === null)
+            || $atribuicoes->contains(fn ($a) => (int) $a->disciplina_id === (int) $diario->disciplina_id)
             || $diario->user_id === $user->id;
     }
 

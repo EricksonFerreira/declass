@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\AvaliacaoService;
 use App\Services\BreadcrumbService;
 use App\Services\NotaService;
+use App\Services\TurmaService;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ class AvaliacaoController extends BaseController implements FiltroInterface, Res
         protected AvaliacaoService $avaliacaoService,
         protected NotaService $notaService,
         protected BreadcrumbService $breadcrumbService,
+        protected TurmaService $turmaService,
     ) {
         $this->titulo = 'Avaliações';
         $this->nomeFiltro = 'avaliacao';
@@ -227,7 +229,6 @@ class AvaliacaoController extends BaseController implements FiltroInterface, Res
             $query->whereHas('atribuicoes', fn ($q) => $q->where('user_id', $user->id)->where('ativo', 'S'));
         }
         $turmas = $query->get();
-        $isProfessor = $user && $user->isProfessor();
 
         return [
             'turmas' => $turmas->mapWithKeys(fn (Turma $t) => [
@@ -245,17 +246,11 @@ class AvaliacaoController extends BaseController implements FiltroInterface, Res
             ])->values()->all(),
             'disciplinas' => Disciplina::query()->where('ativo', 'S')->orderBy('nome')
                 ->pluck('nome', 'id')->all(),
-            // Professor: por turma, somente as disciplinas que ele leciona.
-            'disciplinasPorTurma' => $turmas->mapWithKeys(function ($t) use ($user, $isProfessor) {
-                $disciplinas = $t->disciplinas;
-                if ($isProfessor) {
-                    $minhas = $t->atribuicoes
-                        ->where('user_id', $user->id)->where('ativo', 'S')
-                        ->pluck('disciplina_id');
-                    $disciplinas = $disciplinas->whereIn('id', $minhas);
-                }
-
-                return [$t->id => $disciplinas->mapWithKeys(fn ($d) => [$d->id => $d->nome])->all()];
+            // Professor: por turma, somente as disciplinas visiveis
+            // (regente ve todas as ofertadas — ver TurmaService).
+            'disciplinasPorTurma' => $turmas->mapWithKeys(function ($t) use ($user) {
+                return [$t->id => $this->turmaService->disciplinasVisiveisNaTurma($t, $user)
+                    ->mapWithKeys(fn ($d) => [$d->id => $d->nome])->all()];
             })->toJson(),
             'tipos' => Avaliacao::TIPOS,
             'periodosJson' => $this->periodosPorTurmaJson(),
