@@ -57,7 +57,7 @@
             ['label' => 'Solicitar', 'icone' => 'fas fa-file-signature', 'url' => route('portal.solicitacoes'), 'slug' => null, 'prefixos' => ['portal.solicitacoes']],
             ['label' => 'Menu', 'icone' => 'fas fa-bars', 'url' => route('menu.index'), 'slug' => '__menu__', 'prefixos' => []],
         ];
-    } elseif ($mobileNavUser?->isSecretaria() || $mobileNavUser?->isAdministrador() || $mobileNavUser?->isDiretoria() ?? false) {
+    } elseif ($mobileNavUser?->isSecretaria() || $mobileNavUser?->isAdministrador()) {
         // Secretaria/diretoria: rotina de atendimento e escolar
         $mobileItens = [
             ['label' => 'Início', 'icone' => 'fas fa-home', 'url' => route('home'), 'slug' => null, 'prefixos' => ['home', 'dashboard', 'admin.index']],
