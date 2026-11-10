@@ -2,68 +2,91 @@
 
 @section('title', $titulo)
 
-@section('content_header')
-    <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title title="Painel da Secretaria" subtitle="Fila de atendimento e resumo da escola" />
-@stop
-
-@push('css')
-<style>
-    .hs-card { display:flex; align-items:center; gap:.7rem; border:1px solid #eef1f6; border-radius:10px; padding:.8rem 1rem; background:#fff; height:100%; color:inherit; text-decoration:none !important; transition:box-shadow .12s, transform .12s; }
-    .hs-card:hover { box-shadow:0 4px 14px rgba(37,99,235,.10); transform:translateY(-1px); }
-    .hs-card .ic { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.05rem; color:#fff; flex-shrink:0; }
-    .hs-card b { font-size:1.35rem; line-height:1; color:#1f2937; }
-    .hs-card small { font-size:.72rem; color:#6b7280; display:block; }
-    .hs-resumo { border:1px solid #eef1f6; border-radius:10px; padding:.6rem .9rem; background:#fff; text-align:center; }
-    .hs-resumo b { display:block; font-size:1.3rem; color:#1e3a8a; }
-    .hs-resumo small { font-size:.68rem; text-transform:uppercase; color:#9ca3af; font-weight:700; }
-    .hs-acao { display:flex; align-items:center; gap:.55rem; border:1px solid #e5e7eb; border-radius:10px; padding:.6rem .9rem; background:#fff; color:#1e3a8a !important; font-weight:600; font-size:.85rem; text-decoration:none !important; }
-    .hs-acao:hover { background:#eff6ff; border-color:#bfdbfe; }
-    .hs-sec { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#2563eb; margin:1.1rem 0 .6rem; }
-    .hs-sec:first-child { margin-top:0; }
-    .hs-zero { opacity:.55; }
-</style>
-@endpush
-
 @section('content')
+@php
+    $usuario = auth()->user();
+    $hora = (int) now()->format('H');
+    $saudacao = $hora < 12 ? 'Bom dia' : ($hora < 18 ? 'Boa tarde' : 'Boa noite');
+    $primeiroNome = \Illuminate\Support\Str::of((string) $usuario->nome)->explode(' ')->first();
+    $dataExtenso = ucfirst(\Carbon\Carbon::now()->locale('pt_BR')->isoFormat('dddd, D [de] MMMM'));
 
-<div class="hs-sec"><i class="fa fa-bell mr-1"></i> Precisa de atenção</div>
+    $tiles = [
+        ['icone' => 'fas fa-inbox', 'cor' => 'bg-warning', 'valor' => $solicitacoesAbertas, 'label' => 'Solicitações', 'url' => route('solicitacao.index')],
+        ['icone' => 'fas fa-file-upload', 'cor' => 'bg-info', 'valor' => $docEnviados, 'label' => 'Docs p/ analisar', 'url' => route('documento_solicitacao.index')],
+        ['icone' => 'fas fa-file-alt', 'cor' => 'bg-danger', 'valor' => $docPendentes, 'label' => 'Docs pendentes', 'url' => route('documento_solicitacao.index')],
+        ['icone' => 'fas fa-file-medical', 'cor' => 'bg-purple', 'valor' => $atestadosEmVigor, 'label' => 'Atestados hoje', 'url' => route('justificativa.index')],
+        ['icone' => 'fas fa-exclamation-circle', 'cor' => 'bg-pink', 'valor' => $ocorrenciasSemana, 'label' => 'Ocorrências (7d)', 'url' => route('ocorrencia.index')],
+        ['icone' => 'fas fa-clipboard-question', 'cor' => 'bg-teal', 'valor' => $pesquisasAbertas, 'label' => 'Pesquisas abertas', 'url' => route('pesquisa.index')],
+    ];
+
+    $fila = collect([
+        ['titulo' => 'Solicitações das famílias', 'detalhe' => 'pedidos em aberto ou em análise', 'qtd' => $solicitacoesAbertas, 'cor' => 'bg-warning', 'url' => route('solicitacao.index')],
+        ['titulo' => 'Documentos enviados', 'detalhe' => 'aguardando análise da secretaria', 'qtd' => $docEnviados, 'cor' => 'bg-info', 'url' => route('documento_solicitacao.index')],
+        ['titulo' => 'Documentos pendentes', 'detalhe' => 'pedidos ainda não entregues', 'qtd' => $docPendentes, 'cor' => 'bg-danger', 'url' => route('documento_solicitacao.index')],
+        ['titulo' => 'Atestados e abonos', 'detalhe' => 'em vigor hoje', 'qtd' => $atestadosEmVigor, 'cor' => 'bg-purple', 'url' => route('justificativa.index')],
+        ['titulo' => 'Ocorrências da semana', 'detalhe' => 'registradas nos últimos 7 dias', 'qtd' => $ocorrenciasSemana, 'cor' => 'bg-pink', 'url' => route('ocorrencia.index')],
+        ['titulo' => 'Pesquisas abertas', 'detalhe' => 'aguardando resposta das famílias', 'qtd' => $pesquisasAbertas, 'cor' => 'bg-teal', 'url' => route('pesquisa.index')],
+    ])->filter(fn ($item) => $item['qtd'] > 0)->values();
+@endphp
+
+{{-- Saudacao --}}
+<div class="callout callout-info hs-saudacao">
+    <img class="hs-avatar" src="{{ $usuario->foto_perfil_url }}" alt="{{ $usuario->nome }}">
+    <div>
+        <h5 class="mb-0">{{ $saudacao }}, {{ $primeiroNome }}</h5>
+        <small class="text-muted"><i class="far fa-calendar mr-1"></i>{{ $dataExtenso }}</small>
+    </div>
+</div>
+
+{{-- Resumo do dia (padrao small-box do AdminLTE) --}}
 <div class="row">
-    <div class="col-12 col-md-6 col-lg-4 mb-2">
-        <a href="{{ route('solicitacao.index') }}" class="hs-card {{ $solicitacoesAbertas ? '' : 'hs-zero' }}">
-            <span class="ic" style="background:{{ $solicitacoesAbertas ? '#f59e0b' : '#9ca3af' }};"><i class="fas fa-inbox"></i></span>
-            <span><b>{{ $solicitacoesAbertas }}</b><small>solicitações das famílias em aberto</small></span>
-        </a>
+    @foreach($tiles as $t)
+        <div class="col-md-4 col-6">
+            <div class="small-box {{ $t['cor'] }}">
+                <div class="inner">
+                    <h3>{{ $t['valor'] }}</h3>
+                    <p>{{ $t['label'] }}</p>
+                </div>
+                <div class="icon"><i class="{{ $t['icone'] }}"></i></div>
+                <a href="{{ $t['url'] }}" class="small-box-footer">Abrir <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+{{-- Fila de atendimento: so o que precisa de acao --}}
+<div class="card">
+    <div class="card-header font-weight-bold d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-bell mr-1"></i> Precisa de atenção</span>
+        @if($fila->isNotEmpty())
+            <span class="badge badge-danger">{{ $fila->sum('qtd') }}</span>
+        @endif
     </div>
-    <div class="col-12 col-md-6 col-lg-4 mb-2">
-        <a href="{{ route('documento_solicitacao.index') }}" class="hs-card {{ $docEnviados ? '' : 'hs-zero' }}">
-            <span class="ic" style="background:{{ $docEnviados ? '#2563eb' : '#9ca3af' }};"><i class="fas fa-file-upload"></i></span>
-            <span><b>{{ $docEnviados }}</b><small>documentos enviados aguardando análise</small></span>
-        </a>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4 mb-2">
-        <a href="{{ route('documento_solicitacao.index') }}" class="hs-card {{ $docPendentes ? '' : 'hs-zero' }}">
-            <span class="ic" style="background:{{ $docPendentes ? '#ef4444' : '#9ca3af' }};"><i class="fas fa-file-alt"></i></span>
-            <span><b>{{ $docPendentes }}</b><small>documentos pedidos ainda não entregues</small></span>
-        </a>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4 mb-2">
-        <a href="{{ route('justificativa.index') }}" class="hs-card {{ $atestadosEmVigor ? '' : 'hs-zero' }}">
-            <span class="ic" style="background:#8b5cf6;"><i class="fas fa-file-medical"></i></span>
-            <span><b>{{ $atestadosEmVigor }}</b><small>atestados/abonos em vigor hoje</small></span>
-        </a>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4 mb-2">
-        <a href="{{ route('ocorrencia.index') }}" class="hs-card {{ $ocorrenciasSemana ? '' : 'hs-zero' }}">
-            <span class="ic" style="background:#ec4899;"><i class="fas fa-exclamation-circle"></i></span>
-            <span><b>{{ $ocorrenciasSemana }}</b><small>ocorrências na última semana</small></span>
-        </a>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4 mb-2">
-        <a href="{{ route('pesquisa.index') }}" class="hs-card {{ $pesquisasAbertas ? '' : 'hs-zero' }}">
-            <span class="ic" style="background:#14b8a6;"><i class="fas fa-clipboard-question"></i></span>
-            <span><b>{{ $pesquisasAbertas }}</b><small>pesquisas abertas para as famílias</small></span>
-        </a>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                @forelse($fila as $item)
+                    <tr class="hs-fila-linha" onclick="window.location='{{ $item['url'] }}'" style="cursor:pointer;">
+                        <td class="text-center" style="width:70px;">
+                            <span class="badge {{ $item['cor'] }} px-2 py-1">{{ $item['qtd'] }}</span>
+                        </td>
+                        <td class="font-weight-bold">{{ $item['titulo'] }}</td>
+                        <td class="text-muted">{{ $item['detalhe'] }}</td>
+                        <td class="text-right text-nowrap" style="width:60px;">
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td class="text-center text-muted py-4">
+                            <i class="fas fa-check-circle mb-1 d-block" style="font-size:1.4rem;opacity:.4;"></i>
+                            <strong>Tudo em dia</strong><br>
+                            <small>Nenhuma pendência na fila de atendimento.</small>
+                        </td>
+                    </tr>
+                @endforelse
+            </table>
+        </div>
     </div>
 </div>
 
@@ -98,4 +121,17 @@
     @endcan
 </div>
 
+<style>
+    .hs-saudacao { display: flex; align-items: center; gap: .8rem; }
+    .hs-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .hs-fila-linha td { vertical-align: middle; }
+    .hs-fila-linha:hover td { background: #f8fafc; }
+    .hs-resumo { border:1px solid #eef1f6; border-radius:10px; padding:.6rem .9rem; background:#fff; text-align:center; }
+    .hs-resumo b { display:block; font-size:1.3rem; color:#1e3a8a; }
+    .hs-resumo small { font-size:.68rem; text-transform:uppercase; color:#9ca3af; font-weight:700; }
+    .hs-acao { display:flex; align-items:center; gap:.55rem; border:1px solid #e5e7eb; border-radius:10px; padding:.6rem .9rem; background:#fff; color:#1e3a8a !important; font-weight:600; font-size:.85rem; text-decoration:none !important; }
+    .hs-acao:hover { background:#eff6ff; border-color:#bfdbfe; }
+    .hs-sec { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#2563eb; margin:1.1rem 0 .6rem; }
+    .hs-sec:first-child { margin-top:0; }
+</style>
 @stop

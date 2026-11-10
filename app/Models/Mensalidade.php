@@ -27,6 +27,13 @@ class Mensalidade extends Model
         'boleto_nome',
         'lembrete_a_vencer_em',
         'lembrete_vencida_em',
+        'gateway',
+        'gateway_payment_id',
+        'gateway_status',
+        'boleto_url',
+        'linha_digitavel',
+        'pix_copia_cola',
+        'gateway_synced_at',
     ];
 
     protected $casts = [
@@ -35,6 +42,7 @@ class Mensalidade extends Model
         'data_pagamento' => 'date',
         'lembrete_a_vencer_em' => 'datetime',
         'lembrete_vencida_em' => 'datetime',
+        'gateway_synced_at' => 'datetime',
     ];
 
     public const STATUS = [

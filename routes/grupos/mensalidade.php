@@ -19,3 +19,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('mensalidade/{id}/recibo', [MensalidadeController::class, 'recibo'])->name('mensalidade.recibo');
     Route::post('mensalidade/gerar', [MensalidadeController::class, 'gerar'])->name('mensalidade.gerar');
 });
+    Route::post('mensalidade/{id}/cobranca', [MensalidadeController::class, 'gerarCobranca'])->name('mensalidade.cobranca');
+    Route::post('mensalidade/{id}/sincronizar', [MensalidadeController::class, 'sincronizarCobranca'])->name('mensalidade.sincronizar');

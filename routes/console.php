@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Lembretes diarios de mensalidades (familias do portal).
 Schedule::command('financeiro:lembrar-vencimentos')->dailyAt('07:00');
+
+// Sincronizacao horaria das cobrancas no gateway (baixa/venecidas).
+Schedule::command('cobrancas:sincronizar')->hourly();

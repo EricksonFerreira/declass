@@ -124,6 +124,12 @@
                             <td>
                                 @php $cor = ['pendente' => 'warning', 'vencida' => 'danger', 'paga' => 'success', 'cancelada' => 'secondary'][$situacao] ?? 'secondary'; @endphp
                                 <span class="badge badge-{{ $cor }}">{{ ucfirst($situacao) }}</span>
+                                @if($mensalidade->gateway_status)
+                                    @php $corGw = ['pendente' => 'secondary', 'recebida' => 'info', 'vencida' => 'danger', 'cancelada' => 'dark'][$mensalidade->gateway_status] ?? 'secondary'; @endphp
+                                    <span class="badge badge-{{ $corGw }}" title="Status no gateway ({{ strtoupper($mensalidade->gateway) }}){{ $mensalidade->gateway_synced_at ? ' — '. $mensalidade->gateway_synced_at->format('d/m H:i') : '' }}">
+                                        <i class="fas fa-plug"></i> {{ ucfirst($mensalidade->gateway_status) }}
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 @if($mensalidade->status === 'paga')
@@ -140,12 +146,31 @@
                                             <input type="hidden" name="forma_pagamento" value="pix">
                                             <button type="submit" class="btn btn-xs btn-success" title="Baixar (receber) — registra Pix"><i class="fa fa-check"></i></button>
                                         </form>
+                                        @if(! $mensalidade->gateway_payment_id)
+                                            <form method="POST" action="{{ route('mensalidade.cobranca', $mensalidade->id) }}" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-xs btn-outline-primary" title="Gerar cobrança no gateway (boleto)"><i class="fa fa-barcode"></i></button>
+                                            </form>
+                                            <form method="POST" action="{{ route('mensalidade.cobranca', $mensalidade->id) }}" class="d-inline">
+                                                @csrf
+                                                <input type="hidden" name="metodo" value="PIX">
+                                                <button type="submit" class="btn btn-xs btn-outline-info" title="Gerar Pix no gateway"><i class="fa fa-qrcode"></i></button>
+                                            </form>
+                                        @else
+                                            <form method="POST" action="{{ route('mensalidade.sincronizar', $mensalidade->id) }}" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-xs btn-outline-secondary" title="Consultar status no gateway"><i class="fa fa-sync"></i></button>
+                                            </form>
+                                        @endif
                                     @endcan
                                 @endif
                                 @if($mensalidade->status === 'paga')
                                     @can('mensalidade.recibo')
                                         <a href="{{ route('mensalidade.recibo', $mensalidade->id) }}" class="btn btn-xs btn-outline-primary" title="Recibo de pagamento"><i class="fa fa-file-invoice"></i></a>
                                     @endcan
+                                @endif
+                                @if($mensalidade->boleto_url)
+                                    <a href="{{ $mensalidade->boleto_url }}" target="_blank" class="btn btn-xs btn-outline-secondary" title="Abrir boleto do gateway"><i class="fa fa-external-link-alt"></i></a>
                                 @endif
                                 @if($mensalidade->boleto_path)
                                     @can('mensalidade.edit')

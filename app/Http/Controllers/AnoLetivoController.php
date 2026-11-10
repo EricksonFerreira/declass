@@ -48,7 +48,7 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
         $anosLetivos = $this->anoLetivoService->getAllWithFiltersAndPagination(
-            $itensFiltered, $perPage, ['escola']
+            $itensFiltered, $perPage, ['escola', 'periodos', 'turmas']
         );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Anos Letivos', 'Vida Acadêmica');

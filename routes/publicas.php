@@ -16,3 +16,7 @@ Route::post('matricula/{empresaSlug}/{escolaSlug}', [MatriculaPublicaController:
 // No dominio personalizado da empresa o mesmo controller serve a raiz.
 Route::get('rede/{empresa:slug}', [SiteEmpresaController::class, 'show'])
     ->name('rede.site');
+
+// Webhook de cobrancas — o gateway avisa quando a mensalidade e paga.
+Route::post('webhooks/asaas', [\App\Http\Controllers\WebhookAsaasController::class, 'handle'])
+    ->name('webhook.asaas');

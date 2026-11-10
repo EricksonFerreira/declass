@@ -286,4 +286,33 @@ class MensalidadeController extends BaseController implements FiltroInterface
             'formasPagamento' => Mensalidade::FORMAS_PAGAMENTO,
         ];
     }
+
+    /** Gera boleto ou Pix no gateway configurado (Asaas). */
+    public function gerarCobranca(Request $request, int $id, \App\Services\Pagamentos\MensalidadeCobrancaService $service)
+    {
+        $mensalidade = Mensalidade::findOrFail($id);
+
+        try {
+            $service->gerar($mensalidade, $request->input('metodo', 'BOLETO'));
+
+            return back()->with('success', 'Cobrança gerada no gateway — o boleto/Pix já está disponível.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Não foi possível gerar a cobrança: '.$e->getMessage());
+        }
+    }
+
+    /** Confere o status atual da cobrança no gateway (baixa se recebida). */
+    public function sincronizarCobranca(int $id, \App\Services\Pagamentos\MensalidadeCobrancaService $service)
+    {
+        $mensalidade = Mensalidade::findOrFail($id);
+
+        try {
+            $status = $service->sincronizar($mensalidade);
+            $msg = ['recebida' => 'Pagamento recebido — mensalidade baixada!', 'vencida' => 'Cobrança vencida no gateway.', 'cancelada' => 'Cobrança cancelada no gateway.', 'pendente' => 'Ainda aguardando pagamento.'][$status] ?? $status;
+
+            return back()->with('success', $msg);
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Falha ao consultar o gateway: '.$e->getMessage());
+        }
+    }
 }

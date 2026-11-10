@@ -51,7 +51,13 @@ class Empresa extends Model
         'site_galeria',
         'site_depoimentos',
         'ativo',
+        'gateway_pagamento',
+        'gateway_api_key',
+        'gateway_ambiente',
+        'gateway_webhook_token',
     ];
+
+    protected $hidden = ['gateway_api_key'];
 
     /**
      * Modelos de layout disponiveis para o site publico da empresa

@@ -23,6 +23,8 @@ Route::middleware('auth')->prefix('empresa')->name('empresa.')->group(function (
     Route::get('minha', [EmpresaController::class, 'minhaEmpresa'])->name('minha');
     Route::get('editar', [EmpresaController::class, 'editarEmpresa'])->name('editar');
     Route::put('atualizar', [EmpresaController::class, 'atualizarEmpresa'])->name('atualizar');
+    Route::get('integracoes', [\App\Http\Controllers\EmpresaIntegracaoController::class, 'edit'])->name('integracoes');
+    Route::put('integracoes', [\App\Http\Controllers\EmpresaIntegracaoController::class, 'update'])->name('integracoes.atualizar');
 });
 
 Route::middleware('can:acessar-superadmin')->group(function () {
