@@ -51,12 +51,16 @@
             break;
         }
     }
+
+    $appliedFiltersCount = count(array_filter($itensFiltered, function ($f) {
+        return !empty($f['valor']);
+    }));
 @endphp
 
-<div class="card mb-2">
+<div class="card mb-2 filter-card">
     <div class="card-body p-2">
-        <h6 class="text-secondary text-xs mb-1"><i class="fa fa-filter mr-1"></i> Filtros</h6>
-        <hr class="m-0 mb-2">
+        <h6 class="filter-heading text-secondary text-xs mb-1"><i class="fa fa-filter mr-1"></i> Filtros</h6>
+        <hr class="filter-heading m-0 mb-2">
 
         <form method="GET" action="{{ $filtroUrl }}">
             <div class="row align-items-end">
@@ -69,7 +73,7 @@
                         $filterWhere = $filter['typeWhere'] ?? 'where';
                         $filterType = in_array($filter['type'] ?? 'text', ['text', 'date', 'number']) ? ($filter['type'] ?? 'text') : 'text';
                     @endphp
-                    <div class="col-auto flex-grow-1">
+                    <div class="col-auto flex-grow-1 filter-field">
                         <label class="text-xs mb-0" for="{{ $filterName }}">{{ $filterLabel }}</label>
                         @if ($hasOptions)
                             <select
@@ -101,10 +105,18 @@
                     </div>
                 @endforeach
 
-                <div class="col-auto d-flex align-items-end gap-1" style="gap:6px;">
+                <div class="col-auto d-flex align-items-end" style="gap:6px;">
+                    <button type="button" id="toggle-filters-mobile"
+                        class="btn btn-sm btn-outline-secondary d-md-none"
+                        aria-expanded="false" aria-label="Abrir filtros">
+                        <i class="fa fa-filter mr-1"></i> Filtros
+                        @if ($appliedFiltersCount > 0)
+                            <span class="badge badge-primary ml-1">{{ $appliedFiltersCount }}</span>
+                        @endif
+                    </button>
                     @if (count($additionalFilters) > 0)
                         <button type="button" id="toggle-filters"
-                            class="btn btn-sm btn-outline-secondary"
+                            class="btn btn-sm btn-outline-secondary filter-toggle-desktop"
                             title="Filtros adicionais" data-toggle="tooltip">
                             <i class="fa fa-angle-double-down"></i>
                         </button>
@@ -127,7 +139,7 @@
                             $filterWhere = $filter['typeWhere'] ?? 'where';
                             $filterType = in_array($filter['type'] ?? 'text', ['text', 'date', 'number']) ? ($filter['type'] ?? 'text') : 'text';
                         @endphp
-                        <div class="col-auto flex-grow-1">
+                        <div class="col-auto flex-grow-1 filter-field">
                             <label class="text-xs mb-0" for="{{ $filterName }}">{{ $filterLabel }}</label>
                             @if ($hasOptions)
                                 <select
@@ -225,10 +237,37 @@
         });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initToggleFilters);
-    } else {
+    // Mobile: botão "Filtros" expande/colapsa todos os campos do form
+    function initMobileFilterToggle() {
+        var btn = document.getElementById('toggle-filters-mobile');
+        if (!btn) return;
+        var form = btn.closest('form');
+        var af = document.getElementById('additional-filters');
+        var arrow = document.getElementById('toggle-filters');
+        if (!form) return;
+
+        btn.addEventListener('click', function () {
+            var open = form.classList.toggle('filters-open');
+            if (af) af.style.display = open ? '' : 'none';
+            if (arrow) {
+                arrow.innerHTML = open
+                    ? '<i class="fa fa-angle-double-up"></i>'
+                    : '<i class="fa fa-angle-double-down"></i>';
+                arrow.setAttribute('title', open ? 'Ocultar filtros adicionais' : 'Exibir filtros adicionais');
+            }
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+    }
+
+    function init() {
         initToggleFilters();
+        initMobileFilterToggle();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
 })();
 </script>

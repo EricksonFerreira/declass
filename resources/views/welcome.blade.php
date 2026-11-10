@@ -298,7 +298,7 @@
                         ['desktop-portal-home.png', 'Portal da família, notas, frequência e avisos'],
                     ] as $idx => [$img, $cap])
                         <div class="car-slide {{ $idx === 0 ? 'on' : '' }}">
-                            <img src="{{ asset('img/mockups/'.$img) }}" alt="{{ $cap }}" loading="{{ $idx === 0 ? 'eager' : 'lazy' }}">
+                            <img src="{{ asset('img/mockups/'.$img.'?v=3') }}" alt="{{ $cap }}" loading="{{ $idx === 0 ? 'eager' : 'lazy' }}">
                             <div class="car-cap">{{ $cap }}</div>
                         </div>
                     @endforeach
@@ -371,7 +371,7 @@
             <div class="feat-mock">
                 <div class="mini-mock">
                     <div class="mm-bar"><span></span><span></span><span></span></div>
-                    <img src="{{ asset('img/mockups/desktop-secretaria-matricula.png') }}" alt="Solicitações de matrícula" loading="lazy" class="mm-img">
+                    <img src="{{ asset('img/mockups/desktop-secretaria-matricula.png?v=3') }}" alt="Solicitações de matrícula" loading="lazy" class="mm-img">
                 </div>
             </div>
         </div>
@@ -390,7 +390,7 @@
             <div class="feat-mock">
                 <div class="mini-mock">
                     <div class="mm-bar"><span></span><span></span><span></span></div>
-                    <img src="{{ asset('img/mockups/desktop-secretaria-mensalidade.png') }}" alt="Gestão de mensalidades" loading="lazy" class="mm-img">
+                    <img src="{{ asset('img/mockups/desktop-secretaria-mensalidade.png?v=3') }}" alt="Gestão de mensalidades" loading="lazy" class="mm-img">
                 </div>
             </div>
         </div>
@@ -409,7 +409,7 @@
             <div class="feat-mock">
                 <div class="mini-mock">
                     <div class="mm-bar"><span></span><span></span><span></span></div>
-                    <img src="{{ asset('img/mockups/desktop-portal-home.png') }}" alt="Portal da família" loading="lazy" class="mm-img">
+                    <img src="{{ asset('img/mockups/desktop-portal-home.png?v=3') }}" alt="Portal da família" loading="lazy" class="mm-img">
                 </div>
             </div>
         </div>
@@ -428,7 +428,7 @@
             <div class="feat-mock">
                 <div class="mini-mock">
                     <div class="mm-bar"><span></span><span></span><span></span></div>
-                    <img src="{{ asset('img/mockups/desktop-secretaria-home.png') }}" alt="Painel de cada perfil" loading="lazy" class="mm-img">
+                    <img src="{{ asset('img/mockups/desktop-secretaria-home.png?v=3') }}" alt="Painel de cada perfil" loading="lazy" class="mm-img">
                 </div>
             </div>
         </div>
@@ -468,11 +468,11 @@
         <div class="shots-grid">
             <div class="shot-browser">
                 <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-                <img src="{{ asset('img/mockups/desktop-secretaria-home.png') }}" alt="Painel da secretaria no computador" loading="lazy">
+                <img src="{{ asset('img/mockups/desktop-secretaria-home.png?v=3') }}" alt="Painel da secretaria no computador" loading="lazy">
                 <div class="shot-caption"><i class="fas fa-desktop"></i> Painel da secretaria, fila de atendimento, resumo da escola e ações rápidas</div>
             </div>
             <div class="shot-phone">
-                <img src="{{ asset('img/mockups/mobile-portal-home.png') }}" alt="Portal da família no celular" loading="lazy">
+                <img src="{{ asset('img/mockups/mobile-portal-home.png?v=3') }}" alt="Portal da família no celular" loading="lazy">
                 <div class="shot-caption"><i class="fas fa-mobile-alt"></i> Portal da família, notas, frequência e avisos no bolso</div>
             </div>
         </div>
@@ -480,17 +480,17 @@
         <div class="shots-row">
             <div class="shot-browser">
                 <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-                <img src="{{ asset('img/mockups/desktop-secretaria-turmas.png') }}" alt="Gestão de turmas" loading="lazy">
+                <img src="{{ asset('img/mockups/desktop-secretaria-turmas.png?v=3') }}" alt="Gestão de turmas" loading="lazy">
                 <div class="shot-caption"><i class="fas fa-users"></i> Gestão de turmas</div>
             </div>
             <div class="shot-browser">
                 <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-                <img src="{{ asset('img/mockups/desktop-secretaria-alunos.png') }}" alt="Gestão de alunos" loading="lazy">
+                <img src="{{ asset('img/mockups/desktop-secretaria-alunos.png?v=3') }}" alt="Gestão de alunos" loading="lazy">
                 <div class="shot-caption"><i class="fas fa-user-graduate"></i> Cadastro de alunos</div>
             </div>
             <div class="shot-browser">
                 <div class="browser-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-                <img src="{{ asset('img/mockups/desktop-secretaria-avaliacao.png') }}" alt="Avaliações e lançamento de notas" loading="lazy">
+                <img src="{{ asset('img/mockups/desktop-secretaria-avaliacao.png?v=3') }}" alt="Avaliações e lançamento de notas" loading="lazy">
                 <div class="shot-caption"><i class="fas fa-clipboard-check"></i> Avaliações e lançamento de notas</div>
             </div>
         </div>

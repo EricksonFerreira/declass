@@ -79,6 +79,77 @@
     color: #0b3d91 !important;
 }
 
+/* Seletor de escola da sessão no menu lateral (so aparece para quem tem
+   mais de uma unidade permitida — ver partial escola-context-select) */
+.main-sidebar .escola-context-block {
+    padding: .55rem 1rem .7rem;
+    border-bottom: 1px solid rgba(15, 23, 42, .09);
+    margin-bottom: .15rem;
+}
+
+.main-sidebar .escola-context-label {
+    display: block;
+    font-size: .66rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: rgba(15, 23, 42, .45);
+    margin-bottom: .3rem;
+}
+
+.main-sidebar .escola-context-select {
+    width: 100%;
+    height: 34px;
+    padding: 4px 30px 4px 10px;
+    font-size: .82rem;
+    font-weight: 600;
+    border-radius: .45rem;
+    border: 1px solid #d5d9e0;
+    background: #fff url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath fill='%23343a40' d='M0 2l4 4 4-4z'/%3E%3C/svg%3E") no-repeat right .6rem center;
+    background-size: 9px;
+    color: #1f2d3d;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+.main-sidebar .escola-context-select:focus {
+    border-color: #8fb3e8;
+    box-shadow: 0 0 0 2px rgba(11, 61, 145, .15);
+    outline: none;
+}
+
+.main-sidebar .escola-context-select option {
+    color: #1f2d3d;
+    background: #fff;
+}
+
+/* Dark mode */
+.dark-mode .main-sidebar .escola-context-block {
+    border-bottom-color: rgba(255, 255, 255, .09);
+}
+
+.dark-mode .main-sidebar .escola-context-label {
+    color: rgba(255, 255, 255, .5);
+}
+
+.dark-mode .main-sidebar .escola-context-select {
+    border-color: rgba(255, 255, 255, .2);
+    background-color: rgba(255, 255, 255, .09);
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath fill='%23ffffff' d='M0 2l4 4 4-4z'/%3E%3C/svg%3E");
+    color: #fff;
+}
+
+.dark-mode .main-sidebar .escola-context-select:focus {
+    border-color: rgba(255, 255, 255, .45);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, .12);
+}
+
+.dark-mode .main-sidebar .escola-context-select option {
+    color: #1f2d3d;
+    background: #fff;
+}
+
 /* =====================================================================
    Abas de conteúdo (nav-tabs-app) — visual de controle segmentado
    ===================================================================== */
@@ -172,4 +243,33 @@
     }
     .nav-tabs .nav-item { flex-shrink: 0; }
     .nav-tabs .nav-link { white-space: nowrap; }
+}
+
+/* =====================================================================
+   Mobile — padrões de app: título sem subtítulo, filtros colapsáveis
+   (NN/g bottom-sheet, Baymard, Shopify, Material lists)
+   ===================================================================== */
+@media (max-width: 767.98px) {
+    /* Apps exibem só o título no cabeçalho — subtítulo some no celular */
+    .page-title__subtitle { display: none; }
+    .page-title h3 { font-size: 1.15rem; }
+
+    /* "Itens por página" é controle de densidade de desktop */
+    .per-page-selector { display: none !important; }
+
+    /* Filtros: campos ficam atrás do botão "Filtros" (entrada -> seleção -> retorno) */
+    .filter-card .filter-heading { display: none; }
+    .filter-card .filter-toggle-desktop { display: none; }
+    .filter-card form .filter-field { display: none; }
+    .filter-card form.filters-open .filter-field {
+        display: block;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .filter-card form.filters-open #additional-filters { display: flex !important; }
+
+    /* Alvos de toque confortáveis dentro do painel de filtros */
+    .filter-card .filter-field .form-control,
+    .filter-card .filter-field .select2-selection { min-height: 38px; }
+    .filter-card .filter-field .select2-selection__rendered { line-height: 36px; }
 }

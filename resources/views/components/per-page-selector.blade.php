@@ -7,10 +7,10 @@
 @endphp
 
 @if ($perPageAction)
-    <form method="POST" action="{{ $perPageAction }}" class="d-flex flex-row align-items-end mr-2 mb-0">
+    <form method="POST" action="{{ $perPageAction }}" class="per-page-selector d-flex flex-row align-items-end mr-2 mb-0">
         @csrf
 @else
-    <div class="d-flex flex-row align-items-end mr-2">
+    <div class="per-page-selector d-flex flex-row align-items-end mr-2">
 @endif
         <label for="perPage" class="text-xs font-weight-normal mr-2" style="margin:0px;color:#6c757d">Itens Página</label>
         <select name="perPage" id="perPage" class="form-control form-control-sm p-0" onchange="this.form.submit()"

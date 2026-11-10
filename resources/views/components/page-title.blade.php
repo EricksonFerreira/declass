@@ -2,7 +2,7 @@
     <div>
         <h3 class="mb-0 font-weight-bold">{{ $title }}</h3>
         @if (!empty($subtitle))
-            <div class="text-muted" style="font-size:.86rem;">{{ $subtitle }}</div>
+            <div class="page-title__subtitle text-muted" style="font-size:.86rem;">{{ $subtitle }}</div>
         @endif
     </div>
 
