@@ -18,6 +18,9 @@
             <span class="badge align-self-center" style="background:{{ $corDisc['tx'] }}; color:{{ $corDisc['bg'] }}">{{ $tarefa->disciplina->sigla }}</span>
         @endif
         <span class="badge badge-{{ $corSituacao }} align-self-center">{{ $txtSituacao }}</span>
+        @if($isResponsavel)
+            <span class="badge badge-secondary align-self-center"><i class="fas fa-eye mr-1"></i>Acompanhando</span>
+        @endif
     </x-page-title>
 @stop
 
@@ -30,8 +33,20 @@
 @if(session('success'))<div class="alert alert-success"><i class="fas fa-check-circle mr-1"></i> {{ session('success') }}</div>@endif
 @if($errors->any())<div class="alert alert-danger"><i class="fas fa-exclamation-triangle mr-1"></i> Confira as respostas: {{ $errors->first() }}</div>@endif
 @if($isResponsavel)
-    <div class="callout callout-info py-2">
-        <i class="fas fa-eye mr-1"></i> Você está acompanhando esta atividade — apenas o aluno pode responder.
+    <div class="alert shadow-sm d-flex align-items-start mb-3" role="alert"
+         style="background:linear-gradient(90deg,#fffbeb,#fef3c7);border:1px solid #fcd34d;border-left:5px solid #d97706;border-radius:.6rem;">
+        <div class="mr-3" style="font-size:1.5rem;color:#d97706;line-height:1;">
+            <i class="fas fa-eye"></i>
+        </div>
+        <div>
+            <div class="font-weight-bold" style="color:#92400e;">
+                Você está acompanhando esta atividade
+            </div>
+            <div class="small" style="color:#a16207;">
+                Apenas <strong>{{ $matricula->aluno->pessoa->nome ?? $matricula->aluno->nome }}</strong> pode responder e enviar.
+                Você visualiza tudo em modo somente leitura.
+            </div>
+        </div>
     </div>
 @endif
 

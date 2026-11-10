@@ -203,30 +203,54 @@
         flex-wrap: wrap;
     }
 
+    /* Mobile/tablet: cards em grid 2-3 colunas e acoes compactas.
+       Seletor forte (.ux-index-body[data-view]) vence os overrides
+       por tela (.x-cards.ux-cards) sem precisar de !important. */
     @media (max-width: 991.98px) {
-        .ux-cards {
-            grid-template-columns: 1fr;
-            padding: 6px 4px 12px;
+        .ux-index-body[data-view="cards"] .ux-card__foot {
+            flex-direction: row;
+            justify-content: flex-end;
+            gap: 6px;
+            padding: 8px 10px 10px;
         }
 
-        .ux-card__foot {
-            flex-direction: column;
-            gap: 8px;
+        .ux-index-body[data-view="cards"] .ux-card__foot form {
+            width: auto;
+            display: inline;
         }
 
-        .ux-card__foot form {
-            width: 100%;
-            display: block;
-        }
-
-        .ux-card__foot .btn {
-            width: 100%;
-            min-height: 40px;
+        .ux-index-body[data-view="cards"] .ux-card__foot .btn {
+            width: auto;
+            min-height: 0;
+            height: 32px;
+            padding: 0 .55rem;
+            font-size: .72rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: .85rem;
         }
+    }
+
+    @media (max-width: 767.98px) {
+        /* Celular: 2 cards por linha (padrao mobile comprovado;
+           3 colunas deixaria ~110px por card, apertado demais) */
+        .ux-index-body[data-view="cards"] .ux-cards {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 8px 4px 12px;
+        }
+
+        .ux-index-body[data-view="cards"] .ux-card__head { padding: 9px 10px 7px; gap: 7px; }
+        .ux-index-body[data-view="cards"] .ux-card__avatar { width: 30px; height: 30px; border-radius: 8px; font-size: .62rem; }
+        .ux-index-body[data-view="cards"] .ux-card__title { font-size: .74rem; }
+        .ux-index-body[data-view="cards"] .ux-card__sub { font-size: .64rem; }
+        .ux-index-body[data-view="cards"] .ux-card__badges { gap: 4px; }
+        .ux-index-body[data-view="cards"] .ux-card__badge { font-size: .56rem; padding: 2px 5px; }
+        .ux-index-body[data-view="cards"] .ux-card__meta { padding: 6px 10px 4px; gap: 4px 8px; }
+        .ux-index-body[data-view="cards"] .ux-card__meta-label { font-size: .56rem; }
+        .ux-index-body[data-view="cards"] .ux-card__meta-value { font-size: .68rem; white-space: normal; }
+        .ux-index-body[data-view="cards"] .ux-card__foot { padding: 6px 10px 8px; gap: 5px; }
+        .ux-index-body[data-view="cards"] .ux-card__foot .btn { height: 32px; font-size: .7rem; padding: 0 .5rem; }
     }
 
     @media (max-width: 575.98px) {
@@ -235,7 +259,8 @@
             position: static;
         }
 
-        .ux-card__meta {
+        /* Meta em 1 coluna nos cards estreitos do celular */
+        .ux-index-body[data-view="cards"] .ux-card__meta {
             grid-template-columns: 1fr;
         }
 
