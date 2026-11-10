@@ -42,7 +42,10 @@ class DisciplinaController extends BaseController implements FiltroInterface, Re
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $disciplinas = $this->disciplinaService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
+        $disciplinas = $this->disciplinaService->getAllWithFiltersAndPagination(
+            $itensFiltered, $perPage, [], 'nome', 'asc',
+            fn ($query) => $query->withCount('turmas')
+        );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Disciplinas', 'Vida Acadêmica');
         $filters = $this->obterFiltrosPrincipais();
@@ -141,7 +144,10 @@ class DisciplinaController extends BaseController implements FiltroInterface, Re
             [
                 'name' => 'ativo', 'label' => 'Status', 'type' => 'select',
                 'typeWhere' => 'where',
-                'options' => ['S' => 'Ativo', 'N' => 'Inativo'],
+                'options' => [
+                    ['value' => 'S', 'label' => 'Ativa', 'selected' => false],
+                    ['value' => 'N', 'label' => 'Inativa', 'selected' => false],
+                ],
             ],
         ];
     }

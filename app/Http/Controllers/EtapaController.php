@@ -43,7 +43,10 @@ class EtapaController extends BaseController implements FiltroInterface, Resourc
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $etapas = $this->etapaService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
+        $etapas = $this->etapaService->getAllWithFiltersAndPagination(
+            $itensFiltered, $perPage, [], 'ordem', 'asc',
+            fn ($query) => $query->withCount('turmas')
+        );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Etapas', 'Vida Acadêmica');
         $filters = $this->obterFiltrosPrincipais();
@@ -143,12 +146,17 @@ class EtapaController extends BaseController implements FiltroInterface, Resourc
             [
                 'name' => 'segmento', 'label' => 'Segmento', 'type' => 'select',
                 'typeWhere' => 'where',
-                'options' => Etapa::SEGMENTOS,
+                'options' => collect(Etapa::SEGMENTOS)
+                    ->map(fn ($label, $v) => ['value' => $v, 'label' => $label, 'selected' => false])
+                    ->values()->all(),
             ],
             [
                 'name' => 'ativo', 'label' => 'Status', 'type' => 'select',
                 'typeWhere' => 'where',
-                'options' => ['S' => 'Ativo', 'N' => 'Inativo'],
+                'options' => [
+                    ['value' => 'S', 'label' => 'Ativa', 'selected' => false],
+                    ['value' => 'N', 'label' => 'Inativa', 'selected' => false],
+                ],
             ],
         ];
     }

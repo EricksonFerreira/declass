@@ -254,7 +254,7 @@
                 </div>
                 <div class="plt-segs" id="pltSegs"></div>
             </div>
-            <div class="modal-body pt-3 pb-2">
+            <div class="modal-body p-0">
                 <div class="plt-info">
                     <div class="plt-info__item">
                         <div class="plt-info__label"><i class="fas fa-calendar-alt"></i>Ano letivo</div>
