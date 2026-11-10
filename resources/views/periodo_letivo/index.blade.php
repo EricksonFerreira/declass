@@ -29,12 +29,58 @@
         .plt-cards .ux-card--muted:hover { opacity: .9; }
         tr.plt-item { cursor: pointer; }
 
-        .plt-modal { border: none; border-radius: 16px; overflow: hidden; }
-        .plt-modal__bar { height: 5px; background: #64748b; }
-        .plt-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: .78rem; color: #64748b; margin-top: 3px; }
-        .plt-meta i { color: #94a3b8; margin-right: 3px; }
-        .plt-sec { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin: 14px 0 5px; }
-        .plt-sec i { margin-right: 4px; }
+        .plt-modal { border: none; border-radius: 18px; overflow: hidden; box-shadow: 0 24px 60px rgba(11,18,32,.28); }
+        .plt-modal__hero {
+            display: flex; align-items: center; gap: 14px;
+            padding: 18px 20px 16px; color: #fff;
+            background: linear-gradient(135deg, #334155, #0f172a);
+        }
+        .plt-modal--ativo .plt-modal__hero { background: linear-gradient(135deg, #16a34a, #15803d); }
+        .plt-modal__medal {
+            width: 54px; height: 54px; border-radius: 15px; flex-shrink: 0;
+            background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: 800; letter-spacing: .02em;
+        }
+        .plt-modal__hero-info { flex: 1; min-width: 0; }
+        .plt-modal__title { font-size: 1.06rem; font-weight: 800; margin: 0; color: #fff; line-height: 1.25; }
+        .plt-modal__sub { font-size: .76rem; opacity: .82; margin-top: 3px; }
+        .plt-modal__status {
+            display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+            font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+            padding: 5px 11px; border-radius: 999px;
+            background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.32);
+            white-space: nowrap;
+        }
+        .plt-modal__status i { font-size: .55rem; }
+        .plt-modal__close {
+            width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12);
+            color: #fff; font-size: .8rem; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .plt-modal__close:hover { background: rgba(255,255,255,.28); color: #fff; }
+        .plt-modal__progress { padding: 14px 20px 8px; }
+        .plt-progress-label {
+            display: flex; justify-content: space-between; align-items: baseline;
+            font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #64748b;
+        }
+        .plt-segs { display: flex; gap: 6px; margin-top: 8px; }
+        .plt-seg { flex: 1; height: 7px; border-radius: 99px; background: #e8edf5; transition: background .3s; }
+        .plt-modal--ativo .plt-seg--on { background: #22c55e; }
+        .plt-modal--inativo .plt-seg--on { background: #94a3b8; }
+        .plt-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 18px; padding: 10px 20px 14px; }
+        .plt-info__item { min-width: 0; }
+        .plt-info__label {
+            display: flex; align-items: center; gap: 5px;
+            font-size: .63rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #94a3b8; margin-bottom: 3px;
+        }
+        .plt-info__label i { font-size: .6rem; }
+        .plt-info__value { font-size: .85rem; font-weight: 600; color: #0f172a; }
+        @media (max-width: 575.98px) {
+            .plt-info { grid-template-columns: 1fr; }
+            .plt-modal__medal { width: 44px; height: 44px; font-size: 1rem; border-radius: 12px; }
+        }
     </style>
 @endpush
 
@@ -55,6 +101,8 @@
                 <article class="ux-card plt-item {{ $ativo ? '' : 'ux-card--muted' }}" data-plt
                     data-nome="{{ $periodo->nome }}"
                     data-ordem="{{ $periodo->ordem }}º"
+                    data-ordem-num="{{ $periodo->ordem }}"
+                    data-periodicidade-key="{{ $periodo->anoLetivo->periodicidade ?? '' }}"
                     data-ano="{{ $periodo->anoLetivo->ano ?? '—' }}"
                     data-escola="{{ $periodo->escola->nome ?? '—' }}"
                     data-periodicidade="{{ \App\Models\AnoLetivo::PERIODICIDADES[$periodo->anoLetivo->periodicidade ?? ''] ?? '—' }}"
@@ -130,6 +178,8 @@
                         <tr class="plt-item" data-plt
                             data-nome="{{ $periodo->nome }}"
                             data-ordem="{{ $periodo->ordem }}º"
+                            data-ordem-num="{{ $periodo->ordem }}"
+                            data-periodicidade-key="{{ $periodo->anoLetivo->periodicidade ?? '' }}"
                             data-ano="{{ $periodo->anoLetivo->ano ?? '—' }}"
                             data-escola="{{ $periodo->escola->nome ?? '—' }}"
                             data-periodicidade="{{ \App\Models\AnoLetivo::PERIODICIDADES[$periodo->anoLetivo->periodicidade ?? ''] ?? '—' }}"
@@ -186,32 +236,53 @@
 
 {{-- Modal de detalhes do periodo (compartilhado por cards e tabela) --}}
 <div class="modal fade" id="modalPeriodo" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content plt-modal">
-            <div class="plt-modal__bar" id="pltBar"></div>
-            <div class="modal-header border-0 pb-1">
-                <div class="pr-2">
-                    <div class="d-flex align-items-center flex-wrap" style="gap:.35rem;">
-                        <span class="badge" id="pltStatus"></span>
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content plt-modal plt-modal--inativo" id="pltModalCard">
+            <div class="plt-modal__hero">
+                <div class="plt-modal__medal" id="pltOrdemMedal"></div>
+                <div class="plt-modal__hero-info">
+                    <h5 class="plt-modal__title" id="pltNome"></h5>
+                    <div class="plt-modal__sub" id="pltSub"></div>
+                </div>
+                <span class="plt-modal__status"><i class="fas fa-circle"></i><span id="pltStatus"></span></span>
+                <button type="button" class="plt-modal__close" data-dismiss="modal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="plt-modal__progress" id="pltProgressWrap" style="display:none;">
+                <div class="plt-progress-label">
+                    <span id="pltProgressText"></span>
+                    <span id="pltProgressPct"></span>
+                </div>
+                <div class="plt-segs" id="pltSegs"></div>
+            </div>
+            <div class="modal-body pt-3 pb-2">
+                <div class="plt-info">
+                    <div class="plt-info__item">
+                        <div class="plt-info__label"><i class="fas fa-calendar-alt"></i>Ano letivo</div>
+                        <div class="plt-info__value" id="pltAno"></div>
                     </div>
-                    <h5 class="modal-title font-weight-bold mt-2 mb-0" id="pltNome"></h5>
-                    <div class="plt-meta">
-                        <span><i class="fas fa-calendar-alt"></i><span id="pltAno"></span></span>
-                        <span><i class="fas fa-school"></i><span id="pltEscola"></span></span>
+                    <div class="plt-info__item">
+                        <div class="plt-info__label"><i class="fas fa-school"></i>Escola</div>
+                        <div class="plt-info__value" id="pltEscola"></div>
+                    </div>
+                    <div class="plt-info__item">
+                        <div class="plt-info__label"><i class="fas fa-sort-numeric-down"></i>Ordem</div>
+                        <div class="plt-info__value" id="pltOrdem"></div>
+                    </div>
+                    <div class="plt-info__item">
+                        <div class="plt-info__label"><i class="far fa-calendar"></i>Início</div>
+                        <div class="plt-info__value" id="pltInicio"></div>
+                    </div>
+                    <div class="plt-info__item">
+                        <div class="plt-info__label"><i class="far fa-calendar-check"></i>Término</div>
+                        <div class="plt-info__value" id="pltFim"></div>
+                    </div>
+                    <div class="plt-info__item">
+                        <div class="plt-info__label"><i class="fas fa-layer-group"></i>Periodicidade</div>
+                        <div class="plt-info__value" id="pltPeriodicidade"></div>
                     </div>
                 </div>
-                <button type="button" class="close align-self-start" data-dismiss="modal" aria-label="Fechar"><span aria-hidden="true">&times;</span></button>
             </div>
-            <div class="modal-body pt-2">
-                <div class="plt-sec"><i class="far fa-calendar"></i>Período letivo</div>
-                <dl class="row mb-0" style="font-size:.85rem;">
-                    <dt class="col-sm-4">Ordem</dt><dd class="col-sm-8" id="pltOrdem"></dd>
-                    <dt class="col-sm-4">Início</dt><dd class="col-sm-8" id="pltInicio"></dd>
-                    <dt class="col-sm-4">Término</dt><dd class="col-sm-8" id="pltFim"></dd>
-                    <dt class="col-sm-4">Periodicidade</dt><dd class="col-sm-8" id="pltPeriodicidade"></dd>
-                </dl>
-            </div>
-            <div class="modal-footer border-0 pt-0 justify-content-between">
+            <div class="modal-footer border-0 pt-2 pb-3 justify-content-between">
                 <small class="text-muted">Período letivo</small>
                 <div>
                     @can('periodo_letivo.show')
@@ -230,18 +301,25 @@
 @push('js')
 <script>
 $(function () {
-    var STATUS_BADGE = {S: 'badge-success', N: 'badge-secondary'};
-    var STATUS_COR = {S: '#16a34a', N: '#64748b'};
+    // total de periodos por periodicidade (espelha PeriodoLetivoService::NOMES_POR_PERIODICIDADE)
+    var PER_TOTAL = {bimestral: 4, trimestral: 3, semestral: 2, anual: 1};
 
     $(document).on('click', '.plt-item', function (e) {
         // botoes/links dentro do item nao abrem o modal
         if ($(e.target).closest('a, button, form, input, summary').length) return;
 
         var d = this.dataset;
-        $('#pltBar').css('background', STATUS_COR[d.statusKey] || '#64748b');
-        $('#pltStatus').attr('class', 'badge ' + (STATUS_BADGE[d.statusKey] || 'badge-secondary')).text(d.status || '—');
+        var ativo = d.statusKey === 'S';
+
+        $('#pltModalCard')
+            .toggleClass('plt-modal--ativo', ativo)
+            .toggleClass('plt-modal--inativo', !ativo);
+
+        $('#pltOrdemMedal').text(d.ordem || '—');
         $('#pltNome').text(d.nome || '—');
-        $('#pltAno').text(d.ano ? 'Ano letivo ' + d.ano : '—');
+        $('#pltSub').text([d.ano ? 'Ano letivo ' + d.ano : null, d.escola].filter(Boolean).join(' · '));
+        $('#pltStatus').text(d.status || '—');
+        $('#pltAno').text(d.ano || '—');
         $('#pltEscola').text(d.escola || '—');
         $('#pltOrdem').text(d.ordem || '—');
         $('#pltInicio').text(d.inicio || '—');
@@ -249,6 +327,23 @@ $(function () {
         $('#pltPeriodicidade').text(d.periodicidade || '—');
         $('#pltShow').attr('href', d.show || '#');
         $('#pltEdit').attr('href', d.edit || '#');
+
+        // progresso: posicao do periodo dentro do ano letivo
+        var ordemNum = parseInt(d.ordemNum, 10) || 0;
+        var total = PER_TOTAL[d.periodicidadeKey] || 0;
+        var $wrap = $('#pltProgressWrap');
+        if (total > 0 && ordemNum > 0 && ordemNum <= total) {
+            $('#pltProgressText').text('Período ' + ordemNum + ' de ' + total);
+            $('#pltProgressPct').text(Math.round((ordemNum / total) * 100) + '% do ano letivo');
+            var $segs = $('#pltSegs').empty();
+            for (var i = 1; i <= total; i++) {
+                $segs.append($('<div>').addClass('plt-seg' + (i <= ordemNum ? ' plt-seg--on' : '')));
+            }
+            $wrap.show();
+        } else {
+            $wrap.hide();
+        }
+
         $('#modalPeriodo').modal('show');
     });
 });

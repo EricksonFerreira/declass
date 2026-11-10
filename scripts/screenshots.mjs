@@ -44,16 +44,16 @@ await mob.close();
 // ---- FAMILIA/ALUNO (desktop + mobile) ----
 const desk2 = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
 page = await desk2.newPage();
-await login(page, 'responsavel.demo@escolademo.test');
-await shot(page, '/portal', 'desktop-portal-home', 1400);
-await shot(page, '/portal/horarios', 'desktop-portal-horarios', 1200);
+await login(page, 'responsavel@escolademo.test');
+await shot(page, '/admin/portal', 'desktop-portal-home', 1400);
+await shot(page, '/admin/portal/horarios', 'desktop-portal-horarios', 1200);
 await desk2.close();
 
 const mob2 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, deviceScaleFactor: 2 });
 page = await mob2.newPage();
-await login(page, 'responsavel.demo@escolademo.test');
-await shot(page, '/portal', 'mobile-portal-home', 1400);
-await shot(page, '/portal/avisos', 'mobile-portal-avisos', 1200);
+await login(page, 'responsavel@escolademo.test');
+await shot(page, '/admin/portal', 'mobile-portal-home', 1400);
+await shot(page, '/admin/portal/avisos', 'mobile-portal-avisos', 1200);
 await mob2.close();
 
 await browser.close();
