@@ -77,6 +77,7 @@
                 $empresasMenu = \Illuminate\Support\Facades\DB::table('empresas')->orderBy('nome')->pluck('nome', 'id')->toArray();
             @endphp
 
+            @can('acessar-superadmin')
             <li class="user-body empresa-context-body">
                 <div class="empresa-context-select">
                     <label>Empresa da sessão</label>
@@ -105,6 +106,7 @@
                     </a>
                 </div>
             </li>
+            @endcan
         @endif
 
         {{-- User menu footer --}}

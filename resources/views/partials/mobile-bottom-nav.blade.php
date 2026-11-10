@@ -48,6 +48,24 @@
                 'prefixos' => [],
             ],
         ];
+    } elseif ($mobileNavUser?->isPortalAccount()) {
+        // Aluno/familia: funcoes do portal
+        $mobileItens = [
+            ['label' => 'Início', 'icone' => 'fas fa-home', 'url' => route('portal.index'), 'slug' => null, 'prefixos' => ['portal.index', 'portal.home']],
+            ['label' => 'Notas', 'icone' => 'fas fa-star-half-alt', 'url' => route('portal.notas'), 'slug' => null, 'prefixos' => ['portal.notas', 'portal.boletim']],
+            ['label' => 'Avisos', 'icone' => 'fas fa-bullhorn', 'url' => route('portal.avisos'), 'slug' => null, 'prefixos' => ['portal.avisos', 'portal.agenda']],
+            ['label' => 'Solicitar', 'icone' => 'fas fa-file-signature', 'url' => route('portal.solicitacoes'), 'slug' => null, 'prefixos' => ['portal.solicitacoes']],
+            ['label' => 'Menu', 'icone' => 'fas fa-bars', 'url' => route('menu.index'), 'slug' => '__menu__', 'prefixos' => []],
+        ];
+    } elseif ($mobileNavUser?->isSecretaria() || $mobileNavUser?->isAdministrador() || $mobileNavUser?->isDiretoria() ?? false) {
+        // Secretaria/diretoria: rotina de atendimento e escolar
+        $mobileItens = [
+            ['label' => 'Início', 'icone' => 'fas fa-home', 'url' => route('home'), 'slug' => null, 'prefixos' => ['home', 'dashboard', 'admin.index']],
+            ['label' => 'Atendimento', 'icone' => 'fas fa-user-check', 'url' => route('aluno.index'), 'slug' => 'atendimento', 'prefixos' => ['aluno.', 'matricula.', 'solicitacao_']],
+            ['label' => 'Turmas', 'icone' => 'fas fa-chalkboard-teacher', 'url' => route('turma.index'), 'slug' => 'escolar', 'prefixos' => ['turma.', 'diario.', 'avaliacao.']],
+            ['label' => 'Docs', 'icone' => 'fas fa-folder-open', 'url' => route('documento_solicitacao.index'), 'slug' => null, 'prefixos' => ['documento_solicitacao.', 'documentos.']],
+            ['label' => 'Menu', 'icone' => 'fas fa-bars', 'url' => route('menu.index'), 'slug' => '__menu__', 'prefixos' => []],
+        ];
     } else {
     $mobileItens = [
         [

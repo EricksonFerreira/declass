@@ -157,28 +157,31 @@ class PeriodoLetivoController extends BaseController implements FiltroInterface,
     public function obterFiltrosPrincipais()
     {
         return [
-            ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
-        ];
-    }
-
-    public function obterFiltrosSecundarios()
-    {
-        return [
-            [
-                'name' => 'escola_id', 'label' => 'Escola', 'type' => 'select',
-                'typeWhere' => 'where',
-                'options' => $this->escolasOpcoesFiltro(),
-            ],
             [
                 'name' => 'ano_letivo_id', 'label' => 'Ano letivo', 'type' => 'select',
                 'typeWhere' => 'where',
                 'options' => $this->anosLetivosOpcoesFiltro(),
             ],
             [
+                'name' => 'escola_id', 'label' => 'Escola', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => $this->escolasOpcoesFiltro(),
+            ],
+            [
                 'name' => 'ativo', 'label' => 'Status', 'type' => 'select',
                 'typeWhere' => 'where',
-                'options' => ['S' => 'Ativo', 'N' => 'Inativo'],
+                'options' => [
+                    ['value' => 'S', 'label' => 'Ativo', 'selected' => false],
+                    ['value' => 'N', 'label' => 'Inativo', 'selected' => false],
+                ],
             ],
+        ];
+    }
+
+    public function obterFiltrosSecundarios()
+    {
+        return [
+            ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
         ];
     }
 
