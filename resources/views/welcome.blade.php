@@ -180,7 +180,12 @@
         /* planos */
         .plans{background:var(--navy);color:#fff}
         .plans .lead{color:#b6c2dd}
-        .plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin-top:3rem;align-items:stretch}
+        .plan-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.4rem;margin-top:3rem;align-items:stretch;max-width:900px;margin-left:auto;margin-right:auto}
+        .plan-tabela{margin:1rem 0 .4rem;border:1px solid rgba(255,255,255,.14);border-radius:10px;overflow:hidden;font-size:.82rem}
+        .plan-tabela .pt-row{display:flex;justify-content:space-between;padding:.5rem .9rem;border-top:1px solid rgba(255,255,255,.08);color:#cbd5e1}
+        .plan-tabela .pt-row:first-child{border-top:0;background:rgba(255,255,255,.05);font-weight:700;color:#94a3b8;text-transform:uppercase;font-size:.68rem;letter-spacing:.04em}
+        .plan-tabela .pt-row b{color:#fff;font-weight:700}
+        .plan-tabela .pt-row .consulta{color:#fbbf24;font-weight:700}
         .plan{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:2rem;display:flex;flex-direction:column;transition:border-color .2s,transform .2s}
         .plan:hover{border-color:rgba(255,255,255,.3);transform:translateY(-4px)}
         .plan.hot{background:linear-gradient(160deg,rgba(245,158,11,.14),rgba(255,255,255,.04));border-color:rgba(245,158,11,.55);position:relative}
@@ -501,11 +506,20 @@
     <div class="wrap center">
         <span class="eyebrow" style="background:rgba(245,158,11,.15);color:#fbbf24"><i class="fas fa-tag"></i> Planos</span>
         <h2>Escolha pelo que sua escola precisa</h2>
-        <p class="lead">Todos os planos incluem suporte e atualizações. A cobrança é por unidade e porte de alunos, fale com a gente para a tabela da sua realidade.</p>
+        <p class="lead">Preço por unidade, conforme o número de alunos. Todos os planos incluem suporte e atualizações, sem taxa de implantação.</p>
         <div class="plan-grid">
             <div class="plan">
                 <h3>Essencial</h3>
-                <div class="price"><b>Sob consulta</b> <span>/mês por unidade</span></div>
+                <div class="price"><b>R$ 129</b> <span>/mês por unidade, a partir de</span></div>
+                <div class="plan-tabela">
+                    <div class="pt-row"><span>Alunos</span><span>Preço/mês</span></div>
+                    <div class="pt-row"><span>Até 100</span><b>R$ 129</b></div>
+                    <div class="pt-row"><span>101 a 200</span><b>R$ 179</b></div>
+                    <div class="pt-row"><span>201 a 300</span><b>R$ 229</b></div>
+                    <div class="pt-row"><span>301 a 500</span><b>R$ 329</b></div>
+                    <div class="pt-row"><span>501 a 1.000</span><b>R$ 479</b></div>
+                    <div class="pt-row"><span>Acima de 1.000</span><span class="consulta">Sob consulta</span></div>
+                </div>
                 <ul>
                     <li><i class="fas fa-check"></i> Matrículas e rematrícula</li>
                     <li><i class="fas fa-check"></i> Diário, avaliações e boletim</li>
@@ -518,7 +532,16 @@
             <div class="plan hot">
                 <span class="tag">Mais escolhido</span>
                 <h3>Completo</h3>
-                <div class="price"><b>Sob consulta</b> <span>/mês por unidade</span></div>
+                <div class="price"><b>R$ 199</b> <span>/mês por unidade, a partir de</span></div>
+                <div class="plan-tabela">
+                    <div class="pt-row"><span>Alunos</span><span>Preço/mês</span></div>
+                    <div class="pt-row"><span>Até 100</span><b>R$ 199</b></div>
+                    <div class="pt-row"><span>101 a 200</span><b>R$ 279</b></div>
+                    <div class="pt-row"><span>201 a 300</span><b>R$ 349</b></div>
+                    <div class="pt-row"><span>301 a 500</span><b>R$ 499</b></div>
+                    <div class="pt-row"><span>501 a 1.000</span><b>R$ 749</b></div>
+                    <div class="pt-row"><span>Acima de 1.000</span><span class="consulta">Sob consulta</span></div>
+                </div>
                 <ul>
                     <li><i class="fas fa-check"></i> Tudo do Essencial</li>
                     <li><i class="fas fa-check"></i> Financeiro completo (DRE, fluxo, contas a pagar)</li>
@@ -528,20 +551,8 @@
                 </ul>
                 <a href="{{ route('cadastro.empresa.create') }}" class="btn btn-amber">Começar agora</a>
             </div>
-            <div class="plan">
-                <h3>Rede</h3>
-                <div class="price"><b>Sob consulta</b> <span>/mês por rede</span></div>
-                <ul>
-                    <li><i class="fas fa-check"></i> Tudo do Completo</li>
-                    <li><i class="fas fa-check"></i> Multi-unidades no mesmo tenant</li>
-                    <li><i class="fas fa-check"></i> Relatórios consolidados da rede</li>
-                    <li><i class="fas fa-check"></i> Perfis e permissões granulares</li>
-                    <li><i class="fas fa-check"></i> Suporte prioritário e onboarding</li>
-                </ul>
-                <a href="{{ route('cadastro.empresa.create') }}" class="btn btn-outline">Falar com especialista</a>
-            </div>
         </div>
-        <p class="plan-note">Cobraça por unidade e faixa de alunos. Sem taxa de implantação. Implantação assistida disponível.</p>
+        <p class="plan-note">Cobrança por unidade e faixa de alunos. Acima de 1.000 alunos, fale com a gente para uma proposta personalizada.</p>
     </div>
 </section>
 
@@ -566,7 +577,7 @@
         </details>
         <details>
             <summary>Como funciona a cobrança?</summary>
-            <div class="ans">A cobrança é por unidade e faixa de alunos, conforme o plano escolhido. Não há taxa de implantação e todos os planos incluem suporte e atualizações. Fale com a nossa equipe para receber a tabela da sua realidade.</div>
+            <div class="ans">A cobrança é por unidade e faixa de alunos: o Essencial começa em R$ 129/mês e o Completo em R$ 199/mês (veja a tabela na seção de planos). Não há taxa de implantação e todos os planos incluem suporte e atualizações.</div>
         </details>
         <details>
             <summary>Posso começar a usar agora?</summary>

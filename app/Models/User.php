@@ -283,12 +283,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Conta com perfil restrito (aluno, responsavel ou professor):
-     * no Meu Perfil so pode alterar a propria foto.
+     * Conta com perfil restrito: no Meu Perfil so pode alterar a
+     * propria foto — aluno, responsavel, professor, secretaria e
+     * direcao. Admins e demais equipes editam dados de contato.
      */
     public function perfilApenasFoto(): bool
     {
-        return $this->isPortalAccount() || $this->isProfessor();
+        return $this->isPortalAccount() || $this->isProfessor()
+            || $this->isSecretaria() || $this->isDiretor();
     }
 
     /**
@@ -393,6 +395,21 @@ class User extends Authenticatable implements MustVerifyEmail
         $role = strtolower(trim((string) ($this->regra?->name ?? '')));
 
         return in_array($role, ['secretario', 'auxiliar_secretaria'], true);
+    }
+
+    /**
+     * Direcao escolar: diretor e vice-diretor.
+     */
+    public function isDiretor(): bool
+    {
+        // Espelhamento: o superadmin ve o papel do usuario espelhado.
+        if ($this->isSuperAdmin() && ($alvo = $this->alvoEspelhado())) {
+            return $alvo->isDiretor();
+        }
+
+        $role = strtolower(trim((string) ($this->regra?->name ?? '')));
+
+        return in_array($role, ['diretor', 'vice_diretor'], true);
     }
 
     public function isAdministrador(): bool

@@ -46,6 +46,25 @@ test('professor e aluno so alteram a foto no perfil', function () {
     \Illuminate\Support\Facades\Storage::disk('public')->assertExists($path);
 });
 
+test('secretaria e diretor so alteram a foto no perfil', function () {
+    $empresa = tenant();
+    $secretaria = usuarioTenant($empresa, 'secretario');
+    $diretor = usuarioTenant($empresa, 'diretor');
+
+    $this->actingAs($secretaria)->put('/admin/profile', ['telefone' => '11999999999'])
+        ->assertForbidden();
+    $this->actingAs($diretor)->put('/admin/profile', ['telefone' => '11999999999'])
+        ->assertForbidden();
+});
+
+test('responsavel cai no perfil ao abrir a home', function () {
+    $empresa = tenant();
+    $responsavel = usuarioTenant($empresa, 'responsavel_legal');
+
+    $this->actingAs($responsavel)->get('/admin/home')
+        ->assertRedirect(route('profile.edit'));
+});
+
 test('administrador ainda edita dados de contato no perfil', function () {
     $empresa = tenant();
     $user = usuarioTenant($empresa, 'administrador');

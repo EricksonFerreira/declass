@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\SetupChecklistService;
 use App\Services\TurmaGradeService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,9 +19,16 @@ class HomeController extends Controller
         protected TurmaGradeService $gradeService,
     ) {}
 
-    public function home(Request $request): View
+    public function home(Request $request): View|RedirectResponse
     {
         $user = $request->user();
+
+        // Contas de portal (aluno/responsavel): a home operacional nao
+        // se aplica — a tela de inicio delas e o proprio perfil.
+        if ($user->isPortalAccount()) {
+            return redirect()->route('profile.edit');
+        }
+
         if ($user->isProfessor()) {
             return $this->homeProfessor($user);
         }
