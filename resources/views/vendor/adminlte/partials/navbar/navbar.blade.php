@@ -249,6 +249,28 @@
             font-weight: 700;
         }
 
+        /* Seletor de escola da sessao no menu lateral — mesma cor de
+           contraste dos itens do menu, sobre fundo levemente escurecido */
+        body:not(.login-page) .main-sidebar .escola-context-block {
+            border-bottom-color: color-mix(in srgb, var(--empresa-cor-primaria-contraste, #fff) 12%, transparent 88%);
+        }
+
+        body:not(.login-page) .main-sidebar .escola-context-label {
+            color: color-mix(in srgb, var(--empresa-cor-primaria-contraste, #fff) 60%, transparent 40%);
+        }
+
+        body:not(.login-page) .main-sidebar .escola-context-select {
+            background-color: rgba(0, 0, 0, .16);
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath fill='%23ffffff' d='M0 2l4 4 4-4z'/%3E%3C/svg%3E");
+            border-color: color-mix(in srgb, var(--empresa-cor-primaria-contraste, #fff) 22%, transparent 78%);
+            color: var(--empresa-cor-primaria-contraste, #fff);
+        }
+
+        body:not(.login-page) .main-sidebar .escola-context-select:focus {
+            border-color: color-mix(in srgb, var(--empresa-cor-primaria-contraste, #fff) 55%, transparent 45%);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--empresa-cor-primaria-contraste, #fff) 18%, transparent 82%);
+        }
+
         body:not(.login-page) .main-header.navbar {
             border-bottom: 2px solid color-mix(in srgb, var(--empresa-cor-primaria) 35%, #dbe5f0 65%);
         }

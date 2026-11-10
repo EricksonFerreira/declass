@@ -62,7 +62,26 @@
         <h6 class="filter-heading text-secondary text-xs mb-1"><i class="fa fa-filter mr-1"></i> Filtros</h6>
         <hr class="filter-heading m-0 mb-2">
 
+        {{-- Ponto de entrada no mobile: abre o bottom sheet com os campos --}}
+        <div class="filter-mobile-bar d-md-none">
+            <button type="button" id="toggle-filters-mobile"
+                class="btn btn-sm btn-outline-secondary"
+                aria-expanded="false" aria-label="Abrir filtros">
+                <i class="fa fa-filter mr-1"></i> Filtros
+                @if ($appliedFiltersCount > 0)
+                    <span class="badge badge-primary ml-1">{{ $appliedFiltersCount }}</span>
+                @endif
+            </button>
+        </div>
+
         <form method="GET" action="{{ $filtroUrl }}">
+            {{-- Header do bottom sheet (so visivel no mobile) --}}
+            <div class="filter-sheet-head d-md-none">
+                <span class="filter-sheet-title"><i class="fa fa-filter mr-1"></i> Filtros</span>
+                <button type="button" id="close-filters-mobile" class="filter-sheet-close" aria-label="Fechar filtros">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
             <div class="row align-items-end">
                 @foreach ($filters as $filter)
                     @php
@@ -105,15 +124,7 @@
                     </div>
                 @endforeach
 
-                <div class="col-auto d-flex align-items-end" style="gap:6px;">
-                    <button type="button" id="toggle-filters-mobile"
-                        class="btn btn-sm btn-outline-secondary d-md-none"
-                        aria-expanded="false" aria-label="Abrir filtros">
-                        <i class="fa fa-filter mr-1"></i> Filtros
-                        @if ($appliedFiltersCount > 0)
-                            <span class="badge badge-primary ml-1">{{ $appliedFiltersCount }}</span>
-                        @endif
-                    </button>
+                <div class="col-auto d-flex align-items-end filter-actions" style="gap:6px;">
                     @if (count($additionalFilters) > 0)
                         <button type="button" id="toggle-filters"
                             class="btn btn-sm btn-outline-secondary filter-toggle-desktop"
@@ -173,6 +184,9 @@
                 </div>
             @endif
         </form>
+
+        {{-- Scrim do bottom sheet (mobile): fecha ao tocar fora --}}
+        <div class="filter-scrim d-md-none"></div>
 
         {{-- Filtros aplicados --}}
         @if (count($itensFiltered) > 0)
@@ -237,17 +251,21 @@
         });
     }
 
-    // Mobile: botão "Filtros" expande/colapsa todos os campos do form
-    function initMobileFilterToggle() {
+    // Mobile: botão "Filtros" abre o form como bottom sheet
+    // (scrim, botao fechar, ESC e trava de scroll da pagina)
+    function initMobileFilterSheet() {
         var btn = document.getElementById('toggle-filters-mobile');
         if (!btn) return;
-        var form = btn.closest('form');
+        var card = btn.closest('.filter-card');
+        if (!card) return;
+        var closeBtn = document.getElementById('close-filters-mobile');
+        var scrim = card.querySelector('.filter-scrim');
         var af = document.getElementById('additional-filters');
         var arrow = document.getElementById('toggle-filters');
-        if (!form) return;
 
-        btn.addEventListener('click', function () {
-            var open = form.classList.toggle('filters-open');
+        function setOpen(open) {
+            card.classList.toggle('filters-open', open);
+            document.body.style.overflow = open ? 'hidden' : '';
             if (af) af.style.display = open ? '' : 'none';
             if (arrow) {
                 arrow.innerHTML = open
@@ -256,12 +274,21 @@
                 arrow.setAttribute('title', open ? 'Ocultar filtros adicionais' : 'Exibir filtros adicionais');
             }
             btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        btn.addEventListener('click', function () {
+            setOpen(!card.classList.contains('filters-open'));
+        });
+        if (closeBtn) closeBtn.addEventListener('click', function () { setOpen(false); });
+        if (scrim) scrim.addEventListener('click', function () { setOpen(false); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && card.classList.contains('filters-open')) setOpen(false);
         });
     }
 
     function init() {
         initToggleFilters();
-        initMobileFilterToggle();
+        initMobileFilterSheet();
     }
 
     if (document.readyState === 'loading') {

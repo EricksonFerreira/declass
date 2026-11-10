@@ -257,19 +257,111 @@
     /* "Itens por página" é controle de densidade de desktop */
     .per-page-selector { display: none !important; }
 
-    /* Filtros: campos ficam atrás do botão "Filtros" (entrada -> seleção -> retorno) */
+    /* Filtros: entrada "Filtros" -> bottom sheet de selecao -> chips de retorno
+       (padrao NN/g bottom-sheet + Baymard drawer mobile) */
     .filter-card .filter-heading { display: none; }
     .filter-card .filter-toggle-desktop { display: none; }
-    .filter-card form .filter-field { display: none; }
-    .filter-card form.filters-open .filter-field {
+
+    /* Scrim: tocar fora fecha o sheet */
+    .filter-card .filter-scrim {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, .45);
+        z-index: 1039;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .25s ease, visibility .25s;
+    }
+    .filter-card.filters-open .filter-scrim { opacity: 1; visibility: visible; }
+
+    /* O form inteiro vira o bottom sheet */
+    .filter-card form {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        z-index: 1040;
+        margin: 0;
+        background: #fff;
+        border-radius: 18px 18px 0 0;
+        box-shadow: 0 -8px 30px rgba(15, 23, 42, .3);
+        padding: 10px 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+        max-height: 82vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        transform: translateY(105%);
+        visibility: hidden;
+        transition: transform .28s ease, visibility .28s;
+    }
+    .filter-card.filters-open form { transform: translateY(0); visibility: visible; }
+
+    /* Handle de arraste no topo do sheet */
+    .filter-card form::before {
+        content: '';
         display: block;
+        width: 42px;
+        height: 4px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        margin: 0 auto 8px;
+    }
+
+    /* Header do sheet: titulo + botao fechar */
+    .filter-card .filter-sheet-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: .65rem;
+    }
+    .filter-card .filter-sheet-title {
+        font-size: .8rem;
+        font-weight: 800;
+        color: #334155;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+    }
+    .filter-card .filter-sheet-close {
+        width: 34px;
+        height: 34px;
+        border: none;
+        border-radius: 50%;
+        background: #f1f5f9;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .9rem;
+    }
+
+    /* Campos empilhados em coluna unica com alvos >= 40px */
+    .filter-card form .filter-field {
         flex: 0 0 100%;
         max-width: 100%;
+        margin-bottom: .15rem;
     }
-    .filter-card form.filters-open #additional-filters { display: flex !important; }
+    .filter-card form .form-control,
+    .filter-card form .select2-selection { min-height: 40px; }
+    .filter-card .filter-field .select2-selection__rendered { line-height: 38px; }
 
-    /* Alvos de toque confortáveis dentro do painel de filtros */
-    .filter-card .filter-field .form-control,
-    .filter-card .filter-field .select2-selection { min-height: 38px; }
-    .filter-card .filter-field .select2-selection__rendered { line-height: 36px; }
+    /* Rodape do sheet: "Filtrar" grande como botao de aplicar (sticky) */
+    .filter-card form .filter-actions {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-top: .5rem;
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        padding: .35rem 0;
+    }
+    .filter-card form .filter-actions button[type="submit"] {
+        flex: 1;
+        height: 42px;
+        font-size: .85rem;
+    }
+    .filter-card.filters-open #additional-filters { display: flex !important; }
+
+    /* Dark mode */
+    .dark-mode .filter-card form { background: #2b3038; box-shadow: 0 -8px 30px rgba(0,0,0,.5); }
+    .dark-mode .filter-card form::before { background: #4b5563; }
+    .dark-mode .filter-card .filter-sheet-title { color: #e4e9ee; }
+    .dark-mode .filter-card .filter-sheet-close { background: #3f474e; color: #c2c7d0; }
+    .dark-mode .filter-card form .filter-actions { background: #2b3038; }
 }

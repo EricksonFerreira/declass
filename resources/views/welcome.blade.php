@@ -198,7 +198,10 @@
         .plan ul li{display:flex;gap:.6rem;font-size:.87rem;color:#cbd5e1;align-items:flex-start}
         .plan ul li i{color:var(--accent);margin-top:.2rem;font-size:.75rem}
         .plan .btn{width:100%}
-        .plan-note{text-align:center;color:#94a3b8;font-size:.82rem;margin-top:2rem}
+        .plan-note{text-align:center;color:#94a3b8;font-size:.82rem;margin-top:1.6rem}
+        .plan-extra{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem 2.4rem;margin-top:2.2rem;padding:1.1rem 1.5rem;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(255,255,255,.04);font-size:.85rem;color:#cbd5e1}
+        .plan-extra i{color:var(--accent);margin-right:.45rem}
+        .plan-extra em{color:#e2e8f0;font-style:normal;font-weight:600}
 
         /* FAQ */
         .faq details{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:.8rem;overflow:hidden;transition:border-color .2s}
@@ -521,11 +524,14 @@
                     <div class="pt-row"><span>Acima de 1.000</span><span class="consulta">Sob consulta</span></div>
                 </div>
                 <ul>
-                    <li><i class="fas fa-check"></i> Matrículas e rematrícula</li>
-                    <li><i class="fas fa-check"></i> Diário, avaliações e boletim</li>
-                    <li><i class="fas fa-check"></i> Mensalidades e planos</li>
-                    <li><i class="fas fa-check"></i> Portal da família</li>
-                    <li><i class="fas fa-check"></i> Avisos e agenda</li>
+                    <li><i class="fas fa-check"></i> Matrículas, rematrícula e fila de análise</li>
+                    <li><i class="fas fa-check"></i> Alunos, responsáveis e ficha completa</li>
+                    <li><i class="fas fa-check"></i> Diário de classe, avaliações e boletim</li>
+                    <li><i class="fas fa-check"></i> Frequência, atestados e ocorrências</li>
+                    <li><i class="fas fa-check"></i> Mensalidades e planos de pagamento</li>
+                    <li><i class="fas fa-check"></i> Portal da família 24 horas</li>
+                    <li><i class="fas fa-check"></i> Avisos, agenda e comunicação</li>
+                    <li><i class="fas fa-check"></i> Documentos e declarações em PDF</li>
                 </ul>
                 <a href="{{ route('cadastro.empresa.create') }}" class="btn btn-outline">Começar agora</a>
             </div>
@@ -544,13 +550,20 @@
                 </div>
                 <ul>
                     <li><i class="fas fa-check"></i> Tudo do Essencial</li>
-                    <li><i class="fas fa-check"></i> Financeiro completo (DRE, fluxo, contas a pagar)</li>
+                    <li><i class="fas fa-check"></i> <strong>Site de apresentação da escola</strong> (página pública com sua identidade)</li>
+                    <li><i class="fas fa-check"></i> Financeiro completo (DRE, fluxo de caixa, contas a pagar)</li>
                     <li><i class="fas fa-check"></i> Biblioteca, transporte, alimentação e estoque</li>
-                    <li><i class="fas fa-check"></i> Saúde, inclusão e ocorrências</li>
-                    <li><i class="fas fa-check"></i> Pesquisas de satisfação e relatórios</li>
+                    <li><i class="fas fa-check"></i> Saúde, inclusão, PEI/PDI e planos de atendimento</li>
+                    <li><i class="fas fa-check"></i> Pesquisas de satisfação e relatórios gerenciais</li>
+                    <li><i class="fas fa-check"></i> Tarefas online, fórum e solicitações das famílias</li>
                 </ul>
                 <a href="{{ route('cadastro.empresa.create') }}" class="btn btn-amber">Começar agora</a>
             </div>
+        </div>
+        <div class="plan-extra">
+            <span><i class="fas fa-globe"></i> <strong>Subdomínio próprio incluído</strong> — sua escola acessa em <em>suaescola.declass.com.br</em></span>
+            <span><i class="fas fa-link"></i> Tem domínio próprio? Use o seu — apontamos <em>portal.suaescola.com.br</em> para o sistema</span>
+            <span><i class="fas fa-headset"></i> Suporte e atualizações em todos os planos, sem taxa de implantação</span>
         </div>
         <p class="plan-note">Cobrança por unidade e faixa de alunos. Acima de 1.000 alunos, fale com a gente para uma proposta personalizada.</p>
     </div>

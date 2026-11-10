@@ -32,7 +32,7 @@ class HomeController extends Controller
         if ($user->isProfessor()) {
             return $this->homeProfessor($user);
         }
-        if ($user->isSecretaria()) {
+        if ($user->isSecretaria() || $user->isDiretor()) {
             return $this->homeSecretaria($user);
         }
 
@@ -104,8 +104,9 @@ class HomeController extends Controller
     }
 
     /**
-     * Painel da secretaria: fila de atendimento (solicitacoes, documentos,
-     * atestados), resumo da escola e atalhos das acoes do dia a dia.
+     * Home da secretaria e da direcao em formato de app: fila de
+     * atendimento (solicitacoes, documentos, atestados), resumo da
+     * escola e atalhos das acoes do dia a dia.
      */
     private function homeSecretaria(User $user): View
     {
