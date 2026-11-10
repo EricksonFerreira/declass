@@ -115,6 +115,12 @@
         .shots-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:1.8rem}
         .shots-row .shot-caption{font-size:.68rem}
         @media(max-width:900px){.shots-grid{grid-template-columns:1fr}.shots-row{grid-template-columns:1fr}.shot-phone{max-width:280px;margin:0 auto}}
+        .shot-browser img,.shot-phone img{cursor:zoom-in}
+        .lightbox{position:fixed;inset:0;z-index:9999;background:rgba(2,6,23,.92);display:flex;align-items:center;justify-content:center;padding:2.5rem 1.5rem;cursor:zoom-out;opacity:0;pointer-events:none;transition:opacity .25s}
+        .lightbox.on{opacity:1;pointer-events:auto}
+        .lightbox img{max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+        .lightbox .lb-close{position:absolute;top:1rem;right:1.4rem;color:#e2e8f0;font-size:2rem;background:none;border:0;cursor:pointer}
+        .lightbox .lb-cap{position:absolute;bottom:1.2rem;left:50%;transform:translateX(-50%);color:#cbd5e1;font-size:.82rem}
 
         /* stats strip */
         .stats{background:#fff;border-bottom:1px solid var(--line)}
@@ -651,6 +657,30 @@
     car.addEventListener('mouseenter', function () { clearInterval(timer); });
     car.addEventListener('mouseleave', reset);
     reset();
+})();
+</script>
+<div class="lightbox" id="imgLb">
+    <button type="button" class="lb-close" aria-label="Fechar">&times;</button>
+    <img src="" alt="">
+    <div class="lb-cap"></div>
+</div>
+<script>
+(function () {
+    var lb = document.getElementById('imgLb');
+    var img = lb.querySelector('img');
+    var cap = lb.querySelector('.lb-cap');
+    document.querySelectorAll('.shot-browser img, .shot-phone img, .car-slide img').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            e.stopPropagation();
+            img.src = el.src;
+            cap.textContent = el.alt || '';
+            lb.classList.add('on');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+    function close() { lb.classList.remove('on'); document.body.style.overflow = ''; img.src = ''; }
+    lb.addEventListener('click', close);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
 })();
 </script>
 </body>
