@@ -123,6 +123,24 @@ test('nav inferior do professor traz as funcoes do dia a dia', function () {
     $this->actingAs($admin);
     $htmlAdmin = view('partials.mobile-bottom-nav')->render();
     expect($htmlAdmin)
-        ->toContain('Institucional')
+        ->toContain('Atendimento')
+        ->toContain('Docs')
         ->not->toContain('Horários');
+});
+
+test('nav inferior marca apenas o item da tela atual', function () {
+    $empresa = tenant();
+    $professor = usuarioTenant($empresa, 'professor');
+
+    $html = $this->actingAs($professor)->get(route('home'))
+        ->assertOk()
+        ->getContent();
+
+    preg_match('/<nav class="mobile-bottom-nav.*?<\/nav>/s', $html, $m);
+    $nav = $m[0] ?? '';
+
+    // Antes do fix, itens com slug null casavam secao null e todos
+    // ficavam ativos em qualquer tela (Início + Horários + Calendário).
+    expect($nav)->not->toBe('')
+        ->and(substr_count($nav, 'mbn-item active'))->toBe(1);
 });

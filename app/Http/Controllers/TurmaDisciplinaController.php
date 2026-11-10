@@ -63,6 +63,16 @@ class TurmaDisciplinaController extends BaseController
             ->limit(50)
             ->get();
 
+        // Aulas e avaliacoes da disciplina — mesmo escopo do viewer
+        // usado na tela da turma (professor ve so os proprios).
+        $viewer = auth()->user();
+        $diarios = $this->turmaService->diariosDaTurma($turma, 15, $viewer, [
+            'disciplina_id' => $disciplina->id,
+        ]);
+        $avaliacoes = $this->turmaService->avaliacoesDaTurma($turma, 15, $viewer, [
+            'disciplina_id' => $disciplina->id,
+        ]);
+
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCustom([
             ['Home', route('home')],
             ['Turmas', route('turma.index')],
@@ -70,7 +80,7 @@ class TurmaDisciplinaController extends BaseController
             [$disciplina->nome, null],
         ]);
 
-        return view('turma.disciplina', compact('turma', 'disciplina', 'posts', 'materiais', 'breadcrumb'))
+        return view('turma.disciplina', compact('turma', 'disciplina', 'posts', 'materiais', 'diarios', 'avaliacoes', 'breadcrumb'))
             ->with('titulo', $disciplina->nome.' — '.$turma->nome);
     }
 

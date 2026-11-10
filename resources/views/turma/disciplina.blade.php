@@ -7,12 +7,43 @@
     <x-page-title :title="$disciplina->nome" subtitle="{{ $turma->nome }} · {{ $turma->etapa->nome ?? '' }} · {{ $turma->anoLetivo->ano ?? '' }}" />
 @stop
 
+@push('css')
+<style>
+    .disc-acoes { gap: .5rem; }
+    @media (max-width: 576px) {
+        .disc-acoes .btn { flex: 1 1 100%; }
+    }
+</style>
+@endpush
+
 @section('content')
 @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 
+{{-- Acoes academicas da disciplina: chamada, avaliacao e registro de aula --}}
+<div class="d-flex flex-wrap align-items-center disc-acoes mb-3">
+    @can('diario.frequencia')
+        <a href="{{ route('diario.chamada', ['turma_id' => $turma->id, 'disciplina_id' => $disciplina->id, 'data' => now()->toDateString()]) }}" class="btn btn-success btn-sm">
+            <i class="fa fa-clipboard-check"></i> Fazer chamada
+        </a>
+    @endcan
+    @can('avaliacao.create')
+        <a href="{{ route('turma.avaliacao.create', $turma->id) }}?disciplina_id={{ $disciplina->id }}" class="btn btn-outline-danger btn-sm">
+            <i class="fa fa-star"></i> Nova avaliação
+        </a>
+    @endcan
+    @can('diario.create')
+        <a href="{{ route('diario.create', ['turma_id' => $turma->id, 'disciplina_id' => $disciplina->id]) }}" class="btn btn-outline-primary btn-sm">
+            <i class="fa fa-book"></i> Registrar aula
+        </a>
+    @endcan
+</div>
+
 <ul class="nav nav-tabs" id="disciplinaTabs" role="tablist">
     <li class="nav-item">
-        <a class="nav-link active" id="tab-forum-link" data-toggle="tab" href="#tab-forum" role="tab"><i class="fas fa-comments mr-1"></i> Fórum <span class="badge badge-light border ml-1">{{ $posts->count() }}</span></a>
+        <a class="nav-link active" id="tab-academico-link" data-toggle="tab" href="#tab-academico" role="tab"><i class="fas fa-graduation-cap mr-1"></i> Acadêmico <span class="badge badge-light border ml-1">{{ $diarios->count() + $avaliacoes->count() }}</span></a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="tab-forum-link" data-toggle="tab" href="#tab-forum" role="tab"><i class="fas fa-comments mr-1"></i> Fórum <span class="badge badge-light border ml-1">{{ $posts->count() }}</span></a>
     </li>
     <li class="nav-item">
         <a class="nav-link" id="tab-materiais-link" data-toggle="tab" href="#tab-materiais" role="tab"><i class="fas fa-folder-open mr-1"></i> Materiais <span class="badge badge-light border ml-1">{{ $materiais->count() }}</span></a>
@@ -21,7 +52,70 @@
 
 <div class="tab-content pt-3">
 
-<div class="tab-pane fade show active" id="tab-forum" role="tabpanel">
+<div class="tab-pane fade show active" id="tab-academico" role="tabpanel">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-book-open mr-1"></i> Aulas registradas</h3></div>
+                <div class="list-group list-group-flush">
+                    @forelse($diarios as $d)
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:.4rem;">
+                                <div class="min-w-0">
+                                    <strong>{{ $d->data?->format('d/m/Y') }}</strong>
+                                    <small class="text-muted d-block">{{ $d->professor->nome ?? '' }}</small>
+                                    @if($d->conteudo)<small>{{ \Illuminate\Support\Str::limit($d->conteudo, 90) }}</small>@endif
+                                </div>
+                                <div class="d-flex align-items-center" style="gap:.3rem;">
+                                    @can('diario.frequencia')
+                                        <a href="{{ route('diario.chamada', ['turma_id' => $turma->id, 'disciplina_id' => $disciplina->id, 'data' => $d->data?->format('Y-m-d')]) }}" class="btn btn-xs btn-outline-success" title="Chamada"><i class="fa fa-clipboard-check"></i></a>
+                                    @endcan
+                                    @can('diario.edit')
+                                        <a href="{{ route('diario.edit', $d->id) }}" class="btn btn-xs btn-outline-warning" title="Editar aula"><i class="fa fa-edit"></i></a>
+                                    @endcan
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="list-group-item text-muted text-center py-3">Nenhuma aula registrada nesta disciplina.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-star mr-1"></i> Avaliações</h3></div>
+                <div class="list-group list-group-flush">
+                    @forelse($avaliacoes as $a)
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:.4rem;">
+                                <div class="min-w-0">
+                                    <strong>{{ $a->nome }}</strong>
+                                    <span class="badge badge-secondary ml-1">{{ \App\Models\Avaliacao::TIPOS[$a->tipo] ?? $a->tipo }}</span>
+                                    <small class="text-muted d-block">
+                                        {{ $a->data?->format('d/m/Y') ?? 'sem data' }} · máx. {{ number_format($a->nota_maxima, 1, ',', '.') }} · {{ $a->professor->nome ?? '' }}
+                                    </small>
+                                </div>
+                                <div class="d-flex align-items-center" style="gap:.3rem;">
+                                    @can('avaliacao.notas')
+                                        <a href="{{ route('avaliacao.notas', $a->id) }}" class="btn btn-xs btn-outline-success" title="Lançar notas"><i class="fa fa-pencil-alt"></i></a>
+                                    @endcan
+                                    @can('avaliacao.edit')
+                                        <a href="{{ route('avaliacao.edit', $a->id) }}" class="btn btn-xs btn-outline-warning" title="Editar avaliação"><i class="fa fa-edit"></i></a>
+                                    @endcan
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="list-group-item text-muted text-center py-3">Nenhuma avaliação nesta disciplina.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-pane fade" id="tab-forum" role="tabpanel">
     <div class="card">
         <div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-comments mr-1"></i> Fórum de {{ $disciplina->nome }}</h3></div>
         @can('turma.forum.store')

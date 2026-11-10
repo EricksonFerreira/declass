@@ -7,6 +7,17 @@
     <x-page-title :title="$turma->nome" subtitle="Disciplinas ofertadas e professores" />
 @stop
 
+@push('css')
+<style>
+    /* Mobile: acoes principais ocupam a linha inteira */
+    @media (max-width: 576px) {
+        .turma-acoes .btn,
+        .turma-acoes .dropdown { flex: 1 1 100%; }
+        .turma-acoes .dropdown .btn { width: 100%; }
+    }
+</style>
+@endpush
+
 @section('content')
 @php
     $alunosAtivos = $turma->matriculas->where('status', 'ativa')->count();
@@ -62,7 +73,7 @@
 </div>
 @endunless
 
-<div class="mb-3 d-flex flex-wrap align-items-center" style="gap:.5rem;">
+<div class="mb-3 d-flex flex-wrap align-items-center turma-acoes" style="gap:.5rem;">
     @can('diario.frequencia')
         <a href="{{ route('turma.chamada.create', $turma->id) }}" class="btn btn-success"><i class="fa fa-clipboard-check"></i> {{ $diarioHoje ? 'Chamada de hoje' : 'Fazer chamada' }}</a>
     @endcan
@@ -152,9 +163,7 @@
                         <tr>
                             <th>Disciplina</th>
                             <th>{{ $isProfessor ? 'Minhas aulas/semana' : 'Carga horária · Média aprovação' }}</th>
-                            @unless($isProfessor)
-                                <th class="text-right">Ações</th>
-                            @endunless
+                            <th class="text-right">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -176,20 +185,27 @@
                                         </form>
                                     @endif
                                 </td>
-                                @unless($isProfessor)
-                                <td class="text-right">
-                                    @can('turma.disciplina.destroy')
-                                        <form method="POST" action="{{ route('turma.disciplina.destroy', [$turma->id, $disciplina->id]) }}" onsubmit="return confirm('Remover esta disciplina da turma?');" class="d-inline">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-xs btn-outline-danger">Remover</button>
-                                        </form>
-                                    @endcan
+                                <td class="text-right text-nowrap">
+                                    @if($isProfessor)
+                                        @can('diario.frequencia')
+                                            <a href="{{ route('diario.chamada', ['turma_id' => $turma->id, 'disciplina_id' => $disciplina->id, 'data' => now()->toDateString()]) }}" class="btn btn-xs btn-outline-success" title="Fazer chamada desta disciplina"><i class="fa fa-clipboard-check"></i></a>
+                                        @endcan
+                                        @can('avaliacao.create')
+                                            <a href="{{ route('turma.avaliacao.create', $turma->id) }}?disciplina_id={{ $disciplina->id }}" class="btn btn-xs btn-outline-danger" title="Nova avaliação nesta disciplina"><i class="fa fa-star"></i></a>
+                                        @endcan
+                                    @else
+                                        @can('turma.disciplina.destroy')
+                                            <form method="POST" action="{{ route('turma.disciplina.destroy', [$turma->id, $disciplina->id]) }}" onsubmit="return confirm('Remover esta disciplina da turma?');" class="d-inline">
+                                                @csrf @method('DELETE')
+                                                <button class="btn btn-xs btn-outline-danger">Remover</button>
+                                            </form>
+                                        @endcan
+                                    @endif
                                 </td>
-                                @endunless
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $isProfessor ? 2 : 3 }}" class="text-center text-muted py-3">{{ $isProfessor ? 'Você não leciona nenhuma disciplina nesta turma.' : 'Nenhuma disciplina ofertada.' }}</td>
+                                <td colspan="3" class="text-center text-muted py-3">{{ $isProfessor ? 'Você não leciona nenhuma disciplina nesta turma.' : 'Nenhuma disciplina ofertada.' }}</td>
                             </tr>
                         @endforelse
                     </tbody>

@@ -209,7 +209,7 @@
     const selTurma = document.getElementById('turma_id');
     const selDisc = document.getElementById('disciplina_id');
     const selPeriodo = document.getElementById('periodo_letivo_id');
-    const oldDisc = "{{ old('disciplina_id') }}";
+    const oldDisc = "{{ old('disciplina_id', request('disciplina_id')) }}";
     const oldPeriodo = "{{ old('periodo_letivo_id') }}";
 
     function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }

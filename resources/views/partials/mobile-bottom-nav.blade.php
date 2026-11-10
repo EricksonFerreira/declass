@@ -57,13 +57,13 @@
             ['label' => 'Solicitar', 'icone' => 'fas fa-file-signature', 'url' => route('portal.solicitacoes'), 'slug' => null, 'prefixos' => ['portal.solicitacoes']],
             ['label' => 'Menu', 'icone' => 'fas fa-bars', 'url' => route('menu.index'), 'slug' => '__menu__', 'prefixos' => []],
         ];
-    } elseif ($mobileNavUser?->isSecretaria() || $mobileNavUser?->isAdministrador()) {
+    } elseif ($mobileNavUser?->isSecretaria() || $mobileNavUser?->isAdministrador() || $mobileNavUser?->isDiretor()) {
         // Secretaria/diretoria: rotina de atendimento e escolar
         $mobileItens = [
             ['label' => 'Início', 'icone' => 'fas fa-home', 'url' => route('home'), 'slug' => null, 'prefixos' => ['home', 'dashboard', 'admin.index']],
-            ['label' => 'Atendimento', 'icone' => 'fas fa-user-check', 'url' => route('aluno.index'), 'slug' => 'atendimento', 'prefixos' => ['aluno.', 'matricula.', 'solicitacao_']],
-            ['label' => 'Turmas', 'icone' => 'fas fa-chalkboard-teacher', 'url' => route('turma.index'), 'slug' => 'escolar', 'prefixos' => ['turma.', 'diario.', 'avaliacao.']],
-            ['label' => 'Docs', 'icone' => 'fas fa-folder-open', 'url' => route('documento_solicitacao.index'), 'slug' => null, 'prefixos' => ['documento_solicitacao.', 'documentos.']],
+            ['label' => 'Atendimento', 'icone' => 'fas fa-user-check', 'url' => route('aluno.index'), 'slug' => 'academico', 'prefixos' => ['aluno.', 'matricula.', 'solicitacao_']],
+            ['label' => 'Turmas', 'icone' => 'fas fa-chalkboard-teacher', 'url' => route('turma.index'), 'slug' => 'academico', 'prefixos' => ['turma.', 'diario.', 'avaliacao.']],
+            ['label' => 'Docs', 'icone' => 'fas fa-folder-open', 'url' => route('documento_solicitacao.index'), 'slug' => 'documentos', 'prefixos' => ['documento_solicitacao.', 'documentos.']],
             ['label' => 'Menu', 'icone' => 'fas fa-bars', 'url' => route('menu.index'), 'slug' => '__menu__', 'prefixos' => []],
         ];
     } else {
@@ -106,23 +106,34 @@
     ];
     }
 
-    $mobileAtivo = function (array $item) use ($mobileRotaAtual, $mobileSecaoParam) {
-        if ($item['slug'] === '__menu__') {
-            return $mobileRotaAtual === 'menu.index' && ! in_array($mobileSecaoParam, ['institucional', 'pessoas', 'documentos'], true);
-        }
-
-        if ($mobileSecaoParam === $item['slug']) {
-            return true;
-        }
-
-        return collect($item['prefixos'])->contains(fn ($p) => str_starts_with($mobileRotaAtual, $p));
-    };
-
     $mobileItens = array_values(array_filter($mobileItens, function ($item) use ($mobileSecoes) {
         return $item['slug'] === null
             || $item['slug'] === '__menu__'
             || in_array($item['slug'], $mobileSecoes, true);
     }));
+
+    $mobileAtivo = function (array $item) use ($mobileRotaAtual, $mobileSecaoParam, $mobileItens) {
+        if ($item['slug'] === '__menu__') {
+            if ($mobileRotaAtual !== 'menu.index') {
+                return false;
+            }
+
+            // Menu generico so fica ativo quando nenhuma secao especifica esta aberta
+            return ! collect($mobileItens)->contains(
+                fn ($i) => $i['slug'] !== null
+                    && $i['slug'] !== '__menu__'
+                    && $i['slug'] === $mobileSecaoParam
+            );
+        }
+
+        // secao so existe na rota menu.index/{secao} — sem o guard,
+        // slug null + param null marcaria todos os itens como ativos
+        if ($mobileSecaoParam !== null && $mobileSecaoParam === $item['slug']) {
+            return true;
+        }
+
+        return collect($item['prefixos'])->contains(fn ($p) => str_starts_with($mobileRotaAtual, $p));
+    };
 @endphp
 
 @if ($mobileNavUser)
