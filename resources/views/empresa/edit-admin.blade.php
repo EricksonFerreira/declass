@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="Editar: {$empresa->nome}" subtitle="Dados da minha organização" />
+    <x-page-title :title="'Editar: '.$empresa->nome" subtitle="Dados da minha organização" />
 @stop
 
 @section('content')

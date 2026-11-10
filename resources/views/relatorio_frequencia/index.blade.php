@@ -50,7 +50,7 @@
 </div>
 
 {{-- Graficos: distribuicao por faixa + turmas com mais alunos em risco --}}
-@php($temDados = array_sum($graficos['faixas'] ?? []) > 0)
+@php $temDados = array_sum($graficos['faixas'] ?? []) > 0; @endphp
 @if($temDados)
 <div class="row">
     <div class="col-md-5">

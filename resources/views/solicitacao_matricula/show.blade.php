@@ -113,7 +113,7 @@
                                     <option value="">Selecione a turma...</option>
                                     @foreach($turmasAprovacao as $t)
                                         <option value="{{ $t->id }}" {{ $solicitacao->turma_id == $t->id ? 'selected' : '' }}>
-                                            {{ $t->nome }}@if($t->etapa) — {{ $t->etapa->nome }}@endif@if($t->anoLetivo) · {{ $t->anoLetivo->ano }}@endif
+                                            {{ $t->nome }}@if($t->etapa) — {{ $t->etapa->nome }} @endif @if($t->anoLetivo) · {{ $t->anoLetivo->ano }} @endif
                                         </option>
                                     @endforeach
                                 </select>

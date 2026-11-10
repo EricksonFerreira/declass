@@ -5,6 +5,6 @@
   "type": "php",
   "root_directory": "/home/u735272302/domains/declass.ericksondev.online/public_html",
   "database": "u735272302_declass",
-  "deployed_at": "2026-11-06",
+  "deployed_at": "2026-11-09",
   "notes": "Deploy via hosting_deploy com pacote local (vendor --no-dev + fakerphp/faker + .env embutido). Setup remoto via /migrations/setup-producao?token=...&demo=1. Cron schedule:run uid UJNpeYvUJv."
 }

@@ -15,7 +15,7 @@
     <div class="alert alert-danger">{{ session('error') }}</div>
 @endif
 
-@php($din = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.'))
+@php $din = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.'); @endphp
 @push('css')
 <style>
     @media (max-width: 575.98px) { .mens-stat-val { font-size: 1.05rem !important; } }

@@ -146,6 +146,7 @@
         .mini-mock .mm-bar{display:flex;gap:.4rem;padding:.6rem .9rem;border-bottom:1px solid var(--line);background:#f8fafc}
         .mini-mock .mm-bar span{width:8px;height:8px;border-radius:50%;background:#cbd5e1}
         .mini-mock .mm-body{padding:1rem;display:flex;flex-direction:column;gap:.6rem}
+        .mini-mock .mm-img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;object-position:top}
         .mm-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
         .mm-card{border:1px solid var(--line);border-radius:9px;padding:.6rem}
         .mm-card .l{font-size:.58rem;color:#94a3b8;font-weight:700;text-transform:uppercase}
@@ -309,7 +310,7 @@
     <div class="wrap stats-grid">
         <div class="stat"><b>18+</b><span>módulos integrados</span></div>
         <div class="stat"><b>19</b><span>perfis de acesso prontos</span></div>
-        <div class="stat"><b>Multi</b><span>escolas e redes por tenant</span></div>
+        <div class="stat"><b>1</b><span>login para toda a escola e família</span></div>
         <div class="stat"><b>100%</b><span>web, funciona em qualquer dispositivo</span></div>
     </div>
 </div>
@@ -364,20 +365,7 @@
             <div class="feat-mock">
                 <div class="mini-mock">
                     <div class="mm-bar"><span></span><span></span><span></span></div>
-                    <div class="mm-body">
-                        <div class="mm-cards">
-                            <div class="mm-card"><div class="l">Pendentes</div><div class="v">12</div></div>
-                            <div class="mm-card"><div class="l">Aprovadas</div><div class="v" style="color:#059669">87</div></div>
-                            <div class="mm-card"><div class="l">Em análise</div><div class="v" style="color:#d97706">5</div></div>
-                        </div>
-                        <div class="mm-lines">
-                            <div class="mm-line blue"></div>
-                            <div class="mm-line"></div>
-                            <div class="mm-line mid"></div>
-                            <div class="mm-line accent"></div>
-                            <div class="mm-line short"></div>
-                        </div>
-                    </div>
+                    <img src="{{ asset('img/mockups/desktop-secretaria-matricula.png') }}" alt="Solicitações de matrícula" loading="lazy" class="mm-img">
                 </div>
             </div>
         </div>
@@ -396,19 +384,7 @@
             <div class="feat-mock">
                 <div class="mini-mock">
                     <div class="mm-bar"><span></span><span></span><span></span></div>
-                    <div class="mm-body">
-                        <div class="mm-grid2">
-                            <div class="mm-card"><div class="l">Receita líquida</div><div class="v" style="color:#059669">R$ 84,2k</div></div>
-                            <div class="mm-card"><div class="l">Resultado</div><div class="v" style="color:#dc2626">−R$ 3,1k</div></div>
-                        </div>
-                        <div class="mm-lines">
-                            <div class="mm-line accent" style="width:82%"></div>
-                            <div class="mm-line blue" style="width:64%"></div>
-                            <div class="mm-line" style="width:48%"></div>
-                            <div class="mm-line" style="width:35%"></div>
-                        </div>
-                        <div><span class="mm-badge">Previsto</span> <span class="mm-badge warn">Vencido</span> <span class="mm-badge info">Pago</span></div>
-                    </div>
+                    <img src="{{ asset('img/mockups/desktop-secretaria-mensalidade.png') }}" alt="Gestão de mensalidades" loading="lazy" class="mm-img">
                 </div>
             </div>
         </div>
@@ -427,48 +403,26 @@
             <div class="feat-mock">
                 <div class="mini-mock">
                     <div class="mm-bar"><span></span><span></span><span></span></div>
-                    <div class="mm-body">
-                        <div class="mm-grid2">
-                            <div class="mm-card"><div class="l">Boletim</div><div class="v" style="font-size:.75rem">9,2 média</div></div>
-                            <div class="mm-card"><div class="l">Frequência</div><div class="v">97%</div></div>
-                        </div>
-                        <div class="mm-lines">
-                            <div class="mm-line blue" style="width:90%"></div>
-                            <div class="mm-line" style="width:70%"></div>
-                            <div class="mm-line accent" style="width:60%"></div>
-                        </div>
-                        <div><span class="mm-badge info">Nova pesquisa disponível</span></div>
-                    </div>
+                    <img src="{{ asset('img/mockups/desktop-portal-home.png') }}" alt="Portal da família" loading="lazy" class="mm-img">
                 </div>
             </div>
         </div>
 
         <div class="feat-row flip">
             <div class="feat-txt">
-                <h3>Multi-escola, multi-perfil, multi-tenant</h3>
-                <p>Uma escola ou uma rede inteira de ensino com isolamento total de dados.</p>
+                <h3>Cada pessoa vê só o que precisa</h3>
+                <p>Secretaria, professores, famílias e gestão: cada um entra e vê sua rotina, sem complicação.</p>
                 <ul class="feat-list">
-                    <li><i class="fas fa-check"></i> Múltiplas unidades por empresa, com seletor de escola na sessão</li>
-                    <li><i class="fas fa-check"></i> 19 perfis escolares + perfis personalizados por ação</li>
-                    <li><i class="fas fa-check"></i> Relatórios consolidados da rede e por unidade</li>
-                    <li><i class="fas fa-check"></i> Identidade visual, domínio próprio e auditoria completa</li>
+                    <li><i class="fas fa-check"></i> Professor vê só as turmas que leciona</li>
+                    <li><i class="fas fa-check"></i> Secretaria com fila de atendimento e ações rápidas</li>
+                    <li><i class="fas fa-check"></i> Família acompanha notas, frequência e financeiro pelo portal</li>
+                    <li><i class="fas fa-check"></i> Gestão enxerga tudo e controla permissões de cada pessoa</li>
                 </ul>
             </div>
             <div class="feat-mock">
                 <div class="mini-mock">
                     <div class="mm-bar"><span></span><span></span><span></span></div>
-                    <div class="mm-body">
-                        <div class="mm-grid2">
-                            <div class="mm-card"><div class="l">Unidade Central</div><div class="v" style="font-size:.75rem">620 alunos</div></div>
-                            <div class="mm-card"><div class="l">Unidade Norte</div><div class="v" style="font-size:.75rem">410 alunos</div></div>
-                        </div>
-                        <div class="mm-lines">
-                            <div class="mm-line blue" style="width:88%"></div>
-                            <div class="mm-line accent" style="width:70%"></div>
-                            <div class="mm-line" style="width:55%"></div>
-                        </div>
-                        <div><span class="mm-badge">Rede Educar</span> <span class="mm-badge info">3 unidades</span></div>
-                    </div>
+                    <img src="{{ asset('img/mockups/desktop-secretaria-home.png') }}" alt="Painel de cada perfil" loading="lazy" class="mm-img">
                 </div>
             </div>
         </div>
