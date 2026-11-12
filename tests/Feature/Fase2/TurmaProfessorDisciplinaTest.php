@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AnoLetivo;
 use App\Models\Atribuicao;
 use App\Models\Avaliacao;
 use App\Models\Diario;
@@ -7,7 +8,6 @@ use App\Models\Disciplina;
 use App\Models\Escola;
 use App\Models\Etapa;
 use App\Models\Turma;
-use App\Models\AnoLetivo;
 use App\Support\EmpresaContext;
 use Illuminate\Support\Facades\DB;
 

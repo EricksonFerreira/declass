@@ -114,6 +114,9 @@ class ComandoSistemaController extends Controller
 
         $seeders = collect(glob(database_path('seeders/*.php')) ?: [])
             ->map(fn (string $arquivo) => pathinfo($arquivo, PATHINFO_FILENAME))
+            // Seeders destrutivos (*ResetSeeder apagam dados) ficam fora da
+            // central — uso somente via artisan, com ciencia do operador.
+            ->reject(fn (string $classe) => str_ends_with($classe, 'ResetSeeder'))
             ->sort()
             ->values();
 

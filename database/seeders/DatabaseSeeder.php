@@ -31,10 +31,11 @@ class DatabaseSeeder extends Seeder
                 'cor_secundaria' => '#f59e0b',
             ]
         );
-        $empresa->update([
-            'nome' => 'Escola Vila Nova',
-            'dominio' => 'vilanova.ericksondev.online',
-        ]);
+        // Backfill apenas: nunca reverte nome/dominio ja configurados —
+        // em producao a escola pode ter sido personalizada.
+        if (! $empresa->dominio) {
+            $empresa->update(['dominio' => 'vilanova.ericksondev.online']);
+        }
         $this->configurarSiteVilaNova($empresa);
 
         $escolaExistente = DB::table('escolas')
@@ -133,6 +134,13 @@ class DatabaseSeeder extends Seeder
      */
     private function configurarSiteVilaNova(Empresa $empresa): void
     {
+        // Os defaults do site so sao aplicados uma unica vez: site_titulo
+        // preenchido significa que o site ja foi configurado (seed ou
+        // painel admin) — re-seed em producao nao pode regredir isso.
+        if ($empresa->site_titulo !== null) {
+            return;
+        }
+
         $disk = Storage::disk('public');
         $copiar = function (string $arquivo) use ($disk): string {
             $dest = 'site/vilanova/'.$arquivo;

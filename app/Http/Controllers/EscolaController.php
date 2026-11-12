@@ -81,7 +81,7 @@ class EscolaController extends BaseController implements FiltroInterface, Resour
         unset($data['logo']);
 
         if ($logo) {
-            $data['logo_path'] = UploadStorage::putFile($logo, 'escolas/logo');
+            $data['logo_path'] = UploadStorage::putFile($logo, 'escolas/logo', null, 'public');
         }
 
         $this->escolaService->create($data);
@@ -124,7 +124,7 @@ class EscolaController extends BaseController implements FiltroInterface, Resour
             if ($escola->logo_path) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($escola->logo_path);
             }
-            $data['logo_path'] = UploadStorage::putFile($logo, 'escolas/logo');
+            $data['logo_path'] = UploadStorage::putFile($logo, 'escolas/logo', null, 'public');
         }
 
         $escola = $this->escolaService->update($id, $data);

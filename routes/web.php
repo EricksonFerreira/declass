@@ -71,6 +71,12 @@ Route::get('/sitemap.xml', function (Request $request) {
 // Setup de producao — publico, protegido pela senha APP_MIGRATION_ROUTE_TOKEN do .env
 Route::get('migrations/setup-producao', [MigrationController::class, 'setupProducao'])->name('migrations.setup-producao');
 
+// Fallback de assets do disk publico — so e alcancado quando o arquivo
+// nao existe em public/storage (pasta real no lugar do symlink).
+Route::get('storage/{path}', [\App\Http\Controllers\StorageFileController::class, 'show'])
+    ->where('path', '.*')
+    ->name('storage.fallback');
+
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
     Route::middleware(['auth'])->get('/', function () {
         return redirect('/admin/home');

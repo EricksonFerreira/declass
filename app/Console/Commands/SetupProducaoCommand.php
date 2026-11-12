@@ -24,12 +24,27 @@ class SetupProducaoCommand extends Command
 
     public function handle(): int
     {
+        // Producao e intocavel: opcoes destrutivas so rodam com opt-in
+        // explicito no .env — nunca por acidente via rota ou comando.
+        $destrutivo = $this->option('fresh') || $this->option('reset-demo');
+        if ($destrutivo && app()->isProduction()
+            && ! filter_var(env('DECLASS_SETUP_PERMITIR_RESET', false), FILTER_VALIDATE_BOOLEAN)) {
+            $this->error('Opcoes destrutivas (--fresh/--reset-demo) bloqueadas em producao.');
+            $this->line('Uso emergencial: defina DECLASS_SETUP_PERMITIR_RESET=true no .env, execute e remova na sequencia.');
+
+            return self::FAILURE;
+        }
+        if ($destrutivo) {
+            $this->warn('ATENCAO: operacao destrutiva autorizada explicitamente em '.app()->environment().'.');
+        }
+
         $this->info('=== optimize:clear ===');
         Artisan::call('optimize:clear');
         $this->line(Artisan::output());
 
         // Logo/publicos: cria public/storage (idempotente — avisa se ja existe)
         $this->info('=== storage:link ===');
+        $this->prepararLinkStorage();
         Artisan::call('storage:link');
         $this->line(Artisan::output());
 
@@ -72,6 +87,28 @@ class SetupProducaoCommand extends Command
         $this->info('Setup de producao concluido.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Deploy que copia o symlink public/storage como pasta real deixa o
+     * storage:link sem efeito ("link ja existe") e os uploads novos 404.
+     * Em producao, renomeia a pasta para nao-destrutivo antes de linkar —
+     * o conteudo antigo fica preservado em public/storage-legado-*.
+     */
+    private function prepararLinkStorage(): void
+    {
+        $publicStorage = public_path('storage');
+
+        if (! app()->isProduction() || ! is_dir($publicStorage) || is_link($publicStorage)) {
+            return;
+        }
+
+        $legado = $publicStorage.'-legado-'.now()->format('YmdHis');
+        if (@rename($publicStorage, $legado)) {
+            $this->warn("public/storage era pasta real; movida para {$legado}");
+        } else {
+            $this->warn('public/storage e pasta real e nao pôde ser movida — storage:link pode falhar.');
+        }
     }
 
     private function garantirEmpresaDeclock(): Empresa

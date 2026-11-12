@@ -33,6 +33,7 @@
 
 - Nao alterar migrations executadas em producao.
 - Nao executar `migrate:fresh`.
+- **PROIBICAO ABSOLUTA: deploy/setup NUNCA pode resetar dados de producao.** `?fresh` e `?reset` nao sao aceitos pela rota `setup-producao` (migrate:fresh derruba todas as tabelas; DemoEscolarResetSeeder apaga a massa academica do tenant escola-demo). Os flags existem so no artisan e sao bloqueados quando `APP_ENV=production` salvo `DECLASS_SETUP_PERMITIR_RESET=true` no .env (uso emergencial — remover na sequencia). `db:seed` e idempotente: so preenche campos vazios (site da escola-demo so configura quando `site_titulo` esta vazio; `dominio` so faz backfill). Seeders `*ResetSeeder` ficam fora da central `/admin/comandos`.
 - Nao mudar contratos publicos sem necessidade.
 - Nao modificar arquivos fora do escopo solicitado.
 - Nao criar classes genericas sem beneficio concreto.
@@ -58,7 +59,7 @@ php artisan tinker
 - EXCLUIR do pacote: `public/storage` (e symlink local; virou pasta real com lixo de dev — o deploy apaga e `storage:link` recria), `storage/framework/views/*` (views compiladas em lote podem sair corrompidas), `storage/logs/*`, `bootstrap/cache/*.php`, `.git`, `node_modules`.
 - Blade: nao misturar `@php(expr)` inline com `@endphp` mais adiante no mesmo arquivo — o regex `@php(.*?)@endphp` engole o meio como bloco cru (parse error + corrompe o contador de `@forelse` no `view:cache`, gerando `$__empty_-N` em views seguintes). Usar sempre `@php expr; @endphp`.
 - Sessao/cache em `file` no .env de producao (drivers `database` exigem tabelas que nao existem antes do primeiro migrate).
-- Setup remoto: `GET /migrations/setup-producao?token={APP_MIGRATION_ROUTE_TOKEN}&demo=1` roda optimize:clear + storage:link + migrate --force + db:seed (+DemoEscolarSeeder com `demo=1`) + tenant/superadmins. Idempotente.
+- Setup remoto: `GET /migrations/setup-producao?token={APP_MIGRATION_ROUTE_TOKEN}&demo=1` roda optimize:clear + storage:link + migrate --force + db:seed (+DemoEscolarSeeder com `demo=1`) + tenant/superadmins. Idempotente e SEM opções destrutivas — ver proibicao em Restricoes.
 - Cron `schedule:run` criado via API (uid em `.hostinger/site.json`).
 - Metadados do deploy em `.hostinger/site.json`.
 

@@ -96,10 +96,12 @@ class MigrationController extends Controller
             // passamos um BufferedOutput para capturar tudo que o setup
             // escreve via $this->info/$this->line.
             $buffer = new \Symfony\Component\Console\Output\BufferedOutput();
+            // --fresh e --reset-demo sao destrutivos e NAO sao expostos via
+            // HTTP: migrate:fresh derruba todas as tabelas e o reset-demo
+            // apaga a massa academica do tenant escola-demo. Uso emergencial
+            // somente via artisan com DECLASS_SETUP_PERMITIR_RESET=true.
             Artisan::call('declass:setup-producao', [
                 '--demo' => (bool) $request->query('demo'),
-                '--reset-demo' => (bool) $request->query('reset'),
-                '--fresh' => (bool) $request->query('fresh'),
             ], $buffer);
             $output = $buffer->fetch();
 
