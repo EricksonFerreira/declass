@@ -4,35 +4,15 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$solicitacao->nome_aluno" subtitle="Pré-matrícula #{{ $solicitacao->codigo }} · {{ $solicitacao->escola->nome ?? '—' }}" />
 @stop
 
 @push('css')
 <link href="{{ asset('css/select2.min.css') }}" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 <style>
-    .sm-hero { display:flex; align-items:center; gap:.9rem; padding:1rem 1.2rem; border-radius:10px; color:#fff; }
-    .sm-hero i { font-size:1.9rem; opacity:.9; }
-    .sm-hero-status { display:block; font-size:1.25rem; font-weight:800; letter-spacing:.02em; line-height:1.1; }
-    .sm-hero-sub { display:block; font-size:.78rem; opacity:.92; margin-top:2px; }
-    .sm-steps { display:flex; align-items:flex-start; margin:1.1rem 0 .4rem; }
-    .sm-step { flex:1; text-align:center; position:relative; }
-    .sm-step::before { content:''; position:absolute; top:.65rem; left:-50%; width:100%; height:2px; background:#e5e7eb; z-index:0; }
-    .sm-step:first-child::before { display:none; }
-    .sm-step-dot { position:relative; z-index:1; width:1.35rem; height:1.35rem; border-radius:50%; margin:0 auto .3rem; display:flex; align-items:center; justify-content:center; font-size:.6rem; color:#fff; background:#cbd5e1; }
-    .sm-step--feito .sm-step-dot { background:#2563eb; }
-    .sm-step--atual .sm-step-dot { box-shadow:0 0 0 4px rgba(37,99,235,.18); background:#2563eb; }
-    .sm-step--atual::before, .sm-step--feito::before { background:#2563eb; }
-    .sm-step--success .sm-step-dot, .sm-step--success::before { background:#16a34a; }
-    .sm-step--danger .sm-step-dot, .sm-step--danger::before { background:#dc2626; }
-    .sm-step--secondary .sm-step-dot, .sm-step--secondary::before { background:#64748b; }
-    .sm-step--warning .sm-step-dot, .sm-step--warning::before { background:#d97706; }
-    .sm-step--info .sm-step-dot, .sm-step--info::before { background:#0891b2; }
-    .sm-step label { display:block; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#6b7280; margin:0; }
-    .sm-step--atual label, .sm-step--success label, .sm-step--danger label { color:#1f2937; }
-    .sm-step small { display:block; font-size:.66rem; color:#9ca3af; }
     .sm-divider-or { display:flex; align-items:center; gap:.6rem; color:#9ca3af; font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; margin:.9rem 0; }
     .sm-divider-or::before, .sm-divider-or::after { content:''; flex:1; border-top:1px solid #eef1f6; }
+    .sm-status-lg { font-size:.95rem; font-weight:800; padding:.4rem .85rem; border-radius:8px; letter-spacing:.02em; }
     .sm-perfil { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
     .sm-avatar { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.35rem; font-weight:700; color:#fff; background:linear-gradient(135deg,#2563eb,#7c3aed); flex-shrink:0; }
     .sm-nome { font-size:1.15rem; font-weight:700; margin-bottom:2px; }
@@ -45,13 +25,6 @@
     .sm-item i { color:#2563eb; width:14px; margin-top:3px; text-align:center; }
     .sm-item label { display:block; font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#9ca3af; margin:0; }
     .sm-item span { font-size:.82rem; color:#1f2937; font-weight:600; }
-    .sm-tl { position:relative; padding-left:1.4rem; }
-    .sm-tl::before { content:''; position:absolute; left:.34rem; top:.35rem; bottom:.35rem; width:2px; background:#e5e7eb; }
-    .sm-tl-item { position:relative; padding-bottom:.85rem; }
-    .sm-tl-item:last-child { padding-bottom:0; }
-    .sm-tl-dot { position:absolute; left:-1.4rem; top:.2rem; width:.8rem; height:.8rem; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 2px #e5e7eb; }
-    .sm-tl-item label { display:block; font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#9ca3af; margin:0; }
-    .sm-tl-item span { font-size:.82rem; color:#1f2937; font-weight:600; }
 </style>
 @endpush
 
@@ -60,19 +33,6 @@
     $statusCores = ['pendente' => 'warning', 'em_analise' => 'info', 'aprovada' => 'success', 'recusada' => 'danger', 'cancelada' => 'secondary'];
     $statusIcones = ['pendente' => 'fa-clock', 'em_analise' => 'fa-search', 'aprovada' => 'fa-check-circle', 'recusada' => 'fa-times-circle', 'cancelada' => 'fa-ban'];
     $statusCor = $statusCores[$solicitacao->status] ?? 'secondary';
-    $statusHero = [
-        'pendente' => 'Aguardando análise da secretaria',
-        'em_analise' => 'Sendo analisada pela equipe',
-        'aprovada' => 'Matrícula criada com sucesso',
-        'recusada' => 'Solicitação recusada — ver o motivo',
-        'cancelada' => 'Solicitação anulada',
-    ];
-    $decidida = in_array($solicitacao->status, ['aprovada', 'recusada', 'cancelada'], true);
-    $passos = [
-        ['rotulo' => 'Recebida', 'estado' => 'feito', 'data' => $solicitacao->recebida_em],
-        ['rotulo' => 'Em análise', 'estado' => $solicitacao->status === 'pendente' ? 'futuro' : ($decidida ? 'feito' : 'atual'), 'data' => null],
-        ['rotulo' => $decidida ? $statusLabel : 'Decisão', 'estado' => $decidida ? $statusCor : 'futuro', 'data' => $solicitacao->analisada_em],
-    ];
     $iniciais = collect(explode(' ', trim($solicitacao->nome_aluno ?? '?')))->filter()->map(fn ($s) => mb_strtoupper(mb_substr($s, 0, 1)))->take(2)->implode('');
     $info = function (string $icon, string $label, $valor) {
         return '<div class="sm-item"><i class="fa '.$icon.'"></i><div><label>'.$label.'</label><span>'.$valor.'</span></div></div>';
@@ -88,7 +48,7 @@
             <div class="sm-meta">
                 <code class="text-dark font-weight-bold">#{{ $solicitacao->codigo }}</code>
                 · {{ $solicitacao->escola->nome ?? '—' }}
-                <span class="badge badge-{{ $statusCor }} ml-1"><i class="fa {{ $statusIcones[$solicitacao->status] ?? 'fa-circle' }}"></i> {{ $solicitacao->status_label }}</span>
+                <span class="badge badge-{{ $statusCor }} sm-status-lg ml-2"><i class="fa {{ $statusIcones[$solicitacao->status] ?? 'fa-circle' }}"></i> {{ $solicitacao->status_label }}</span>
             </div>
         </div>
         <div class="sm-acoes">
@@ -236,42 +196,13 @@
 
                         <form method="POST" action="{{ route('solicitacao_matricula.cancelar', $solicitacao->id) }}" class="text-center">
                             @csrf
-                            <button type="submit" class="btn btn-link btn-sm text-muted" title="Anula o pedido sem decisão — ex.: duplicado ou registrado por engano" onclick="return confirm('Cancelar anula o pedido sem decisão (duplicado, registro por engano). Continuar?')"><i class="fa fa-ban"></i> Cancelar solicitação (anula sem decisão)</button>
+                            <button type="submit" class="btn btn-warning btn-sm btn-block" title="Anula o pedido sem decisão — ex.: duplicado ou registrado por engano" onclick="return confirm('Cancelar anula o pedido sem decisão (duplicado, registro por engano). Continuar?')"><i class="fa fa-ban"></i> Cancelar solicitação (anula sem decisão)</button>
                         </form>
                     </div>
                 </div>
             @endcan
         @endif
 
-        <div class="card">
-            <div class="card-body">
-                <div class="sm-hero bg-{{ $statusCor }}">
-                    <i class="fa {{ $statusIcones[$solicitacao->status] ?? 'fa-circle' }}"></i>
-                    <div>
-                        <span class="sm-hero-status">{{ $solicitacao->status_label }}</span>
-                        <span class="sm-hero-sub">{{ $statusHero[$solicitacao->status] ?? '' }}</span>
-                    </div>
-                </div>
-
-                <div class="sm-steps">
-                    @foreach($passos as $passo)
-                        <div class="sm-step sm-step--{{ $passo['estado'] }}">
-                            <div class="sm-step-dot">
-                                @if($passo['estado'] === 'futuro')<i class="fa fa-circle" style="font-size:.35rem"></i>
-                                @elseif($passo['estado'] === 'atual')<i class="fa fa-circle" style="font-size:.4rem"></i>
-                                @else<i class="fa fa-check"></i>@endif
-                            </div>
-                            <label>{{ $passo['rotulo'] }}</label>
-                            @if($passo['data'])<small>{{ $passo['data'] }}</small>@endif
-                        </div>
-                    @endforeach
-                </div>
-
-                @if($solicitacao->analista)
-                    <small class="text-muted d-block text-center mt-1">Analisada por {{ $solicitacao->analista->name }}</small>
-                @endif
-            </div>
-        </div>
     </div>
 </div>
 @stop
