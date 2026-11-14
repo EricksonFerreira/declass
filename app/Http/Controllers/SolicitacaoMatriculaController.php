@@ -97,8 +97,14 @@ class SolicitacaoMatriculaController extends BaseController implements FiltroInt
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Solicitações de Matrícula', 'solicitacao_matricula.index', $solicitacao->nome_aluno, 'Vida Acadêmica');
 
-        return view('solicitacao_matricula.show', array_merge(compact('solicitacao', 'breadcrumb'), $this->opcoesAprovacao($solicitacao)))
-            ->with('titulo', $this->titulo);
+        $statusLabel = SolicitacaoMatricula::STATUS[$solicitacao->status] ?? $solicitacao->statusLabel();
+        $parentescoLabel = SolicitacaoMatricula::PARENTESCOS[$solicitacao->parentesco] ?? $solicitacao->parentesco;
+        $origemLabel = SolicitacaoMatricula::ORIGENS[$solicitacao->origem] ?? $solicitacao->origem;
+
+        return view('solicitacao_matricula.show', array_merge(
+            compact('solicitacao', 'breadcrumb', 'statusLabel', 'parentescoLabel', 'origemLabel'),
+            $this->opcoesAprovacao($solicitacao)
+        ))->with('titulo', $this->titulo);
     }
 
     public function edit($id)
@@ -237,13 +243,18 @@ class SolicitacaoMatriculaController extends BaseController implements FiltroInt
         ];
     }
 
-    /** Turmas da escola da solicitacao para o select de aprovacao. */
+    /** Turmas ativas da escola da solicitacao para o select de aprovacao. */
     private function opcoesAprovacao(SolicitacaoMatricula $solicitacao): array
     {
         return [
             'turmasAprovacao' => Turma::query()
                 ->with('anoLetivo', 'etapa')
                 ->where('escola_id', $solicitacao->escola_id)
+                ->where('ativo', 'S')
+                ->where(function ($q) {
+                    $q->whereDoesntHave('anoLetivo')
+                        ->orWhereHas('anoLetivo', fn ($a) => $a->where('status', '!=', 'encerrado'));
+                })
                 ->orderBy('nome')
                 ->get(),
         ];

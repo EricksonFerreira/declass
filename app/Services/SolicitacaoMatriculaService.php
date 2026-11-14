@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\AnaliseMatriculaMail;
 use App\Models\Aluno;
 use App\Models\Matricula;
 use App\Models\Pessoa;
@@ -17,8 +18,10 @@ class SolicitacaoMatriculaService extends AbstractBaseService
 {
     protected Model $model;
 
-    public function __construct(SolicitacaoMatricula $solicitacao)
-    {
+    public function __construct(
+        SolicitacaoMatricula $solicitacao,
+        private readonly EmailService $emailService,
+    ) {
         $this->model = $solicitacao;
     }
 
@@ -74,8 +77,13 @@ class SolicitacaoMatriculaService extends AbstractBaseService
                 'turma_id' => 'A turma deve ser da mesma escola da solicitação.',
             ]);
         }
+        if ($turma->finalizada()) {
+            throw ValidationException::withMessages([
+                'turma_id' => 'A turma está inativa ou o ano letivo está encerrado.',
+            ]);
+        }
 
-        return DB::transaction(function () use ($solicitacao, $turma, $user) {
+        $solicitacao = DB::transaction(function () use ($solicitacao, $turma, $user) {
             // 1. aluno pretendido (pessoas.sexo e M/F/O)
             $pessoaAluno = Pessoa::create([
                 'nome' => $solicitacao->nome_aluno,
@@ -138,6 +146,10 @@ class SolicitacaoMatriculaService extends AbstractBaseService
 
             return $solicitacao->fresh(['aluno.pessoa', 'responsavel.pessoa', 'matricula.turma']);
         });
+
+        $this->notificarAnalise($solicitacao);
+
+        return $solicitacao;
     }
 
     /** Reprova a solicitacao informando o motivo. */
@@ -159,7 +171,21 @@ class SolicitacaoMatriculaService extends AbstractBaseService
             'data_analise' => now(),
         ]);
 
-        return $solicitacao->fresh();
+        $solicitacao = $solicitacao->fresh();
+
+        $this->notificarAnalise($solicitacao);
+
+        return $solicitacao;
+    }
+
+    /** Avisa o responsavel por e-mail sobre a decisao. */
+    private function notificarAnalise(SolicitacaoMatricula $solicitacao): void
+    {
+        $this->emailService->enviar(
+            $solicitacao->email_responsavel,
+            new AnaliseMatriculaMail($solicitacao),
+            "pré-matrícula #{$solicitacao->codigo}",
+        );
     }
 
     /** Cancela uma solicitacao ainda nao decidida. */

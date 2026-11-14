@@ -7,12 +7,11 @@ use App\Mail\BoasVindasEmpresaMail;
 use App\Models\Empresa;
 use App\Models\Regra;
 use App\Models\User;
+use App\Services\EmailService;
 use App\Services\PermissaoSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -108,30 +107,21 @@ class CadastroEmpresaController extends Controller
         });
 
         // Envia e-mail para o administrador com as credenciais de acesso.
-        try {
-            Mail::to($payload['user']->email)
-                ->send(new BoasVindasAdminMail($payload['empresa'], $payload['user'], $payload['senha']));
-        } catch (\Throwable $e) {
-            Log::error('Falha ao enviar e-mail de boas-vindas ao admin.', [
-                'email' => $payload['user']->email,
-                'empresa' => $payload['empresa']->nome,
-                'exception' => $e->getMessage(),
-            ]);
-        }
+        $emailService = app(EmailService::class);
+        $emailService->enviar(
+            $payload['user']->email,
+            new BoasVindasAdminMail($payload['empresa'], $payload['user'], $payload['senha']),
+            "boas-vindas admin {$payload['empresa']->nome}",
+        );
 
         // Envia e-mail para o e-mail da empresa (pode ser diferente do admin).
-        try {
-            $emailEmpresa = $payload['empresa']->email;
-            if ($emailEmpresa && $emailEmpresa !== $payload['user']->email) {
-                Mail::to($emailEmpresa)
-                    ->send(new BoasVindasEmpresaMail($payload['empresa'], $payload['user'], $payload['senha']));
-            }
-        } catch (\Throwable $e) {
-            Log::error('Falha ao enviar e-mail de boas-vindas a empresa.', [
-                'email' => $payload['empresa']->email,
-                'empresa' => $payload['empresa']->nome,
-                'exception' => $e->getMessage(),
-            ]);
+        $emailEmpresa = $payload['empresa']->email;
+        if ($emailEmpresa && $emailEmpresa !== $payload['user']->email) {
+            $emailService->enviar(
+                $emailEmpresa,
+                new BoasVindasEmpresaMail($payload['empresa'], $payload['user'], $payload['senha']),
+                "boas-vindas empresa {$payload['empresa']->nome}",
+            );
         }
 
         return redirect()->route('cadastro.empresa.success')
