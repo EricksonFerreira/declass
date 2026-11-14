@@ -71,6 +71,12 @@ class EmprestimoLivro extends Model
         return $this->status === 'ativo';
     }
 
+    /** Atalho de leitura em Blade: $model->esta_ativo */
+    public function getEstaAtivoAttribute()
+    {
+        return $this->estaAtivo();
+    }
+
     public function estaDevolvido(): bool
     {
         return $this->status === 'devolvido';
@@ -90,5 +96,11 @@ class EmprestimoLivro extends Model
         }
 
         return $this->estaAtrasado() ? 'atrasado' : 'ativo';
+    }
+
+    /** Atalho de leitura em Blade: $model->situacao */
+    public function getSituacaoAttribute()
+    {
+        return $this->situacao();
     }
 }

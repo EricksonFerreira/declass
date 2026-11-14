@@ -119,7 +119,7 @@
     <div class="card">
         <div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-comments mr-1"></i> Fórum de {{ $disciplina->nome }}</h3></div>
         @can('turma.forum.store')
-        @if($turma->finalizada())
+        @if($turma->finalizada)
         <div class="card-body border-bottom">
             <small class="text-muted"><i class="fa fa-lock mr-1"></i>Turma finalizada — o fórum está somente para consulta, sem novas mensagens.</small>
         </div>
@@ -153,7 +153,7 @@
                     <div class="d-flex justify-content-between flex-wrap mb-1">
                         <strong>{{ $post->autor->nome ?? '' }}</strong>
                         <span class="d-flex align-items-center" style="gap:.5rem;">
-                            @if($post->estaEncerrada())
+                            @if($post->esta_encerrada)
                                 <span class="badge badge-secondary"><i class="fa fa-lock mr-1"></i>Encerrada</span>
                             @endif
                             <small class="text-muted">{{ $post->created_at?->format('d/m/Y H:i') }}</small>
@@ -167,7 +167,7 @@
                                         <form method="POST" action="{{ route('turma.forum.encerrar', [$turma->id, $disciplina->id, $post->id]) }}">
                                             @csrf @method('PATCH')
                                             <button type="submit" class="dropdown-item">
-                                                <i class="fa {{ $post->estaEncerrada() ? 'fa-unlock' : 'fa-lock' }} mr-2"></i>{{ $post->estaEncerrada() ? 'Reabrir conversa' : 'Encerrar conversa' }}
+                                                <i class="fa {{ $post->esta_encerrada ? 'fa-unlock' : 'fa-lock' }} mr-2"></i>{{ $post->esta_encerrada ? 'Reabrir conversa' : 'Encerrar conversa' }}
                                             </button>
                                         </form>
                                     @endcan
@@ -201,9 +201,9 @@
                             <div class="small">{!! $resposta->mensagem_formatada !!}</div>
                         </div>
                     @endforeach
-                    @if($turma->finalizada())
+                    @if($turma->finalizada)
                         <small class="text-muted"><i class="fa fa-lock mr-1"></i>Turma finalizada — sem novas respostas.</small>
-                    @elseif($post->estaEncerrada())
+                    @elseif($post->esta_encerrada)
                         <small class="text-muted"><i class="fa fa-lock mr-1"></i>Conversa encerrada — sem novas respostas.</small>
                     @else
                         @can('turma.forum.comentar')

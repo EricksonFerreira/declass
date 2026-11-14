@@ -170,6 +170,12 @@ class Empresa extends Model
         return strtoupper((string) $this->ativo) === 'S';
     }
 
+    /** Atalho de leitura em Blade: $model->esta_ativa */
+    public function getEstaAtivaAttribute()
+    {
+        return $this->estaAtiva();
+    }
+
     /**
      * Site publico da empresa ("rede de escolas") so fica no ar quando
      * a empresa esta ativa e o site foi ligado nas definicoes.
@@ -177,6 +183,12 @@ class Empresa extends Model
     public function sitePublicoAtivo(): bool
     {
         return $this->estaAtiva() && strtoupper((string) $this->site_ativo) === 'S';
+    }
+
+    /** Atalho de leitura em Blade: $model->site_publico_ativo */
+    public function getSitePublicoAtivoAttribute()
+    {
+        return $this->sitePublicoAtivo();
     }
 
     /**

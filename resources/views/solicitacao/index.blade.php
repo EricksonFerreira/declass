@@ -28,9 +28,9 @@
                 <div class="d-flex justify-content-between align-items-start flex-wrap">
                     <div>
                         <strong>{{ $s->titulo }}</strong>
-                        <span class="badge badge-{{ $cores[$s->status] ?? 'secondary' }} ml-1">{{ $s->statusLabel() }}</span>
+                        <span class="badge badge-{{ $cores[$s->status] ?? 'secondary' }} ml-1">{{ $s->status_label }}</span>
                         <div class="text-muted small">
-                            {{ $s->tipoLabel() }} · {{ $s->aluno->pessoa->nome ?? 'Sem aluno' }}
+                            {{ $s->tipo_label }} · {{ $s->aluno->pessoa->nome ?? 'Sem aluno' }}
                             · por {{ $s->autor->nome ?? '' }} · {{ $s->created_at?->format('d/m/Y H:i') }}
                         </div>
                     </div>
@@ -51,7 +51,7 @@
                     <div class="mt-1">
                         @foreach($anexosAbertura as $anexo)
                             <a href="{{ route('solicitacao.anexo', [$s->id, $anexo->id]) }}" target="_blank" class="btn btn-xs btn-outline-secondary mr-1">
-                                <i class="fas fa-paperclip"></i> {{ $anexo->nomeExibicao() }}
+                                <i class="fas fa-paperclip"></i> {{ $anexo->nome_exibicao }}
                             </a>
                         @endforeach
                     </div>
@@ -84,7 +84,7 @@
                                             <div class="mt-1">
                                                 @foreach($mensagem->anexos as $anexo)
                                                     <a href="{{ route('solicitacao.anexo', [$s->id, $anexo->id]) }}" target="_blank" class="btn btn-xs btn-outline-secondary mr-1">
-                                                        <i class="fas fa-paperclip"></i> {{ $anexo->nomeExibicao() }}
+                                                        <i class="fas fa-paperclip"></i> {{ $anexo->nome_exibicao }}
                                                     </a>
                                                 @endforeach
                                             </div>
@@ -94,7 +94,7 @@
                             </div>
                         @endif
 
-                        @if($s->conversaAberta())
+                        @if($s->conversa_aberta)
                             <form method="POST" action="{{ route('solicitacao.mensagem', $s->id) }}" class="mb-3">
                                 @csrf
                                 <div class="form-group mb-1">

@@ -100,10 +100,12 @@ class SolicitacaoMatriculaController extends BaseController implements FiltroInt
         $statusLabel = SolicitacaoMatricula::STATUS[$solicitacao->status] ?? $solicitacao->statusLabel();
         $parentescoLabel = SolicitacaoMatricula::PARENTESCOS[$solicitacao->parentesco] ?? $solicitacao->parentesco;
         $origemLabel = SolicitacaoMatricula::ORIGENS[$solicitacao->origem] ?? $solicitacao->origem;
+        $turmasAprovacao = $this->opcoesAprovacao($solicitacao)['turmasAprovacao'];
+        $semTurmasAtivas = $turmasAprovacao->isEmpty();
+        $turmasPorEtapa = $turmasAprovacao->groupBy(fn ($t) => $t->etapa->nome ?? 'Outras');
 
         return view('solicitacao_matricula.show', array_merge(
-            compact('solicitacao', 'breadcrumb', 'statusLabel', 'parentescoLabel', 'origemLabel'),
-            $this->opcoesAprovacao($solicitacao)
+            compact('solicitacao', 'breadcrumb', 'statusLabel', 'parentescoLabel', 'origemLabel', 'turmasAprovacao', 'turmasPorEtapa', 'semTurmasAtivas')
         ))->with('titulo', $this->titulo);
     }
 

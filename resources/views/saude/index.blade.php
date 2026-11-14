@@ -59,7 +59,7 @@
                             <div class="ux-card__sub">{{ $aluno->escola->nome ?? '—' }}</div>
                         </div>
                         <div class="ux-card__badges">
-                            @if($ficha->temAlertas())
+                            @if($ficha->tem_alertas)
                                 @if($ficha->alergias)<span class="ux-card__badge ux-card__badge--red" title="{{ $ficha->alergias }}">Alergias</span>@endif
                                 @if($ficha->condicoes_cronicas)<span class="ux-card__badge ux-card__badge--amber" title="{{ $ficha->condicoes_cronicas }}">Condições</span>@endif
                                 @if($ficha->medicamentos)<span class="ux-card__badge ux-card__badge--blue" title="{{ $ficha->medicamentos }}">Medicam.</span>@endif
@@ -71,7 +71,7 @@
                     <div class="ux-card__meta">
                         <div class="ux-card__meta-row">
                             <span class="ux-card__meta-label">Tipo sanguíneo</span>
-                            <span class="ux-card__meta-value">{{ $ficha->tipoSanguineoLabel() }}</span>
+                            <span class="ux-card__meta-value">{{ $ficha->tipo_sanguineo_label }}</span>
                         </div>
                         <div class="ux-card__meta-row ux-card__meta-row--full">
                             <span class="ux-card__meta-label">Contato de emergência</span>
@@ -120,9 +120,9 @@
                         <tr>
                             <td class="font-weight-bold">{{ $aluno->pessoa->nome ?? '—' }}</td>
                             <td>{{ $aluno->escola->nome ?? '—' }}</td>
-                            <td>{{ $ficha->tipoSanguineoLabel() }}</td>
+                            <td>{{ $ficha->tipo_sanguineo_label }}</td>
                             <td>
-                                @if($ficha->temAlertas())
+                                @if($ficha->tem_alertas)
                                     @if($ficha->alergias)<span class="badge badge-danger mr-1" title="{{ $ficha->alergias }}">Alergias</span>@endif
                                     @if($ficha->condicoes_cronicas)<span class="badge badge-warning mr-1" title="{{ $ficha->condicoes_cronicas }}">Condições</span>@endif
                                     @if($ficha->medicamentos)<span class="badge badge-info" title="{{ $ficha->medicamentos }}">Medicamentos</span>@endif

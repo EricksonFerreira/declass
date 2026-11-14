@@ -97,7 +97,7 @@
     <div class="card-body p-0 ux-index-body" data-view="cards">
         <div class="ux-cards plt-cards">
             @forelse($periodos as $periodo)
-                @php $ativo = $periodo->estaAtivo(); @endphp
+                @php $ativo = $periodo->esta_ativo; @endphp
                 <article class="ux-card plt-item {{ $ativo ? '' : 'ux-card--muted' }}" data-plt
                     data-nome="{{ $periodo->nome }}"
                     data-ordem="{{ $periodo->ordem }}º"
@@ -174,7 +174,7 @@
                 </thead>
                 <tbody>
                     @forelse($periodos as $periodo)
-                        @php $ativo = $periodo->estaAtivo(); @endphp
+                        @php $ativo = $periodo->esta_ativo; @endphp
                         <tr class="plt-item" data-plt
                             data-nome="{{ $periodo->nome }}"
                             data-ordem="{{ $periodo->ordem }}º"

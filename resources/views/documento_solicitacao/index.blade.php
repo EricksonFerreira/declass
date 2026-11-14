@@ -36,7 +36,7 @@
                         <div class="d-flex justify-content-between align-items-start flex-wrap">
                             <div>
                                 <strong>{{ $doc->titulo }}</strong>
-                                <span class="badge badge-{{ $cores[$doc->status] ?? 'secondary' }} ml-1">{{ $doc->statusLabel() }}</span>
+                                <span class="badge badge-{{ $cores[$doc->status] ?? 'secondary' }} ml-1">{{ $doc->status_label }}</span>
                                 <div class="text-muted small">
                                     {{ $doc->aluno->pessoa->nome ?? '' }}
                                     @if($doc->prazo) · prazo {{ $doc->prazo->format('d/m/Y') }} @endif
@@ -80,7 +80,7 @@
                             <div class="border rounded h-100 p-2 d-flex flex-column" style="background:#fff;">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
                                     <strong class="small">{{ $doc->titulo }}</strong>
-                                    <span class="badge badge-{{ $cores[$doc->status] ?? 'secondary' }} ml-1">{{ $doc->statusLabel() }}</span>
+                                    <span class="badge badge-{{ $cores[$doc->status] ?? 'secondary' }} ml-1">{{ $doc->status_label }}</span>
                                 </div>
                                 <div class="text-muted small">
                                     <i class="fa fa-user mr-1"></i>{{ $doc->aluno->pessoa->nome ?? '' }}

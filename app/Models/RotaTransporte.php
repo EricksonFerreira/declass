@@ -60,8 +60,20 @@ class RotaTransporte extends Model
         return $this->passageiros()->where('ativo', 'S')->count();
     }
 
+    /** Atalho de leitura em Blade: $model->passageiros_ativos */
+    public function getPassageirosAtivosAttribute()
+    {
+        return $this->passageirosAtivos();
+    }
+
     public function estaAtivo(): bool
     {
         return $this->ativo === 'S';
+    }
+
+    /** Atalho de leitura em Blade: $model->esta_ativo */
+    public function getEstaAtivoAttribute()
+    {
+        return $this->estaAtivo();
     }
 }

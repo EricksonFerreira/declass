@@ -55,4 +55,10 @@ class PeriodoLetivo extends Model
     {
         return $this->ativo === 'S';
     }
+
+    /** Atalho de leitura em Blade: $model->esta_ativo */
+    public function getEstaAtivoAttribute()
+    {
+        return $this->estaAtivo();
+    }
 }

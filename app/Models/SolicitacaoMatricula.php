@@ -168,8 +168,42 @@ class SolicitacaoMatricula extends Model
         return in_array($this->status, ['pendente', 'em_analise'], true);
     }
 
+    /** Datas prontas para exibicao em Blade (sem ->format() na view). */
+    public function getRecebidaEmAttribute(): ?string
+    {
+        return $this->created_at?->format('d/m/Y H:i');
+    }
+
+    public function getAnalisadaEmAttribute(): ?string
+    {
+        return $this->data_analise?->format('d/m/Y H:i');
+    }
+
+    public function getNascimentoAlunoBrAttribute(): ?string
+    {
+        return $this->data_nascimento_aluno?->format('d/m/Y');
+    }
+
+    /** Valor para input type=date (Y-m-d) no formulario. */
+    public function getNascimentoAlunoIsoAttribute(): ?string
+    {
+        return $this->data_nascimento_aluno?->format('Y-m-d');
+    }
+
+    /** Atalho de leitura em Blade: $model->esta_pendente */
+    public function getEstaPendenteAttribute()
+    {
+        return $this->estaPendente();
+    }
+
     public function statusLabel(): string
     {
         return self::STATUS[$this->status] ?? $this->status;
+    }
+
+    /** Atalho de leitura em Blade: $model->status_label */
+    public function getStatusLabelAttribute()
+    {
+        return $this->statusLabel();
     }
 }

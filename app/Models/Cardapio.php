@@ -48,8 +48,20 @@ class Cardapio extends Model
         return self::TIPOS[$this->tipo] ?? $this->tipo;
     }
 
+    /** Atalho de leitura em Blade: $model->tipo_label */
+    public function getTipoLabelAttribute()
+    {
+        return $this->tipoLabel();
+    }
+
     public function estaAtivo(): bool
     {
         return $this->ativo === 'S';
+    }
+
+    /** Atalho de leitura em Blade: $model->esta_ativo */
+    public function getEstaAtivoAttribute()
+    {
+        return $this->estaAtivo();
     }
 }

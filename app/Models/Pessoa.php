@@ -68,9 +68,21 @@ class Pessoa extends Model
         return strtoupper((string) $this->ativo) === 'S';
     }
 
+    /** Atalho de leitura em Blade: $model->esta_ativa */
+    public function getEstaAtivaAttribute()
+    {
+        return $this->estaAtiva();
+    }
+
     public function nomeExibicao(): string
     {
         return trim((string) ($this->nome_social ?: $this->nome));
+    }
+
+    /** Atalho de leitura em Blade: $model->nome_exibicao */
+    public function getNomeExibicaoAttribute()
+    {
+        return $this->nomeExibicao();
     }
 
     /**

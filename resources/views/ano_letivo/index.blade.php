@@ -101,7 +101,7 @@
         <div class="ux-cards alt-cards">
             @forelse($anosLetivos as $anoLetivo)
                 @php
-                    $ativo = $anoLetivo->estaAtivo();
+                    $ativo = $anoLetivo->esta_ativo;
                     $statusKey = (string) $anoLetivo->status;
                     $statusLabel = \App\Models\AnoLetivo::STATUS[$statusKey] ?? $statusKey;
                     $statusBadgeVariant = ['letivo' => 'green', 'planejamento' => 'blue', 'encerrado' => 'red'][$statusKey] ?? 'gray';
@@ -179,7 +179,7 @@
                 <tbody>
                     @forelse($anosLetivos as $anoLetivo)
                         @php
-                            $ativo = $anoLetivo->estaAtivo();
+                            $ativo = $anoLetivo->esta_ativo;
                             $statusKey = (string) $anoLetivo->status;
                             $statusLabel = \App\Models\AnoLetivo::STATUS[$statusKey] ?? $statusKey;
                         @endphp

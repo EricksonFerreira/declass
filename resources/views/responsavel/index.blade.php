@@ -33,7 +33,7 @@
                     @forelse($responsaveis as $responsavel)
                         <tr>
                             <td>
-                                <a href="{{ route('responsavel.show', $responsavel->id) }}" class="font-weight-bold">{{ $responsavel->pessoa->nomeExibicao() ?? '—' }}</a>
+                                <a href="{{ route('responsavel.show', $responsavel->id) }}" class="font-weight-bold">{{ $responsavel->pessoa->nome_exibicao ?? '—' }}</a>
                             </td>
                             <td>
                                 {{ $responsavel->pessoa->email ?? '—' }}
@@ -44,7 +44,7 @@
                             <td>{{ $responsavel->profissao ?? '—' }}</td>
                             <td>{{ $responsavel->alunos_count ?? $responsavel->alunos->count() }}</td>
                             <td>
-                                @if($responsavel->estaAtivo())
+                                @if($responsavel->esta_ativo)
                                     <span class="badge badge-success">Ativo</span>
                                 @else
                                     <span class="badge badge-secondary">Inativo</span>
@@ -56,7 +56,7 @@
                                     <a href="{{ route('responsavel.edit', $responsavel->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                                 @endcan
                                 @can('responsavel.destroy')
-                                    <x-delete-button :action="route('responsavel.destroy', $responsavel->id)" titulo="Excluir" mensagem="Excluir o responsável &quot;{{ $responsavel->pessoa->nomeExibicao() ?? '' }}&quot;? Os dados são preservados (exclusão lógica)." />
+                                    <x-delete-button :action="route('responsavel.destroy', $responsavel->id)" titulo="Excluir" mensagem="Excluir o responsável &quot;{{ $responsavel->pessoa->nome_exibicao ?? '' }}&quot;? Os dados são preservados (exclusão lógica)." />
                                 @endcan
                             </td>
                         </tr>

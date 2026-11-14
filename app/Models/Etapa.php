@@ -54,4 +54,10 @@ class Etapa extends Model
     {
         return strtoupper((string) $this->ativo) === 'S';
     }
+
+    /** Atalho de leitura em Blade: $model->esta_ativa */
+    public function getEstaAtivaAttribute()
+    {
+        return $this->estaAtiva();
+    }
 }

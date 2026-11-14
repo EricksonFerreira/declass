@@ -9,7 +9,7 @@
 
 @section('content')
     @php
-        $roleLabel = $user->isSuperAdmin()
+        $roleLabel = $user->is_super_admin
             ? 'Superusuário'
             : (optional($user->tipoUsuario)->name ?? 'Sem perfil');
 

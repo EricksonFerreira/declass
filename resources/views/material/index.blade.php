@@ -32,18 +32,18 @@
                 </thead>
                 <tbody>
                     @forelse($materiais as $material)
-                        <tr class="{{ $material->baixoEstoque() ? 'table-warning' : '' }}">
+                        <tr class="{{ $material->baixo_estoque ? 'table-warning' : '' }}">
                             <td>
                                 <strong>{{ $material->nome }}</strong>
                                 @if($material->ativo !== 'S')
                                     <span class="badge badge-secondary ml-1">Inativo</span>
                                 @endif
                             </td>
-                            <td><span class="badge badge-light border">{{ $material->categoriaLabel() }}</span></td>
+                            <td><span class="badge badge-light border">{{ $material->categoria_label }}</span></td>
                             <td>{{ $material->escola->nome ?? 'Rede toda' }}</td>
                             <td>
-                                <strong>{{ $material->estoqueFormatado() }}</strong>
-                                @if($material->baixoEstoque())
+                                <strong>{{ $material->estoque_formatado }}</strong>
+                                @if($material->baixo_estoque)
                                     <br><span class="badge badge-danger">Estoque baixo</span>
                                 @endif
                             </td>

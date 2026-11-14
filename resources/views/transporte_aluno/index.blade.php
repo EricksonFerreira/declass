@@ -41,7 +41,7 @@
                             <td>{{ $p->rota->veiculo->placa ?? '—' }}</td>
                             <td>{{ $p->parada->nome ?? '—' }}</td>
                             <td>
-                                @if($p->estaAtivo())
+                                @if($p->esta_ativo)
                                     <span class="badge badge-success">Ativo</span>
                                 @else
                                     <span class="badge badge-secondary">Inativo</span>

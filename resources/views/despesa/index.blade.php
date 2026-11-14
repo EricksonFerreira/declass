@@ -37,7 +37,7 @@
                         <tr class="{{ $situacao === 'atrasada' ? 'table-danger' : '' }}">
                             <td class="font-weight-bold">{{ $despesa->descricao }}</td>
                             <td>{{ $despesa->fornecedor ?: '—' }}</td>
-                            <td><span class="badge badge-light border">{{ $despesa->categoriaLabel() }}</span></td>
+                            <td><span class="badge badge-light border">{{ $despesa->categoria_label }}</span></td>
                             <td>{{ $despesa->escola->nome ?? 'Rede toda' }}</td>
                             <td>{{ $despesa->data_vencimento->format('d/m/Y') }}</td>
                             <td class="text-right font-weight-bold">R$ {{ number_format($despesa->valor, 2, ',', '.') }}</td>

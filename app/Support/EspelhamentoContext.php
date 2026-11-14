@@ -46,6 +46,17 @@ class EspelhamentoContext
         return $this->alvo;
     }
 
+    /** Leitura por propriedade em Blade: ->ativo, ->alvo, ->alvo_id. */
+    public function __get(string $prop)
+    {
+        return match ($prop) {
+            'ativo' => $this->ativo(),
+            'alvo' => $this->alvo(),
+            'alvo_id' => $this->alvoId(),
+            default => null,
+        };
+    }
+
     /**
      * Guarda o tenant observado antes de fixar o tenant do alvo —
      * ao encerrar, a observacao anterior e restaurada.

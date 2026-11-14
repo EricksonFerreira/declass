@@ -90,8 +90,8 @@
                                 <tr>
                                     <td class="text-nowrap">{{ $mov->data?->format('d/m/Y') ?? '—' }}</td>
                                     <td class="font-weight-bold">{{ $mov->material->nome ?? '—' }}</td>
-                                    <td><span class="badge badge-{{ $corTipo[$mov->tipo] ?? 'secondary' }}">{{ $mov->tipoLabel() }}</span></td>
-                                    <td class="text-right">{{ $mov->quantidadeFormatada() }}</td>
+                                    <td><span class="badge badge-{{ $corTipo[$mov->tipo] ?? 'secondary' }}">{{ $mov->tipo_label }}</span></td>
+                                    <td class="text-right">{{ $mov->quantidade_formatada }}</td>
                                     <td class="text-right text-nowrap">
                                         {{ $fmtQtd($mov->saldo_anterior) }} → <strong>{{ $fmtQtd($mov->saldo_novo) }}</strong>
                                     </td>
@@ -128,9 +128,9 @@
                                     <option value="">Selecione…</option>
                                     @foreach($materiais as $mat)
                                         <option value="{{ $mat->id }}"
-                                            data-saldo="{{ $mat->estoqueFormatado() }}"
+                                            data-saldo="{{ $mat->estoque_formatado }}"
                                             {{ (string) old('material_id') === (string) $mat->id ? 'selected' : '' }}>
-                                            {{ $mat->nome }} — saldo {{ $mat->estoqueFormatado() }}{{ $mat->escola ? ' · '.$mat->escola->nome : '' }}
+                                            {{ $mat->nome }} — saldo {{ $mat->estoque_formatado }}{{ $mat->escola ? ' · '.$mat->escola->nome : '' }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -188,10 +188,10 @@
                                             <tr>
                                                 <td>
                                                     {{ $mat->nome }}
-                                                    <br><small class="text-muted">{{ $mat->categoriaLabel() }}{{ $mat->escola ? ' · '.$mat->escola->nome : '' }}</small>
-                                                    @if($mat->baixoEstoque()) <span class="badge badge-danger">baixo</span>@endif
+                                                    <br><small class="text-muted">{{ $mat->categoria_label }}{{ $mat->escola ? ' · '.$mat->escola->nome : '' }}</small>
+                                                    @if($mat->baixo_estoque) <span class="badge badge-danger">baixo</span>@endif
                                                 </td>
-                                                <td class="text-right font-weight-bold {{ $mat->baixoEstoque() ? 'text-danger' : '' }}">{{ $mat->estoqueFormatado() }}</td>
+                                                <td class="text-right font-weight-bold {{ $mat->baixo_estoque ? 'text-danger' : '' }}">{{ $mat->estoque_formatado }}</td>
                                             </tr>
                                         @empty
                                             <tr><td colspan="2" class="text-center text-muted py-3">Nenhum material ativo.</td></tr>

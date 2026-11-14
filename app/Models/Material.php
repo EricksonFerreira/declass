@@ -66,6 +66,12 @@ class Material extends Model
         return self::CATEGORIAS[$this->categoria] ?? $this->categoria;
     }
 
+    /** Atalho de leitura em Blade: $model->categoria_label */
+    public function getCategoriaLabelAttribute()
+    {
+        return $this->categoriaLabel();
+    }
+
     public function unidadeLabel(): string
     {
         return self::UNIDADES[$this->unidade_medida] ?? $this->unidade_medida;
@@ -77,6 +83,12 @@ class Material extends Model
             && (float) $this->estoque_atual <= (float) $this->estoque_minimo;
     }
 
+    /** Atalho de leitura em Blade: $model->baixo_estoque */
+    public function getBaixoEstoqueAttribute()
+    {
+        return $this->baixoEstoque();
+    }
+
     public function estoqueFormatado(): string
     {
         $qtd = rtrim(rtrim(number_format((float) $this->estoque_atual, 2, ',', ''), '0'), ',');
@@ -84,5 +96,11 @@ class Material extends Model
         $unidade = self::UNIDADES[$this->unidade_medida] ?? $this->unidade_medida;
 
         return $qtd.' '.$unidade;
+    }
+
+    /** Atalho de leitura em Blade: $model->estoque_formatado */
+    public function getEstoqueFormatadoAttribute()
+    {
+        return $this->estoqueFormatado();
     }
 }

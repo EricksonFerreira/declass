@@ -1,4 +1,4 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -19,7 +19,7 @@
                     <dt class="col-sm-4">Domínio</dt><dd class="col-sm-8">{{ $empresa->dominio ?? '—' }}</dd>
                     <dt class="col-sm-4">Site público</dt>
                     <dd class="col-sm-8">
-                        @if($empresa->sitePublicoAtivo())
+                        @if($empresa->site_publico_ativo)
                             <span class="badge badge-success">No ar</span>
                         @else
                             <span class="badge badge-secondary">Desligado</span>
@@ -32,7 +32,7 @@
                     <dt class="col-sm-4">Endereço</dt><dd class="col-sm-8">{{ $empresa->endereco ?? '—' }}</dd>
                     <dt class="col-sm-4">Status</dt>
                     <dd class="col-sm-8">
-                        @if($empresa->estaAtiva())
+                        @if($empresa->esta_ativa)
                             <span class="badge badge-success">Ativo</span>
                         @else
                             <span class="badge badge-secondary">Inativo</span>

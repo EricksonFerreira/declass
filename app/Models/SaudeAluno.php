@@ -43,8 +43,20 @@ class SaudeAluno extends Model
         return ! empty($this->alergias) || ! empty($this->condicoes_cronicas) || ! empty($this->medicamentos);
     }
 
+    /** Atalho de leitura em Blade: $model->tem_alertas */
+    public function getTemAlertasAttribute()
+    {
+        return $this->temAlertas();
+    }
+
     public function tipoSanguineoLabel(): string
     {
         return $this->tipo_sanguineo ?: '—';
+    }
+
+    /** Atalho de leitura em Blade: $model->tipo_sanguineo_label */
+    public function getTipoSanguineoLabelAttribute()
+    {
+        return $this->tipoSanguineoLabel();
     }
 }

@@ -88,9 +88,21 @@ class Tarefa extends Model
         return $this->data_entrega->isPast() && $this->ativo === 'S';
     }
 
+    /** Atalho de leitura em Blade: $model->atraso */
+    public function getAtrasoAttribute()
+    {
+        return $this->atraso();
+    }
+
     public function entregasEntregues(): int
     {
         return $this->entregas()->whereIn('status', ['entregue', 'avaliada'])->count();
+    }
+
+    /** Atalho de leitura em Blade: $model->entregas_entregues */
+    public function getEntregasEntreguesAttribute()
+    {
+        return $this->entregasEntregues();
     }
 
     public function entregasTotal(): int
@@ -98,9 +110,21 @@ class Tarefa extends Model
         return $this->entregas()->count();
     }
 
+    /** Atalho de leitura em Blade: $model->entregas_total */
+    public function getEntregasTotalAttribute()
+    {
+        return $this->entregasTotal();
+    }
+
     public function estaAtivo(): bool
     {
         return $this->ativo === 'S';
+    }
+
+    /** Atalho de leitura em Blade: $model->esta_ativo */
+    public function getEstaAtivoAttribute()
+    {
+        return $this->estaAtivo();
     }
 
     public function tipoLabel(): string
@@ -108,14 +132,32 @@ class Tarefa extends Model
         return self::TIPOS[$this->tipo] ?? self::TIPOS['atividade'];
     }
 
+    /** Atalho de leitura em Blade: $model->tipo_label */
+    public function getTipoLabelAttribute()
+    {
+        return $this->tipoLabel();
+    }
+
     public function tipoEntregaLabel(): string
     {
         return self::TIPOS_ENTREGA[$this->tipo_entrega] ?? self::TIPOS_ENTREGA['nenhuma'];
+    }
+
+    /** Atalho de leitura em Blade: $model->tipo_entrega_label */
+    public function getTipoEntregaLabelAttribute()
+    {
+        return $this->tipoEntregaLabel();
     }
 
     /** Aluno precisa enviar algo pelo portal (leitura, texto ou fotos). */
     public function exigeEntregaOnline(): bool
     {
         return ($this->tipo_entrega ?? 'nenhuma') !== 'nenhuma';
+    }
+
+    /** Atalho de leitura em Blade: $model->exige_entrega_online */
+    public function getExigeEntregaOnlineAttribute()
+    {
+        return $this->exigeEntregaOnline();
     }
 }

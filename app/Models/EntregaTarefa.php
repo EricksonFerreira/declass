@@ -65,6 +65,12 @@ class EntregaTarefa extends Model
         return self::STATUS[$this->status] ?? $this->status;
     }
 
+    /** Atalho de leitura em Blade: $model->status_label */
+    public function getStatusLabelAttribute()
+    {
+        return $this->statusLabel();
+    }
+
     /**
      * Situacao derivada: pendente com data de entrega vencida = atrasada.
      */
@@ -77,6 +83,12 @@ class EntregaTarefa extends Model
         }
 
         return $this->status;
+    }
+
+    /** Atalho de leitura em Blade: $model->situacao */
+    public function getSituacaoAttribute()
+    {
+        return $this->situacao();
     }
 
     public function situacaoLabel(): string

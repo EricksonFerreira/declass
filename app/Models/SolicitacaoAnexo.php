@@ -40,4 +40,10 @@ class SolicitacaoAnexo extends Model
     {
         return $this->nome_original ?: basename((string) $this->arquivo_path);
     }
+
+    /** Atalho de leitura em Blade: $model->nome_exibicao */
+    public function getNomeExibicaoAttribute()
+    {
+        return $this->nomeExibicao();
+    }
 }

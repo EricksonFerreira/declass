@@ -30,4 +30,10 @@ class PesquisaPergunta extends Model
     {
         return self::TIPOS[$this->tipo] ?? $this->tipo;
     }
+
+    /** Atalho de leitura em Blade: $model->tipo_label */
+    public function getTipoLabelAttribute()
+    {
+        return $this->tipoLabel();
+    }
 }

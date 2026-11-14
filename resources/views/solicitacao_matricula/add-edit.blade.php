@@ -45,7 +45,7 @@
                     <x-form-input name="nome_aluno" label="Nome completo" :value="old('nome_aluno', $s->nome_aluno ?? '')" required maxlength="255" />
                 </div>
                 <div class="col-md-3">
-                    <x-form-input name="data_nascimento_aluno" type="date" label="Data de nascimento" :value="old('data_nascimento_aluno', isset($s) && $s->data_nascimento_aluno ? $s->data_nascimento_aluno->format('Y-m-d') : '')" />
+                    <x-form-input name="data_nascimento_aluno" type="date" label="Data de nascimento" :value="old('data_nascimento_aluno', isset($s) && $s->data_nascimento_aluno ? $s->nascimento_aluno_iso : '')" />
                 </div>
                 <div class="col-md-3">
                     <x-form-select name="sexo_aluno" label="Sexo" :options="['' => '—', 'masculino' => 'Masculino', 'feminino' => 'Feminino', 'outro' => 'Outro']" :selected="old('sexo_aluno', $s->sexo_aluno ?? '')" />

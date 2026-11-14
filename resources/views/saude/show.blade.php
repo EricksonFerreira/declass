@@ -15,7 +15,7 @@
             <dd class="col-sm-9">{{ $aluno->pessoa->nome ?? '—' }} ({{ $aluno->escola->nome ?? '—' }})</dd>
 
             <dt class="col-sm-3">Tipo sanguíneo</dt>
-            <dd class="col-sm-9">{{ $ficha->tipoSanguineoLabel() }}</dd>
+            <dd class="col-sm-9">{{ $ficha->tipo_sanguineo_label }}</dd>
 
             <dt class="col-sm-3">Alergias</dt>
             <dd class="col-sm-9">{{ $ficha->alergias ?: '—' }}</dd>

@@ -102,4 +102,10 @@ class Escola extends Model
     {
         return strtoupper((string) $this->ativa) === 'S';
     }
+
+    /** Atalho de leitura em Blade: $model->esta_ativa */
+    public function getEstaAtivaAttribute()
+    {
+        return $this->estaAtiva();
+    }
 }

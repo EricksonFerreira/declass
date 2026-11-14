@@ -33,7 +33,7 @@
                     @forelse($alunos as $aluno)
                         <tr>
                             <td>
-                                <a href="{{ route('aluno.show', $aluno->id) }}" class="font-weight-bold">{{ $aluno->pessoa->nomeExibicao() ?? '—' }}</a>
+                                <a href="{{ route('aluno.show', $aluno->id) }}" class="font-weight-bold">{{ $aluno->pessoa->nome_exibicao ?? '—' }}</a>
                                 @if($aluno->pessoa?->nome_social)
                                     <div class="text-muted" style="font-size:.75rem;">{{ $aluno->pessoa->nome }}</div>
                                 @endif
@@ -42,7 +42,7 @@
                             <td>{{ $aluno->escola->nome ?? '—' }}</td>
                             <td>{{ optional($aluno->data_ingresso)->format('d/m/Y') ?? '—' }}</td>
                             <td>
-                                @if($aluno->estaAtivo())
+                                @if($aluno->esta_ativo)
                                     <span class="badge badge-success">Ativo</span>
                                 @else
                                     <span class="badge badge-secondary">Inativo</span>
@@ -55,7 +55,7 @@
                                     <a href="{{ route('aluno.edit', $aluno->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                                 @endcan
                                 @can('aluno.destroy')
-                                    <x-delete-button :action="route('aluno.destroy', $aluno->id)" titulo="Excluir" mensagem="Excluir o aluno &quot;{{ $aluno->pessoa->nomeExibicao() ?? '' }}&quot;? Os dados são preservados (exclusão lógica)." />
+                                    <x-delete-button :action="route('aluno.destroy', $aluno->id)" titulo="Excluir" mensagem="Excluir o aluno &quot;{{ $aluno->pessoa->nome_exibicao ?? '' }}&quot;? Os dados são preservados (exclusão lógica)." />
                                 @endcan
                             </td>
                         </tr>

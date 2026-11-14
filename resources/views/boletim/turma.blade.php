@@ -8,7 +8,7 @@
 @stop
 
 @section('content')
-@php $corteGeral = $disciplinas->avg(fn ($d) => $d->mediaAprovacaoNaTurma()); @endphp
+@php $corteGeral = $disciplinas->avg(fn ($d) => $d->media_aprovacao_na_turma); @endphp
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span class="font-weight-bold">Médias por disciplina ({{ $disciplinas->count() }}) · {{ $total_aulas }} aula(s) registrada(s)</span>
@@ -51,7 +51,7 @@
                                 <td class="text-center">
                                     @php
                                         $m = $mediasAluno[$disc->id];
-                                        $corteDisc = $disc->mediaAprovacaoNaTurma();
+                                        $corteDisc = $disc->media_aprovacao_na_turma;
                                     @endphp
                                     @if($m !== null)
                                         <span class="badge badge-{{ $m >= $corteDisc ? 'success' : 'danger' }}" title="Aprovação a partir de {{ number_format($corteDisc, 1, ',', '.') }}">{{ number_format($m, 1, ',', '.') }}</span>

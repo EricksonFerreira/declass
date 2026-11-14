@@ -34,7 +34,7 @@
         <div class="flex-grow-1">
             <h5>{{ $pesquisa->titulo }}</h5>
             <div class="mt-1">
-                <span class="rs-chip"><i class="fa fa-tag"></i> {{ $pesquisa->statusLabel() }}</span>
+                <span class="rs-chip"><i class="fa fa-tag"></i> {{ $pesquisa->status_label }}</span>
                 <span class="rs-chip"><i class="fa fa-calendar"></i> {{ $pesquisa->data_inicio->format('d/m/Y') }} a {{ $pesquisa->data_fim->format('d/m/Y') }}</span>
                 <span class="rs-chip"><i class="fa fa-school"></i> {{ $pesquisa->escola->nome ?? 'Rede toda' }}</span>
             </div>
@@ -77,7 +77,7 @@
                     <span class="rs-num mr-2">{{ $loop->iteration }}</span>
                     <div class="flex-grow-1">
                         <strong>{{ $p->pergunta }}</strong>
-                        <span class="badge badge-light border ml-1">{{ $p->tipoLabel() }}</span>
+                        <span class="badge badge-light border ml-1">{{ $p->tipo_label }}</span>
                         <small class="text-muted">· {{ $item['total'] }} resposta(s)</small>
                     </div>
                 </div>

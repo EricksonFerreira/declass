@@ -77,11 +77,11 @@
                             <td>{{ $pesquisa->escola->nome ?? 'Rede toda' }}</td>
                             <td class="text-nowrap">
                                 <small>{{ $pesquisa->data_inicio->format('d/m/Y') }} a {{ $pesquisa->data_fim->format('d/m/Y') }}</small>
-                                @if($pesquisa->estaAberta())
+                                @if($pesquisa->esta_aberta)
                                     <br><span class="badge badge-success">Aberta agora</span>
                                 @endif
                             </td>
-                            <td><span class="badge badge-{{ $statusCores[$pesquisa->status] ?? 'secondary' }}">{{ $pesquisa->statusLabel() }}</span></td>
+                            <td><span class="badge badge-{{ $statusCores[$pesquisa->status] ?? 'secondary' }}">{{ $pesquisa->status_label }}</span></td>
                             <td>{{ $pesquisa->perguntas->count() }}</td>
                             <td>{{ $pesquisa->respostas->count() }}</td>
                             <td class="text-right text-nowrap" onclick="event.stopPropagation()">
@@ -114,14 +114,14 @@
                     <div class="pq-card" data-id="{{ $pesquisa->id }}" title="Ver detalhes">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <strong class="small">{{ \Illuminate\Support\Str::limit($pesquisa->titulo, 60) }}</strong>
-                            <span class="badge badge-{{ $statusCores[$pesquisa->status] ?? 'secondary' }} ml-1">{{ $pesquisa->statusLabel() }}</span>
+                            <span class="badge badge-{{ $statusCores[$pesquisa->status] ?? 'secondary' }} ml-1">{{ $pesquisa->status_label }}</span>
                         </div>
                         @if($pesquisa->descricao)
                             <div class="pq-meta mb-1">{{ \Illuminate\Support\Str::limit($pesquisa->descricao, 100) }}</div>
                         @endif
                         <div class="pq-meta">
                             <i class="fa fa-calendar mr-1"></i>{{ $pesquisa->data_inicio->format('d/m/Y') }} a {{ $pesquisa->data_fim->format('d/m/Y') }}
-                            @if($pesquisa->estaAberta()) <span class="badge badge-success">Aberta agora</span>@endif<br>
+                            @if($pesquisa->esta_aberta) <span class="badge badge-success">Aberta agora</span>@endif<br>
                             <i class="fa fa-school mr-1"></i>{{ $pesquisa->escola->nome ?? 'Rede toda' }}
                         </div>
                         <div class="mt-1">
@@ -209,9 +209,9 @@
     $pqJson = $pesquisas->keyBy('id')->map(function ($p) use ($statusCores) {
         return [
             'titulo' => $p->titulo,
-            'status' => $p->statusLabel(),
+            'status' => $p->status_label,
             'status_cor' => $statusCores[$p->status] ?? 'secondary',
-            'aberta' => (bool) $p->estaAberta(),
+            'aberta' => (bool) $p->esta_aberta,
             'escola' => $p->escola->nome ?? 'Rede toda',
             'inicio' => $p->data_inicio->format('d/m/Y'),
             'fim' => $p->data_fim->format('d/m/Y'),

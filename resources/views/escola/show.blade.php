@@ -25,7 +25,7 @@
                     <dt class="col-sm-4">Turno padrão</dt><dd class="col-sm-8">{{ \App\Models\Escola::TURNOS[$escola->turno_padrao] ?? '—' }}</dd>
                     <dt class="col-sm-4">Status</dt>
                     <dd class="col-sm-8">
-                        @if($escola->estaAtiva())
+                        @if($escola->esta_ativa)
                             <span class="badge badge-success">Ativa</span>
                         @else
                             <span class="badge badge-secondary">Inativa</span>
@@ -69,7 +69,7 @@
         <div class="card">
             <div class="card-header font-weight-bold">Matrícula online</div>
             <div class="card-body">
-                @if($escola->estaAtiva())
+                @if($escola->esta_ativa)
                     <p class="small text-muted mb-2">Link público do formulário de solicitação de matrícula:</p>
                     <div class="input-group input-group-sm">
                         <input type="text" class="form-control" id="link-matricula" readonly

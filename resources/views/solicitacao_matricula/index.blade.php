@@ -51,7 +51,7 @@
                             </div>
                         </div>
                         <div class="ux-card__badges">
-                            <span class="ux-card__badge {{ $statusBadge[$s->status] ?? 'ux-card__badge--gray' }}">{{ $s->statusLabel() }}</span>
+                            <span class="ux-card__badge {{ $statusBadge[$s->status] ?? 'ux-card__badge--gray' }}">{{ $s->status_label }}</span>
                         </div>
                     </div>
                     <div class="ux-card__meta">
@@ -65,16 +65,16 @@
                         </div>
                         <div class="ux-card__meta-row">
                             <span class="ux-card__meta-label">Recebida em</span>
-                            <span class="ux-card__meta-value">{{ $s->created_at->format('d/m/Y H:i') }}</span>
+                            <span class="ux-card__meta-value">{{ $s->recebida_em }}</span>
                         </div>
                         <div class="ux-card__meta-row">
                             <span class="ux-card__meta-label">Nascimento</span>
-                            <span class="ux-card__meta-value">{{ $s->data_nascimento_aluno?->format('d/m/Y') ?? '—' }}</span>
+                            <span class="ux-card__meta-value">{{ $s->nascimento_aluno_br ?? '—' }}</span>
                         </div>
                     </div>
                     <div class="ux-card__foot">
                         <a href="{{ route('solicitacao_matricula.show', $s->id) }}" class="btn btn-xs btn-info" title="Detalhes"><i class="fa fa-eye"></i></a>
-                        @if($s->estaPendente())
+                        @if($s->esta_pendente)
                             @can('solicitacao_matricula.edit')
                                 <a href="{{ route('solicitacao_matricula.edit', $s->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                             @endcan
@@ -113,7 +113,7 @@
                             <td>
                                 <strong>{{ $s->nome_aluno }}</strong>
                                 @if($s->data_nascimento_aluno)
-                                    <br><small class="text-muted">nasc. {{ $s->data_nascimento_aluno->format('d/m/Y') }}</small>
+                                    <br><small class="text-muted">nasc. {{ $s->nascimento_aluno_br }}</small>
                                 @endif
                             </td>
                             <td>
@@ -131,11 +131,11 @@
                                 @endif
                             </td>
                             <td><small>{{ \App\Models\SolicitacaoMatricula::ORIGENS[$s->origem] ?? $s->origem }}</small></td>
-                            <td><span class="badge badge-{{ $statusCores[$s->status] ?? 'secondary' }}">{{ $s->statusLabel() }}</span></td>
-                            <td class="text-nowrap"><small>{{ $s->created_at->format('d/m/Y H:i') }}</small></td>
+                            <td><span class="badge badge-{{ $statusCores[$s->status] ?? 'secondary' }}">{{ $s->status_label }}</span></td>
+                            <td class="text-nowrap"><small>{{ $s->recebida_em }}</small></td>
                             <td class="text-right text-nowrap">
                                 <a href="{{ route('solicitacao_matricula.show', $s->id) }}" class="btn btn-xs btn-info" title="Detalhes"><i class="fa fa-eye"></i></a>
-                                @if($s->estaPendente())
+                                @if($s->esta_pendente)
                                     @can('solicitacao_matricula.edit')
                                         <a href="{{ route('solicitacao_matricula.edit', $s->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                                     @endcan

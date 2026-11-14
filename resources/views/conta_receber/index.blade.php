@@ -37,7 +37,7 @@
                         <tr class="{{ $situacao === 'atrasada' ? 'table-danger' : '' }}">
                             <td class="font-weight-bold">{{ $conta->descricao }}</td>
                             <td>{{ $conta->aluno->pessoa->nome ?? '—' }}</td>
-                            <td><span class="badge badge-light border">{{ $conta->categoriaLabel() }}</span></td>
+                            <td><span class="badge badge-light border">{{ $conta->categoria_label }}</span></td>
                             <td>{{ $conta->escola->nome ?? 'Rede toda' }}</td>
                             <td>{{ $conta->data_vencimento->format('d/m/Y') }}</td>
                             <td class="text-right font-weight-bold">R$ {{ number_format($conta->valor, 2, ',', '.') }}</td>

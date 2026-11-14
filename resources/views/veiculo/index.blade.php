@@ -46,9 +46,9 @@
                                 @endif
                             </td>
                             <td>{{ $veiculo->escola->nome ?? '—' }}</td>
-                            <td class="text-center">{{ $veiculo->passageiros() }}</td>
+                            <td class="text-center">{{ $veiculo->passageiros }}</td>
                             <td>
-                                @if($veiculo->estaAtivo())
+                                @if($veiculo->esta_ativo)
                                     <span class="badge badge-success">Ativo</span>
                                 @else
                                     <span class="badge badge-secondary">Inativo</span>

@@ -19,7 +19,7 @@
                     @foreach($refeicoes as $cardapio)
                         <tr>
                             <td style="width:160px;">
-                                <span class="badge badge-info">{{ $cardapio->tipoLabel() }}</span>
+                                <span class="badge badge-info">{{ $cardapio->tipo_label }}</span>
                             </td>
                             <td>
                                 {{ $cardapio->descricao }}

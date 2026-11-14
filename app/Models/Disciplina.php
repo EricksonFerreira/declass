@@ -49,8 +49,20 @@ class Disciplina extends Model
         return (float) ($this->pivot?->media_aprovacao ?? self::MEDIA_APROVACAO_PADRAO);
     }
 
+    /** Atalho de leitura em Blade: $model->media_aprovacao_na_turma */
+    public function getMediaAprovacaoNaTurmaAttribute()
+    {
+        return $this->mediaAprovacaoNaTurma();
+    }
+
     public function estaAtiva(): bool
     {
         return strtoupper((string) $this->ativo) === 'S';
+    }
+
+    /** Atalho de leitura em Blade: $model->esta_ativa */
+    public function getEstaAtivaAttribute()
+    {
+        return $this->estaAtiva();
     }
 }

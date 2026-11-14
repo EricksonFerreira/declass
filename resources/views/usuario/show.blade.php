@@ -8,7 +8,7 @@
 @stop
 
 @section('content')
-@php $tipo = $usuario->tipoConta(); @endphp
+@php $tipo = $usuario->tipo_conta; @endphp
 <div class="row">
     <div class="col-md-7">
         <div class="card">

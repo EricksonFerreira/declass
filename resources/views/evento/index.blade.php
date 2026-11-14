@@ -36,11 +36,11 @@
     $dataLonga = fn ($d) => ucfirst($d->locale('pt_BR')->translatedFormat('l, d \d\e F \d\e Y'));
     $podeEditar = auth()->user()->can('evento.edit');
     $eventosJson = $eventos->keyBy('id')->map(function ($e) use ($estilo, $icone, $hora, $dataLonga, $statusCores, $podeEditar) {
-        $fim = $e->periodoFim();
+        $fim = $e->periodo_fim;
         return [
             'titulo' => $e->titulo,
-            'tipo' => $e->tipoLabel(),
-            'status' => $e->statusLabel(),
+            'tipo' => $e->tipo_label,
+            'status' => $e->status_label,
             'statusCor' => $statusCores[$e->status] ?? 'secondary',
             'cancelado' => $e->status === 'cancelado',
             'icone' => $icone($e->tipo),
@@ -140,8 +140,8 @@
                         <div class="flex-grow-1">
                             <div>
                                 <strong>{{ $evento->titulo }}</strong>
-                                <span class="badge badge-{{ $tipoCores[$evento->tipo] ?? 'secondary' }} ml-1">{{ $evento->tipoLabel() }}</span>
-                                <span class="badge badge-{{ $statusCores[$evento->status] ?? 'secondary' }} ml-1">{{ $evento->statusLabel() }}</span>
+                                <span class="badge badge-{{ $tipoCores[$evento->tipo] ?? 'secondary' }} ml-1">{{ $evento->tipo_label }}</span>
+                                <span class="badge badge-{{ $statusCores[$evento->status] ?? 'secondary' }} ml-1">{{ $evento->status_label }}</span>
                                 @if($evento->publico === 'todos')
                                     <span class="badge badge-outline-primary ml-1" title="Visível para as famílias"><i class="fa fa-users"></i> famílias</span>
                                 @endif

@@ -108,7 +108,7 @@
     <div class="card-body p-0 ux-index-body" data-view="cards">
         <div class="ux-cards dis-cards">
             @forelse($disciplinas as $disciplina)
-                @php $ativa = $disciplina->estaAtiva(); @endphp
+                @php $ativa = $disciplina->esta_ativa; @endphp
                 <article class="ux-card dis-item {{ $ativa ? '' : 'ux-card--muted' }}" data-dis
                     data-nome="{{ $disciplina->nome }}"
                     data-avatar="{{ $avatarDisc($disciplina) }}"
@@ -169,7 +169,7 @@
                 </thead>
                 <tbody>
                     @forelse($disciplinas as $disciplina)
-                        @php $ativa = $disciplina->estaAtiva(); @endphp
+                        @php $ativa = $disciplina->esta_ativa; @endphp
                         <tr class="dis-item" data-dis
                             data-nome="{{ $disciplina->nome }}"
                             data-avatar="{{ $avatarDisc($disciplina) }}"

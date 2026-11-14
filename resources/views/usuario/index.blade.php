@@ -37,7 +37,7 @@
                             <td class="font-weight-bold">{{ $usuario->nome }}</td>
                             <td>{{ $usuario->email }}</td>
                             <td>
-                                @php($tipo = $usuario->tipoConta())
+                                @php($tipo = $usuario->tipo_conta)
                                 @if($tipo === 'aluno')
                                     <span class="badge badge-primary">Aluno</span>
                                 @elseif($tipo === 'responsavel')

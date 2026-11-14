@@ -254,6 +254,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return self::TIPO_CONTA_COLABORADOR;
     }
 
+    /** Atalho de leitura em Blade: $model->tipo_conta */
+    public function getTipoContaAttribute()
+    {
+        return $this->tipoConta();
+    }
+
     public function tipoContaLabel(): string
     {
         return self::TIPOS_CONTA[$this->tipoConta()] ?? self::TIPOS_CONTA[self::TIPO_CONTA_COLABORADOR];
@@ -263,6 +269,12 @@ class User extends Authenticatable implements MustVerifyEmail
     public function vinculoNome(): ?string
     {
         return $this->aluno?->nome ?? $this->responsavel?->nome;
+    }
+
+    /** Atalho de leitura em Blade: $model->vinculo_nome */
+    public function getVinculoNomeAttribute()
+    {
+        return $this->vinculoNome();
     }
 
     /** Pessoa do aluno/responsavel vinculado a conta, quando houver. */
@@ -435,6 +447,12 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isSuperAdmin(): bool
     {
         return (int) ($this->getRawOriginal('tipo_usuario_id') ?? 0) === 1;
+    }
+
+    /** Atalho de leitura em Blade: $model->is_super_admin */
+    public function getIsSuperAdminAttribute()
+    {
+        return $this->isSuperAdmin();
     }
 
     /**

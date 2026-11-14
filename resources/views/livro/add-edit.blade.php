@@ -72,8 +72,8 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="liv-capa-drop d-flex align-items-center" style="gap:1rem;">
-                        <img id="capaPreview" src="{{ !empty($livro) ? ($livro->capaUrl() ?? '') : '' }}" alt=""
-                            class="liv-capa-preview" style="{{ (!empty($livro) && $livro->capaUrl()) ? '' : 'display:none;' }}">
+                        <img id="capaPreview" src="{{ !empty($livro) ? ($livro->capa_url ?? '') : '' }}" alt=""
+                            class="liv-capa-preview" style="{{ (!empty($livro) && $livro->capa_url) ? '' : 'display:none;' }}">
                         <div class="flex-grow-1">
                             <input type="file" name="capa" id="capaInput" class="form-control-file" accept="image/jpeg,image/png,image/webp">
                             <small class="text-muted d-block mt-1">JPG, PNG ou WEBP — máx. 2 MB. A foto aparece nos cards e no detalhe do livro.</small>

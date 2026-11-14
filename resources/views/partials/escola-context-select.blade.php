@@ -1,7 +1,7 @@
 {{-- Seletor de escola da sessao: filtra todos os dados do tenant.
      Contas de portal (aluno/responsavel) nao trocam de escola:
      veem apenas os proprios dados vinculados. --}}
-@if(Auth::check() && ! Auth::user()->isSuperAdmin() && ! Auth::user()->isPortalAccount())
+@if(Auth::check() && ! Auth::user()->is_super_admin && ! Auth::user()->isPortalAccount())
     @php
         $escolasContexto = collect();
         $escolaContextoId = 0;

@@ -53,10 +53,22 @@ class MovimentacaoEstoque extends Model
         return self::TIPOS[$this->tipo] ?? $this->tipo;
     }
 
+    /** Atalho de leitura em Blade: $model->tipo_label */
+    public function getTipoLabelAttribute()
+    {
+        return $this->tipoLabel();
+    }
+
     public function quantidadeFormatada(): string
     {
         $qtd = rtrim(rtrim(number_format((float) $this->quantidade, 2, ',', ''), '0'), ',');
 
         return $qtd;
+    }
+
+    /** Atalho de leitura em Blade: $model->quantidade_formatada */
+    public function getQuantidadeFormatadaAttribute()
+    {
+        return $this->quantidadeFormatada();
     }
 }

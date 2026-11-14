@@ -60,7 +60,7 @@
                                 <div class="text-muted" style="font-size:.75rem;">{{ $usuario->email }}</div>
                             </td>
                             <td>
-                                @if($usuario->isSuperAdmin())
+                                @if($usuario->is_super_admin)
                                     <span class="badge badge-danger">Superadmin</span>
                                 @elseif($usuario->regra)
                                     <span class="badge badge-info">{{ $usuario->regra->name }}</span>
@@ -84,7 +84,7 @@
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-xs btn-outline-dark">Parar</button>
                                     </form>
-                                @elseif($usuario->isSuperAdmin() || $ehEu)
+                                @elseif($usuario->is_super_admin || $ehEu)
                                     <span class="text-muted small">—</span>
                                 @elseif(!$usuario->ativo || !$usuario->empresa_id)
                                     <span class="text-muted small" title="{{ !$usuario->ativo ? 'Usuário inativo' : 'Sem empresa vinculada' }}">

@@ -95,15 +95,33 @@ class Evento extends Model
         return self::TIPOS[$this->tipo] ?? $this->tipo;
     }
 
+    /** Atalho de leitura em Blade: $model->tipo_label */
+    public function getTipoLabelAttribute()
+    {
+        return $this->tipoLabel();
+    }
+
     public function statusLabel(): string
     {
         return self::STATUS[$this->status] ?? $this->status;
+    }
+
+    /** Atalho de leitura em Blade: $model->status_label */
+    public function getStatusLabelAttribute()
+    {
+        return $this->statusLabel();
     }
 
     /** Periodo coberto pelo evento (fim = inicio quando nao informado). */
     public function periodoFim()
     {
         return $this->data_fim ?? $this->data_inicio;
+    }
+
+    /** Atalho de leitura em Blade: $model->periodo_fim */
+    public function getPeriodoFimAttribute()
+    {
+        return $this->periodoFim();
     }
 
     /**

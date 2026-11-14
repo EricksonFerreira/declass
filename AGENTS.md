@@ -17,6 +17,7 @@
 - Validacao fica em Form Requests quando possivel.
 - Consultas reutilizaveis devem usar Services, Queries ou Scopes.
 - Nao colocar regra de negocio complexa em Blade.
+- **Blade recebe so variaveis.** Proibido na view: chamar metodo de model/service (`->metodo()`), referenciar classe/constante (`App\Models\X::CONST`), `app(...)`, `auth()->...`, query builder (`->where`, `->whereNull` em builder). O controller prepara labels, flags, totais e datas formatadas. Para dados por-item em loops/cards, usar acessor Eloquent: metodo `statusLabel()` ganha `getStatusLabelAttribute()` e a view usa `->status_label` (propriedade). Ao criar metodo novo de exibicao no model, criar o acessor junto. Aceito como contrato de exibicao: paginador (`->links()`, `hasPages()`), `->count()/->isEmpty()` em colecao ja carregada, helpers de layout/componentes e blades em `resources/views/vendor`.
 - Preservar o padrao existente antes de criar novas abstracoes.
 
 ## Fluxo de trabalho do agente

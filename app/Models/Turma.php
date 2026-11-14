@@ -90,6 +90,12 @@ class Turma extends Model
         return strtoupper((string) $this->ativo) === 'S';
     }
 
+    /** Atalho de leitura em Blade: $model->esta_ativa */
+    public function getEstaAtivaAttribute()
+    {
+        return $this->estaAtiva();
+    }
+
     /**
      * Turma finalizada: inativa ou com ano letivo encerrado.
      * O forum da disciplina fica somente leitura (historico).
@@ -98,5 +104,11 @@ class Turma extends Model
     {
         return ! $this->estaAtiva()
             || ($this->anoLetivo?->status ?? 'letivo') === 'encerrado';
+    }
+
+    /** Atalho de leitura em Blade: $model->finalizada */
+    public function getFinalizadaAttribute()
+    {
+        return $this->finalizada();
     }
 }

@@ -58,7 +58,7 @@
                         <tr class="ta-click" data-id="{{ $tarefa->id }}" title="Ver detalhes">
                             <td class="font-weight-bold" style="max-width:260px;">
                                 {{ \Illuminate\Support\Str::limit($tarefa->titulo, 60) }}
-                                @if($tarefa->atraso())
+                                @if($tarefa->atraso)
                                     <span class="badge badge-danger">vencida</span>
                                 @endif
                             </td>
@@ -66,8 +66,8 @@
                             <td>{{ $tarefa->disciplina->nome ?? '—' }}</td>
                             <td class="text-nowrap">{{ $tarefa->data_entrega->format('d/m/Y') }}</td>
                             <td class="text-center">
-                                @if($tarefa->entregasTotal() > 0)
-                                    {{ $tarefa->entregasEntregues() }}/{{ $tarefa->entregasTotal() }}
+                                @if($tarefa->entregas_total > 0)
+                                    {{ $tarefa->entregas_entregues }}/{{ $tarefa->entregas_total }}
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif
@@ -101,12 +101,12 @@
     <div class="card-body" id="ta-cards" style="display:none;">
         <div class="row">
             @forelse($tarefas as $tarefa)
-                @php $pct = $tarefa->entregasTotal() > 0 ? round($tarefa->entregasEntregues() / $tarefa->entregasTotal() * 100) : null; @endphp
+                @php $pct = $tarefa->entregas_total > 0 ? round($tarefa->entregas_entregues / $tarefa->entregas_total * 100) : null; @endphp
                 <div class="col-md-6 col-xl-4 mb-3">
                     <div class="ta-card" data-id="{{ $tarefa->id }}" title="Ver detalhes">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <strong class="small">{{ \Illuminate\Support\Str::limit($tarefa->titulo, 70) }}</strong>
-                            @if($tarefa->atraso())
+                            @if($tarefa->atraso)
                                 <span class="badge badge-danger ml-1">vencida</span>
                             @endif
                         </div>
@@ -119,7 +119,7 @@
                             · <i class="fa fa-user mr-1"></i>{{ $tarefa->autor->name ?? '—' }}
                         </div>
                         @if($pct !== null)
-                            <div class="ta-meta mt-1">Entregas {{ $tarefa->entregasEntregues() }}/{{ $tarefa->entregasTotal() }} ({{ $pct }}%)</div>
+                            <div class="ta-meta mt-1">Entregas {{ $tarefa->entregas_entregues }}/{{ $tarefa->entregas_total }} ({{ $pct }}%)</div>
                             <div class="ta-prog"><div style="width:{{ $pct }}%;"></div></div>
                         @endif
                         <div class="mt-auto pt-2 d-flex" style="gap:.35rem;" onclick="event.stopPropagation()">
@@ -178,11 +178,11 @@
             'nota_maxima' => $tarefa->nota_maxima,
             'tipo' => \App\Models\Tarefa::TIPOS[$tarefa->tipo] ?? $tarefa->tipo,
             'tipo_entrega' => \App\Models\Tarefa::TIPOS_ENTREGA[$tarefa->tipo_entrega] ?? $tarefa->tipo_entrega,
-            'progresso' => $tarefa->entregasTotal() > 0
-                ? $tarefa->entregasEntregues().'/'.$tarefa->entregasTotal().' entregues'
+            'progresso' => $tarefa->entregas_total > 0
+                ? $tarefa->entregas_entregues.'/'.$tarefa->entregas_total.' entregues'
                 : 'Sem entregas',
             'autor' => $tarefa->autor->name ?? '—',
-            'vencida' => (bool) $tarefa->atraso(),
+            'vencida' => (bool) $tarefa->atraso,
             'descricao' => $tarefa->descricao,
             'instrucoes' => $tarefa->instrucoes,
             'entregas_url' => route('tarefa.entregas', $tarefa->id),

@@ -59,11 +59,11 @@
                         <tr class="pa-click" data-id="{{ $plano->id }}" title="Ver detalhes">
                             <td class="font-weight-bold">{{ $plano->aluno->pessoa->nome ?? '—' }}</td>
                             <td>{{ $plano->escola->nome ?? '—' }}</td>
-                            <td><span class="badge badge-primary">{{ $plano->tipoLabel() }}</span></td>
+                            <td><span class="badge badge-primary">{{ $plano->tipo_label }}</span></td>
                             <td>
                                 @php $cor = ['ativo' => 'success', 'elaboracao' => 'info', 'suspenso' => 'warning', 'encerrado' => 'secondary'][$plano->status] ?? 'secondary'; @endphp
-                                <span class="badge badge-{{ $cor }}">{{ $plano->statusLabel() }}</span>
-                                @if($plano->revisaoVencida())
+                                <span class="badge badge-{{ $cor }}">{{ $plano->status_label }}</span>
+                                @if($plano->revisao_vencida)
                                     <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> revisão vencida</small>
                                 @endif
                             </td>
@@ -106,9 +106,9 @@
                             </div>
                         </div>
                         <div class="mb-1">
-                            <span class="badge badge-primary">{{ $plano->tipoLabel() }}</span>
-                            <span class="badge badge-{{ $cor }}">{{ $plano->statusLabel() }}</span>
-                            @if($plano->revisaoVencida())
+                            <span class="badge badge-primary">{{ $plano->tipo_label }}</span>
+                            <span class="badge badge-{{ $cor }}">{{ $plano->status_label }}</span>
+                            @if($plano->revisao_vencida)
                                 <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> revisão vencida</span>
                             @endif
                         </div>
@@ -165,12 +165,12 @@
         return [
             'nome' => $plano->aluno->pessoa->nome ?? '—',
             'escola' => $plano->escola->nome ?? '—',
-            'tipo' => $plano->tipoLabel(),
-            'status' => $plano->statusLabel(),
+            'tipo' => $plano->tipo_label,
+            'status' => $plano->status_label,
             'status_cor' => $coresStatus[$plano->status] ?? 'secondary',
             'elaboracao' => $plano->data_elaboracao?->format('d/m/Y'),
             'revisao' => $plano->proxima_revisao?->format('d/m/Y'),
-            'revisao_vencida' => (bool) $plano->revisaoVencida(),
+            'revisao_vencida' => (bool) $plano->revisao_vencida,
             'profissional' => $plano->profissional->name ?? '—',
             'diagnostico' => $plano->diagnostico,
             'necessidades' => $plano->necessidades,

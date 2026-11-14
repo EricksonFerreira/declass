@@ -38,10 +38,10 @@
     $hora = fn ($e, $campo) => $e->{$campo} ? \Carbon\Carbon::parse($e->{$campo})->format('H:i') : null;
     $dataLonga = fn ($d) => ucfirst($d->locale('pt_BR')->translatedFormat('l, d \d\e F \d\e Y'));
     $eventosJson = $eventos->keyBy('id')->map(function ($e) use ($estilo, $icone, $hora, $dataLonga) {
-        $fim = $e->periodoFim();
+        $fim = $e->periodo_fim;
         return [
             'titulo' => $e->titulo,
-            'tipo' => $e->tipoLabel(),
+            'tipo' => $e->tipo_label,
             'icone' => $icone($e->tipo),
             'cor' => $estilo($e->tipo)['cor'],
             'fundo' => $estilo($e->tipo)['fundo'],
@@ -166,14 +166,14 @@
                     @foreach($eventosDoDia as $evento)
                         @php
                             $est = $estilo($evento->tipo);
-                            $fim = $evento->periodoFim();
+                            $fim = $evento->periodo_fim;
                         @endphp
                         <div class="ag-evento" id="evt-{{ $evento->id }}" style="border-left-color: {{ $est['cor'] }}">
                             <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:.3rem;">
                                 <div>
                                     <i class="fas {{ $icone($evento->tipo) }}" style="color: {{ $est['cor'] }}"></i>
                                     <strong>{{ $evento->titulo }}</strong>
-                                    <span class="badge ml-1" style="background: {{ $est['cor'] }}">{{ $evento->tipoLabel() }}</span>
+                                    <span class="badge ml-1" style="background: {{ $est['cor'] }}">{{ $evento->tipo_label }}</span>
                                     @if($dataDia->isToday())
                                         <span class="badge badge-success ml-1">Hoje</span>
                                     @endif

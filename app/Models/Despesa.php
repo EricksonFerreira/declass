@@ -78,6 +78,12 @@ class Despesa extends Model
         return self::CATEGORIAS[$this->categoria] ?? $this->categoria;
     }
 
+    /** Atalho de leitura em Blade: $model->categoria_label */
+    public function getCategoriaLabelAttribute()
+    {
+        return $this->categoriaLabel();
+    }
+
     /** Despesa prevista com vencimento passado = em atraso. */
     public function getSituacaoAttribute(): string
     {

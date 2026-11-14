@@ -38,7 +38,7 @@
                             <td>{{ $cardapio->data->locale('pt_BR')->translatedFormat('l') }}</td>
                             <td>{{ $cardapio->escola->nome ?? '—' }}</td>
                             <td>
-                                <span class="badge badge-info">{{ $cardapio->tipoLabel() }}</span>
+                                <span class="badge badge-info">{{ $cardapio->tipo_label }}</span>
                             </td>
                             <td style="max-width:320px;">
                                 <small>{{ \Illuminate\Support\Str::limit($cardapio->descricao, 120) }}</small>
@@ -51,7 +51,7 @@
                                 @endif
                             </td>
                             <td>
-                                @if($cardapio->estaAtivo())
+                                @if($cardapio->esta_ativo)
                                     <span class="badge badge-success">Ativo</span>
                                 @else
                                     <span class="badge badge-secondary">Inativo</span>
@@ -62,7 +62,7 @@
                                     <a href="{{ route('cardapio.edit', $cardapio->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                                 @endcan
                                 @can('cardapio.destroy')
-                                    <x-delete-button :action="route('cardapio.destroy', $cardapio->id)" titulo="Excluir" mensagem="Excluir o cardápio de {{ $cardapio->tipoLabel() }} em {{ $cardapio->data->format('d/m/Y') }}?" />
+                                    <x-delete-button :action="route('cardapio.destroy', $cardapio->id)" titulo="Excluir" mensagem="Excluir o cardápio de {{ $cardapio->tipo_label }} em {{ $cardapio->data->format('d/m/Y') }}?" />
                                 @endcan
                             </td>
                         </tr>

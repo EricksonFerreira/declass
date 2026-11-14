@@ -10,8 +10,8 @@
 @section('content')
 @php
     $corTipo = ['prova' => 'danger', 'trabalho' => 'warning', 'atividade' => 'info'];
-    $vencidas = $tarefas->filter->atraso()->count();
-    $proximas = $tarefas->filter(fn ($t) => ! $t->atraso() && $t->data_entrega->lte(now()->addWeek()->endOfDay()))->count();
+    $vencidas = $tarefas->filter->atraso->count();
+    $proximas = $tarefas->filter(fn ($t) => ! $t->atraso && $t->data_entrega->lte(now()->addWeek()->endOfDay()))->count();
 @endphp
 
 <x-filter :filters="$filters" :additional-filters="$additionalFilters" :itens-filtered="$itensFiltered" :nome-filtro="$nomeFiltro" />
@@ -53,7 +53,7 @@
         $turmaMatriculas = $matriculas->where('turma_id', $tarefa->turma_id);
         $primeiraMatricula = $turmaMatriculas->first();
         $corTarefa = $corTipo[$tarefa->tipo] ?? 'info';
-        $vencida = $tarefa->atraso();
+        $vencida = $tarefa->atraso;
     @endphp
     <div class="card card-outline card-{{ $vencida ? 'danger' : $corTarefa }}">
         <div class="card-header py-2 d-flex flex-wrap align-items-center" style="gap:.75rem;">
@@ -66,7 +66,7 @@
                     <strong>{{ $tarefa->titulo }}</strong>
                 </a>
                 <div>
-                    <span class="badge badge-{{ $corTarefa }}">{{ $tarefa->tipoLabel() }}</span>
+                    <span class="badge badge-{{ $corTarefa }}">{{ $tarefa->tipo_label }}</span>
                     <span class="badge badge-secondary">{{ $tarefa->turma->nome ?? '' }}</span>
                     @if($tarefa->disciplina)
                         <span class="badge badge-light border">{{ $tarefa->disciplina->nome }}</span>
@@ -100,7 +100,7 @@
             @foreach($turmaMatriculas as $matricula)
                 @php
                     $entrega = $entregasPorAluno->get($tarefa->id.'|'.$matricula->id);
-                    $situacao = $entrega?->situacao() ?? 'sem_controle';
+                    $situacao = $entrega?->situacao ?? 'sem_controle';
                     $enviada = $entrega && in_array($entrega->status, ['entregue', 'avaliada']);
                     $cores = [
                         'avaliada' => 'success',

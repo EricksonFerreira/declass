@@ -25,7 +25,7 @@
     $totalCarga = $isProfessor
         ? (int) $minhasAulas->sum()
         : $disciplinasVisiveis->sum(fn ($d) => (int) $d->pivot->carga_horaria_semanal);
-    $professoresAtivos = $turma->atribuicoes->filter->estaAtiva()->pluck('user_id')->unique()->count();
+    $professoresAtivos = $turma->atribuicoes->filter->esta_ativa->pluck('user_id')->unique()->count();
     $larguraStat = $isProfessor ? 4 : 3;
     $ocultarStats = $isProfessor || auth()->user()->isSecretaria();
 @endphp
@@ -143,7 +143,7 @@
                     <dt class="col-sm-5">Capacidade</dt><dd class="col-sm-7">{{ $turma->capacidade_maxima ?? '—' }}</dd>
                     <dt class="col-sm-5">Status</dt>
                     <dd class="col-sm-7">
-                        @if($turma->estaAtiva())
+                        @if($turma->esta_ativa)
                             <span class="badge badge-success">Ativa</span>
                         @else
                             <span class="badge badge-secondary">Inativa</span>
@@ -263,7 +263,7 @@
                                 <td>{{ $atribuicao->disciplina->nome ?? 'Toda a turma' }}</td>
                                 <td><span class="badge badge-secondary">{{ $papeis[$atribuicao->papel] ?? $atribuicao->papel }}</span></td>
                                 <td>
-                                    @if($atribuicao->estaAtiva())
+                                    @if($atribuicao->esta_ativa)
                                         <span class="badge badge-success">Ativa</span>
                                     @else
                                         <span class="badge badge-secondary">Inativa</span>
@@ -545,7 +545,7 @@
                         <div class="min-w-0">
                             <strong>{{ $tarefa->titulo }}</strong>
                             @if($tarefa->tipo !== 'atividade')
-                                <span class="badge badge-{{ $tarefa->tipo === 'prova' ? 'danger' : 'warning' }}">{{ $tarefa->tipoLabel() }}</span>
+                                <span class="badge badge-{{ $tarefa->tipo === 'prova' ? 'danger' : 'warning' }}">{{ $tarefa->tipo_label }}</span>
                             @endif
                             <small class="text-muted d-block">
                                 {{ $tarefa->disciplina->nome ?? 'Geral' }} · entrega até {{ $tarefa->data_entrega->format('d/m/Y') }}

@@ -29,12 +29,12 @@
     <div class="col-md-4">
         <div class="mv-saldo mb-3">
             <small class="text-uppercase font-weight-bold d-block">Saldo atual</small>
-            <div class="num {{ $material->baixoEstoque() ? 'text-warning' : '' }}">{{ $material->estoqueFormatado() }}</div>
+            <div class="num {{ $material->baixo_estoque ? 'text-warning' : '' }}">{{ $material->estoque_formatado }}</div>
             <small>
                 Mínimo: {{ number_format((float) $material->estoque_minimo, 0, ',', '.') }} {{ $material->unidade_medida }}
                 · {{ $material->escola->nome ?? 'Rede toda' }}
             </small>
-            @if($material->baixoEstoque())
+            @if($material->baixo_estoque)
                 <div class="mt-2"><span class="badge badge-danger"><i class="fa fa-exclamation-triangle"></i> Estoque baixo</span></div>
             @endif
         </div>
@@ -99,11 +99,11 @@
                                     <td>
                                         <span class="badge badge-{{ ['entrada' => 'success', 'saida' => 'danger', 'ajuste' => 'warning'][$mov->tipo] ?? 'secondary' }}">
                                             <i class="fa {{ ['entrada' => 'fa-arrow-down', 'saida' => 'fa-arrow-up', 'ajuste' => 'fa-balance-scale'][$mov->tipo] ?? 'fa-exchange-alt' }}"></i>
-                                            {{ $mov->tipoLabel() }}
+                                            {{ $mov->tipo_label }}
                                         </span>
                                     </td>
                                     <td class="text-right {{ $mov->tipo === 'saida' ? 'mv-qtd-neg' : ($mov->tipo === 'entrada' ? 'mv-qtd-pos' : '') }}">
-                                        {{ $mov->tipo === 'saida' ? '−' : ($mov->tipo === 'entrada' ? '+' : '=') }}{{ $mov->quantidadeFormatada() }}
+                                        {{ $mov->tipo === 'saida' ? '−' : ($mov->tipo === 'entrada' ? '+' : '=') }}{{ $mov->quantidade_formatada }}
                                     </td>
                                     <td class="text-right">
                                         <span class="mv-saldo-flow">{{ $fmtQtd($mov->saldo_anterior) }} →</span>

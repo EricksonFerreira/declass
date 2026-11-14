@@ -80,7 +80,7 @@
                         <strong>
                             {{ $tarefa->titulo }}
                             @if($tarefa->tipo !== 'atividade')
-                                <span class="badge badge-{{ $tarefa->tipo === 'prova' ? 'danger' : 'warning' }}">{{ $tarefa->tipoLabel() }}</span>
+                                <span class="badge badge-{{ $tarefa->tipo === 'prova' ? 'danger' : 'warning' }}">{{ $tarefa->tipo_label }}</span>
                             @endif
                         </strong>
                         <span class="badge badge-{{ $cor }}">{{ $statusTxt }}</span>
@@ -88,7 +88,7 @@
                     <small class="text-muted">
                         @if($tarefa->data_entrega) entrega até {{ $tarefa->data_entrega->format('d/m/Y') }} @endif
                         @if($tarefa->questoes->isNotEmpty()) · {{ $tarefa->questoes->count() }} questão(ões) — responda pelo celular @endif
-                        @if($tarefa->exigeEntregaOnline()) · {{ $tarefa->tipoEntregaLabel() }} @endif
+                        @if($tarefa->exige_entrega_online) · {{ $tarefa->tipo_entrega_label }} @endif
                         @if($entrega?->nota !== null) · nota {{ $fmtNum($entrega->nota) }} @endif
                     </small>
                 </a>

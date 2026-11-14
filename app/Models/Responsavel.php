@@ -57,6 +57,12 @@ class Responsavel extends Model
         return strtoupper((string) $this->ativo) === 'S';
     }
 
+    /** Atalho de leitura em Blade: $model->esta_ativo */
+    public function getEstaAtivoAttribute()
+    {
+        return $this->estaAtivo();
+    }
+
     public function getNomeAttribute(): ?string
     {
         return $this->pessoa?->nomeExibicao();

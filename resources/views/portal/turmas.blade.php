@@ -72,7 +72,7 @@
                             @elseif($resultado === 'reprovado')
                                 <span class="ux-card__badge ux-card__badge--red" title="Média abaixo do corte em alguma disciplina">Reprovado</span>
                             @endif
-                            @unless($turma->estaAtiva())
+                            @unless($turma->esta_ativa)
                                 <span class="ux-card__badge ux-card__badge--gray">Inativa</span>
                             @endunless
                         </div>
@@ -148,7 +148,7 @@
                             <td>{{ \App\Models\Turma::TURNOS[$turma->turno ?? ''] ?? '—' }}</td>
                             <td>{{ $turma->sala ?? '—' }}</td>
                             <td>
-                                @if($turma->estaAtiva())
+                                @if($turma->esta_ativa)
                                     <span class="badge badge-success">Ativa</span>
                                 @else
                                     <span class="badge badge-secondary">Inativa</span>

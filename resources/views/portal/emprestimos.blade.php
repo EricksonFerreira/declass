@@ -31,7 +31,7 @@
                 <tbody>
                     @forelse($lista as $emp)
                         @php
-                            $sit = $emp->situacao();
+                            $sit = $emp->situacao;
                             $cor = ['ativo' => 'info', 'atrasado' => 'danger', 'devolvido' => 'success'][$sit];
                             $label = ['ativo' => 'No prazo', 'atrasado' => 'Atrasado', 'devolvido' => 'Devolvido'][$sit];
                         @endphp

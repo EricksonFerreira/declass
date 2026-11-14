@@ -98,7 +98,7 @@
     <div class="card-body p-0 ux-index-body" data-view="cards">
         <div class="ux-cards eta-cards">
             @forelse($etapas as $etapa)
-                @php $ativa = $etapa->estaAtiva(); @endphp
+                @php $ativa = $etapa->esta_ativa; @endphp
                 <article class="ux-card eta-item {{ $ativa ? '' : 'ux-card--muted' }}" data-eta
                     data-nome="{{ $etapa->nome }}"
                     data-ordem="{{ $etapa->ordem }}"
@@ -170,7 +170,7 @@
                 </thead>
                 <tbody>
                     @forelse($etapas as $etapa)
-                        @php $ativa = $etapa->estaAtiva(); @endphp
+                        @php $ativa = $etapa->esta_ativa; @endphp
                         <tr class="eta-item" data-eta
                             data-nome="{{ $etapa->nome }}"
                             data-ordem="{{ $etapa->ordem }}"

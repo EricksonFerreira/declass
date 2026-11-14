@@ -80,14 +80,14 @@
                             </td>
                             <td>{{ $aviso->escola->nome ?? '—' }}</td>
                             <td>
-                                @if($aviso->ehGeral())
+                                @if($aviso->eh_geral)
                                     <span class="badge badge-light border">Escola toda</span>
                                 @else
-                                    <span class="badge badge-info" title="{{ $aviso->turmas->pluck('nome')->implode(', ') }}">{{ $aviso->publicoLabel() }}</span>
+                                    <span class="badge badge-info" title="{{ $aviso->turmas->pluck('nome')->implode(', ') }}">{{ $aviso->publico_label }}</span>
                                 @endif
                             </td>
                             <td>
-                                @if($aviso->estaAtivo())
+                                @if($aviso->esta_ativo)
                                     <span class="badge badge-success">Ativo</span>
                                 @else
                                     <span class="badge badge-secondary">Inativo</span>
@@ -133,7 +133,7 @@
                             @if(($aviso->destino ?? 'familias') === 'staff') · <i class="fa fa-users"></i> Equipe @endif
                         </div>
                         <div class="mt-auto pt-2">
-                            @if(!$aviso->estaAtivo())<span class="badge badge-secondary">Inativo</span>@endif
+                            @if(!$aviso->esta_ativo)<span class="badge badge-secondary">Inativo</span>@endif
                         </div>
                     </div>
                 </div>
@@ -200,10 +200,10 @@
             'tipo' => \App\Models\Aviso::TIPOS[$a->tipo] ?? $a->tipo,
             'tipo_cor' => ['info' => 'primary', 'urgente' => 'danger', 'evento' => 'success'][$a->tipo] ?? 'secondary',
             'escola' => $a->escola->nome ?? '—',
-            'publico' => $a->ehGeral() ? 'Escola toda' : ($a->turma->nome ?? 'Turma #'.$a->turma_id),
+            'publico' => $a->eh_geral ? 'Escola toda' : ($a->turma->nome ?? 'Turma #'.$a->turma_id),
             'destino' => ($a->destino ?? 'familias') === 'staff' ? 'Equipe (mural interno)' : 'Famílias',
             'publicacao' => $a->data_publicacao?->format('d/m/Y'),
-            'status' => $a->estaAtivo() ? 'Ativo' : 'Inativo',
+            'status' => $a->esta_ativo ? 'Ativo' : 'Inativo',
             'mensagem' => $a->mensagem,
             'edit_url' => route('aviso.edit', $a->id),
         ];

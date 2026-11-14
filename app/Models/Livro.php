@@ -60,6 +60,12 @@ class Livro extends Model
         return $this->capa_path ? asset('storage/'.$this->capa_path) : null;
     }
 
+    /** Atalho de leitura em Blade: $model->capa_url */
+    public function getCapaUrlAttribute()
+    {
+        return $this->capaUrl();
+    }
+
     public function emprestimos(): HasMany
     {
         return $this->hasMany(EmprestimoLivro::class, 'livro_id');
@@ -80,6 +86,12 @@ class Livro extends Model
         return max(0, $this->exemplares - $this->emprestadosAtivos());
     }
 
+    /** Atalho de leitura em Blade: $model->disponiveis */
+    public function getDisponiveisAttribute()
+    {
+        return $this->disponiveis();
+    }
+
     public function temDisponiveis(): bool
     {
         return $this->disponiveis() > 0;
@@ -88,5 +100,11 @@ class Livro extends Model
     public function estaAtivo(): bool
     {
         return $this->ativo === 'S';
+    }
+
+    /** Atalho de leitura em Blade: $model->esta_ativo */
+    public function getEstaAtivoAttribute()
+    {
+        return $this->estaAtivo();
     }
 }

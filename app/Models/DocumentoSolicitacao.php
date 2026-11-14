@@ -61,6 +61,12 @@ class DocumentoSolicitacao extends Model
         return self::STATUS[$this->status] ?? $this->status;
     }
 
+    /** Atalho de leitura em Blade: $model->status_label */
+    public function getStatusLabelAttribute()
+    {
+        return $this->statusLabel();
+    }
+
     public function arquivoUrl(): ?string
     {
         return $this->arquivo_path ? Storage::disk('public')->url($this->arquivo_path) : null;
@@ -69,5 +75,11 @@ class DocumentoSolicitacao extends Model
     public function tipoLabel(): string
     {
         return AlunoDocumento::TIPOS[$this->tipo] ?? $this->tipo;
+    }
+
+    /** Atalho de leitura em Blade: $model->tipo_label */
+    public function getTipoLabelAttribute()
+    {
+        return $this->tipoLabel();
     }
 }

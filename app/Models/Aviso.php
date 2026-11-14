@@ -59,6 +59,12 @@ class Aviso extends Model
         return $this->ativo === 'S';
     }
 
+    /** Atalho de leitura em Blade: $model->esta_ativo */
+    public function getEstaAtivoAttribute()
+    {
+        return $this->estaAtivo();
+    }
+
     public function turmas(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(\App\Models\Turma::class, 'aviso_turma');
@@ -67,6 +73,12 @@ class Aviso extends Model
     public function ehGeral(): bool
     {
         return $this->turma_id === null && $this->turmas->isEmpty();
+    }
+
+    /** Atalho de leitura em Blade: $model->eh_geral */
+    public function getEhGeralAttribute()
+    {
+        return $this->ehGeral();
     }
 
     /** Nome exibido na coluna Publico. */
@@ -79,6 +91,12 @@ class Aviso extends Model
 
         return $nomes->isEmpty() ? 'Escola toda' : $nomes->take(3)->implode(', ')
             .($nomes->count() > 3 ? ' +'.($nomes->count() - 3) : '');
+    }
+
+    /** Atalho de leitura em Blade: $model->publico_label */
+    public function getPublicoLabelAttribute()
+    {
+        return $this->publicoLabel();
     }
 
     /**

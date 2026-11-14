@@ -13,10 +13,10 @@
 @section('content')
 @php
     $usuario = auth()->user();
-    $isResponsavel = $usuario->tipoConta() === \App\Models\User::TIPO_CONTA_RESPONSAVEL;
+    $isResponsavel = $usuario->tipo_conta === \App\Models\User::TIPO_CONTA_RESPONSAVEL;
     $hora = (int) now()->format('H');
     $saudacao = $hora < 12 ? 'Bom dia' : ($hora < 18 ? 'Boa tarde' : 'Boa noite');
-    $primeiroNome = \Illuminate\Support\Str::of((string) ($usuario->vinculoNome() ?? $usuario->nome))->explode(' ')->first();
+    $primeiroNome = \Illuminate\Support\Str::of((string) ($usuario->vinculo_nome ?? $usuario->nome))->explode(' ')->first();
     $dataExtenso = ucfirst(\Carbon\Carbon::now()->locale('pt_BR')->isoFormat('dddd, D [de] MMMM'));
 
     $tiles = [

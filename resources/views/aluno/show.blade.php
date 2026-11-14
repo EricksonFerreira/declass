@@ -43,7 +43,7 @@
             <div class="as-nome">{{ $p->nome ?? '—' }}</div>
             <div class="as-meta">
                 RA {{ $aluno->registro_academico ?? '—' }} · {{ $aluno->escola->nome ?? '—' }}
-                <span class="badge badge-{{ $aluno->estaAtivo() ? 'success' : 'secondary' }} ml-1">{{ $aluno->estaAtivo() ? 'Ativo' : 'Inativo' }}</span>
+                <span class="badge badge-{{ $aluno->esta_ativo ? 'success' : 'secondary' }} ml-1">{{ $aluno->esta_ativo ? 'Ativo' : 'Inativo' }}</span>
             </div>
         </div>
         <div class="as-acoes">
@@ -70,7 +70,7 @@
         <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#as-resp"><i class="fa fa-users mr-1"></i> Responsáveis <span class="badge badge-light border ml-1">{{ $vinculos->count() }}</span></a></li>
         <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#as-docs"><i class="fa fa-folder-open mr-1"></i> Documentos <span class="badge badge-light border ml-1">{{ $aluno->documentos->count() }}</span></a></li>
         @can('saude.show')
-            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#as-saude"><i class="fa fa-notes-medical mr-1"></i> Saúde @if($ficha?->temAlertas())<span class="badge badge-danger ml-1" title="Possui alertas de saúde">!</span>@endif</a></li>
+            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#as-saude"><i class="fa fa-notes-medical mr-1"></i> Saúde @if($ficha?->tem_alertas)<span class="badge badge-danger ml-1" title="Possui alertas de saúde">!</span>@endif</a></li>
         @endcan
     </ul>
 
@@ -315,7 +315,7 @@
         <div class="tab-pane fade" id="as-saude">
             <div class="card-body">
                 @if($ficha)
-                    @if($ficha->temAlertas())
+                    @if($ficha->tem_alertas)
                         <div class="alert alert-warning py-2 small">
                             <i class="fa fa-exclamation-triangle mr-1"></i>
                             Aluno com alertas de saúde: verifique alergias, medicamentos e condições crônicas abaixo.
@@ -325,7 +325,7 @@
                         <div class="col-md-6">
                             <div class="as-sec"><i class="fa fa-heartbeat mr-1"></i> Saúde</div>
                             <dl class="row mb-0">
-                                <dt class="col-sm-4">Tipo sanguíneo</dt><dd class="col-sm-8">{{ $ficha->tipoSanguineoLabel() }}</dd>
+                                <dt class="col-sm-4">Tipo sanguíneo</dt><dd class="col-sm-8">{{ $ficha->tipo_sanguineo_label }}</dd>
                                 <dt class="col-sm-4">Alergias</dt><dd class="col-sm-8">{{ $ficha->alergias ?: '—' }}</dd>
                                 <dt class="col-sm-4">Medicamentos</dt><dd class="col-sm-8">{{ $ficha->medicamentos ?: '—' }}</dd>
                                 <dt class="col-sm-4">Condições crônicas</dt><dd class="col-sm-8">{{ $ficha->condicoes_cronicas ?: '—' }}</dd>

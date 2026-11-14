@@ -41,6 +41,12 @@ class TurmaForumPost extends Model
         return $this->encerrada_em !== null;
     }
 
+    /** Atalho de leitura em Blade: $model->esta_encerrada */
+    public function getEstaEncerradaAttribute()
+    {
+        return $this->estaEncerrada();
+    }
+
     /**
      * Mensagem escapada para exibicao, com marcadores estilo WhatsApp:
      * *negrito* vira <strong> e _italico_ vira <em>. O italico exige

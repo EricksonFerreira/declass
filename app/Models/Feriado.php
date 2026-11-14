@@ -45,4 +45,10 @@ class Feriado extends Model
     {
         return $this->data_fim ?? $this->data_inicio;
     }
+
+    /** Atalho de leitura em Blade: $model->periodo_fim */
+    public function getPeriodoFimAttribute()
+    {
+        return $this->periodoFim();
+    }
 }

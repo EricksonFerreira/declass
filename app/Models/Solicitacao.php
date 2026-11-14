@@ -92,13 +92,31 @@ class Solicitacao extends Model
         return in_array($this->status, ['aberta', 'em_analise'], true);
     }
 
+    /** Atalho de leitura em Blade: $model->conversa_aberta */
+    public function getConversaAbertaAttribute()
+    {
+        return $this->conversaAberta();
+    }
+
     public function tipoLabel(): string
     {
         return $this->tipoSolicitacao->nome ?? (self::TIPOS[$this->tipo] ?? $this->tipo);
     }
 
+    /** Atalho de leitura em Blade: $model->tipo_label */
+    public function getTipoLabelAttribute()
+    {
+        return $this->tipoLabel();
+    }
+
     public function statusLabel(): string
     {
         return self::STATUS[$this->status] ?? $this->status;
+    }
+
+    /** Atalho de leitura em Blade: $model->status_label */
+    public function getStatusLabelAttribute()
+    {
+        return $this->statusLabel();
     }
 }

@@ -36,7 +36,7 @@
                     <td class="font-weight-bold">
                         {{ $matricula->aluno->pessoa->nome ?? '—' }}
                         @if($reg?->justificativa_id)
-                            <span class="badge badge-info" title="{{ $reg->justificativaRegistro?->tipoLabel() ?? 'Documento registrado' }}">Atestado</span>
+                            <span class="badge badge-info" title="{{ $reg->justificativaRegistro?->tipo_label ?? 'Documento registrado' }}">Atestado</span>
                         @endif
                     </td>
                     <td class="text-center">

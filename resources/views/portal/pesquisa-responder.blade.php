@@ -37,7 +37,7 @@
                     <label class="font-weight-bold">
                         {{ $loop->iteration }}. {{ $p->pergunta }}
                         @if($p->obrigatoria === 'S')<span class="text-danger">*</span>@endif
-                        <small class="text-muted font-weight-normal">— {{ $p->tipoLabel() }}</small>
+                        <small class="text-muted font-weight-normal">— {{ $p->tipo_label }}</small>
                     </label>
 
                     @if($p->tipo === 'nota')

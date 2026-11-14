@@ -13,7 +13,7 @@
     @endphp
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
     <x-page-title :title="$titulo" subtitle="{{ $turma->nome }}{{ $tarefa->disciplina ? ' · '.$tarefa->disciplina->nome : '' }}">
-        <span class="badge badge-{{ $corTipo[$tarefa->tipo] ?? 'info' }} align-self-center">{{ $tarefa->tipoLabel() }}</span>
+        <span class="badge badge-{{ $corTipo[$tarefa->tipo] ?? 'info' }} align-self-center">{{ $tarefa->tipo_label }}</span>
         @if($tarefa->disciplina?->sigla)
             <span class="badge align-self-center" style="background:{{ $corDisc['tx'] }}; color:{{ $corDisc['bg'] }}">{{ $tarefa->disciplina->sigla }}</span>
         @endif
@@ -66,8 +66,8 @@
             @if($totalQuestoes)
                 <span><i class="fas fa-list-ol mr-1"></i>{{ $totalQuestoes }} {{ $totalQuestoes === 1 ? 'questão' : 'questões' }}</span>
             @endif
-            @if($tarefa->exigeEntregaOnline())
-                <span><i class="fas fa-inbox mr-1"></i>{{ $tarefa->tipoEntregaLabel() }}</span>
+            @if($tarefa->exige_entrega_online)
+                <span><i class="fas fa-inbox mr-1"></i>{{ $tarefa->tipo_entrega_label }}</span>
             @endif
         </div>
     </div>
@@ -181,7 +181,7 @@
 @endif
 
 {{-- Entrega simples: confirmacao de leitura, texto digitado ou fotos --}}
-@if($tarefa->exigeEntregaOnline())
+@if($tarefa->exige_entrega_online)
     <div class="card card-outline card-primary">
         <div class="card-header font-weight-bold"><i class="fas fa-inbox mr-1"></i> {{ $isResponsavel ? 'Entrega do aluno' : 'Sua entrega' }}</div>
         <div class="card-body">

@@ -116,7 +116,7 @@
                                         <td class="disc-nome" style="color:{{ $cor['tx'] }}">{{ $disciplina->nome }}</td>
                                         <td style="text-align:right;">
                                             @if($media !== null)
-                                                <span class="media" style="background:{{ $media >= $disciplina->mediaAprovacaoNaTurma() ? '#15803d' : '#b91c1c' }}; color:#fff">Média {{ number_format($media, 1, ',', '.') }}</span>
+                                                <span class="media" style="background:{{ $media >= $disciplina->media_aprovacao_na_turma ? '#15803d' : '#b91c1c' }}; color:#fff">Média {{ number_format($media, 1, ',', '.') }}</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -180,8 +180,8 @@
             @forelse($ocorrencias as $oc)
                 <tr class="{{ $loop->even ? 'alt' : '' }}">
                     <td>{{ $oc->data?->format('d/m/Y') }}</td>
-                    <td>{{ $oc->tipoLabel() }}</td>
-                    <td>{{ $oc->gravidadeLabel() }}</td>
+                    <td>{{ $oc->tipo_label }}</td>
+                    <td>{{ $oc->gravidade_label }}</td>
                     <td>{{ \Illuminate\Support\Str::limit($oc->descricao, 100) }}</td>
                     <td>{{ \Illuminate\Support\Str::limit($oc->medida_adotada, 60) ?: '—' }}</td>
                 </tr>

@@ -16,7 +16,7 @@
                 <h6 class="font-weight-bold mb-2">
                     {{ $aluno->pessoa->nome ?? $aluno->nome }}
                     @if($ficha)
-                        <span class="badge badge-light border ml-1">{{ $ficha->tipoSanguineoLabel() }}</span>
+                        <span class="badge badge-light border ml-1">{{ $ficha->tipo_sanguineo_label }}</span>
                     @endif
                 </h6>
 

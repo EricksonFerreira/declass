@@ -18,7 +18,7 @@
     $horaLista = fn ($msg) => $msg->created_at?->isToday()
         ? $msg->created_at->format('H:i')
         : $msg->created_at?->format('d/m/Y');
-    $turmaFinalizada = $turma->finalizada();
+    $turmaFinalizada = $turma->finalizada;
 @endphp
 
 <div class="wa-app">
@@ -41,7 +41,7 @@
                     <img class="wa-avatar" src="{{ $post->autor->foto_perfil_url ?? '' }}" alt="{{ $post->autor->nome ?? '' }}">
                     <div class="wa-topic-info">
                         <div class="wa-topic-top">
-                            <span class="wa-topic-titulo">@if($post->estaEncerrada())<i class="fas fa-lock wa-lock" title="Conversa encerrada"></i>@endif{{ $post->titulo ?: \Illuminate\Support\Str::limit($post->mensagem, 40) }}</span>
+                            <span class="wa-topic-titulo">@if($post->esta_encerrada)<i class="fas fa-lock wa-lock" title="Conversa encerrada"></i>@endif{{ $post->titulo ?: \Illuminate\Support\Str::limit($post->mensagem, 40) }}</span>
                             <span class="wa-topic-hora {{ ($post->nao_lidas ?? 0) > 0 ? 'wa-hora-nao-lida' : '' }}">{{ $horaLista($ultima) }}</span>
                         </div>
                         <div class="wa-topic-sub">
@@ -93,9 +93,9 @@
                     <button type="button" class="wa-icon-btn wa-voltar" title="Voltar"><i class="fas fa-arrow-left"></i></button>
                     <img class="wa-avatar" src="{{ $post->autor->foto_perfil_url ?? '' }}" alt="{{ $post->autor->nome ?? '' }}">
                     <div class="wa-head-info min-w-0">
-                        <div class="wa-head-titulo">@if($post->estaEncerrada())<i class="fas fa-lock wa-lock" title="Conversa encerrada"></i>@endif{{ $post->titulo ?: \Illuminate\Support\Str::limit($post->mensagem, 40) }}</div>
+                        <div class="wa-head-titulo">@if($post->esta_encerrada)<i class="fas fa-lock wa-lock" title="Conversa encerrada"></i>@endif{{ $post->titulo ?: \Illuminate\Support\Str::limit($post->mensagem, 40) }}</div>
                         <div class="wa-head-sub">
-                            {{ $post->autor->nome ?? '' }} · {{ $totalMsgs }} {{ $totalMsgs === 1 ? 'mensagem' : 'mensagens' }}{{ $post->estaEncerrada() ? ' · encerrada' : '' }}
+                            {{ $post->autor->nome ?? '' }} · {{ $totalMsgs }} {{ $totalMsgs === 1 ? 'mensagem' : 'mensagens' }}{{ $post->esta_encerrada ? ' · encerrada' : '' }}
                         </div>
                     </div>
                     @if($post->user_id === $euId)
@@ -106,7 +106,7 @@
                                 <form method="POST" action="{{ route('portal.turma.disciplina.forum.encerrar', [$turma->id, $disciplina->id, $post->id]) }}">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="dropdown-item">
-                                        <i class="fas {{ $post->estaEncerrada() ? 'fa-lock-open' : 'fa-lock' }} mr-2"></i>{{ $post->estaEncerrada() ? 'Reabrir conversa' : 'Encerrar conversa' }}
+                                        <i class="fas {{ $post->esta_encerrada ? 'fa-lock-open' : 'fa-lock' }} mr-2"></i>{{ $post->esta_encerrada ? 'Reabrir conversa' : 'Encerrar conversa' }}
                                     </button>
                                 </form>
                             </div>
@@ -153,7 +153,7 @@
                 </div>
                 @if($turmaFinalizada)
                     <div class="wa-composer wa-composer-off"><i class="fas fa-lock mr-1"></i> Turma finalizada — fórum somente para consulta</div>
-                @elseif($post->estaEncerrada())
+                @elseif($post->esta_encerrada)
                     <div class="wa-composer wa-composer-off"><i class="fas fa-lock mr-1"></i> Conversa encerrada — novas respostas desabilitadas</div>
                 @else
                     <form method="POST" action="{{ route('portal.turma.disciplina.forum.comentar', [$turma->id, $disciplina->id, $post->id]) }}" class="wa-composer">

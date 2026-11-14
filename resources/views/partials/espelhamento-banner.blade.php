@@ -1,5 +1,5 @@
 @php $espelhamentoContexto = app(\App\Support\EspelhamentoContext::class); @endphp
-@if($espelhamentoContexto->ativo() && ($espelhado = $espelhamentoContexto->alvo()))
+@if($espelhamentoContexto->ativo && ($espelhado = $espelhamentoContexto->alvo))
     <div class="espelhamento-banner">
         <div class="espelhamento-banner-texto">
             <i class="fas fa-user-secret mr-1"></i>

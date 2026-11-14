@@ -81,4 +81,10 @@ class Matricula extends Model
     {
         return $this->status === 'ativa';
     }
+
+    /** Atalho de leitura em Blade: $model->esta_ativa */
+    public function getEstaAtivaAttribute()
+    {
+        return $this->estaAtiva();
+    }
 }

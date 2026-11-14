@@ -52,7 +52,7 @@
     // mapa dia => feriados que cobrem o dia (para a visao de calendario)
     $porDia = [];
     foreach ($feriados as $f) {
-        $fim = $f->periodoFim()->copy();
+        $fim = $f->periodo_fim->copy();
         for ($d = $f->data_inicio->copy(); $d->lte($fim); $d->addDay()) {
             $porDia[$d->format('Y-m-d')][] = $f;
         }
@@ -113,7 +113,7 @@
         {{-- Visao cards --}}
         <div class="ux-cards fer-cards">
             @forelse($feriados as $f)
-                @php($passado = $f->periodoFim()->isPast() && $f->periodoFim()->toDateString() !== $hoje)
+                @php($passado = $f->periodo_fim->isPast() && $f->periodo_fim->toDateString() !== $hoje)
                 <article class="ux-card {{ $passado ? 'ux-card--muted' : '' }}">
                     <div class="ux-card__accent"></div>
                     <div class="ux-card__head">

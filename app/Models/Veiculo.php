@@ -53,8 +53,20 @@ class Veiculo extends Model
             ->count();
     }
 
+    /** Atalho de leitura em Blade: $model->passageiros */
+    public function getPassageirosAttribute()
+    {
+        return $this->passageiros();
+    }
+
     public function estaAtivo(): bool
     {
         return $this->ativo === 'S';
+    }
+
+    /** Atalho de leitura em Blade: $model->esta_ativo */
+    public function getEstaAtivoAttribute()
+    {
+        return $this->estaAtivo();
     }
 }

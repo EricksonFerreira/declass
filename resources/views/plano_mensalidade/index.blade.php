@@ -35,7 +35,7 @@
                             <td class="font-weight-bold">{{ $plano->nome }}</td>
                             <td class="text-right">R$ {{ number_format($plano->valor, 2, ',', '.') }}</td>
                             <td class="text-muted" style="font-size:.8rem; max-width:280px;">{{ \Illuminate\Support\Str::limit($plano->descricao, 80) ?: '—' }}</td>
-                            <td>{{ $plano->matriculas_count ?? $plano->matriculas()->count() }}</td>
+                            <td>{{ $plano->matriculas_count ?? $plano->matriculas->count() }}</td>
                             <td>
                                 <span class="badge badge-{{ $plano->ativo === 'S' ? 'success' : 'secondary' }}">
                                     {{ $plano->ativo === 'S' ? 'Ativo' : 'Inativo' }}

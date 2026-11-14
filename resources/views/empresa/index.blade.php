@@ -51,7 +51,7 @@
                             <td>{{ $empresa->escolas->count() }}</td>
                             <td>{{ $empresa->users->count() }}</td>
                             <td>
-                                @if($empresa->estaAtiva())
+                                @if($empresa->esta_ativa)
                                     <span class="badge badge-success">Ativo</span>
                                 @else
                                     <span class="badge badge-secondary">Inativo</span>

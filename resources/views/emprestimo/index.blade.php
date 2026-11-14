@@ -30,7 +30,7 @@
         {{-- Visao cards --}}
         <div class="ux-cards emp-cards">
             @forelse($emprestimos as $emp)
-                @php $situacao = $emp->situacao(); @endphp
+                @php $situacao = $emp->situacao; @endphp
                 <article class="ux-card">
                     <div class="ux-card__accent"></div>
                     <div class="ux-card__head">
@@ -78,7 +78,7 @@
                             </span>
                         </div>
                     @endif
-                    @if($emp->estaAtivo())
+                    @if($emp->esta_ativo)
                         <div class="ux-card__foot">
                             @can('emprestimo.devolver')
                                 <button type="button" class="btn btn-xs btn-success btn-devolver" title="Registrar devolução"
@@ -116,7 +116,7 @@
                 </thead>
                 <tbody>
                     @forelse($emprestimos as $emp)
-                        @php $situacao = $emp->situacao(); @endphp
+                        @php $situacao = $emp->situacao; @endphp
                         <tr>
                             <td class="font-weight-bold">{{ $emp->aluno->pessoa->nome ?? 'Aluno #'.$emp->aluno_id }}</td>
                             <td>
@@ -143,7 +143,7 @@
                                 @if($emp->anexos->isNotEmpty())
                                     <a href="{{ $emp->anexos->first()->url() }}" target="_blank" class="btn btn-xs btn-outline-secondary" title="{{ $emp->anexos->count() }} foto(s) da avaria{{ $emp->observacoes ? ' — '.$emp->observacoes : '' }}"><i class="fa fa-camera"></i></a>
                                 @endif
-                                @if($emp->estaAtivo())
+                                @if($emp->esta_ativo)
                                     @can('emprestimo.devolver')
                                         <button type="button" class="btn btn-xs btn-success btn-devolver" title="Registrar devolução"
                                             data-url="{{ route('emprestimo.devolver', $emp->id) }}"

@@ -51,7 +51,7 @@
         {{-- Visao cards --}}
         <div class="ux-cards liv-cards">
             @forelse($livros as $livro)
-                @php $disp = $livro->disponiveis(); @endphp
+                @php $disp = $livro->disponiveis; @endphp
                 <article class="ux-card liv-item"
                     data-titulo="{{ $livro->titulo }}"
                     data-autor="{{ $livro->autor ?? '' }}"
@@ -63,15 +63,15 @@
                     data-ano="{{ $livro->ano_publicacao ?? '' }}"
                     data-exemplares="{{ $livro->exemplares }}"
                     data-disponiveis="{{ $disp }}"
-                    data-status="{{ $livro->estaAtivo() ? 'Ativo' : 'Inativo' }}"
+                    data-status="{{ $livro->esta_ativo ? 'Ativo' : 'Inativo' }}"
                     data-descricao="{{ $livro->descricao ?? '' }}"
-                    data-capa="{{ $livro->capaUrl() ?? '' }}"
+                    data-capa="{{ $livro->capa_url ?? '' }}"
                     data-com="{{ $livro->emprestimosAtivos->map(fn ($e) => $e->aluno->pessoa->nome ?? 'Aluno #'.$e->aluno_id)->implode(', ') }}"
                     data-edit-url="{{ auth()->user()->hasPermissao('livro.edit') ? route('livro.edit', $livro->id) : '' }}">
                     <div class="ux-card__accent"></div>
                     <div class="ux-card__head">
-                        @if($livro->capaUrl())
-                            <img src="{{ $livro->capaUrl() }}" alt="" class="liv-capa">
+                        @if($livro->capa_url)
+                            <img src="{{ $livro->capa_url }}" alt="" class="liv-capa">
                         @else
                             <span class="liv-capa--vazio"><i class="fas fa-book"></i></span>
                         @endif
@@ -141,7 +141,7 @@
                 </thead>
                 <tbody>
                     @forelse($livros as $livro)
-                        @php $disp = $livro->disponiveis(); @endphp
+                        @php $disp = $livro->disponiveis; @endphp
                         <tr class="liv-item"
                             data-titulo="{{ $livro->titulo }}"
                             data-autor="{{ $livro->autor ?? '' }}"
@@ -153,9 +153,9 @@
                             data-ano="{{ $livro->ano_publicacao ?? '' }}"
                             data-exemplares="{{ $livro->exemplares }}"
                             data-disponiveis="{{ $disp }}"
-                            data-status="{{ $livro->estaAtivo() ? 'Ativo' : 'Inativo' }}"
+                            data-status="{{ $livro->esta_ativo ? 'Ativo' : 'Inativo' }}"
                             data-descricao="{{ $livro->descricao ?? '' }}"
-                            data-capa="{{ $livro->capaUrl() ?? '' }}"
+                            data-capa="{{ $livro->capa_url ?? '' }}"
                             data-com="{{ $livro->emprestimosAtivos->map(fn ($e) => $e->aluno->pessoa->nome ?? 'Aluno #'.$e->aluno_id)->implode(', ') }}"
                             data-edit-url="{{ auth()->user()->hasPermissao('livro.edit') ? route('livro.edit', $livro->id) : '' }}">
                             <td>
@@ -181,7 +181,7 @@
                             </td>
                             <td class="text-center">{{ $livro->exemplares }}</td>
                             <td class="text-center">
-                                @php $disp = $livro->disponiveis(); @endphp
+                                @php $disp = $livro->disponiveis; @endphp
                                 @if($disp > 0)
                                     <span class="badge badge-success">{{ $disp }}</span>
                                 @else
@@ -189,7 +189,7 @@
                                 @endif
                             </td>
                             <td>
-                                @if($livro->estaAtivo())
+                                @if($livro->esta_ativo)
                                     <span class="badge badge-success">Ativo</span>
                                 @else
                                     <span class="badge badge-secondary">Inativo</span>

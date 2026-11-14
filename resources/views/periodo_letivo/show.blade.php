@@ -27,7 +27,7 @@
                     <dt class="col-sm-5">Escola</dt><dd class="col-sm-7">{{ $periodo->escola->nome ?? '—' }}</dd>
                     <dt class="col-sm-5">Status</dt>
                     <dd class="col-sm-7">
-                        @if($periodo->estaAtivo())
+                        @if($periodo->esta_ativo)
                             <span class="badge badge-success">Ativo</span>
                         @else
                             <span class="badge badge-secondary">Inativo</span>

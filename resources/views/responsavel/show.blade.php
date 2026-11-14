@@ -41,7 +41,7 @@
                     <dt class="col-sm-4">Local de trabalho</dt><dd class="col-sm-8">{{ $responsavel->local_trabalho ?? '—' }}</dd>
                     <dt class="col-sm-4">Status</dt>
                     <dd class="col-sm-8">
-                        @if($responsavel->estaAtivo())
+                        @if($responsavel->esta_ativo)
                             <span class="badge badge-success">Ativo</span>
                         @else
                             <span class="badge badge-secondary">Inativo</span>
@@ -66,7 +66,7 @@
                 <ul class="list-group list-group-flush">
                     @forelse($responsavel->alunos as $aluno)
                         <li class="list-group-item py-2">
-                            <a href="{{ route('aluno.show', $aluno->id) }}" class="font-weight-bold">{{ $aluno->pessoa->nomeExibicao() ?? '—' }}</a>
+                            <a href="{{ route('aluno.show', $aluno->id) }}" class="font-weight-bold">{{ $aluno->pessoa->nome_exibicao ?? '—' }}</a>
                             <div>
                                 <span class="badge badge-info">{{ \App\Models\Aluno::TIPOS_RESPONSAVEL[$aluno->pivot->tipo] ?? $aluno->pivot->tipo }}</span>
                                 @if($aluno->pivot->principal)<span class="badge badge-primary">Principal</span>@endif

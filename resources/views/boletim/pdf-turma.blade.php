@@ -75,7 +75,7 @@
                         @php $media = $medias["{$matricula->id}:{$disciplina->id}"] ?? null; @endphp
                         <td>
                             @if($media !== null)
-                                <span class="{{ $media >= $disciplina->mediaAprovacaoNaTurma() ? 'media-ok' : 'media-bad' }}">{{ number_format($media, 1, ',', '.') }}</span>
+                                <span class="{{ $media >= $disciplina->media_aprovacao_na_turma ? 'media-ok' : 'media-bad' }}">{{ number_format($media, 1, ',', '.') }}</span>
                             @else
                                 —
                             @endif

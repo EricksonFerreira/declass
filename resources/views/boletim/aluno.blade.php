@@ -48,7 +48,7 @@
                     <span>
                         @php $media = $medias[$disciplina->id] ?? null; @endphp
                         @if($media !== null)
-                            @php $corte = $disciplina->mediaAprovacaoNaTurma(); @endphp
+                            @php $corte = $disciplina->media_aprovacao_na_turma; @endphp
                             <span class="badge badge-{{ $media >= $corte ? 'success' : 'danger' }}" title="Aprovação a partir de {{ number_format($corte, 1, ',', '.') }}">Média {{ number_format($media, 1, ',', '.') }}</span>
                         @endif
                     </span>
@@ -115,8 +115,8 @@
                             @endphp
                             <tr>
                                 <td class="text-nowrap">{{ $oc->data?->format('d/m/Y') }}</td>
-                                <td><span class="badge badge-info">{{ $oc->tipoLabel() }}</span></td>
-                                <td><span class="badge badge-{{ $corGrav }}">{{ $oc->gravidadeLabel() }}</span></td>
+                                <td><span class="badge badge-info">{{ $oc->tipo_label }}</span></td>
+                                <td><span class="badge badge-{{ $corGrav }}">{{ $oc->gravidade_label }}</span></td>
                                 <td><small>{{ \Illuminate\Support\Str::limit($oc->descricao, 120) }}</small></td>
                                 <td><small class="text-muted">{{ \Illuminate\Support\Str::limit($oc->medida_adotada, 80) ?: '—' }}</small></td>
                             </tr>

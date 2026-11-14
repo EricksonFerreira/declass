@@ -73,9 +73,9 @@
                 @endphp
                 <article class="ux-card oco-item" data-oco
                     data-tipo="{{ $ocorrencia->tipo }}"
-                    data-tipo-label="{{ $ocorrencia->tipoLabel() }}"
+                    data-tipo-label="{{ $ocorrencia->tipo_label }}"
                     data-gravidade="{{ $ocorrencia->gravidade }}"
-                    data-gravidade-label="{{ $ocorrencia->gravidadeLabel() }}"
+                    data-gravidade-label="{{ $ocorrencia->gravidade_label }}"
                     data-data="{{ $ocorrencia->data->format('d/m/Y') }}"
                     data-aluno="{{ $nome }}"
                     data-ra="{{ $aluno->registro_academico ?? '' }}"
@@ -97,9 +97,9 @@
                             </div>
                         </div>
                         <div class="ux-card__badges">
-                            <span class="ux-card__badge {{ $tipoBadgeCard[$ocorrencia->tipo] ?? 'ux-card__badge--gray' }}">{{ $ocorrencia->tipoLabel() }}</span>
+                            <span class="ux-card__badge {{ $tipoBadgeCard[$ocorrencia->tipo] ?? 'ux-card__badge--gray' }}">{{ $ocorrencia->tipo_label }}</span>
                             @if($ocorrencia->tipo !== 'elogio')
-                                <span class="ux-card__badge {{ $gravBadgeCard[$ocorrencia->gravidade] ?? 'ux-card__badge--gray' }}">{{ $ocorrencia->gravidadeLabel() }}</span>
+                                <span class="ux-card__badge {{ $gravBadgeCard[$ocorrencia->gravidade] ?? 'ux-card__badge--gray' }}">{{ $ocorrencia->gravidade_label }}</span>
                             @endif
                         </div>
                     </div>
@@ -151,9 +151,9 @@
                     @forelse($ocorrencias as $ocorrencia)
                         <tr class="oco-item" data-oco
                             data-tipo="{{ $ocorrencia->tipo }}"
-                            data-tipo-label="{{ $ocorrencia->tipoLabel() }}"
+                            data-tipo-label="{{ $ocorrencia->tipo_label }}"
                             data-gravidade="{{ $ocorrencia->gravidade }}"
-                            data-gravidade-label="{{ $ocorrencia->gravidadeLabel() }}"
+                            data-gravidade-label="{{ $ocorrencia->gravidade_label }}"
                             data-data="{{ $ocorrencia->data->format('d/m/Y') }}"
                             data-aluno="{{ $ocorrencia->aluno->pessoa->nome ?? '—' }}"
                             data-ra="{{ $ocorrencia->aluno->registro_academico ?? '' }}"
@@ -169,7 +169,7 @@
                             <td>{{ $ocorrencia->escola->nome ?? '—' }}</td>
                             <td>
                                 <span class="badge badge-{{ $ocorrencia->tipo === 'elogio' ? 'success' : ($ocorrencia->tipo === 'suspensao' ? 'danger' : 'warning') }}">
-                                    {{ $ocorrencia->tipoLabel() }}
+                                    {{ $ocorrencia->tipo_label }}
                                 </span>
                             </td>
                             <td>
@@ -177,7 +177,7 @@
                                     <span class="text-muted">—</span>
                                 @else
                                     @php($grav = ['leve' => 'secondary', 'media' => 'warning', 'grave' => 'danger'][$ocorrencia->gravidade] ?? 'secondary')
-                                    <span class="badge badge-{{ $grav }}">{{ $ocorrencia->gravidadeLabel() }}</span>
+                                    <span class="badge badge-{{ $grav }}">{{ $ocorrencia->gravidade_label }}</span>
                                 @endif
                             </td>
                             <td style="max-width:280px;">

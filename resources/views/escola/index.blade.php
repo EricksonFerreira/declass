@@ -38,7 +38,7 @@
                             <td>{{ trim(($escola->cidade ?? '').($escola->estado ? '/'.$escola->estado : '')) ?: '—' }}</td>
                             <td>{{ $escola->capacidade_alunos ?? '—' }}</td>
                             <td>
-                                @if($escola->estaAtiva())
+                                @if($escola->esta_ativa)
                                     <span class="badge badge-success">Ativa</span>
                                 @else
                                     <span class="badge badge-secondary">Inativa</span>

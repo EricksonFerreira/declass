@@ -41,9 +41,9 @@
                             <td class="text-nowrap">{{ $rota->horario_ida?->format('H:i') ?? '—' }}</td>
                             <td class="text-nowrap">{{ $rota->horario_volta?->format('H:i') ?? '—' }}</td>
                             <td class="text-center">{{ $rota->paradas->count() }}</td>
-                            <td class="text-center">{{ $rota->passageirosAtivos() }}</td>
+                            <td class="text-center">{{ $rota->passageiros_ativos }}</td>
                             <td>
-                                @if($rota->estaAtivo())
+                                @if($rota->esta_ativo)
                                     <span class="badge badge-success">Ativa</span>
                                 @else
                                     <span class="badge badge-secondary">Inativa</span>

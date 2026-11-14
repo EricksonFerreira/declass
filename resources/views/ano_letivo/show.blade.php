@@ -31,7 +31,7 @@
             'nome' => $d->nome,
             'carga' => $d->pivot->carga_horaria_semanal,
         ])->values()->all(),
-        'atribuicoes' => $t->atribuicoes->filter->estaAtiva()->map(fn ($a) => [
+        'atribuicoes' => $t->atribuicoes->filter->esta_ativa->map(fn ($a) => [
             'professor' => $a->user->nome ?? '—',
             'disciplina' => $a->disciplina->nome ?? 'Turma toda',
             'papel' => \App\Models\Atribuicao::PAPEIS[$a->papel] ?? $a->papel,
@@ -123,7 +123,7 @@
                                 <td>{{ optional($periodo->data_inicio)->format('d/m/Y') ?? '—' }}</td>
                                 <td>{{ optional($periodo->data_fim)->format('d/m/Y') ?? '—' }}</td>
                                 <td>
-                                    @if($periodo->estaAtivo())
+                                    @if($periodo->esta_ativo)
                                         <span class="badge badge-success">Ativo</span>
                                     @else
                                         <span class="badge badge-secondary">Inativo</span>
@@ -237,7 +237,7 @@
                                 <select name="turma_origem_id" id="rep-origem" class="form-control" required>
                                     <option value="">Selecione a turma modelo…</option>
                                     @foreach($turmas as $turma)
-                                        <option value="{{ $turma->id }}">{{ $turma->nome }} ({{ $turma->disciplinas->count() }} disc. / {{ $turma->atribuicoes->filter->estaAtiva()->count() }} prof.)</option>
+                                        <option value="{{ $turma->id }}">{{ $turma->nome }} ({{ $turma->disciplinas->count() }} disc. / {{ $turma->atribuicoes->filter->esta_ativa->count() }} prof.)</option>
                                     @endforeach
                                 </select>
                                 <small class="text-muted">Disciplinas, cargas e professores desta turma serão copiados.</small>

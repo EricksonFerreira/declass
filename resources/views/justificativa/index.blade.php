@@ -58,7 +58,7 @@
                         <td class="text-nowrap">{{ $j->data_inicio->format('d/m/Y') }} — {{ $j->data_fim->format('d/m/Y') }}</td>
                         <td class="font-weight-bold">{{ $j->matricula->aluno->pessoa->nome ?? '—' }}</td>
                         <td>{{ $j->matricula->turma->nome ?? '—' }}</td>
-                        <td>{{ $j->tipoLabel() }}
+                        <td>{{ $j->tipo_label }}
                             @if($j->motivo)
                                 <small class="d-block text-muted">{{ \Illuminate\Support\Str::limit($j->motivo, 50) }}</small>
                             @endif
@@ -110,7 +110,7 @@
                             @else
                                 <span class="badge badge-info">Justificada</span>
                             @endif
-                            <span class="badge badge-light border">{{ $j->tipoLabel() }}</span>
+                            <span class="badge badge-light border">{{ $j->tipo_label }}</span>
                             @if($j->arquivo_path)
                                 <i class="fa fa-paperclip text-muted" title="Com anexo"></i>
                             @endif
@@ -169,7 +169,7 @@
             'aluno' => $j->matricula->aluno->pessoa->nome ?? '—',
             'turma' => $j->matricula->turma->nome ?? '—',
             'escola' => $j->escola->nome ?? '—',
-            'tipo' => $j->tipoLabel(),
+            'tipo' => $j->tipo_label,
             'efeito' => $j->efeito === 'abonada' ? 'Abonada' : 'Justificada',
             'efeito_cor' => $j->efeito === 'abonada' ? 'success' : 'info',
             'inicio' => $j->data_inicio->format('d/m/Y'),

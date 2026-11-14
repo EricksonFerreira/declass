@@ -53,10 +53,22 @@ class Pesquisa extends Model
         return self::STATUS[$this->status] ?? $this->status;
     }
 
+    /** Atalho de leitura em Blade: $model->status_label */
+    public function getStatusLabelAttribute()
+    {
+        return $this->statusLabel();
+    }
+
     public function estaAberta(): bool
     {
         return $this->status === 'aberta'
             && $this->data_inicio?->lte(now()->startOfDay())
             && $this->data_fim?->gte(now()->startOfDay());
+    }
+
+    /** Atalho de leitura em Blade: $model->esta_aberta */
+    public function getEstaAbertaAttribute()
+    {
+        return $this->estaAberta();
     }
 }

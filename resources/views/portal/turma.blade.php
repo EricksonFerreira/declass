@@ -162,7 +162,7 @@
                     <small class="text-muted">
                         <i class="fas fa-book fa-fw"></i> {{ $tarefa->disciplina->nome ?? 'Geral' }}
                         @if($tarefa->tipo && $tarefa->tipo !== 'atividade')
-                            · <span class="badge badge-light border">{{ $tarefa->tipoLabel() }}</span>
+                            · <span class="badge badge-light border">{{ $tarefa->tipo_label }}</span>
                         @endif
                         @if($tarefa->data_entrega)
                             · <i class="fas fa-calendar-day fa-fw"></i> entrega até {{ $tarefa->data_entrega->format('d/m/Y') }}
