@@ -54,9 +54,9 @@ php artisan tinker
 
 - Site criado em 2026-11-06; docroot `/home/u735272302/domains/declass.ericksondev.online/public_html`.
 - Banco: `u735272302_declass` (user igual), host interno `127.0.0.1:3306`.
-- Deploy e manual via `hosting_deploy` com pacote local: o docroot e o root do projeto; `.env` e `vendor/` vao DENTRO do pacote (API nao edita .env; nao ha SSH/composer remoto — `system/exec` desabilitados).
-- `vendor/` de producao = `composer install --no-dev` + `fakerphp/faker` (seeders usam `fake()`); limpar `vendor/almasaeed2010/adminlte` de docs/plugins/build/src/pages antes de empacotar (~95MB a menos).
-- EXCLUIR do pacote: `public/storage` (e symlink local; virou pasta real com lixo de dev — o deploy apaga e `storage:link` recria), `storage/framework/views/*` (views compiladas em lote podem sair corrompidas), `storage/logs/*`, `bootstrap/cache/*.php`, `.git`, `node_modules`.
+- **Deploy = `git push` na `main`** (auto-deploy Git ativo no site): o servidor da pull e roda `composer install` sozinho. Durante o deploy a app pode dar **500 transitorio** — esperar terminar. Apos deploy com migration nova, rodar `setup-producao` (abaixo).
+- `.env` de producao vive no docroot (nao vem do repo); `vendor/` e regenerado pelo deploy. `public/storage` deve ser symlink para `storage/app/public` — se um upload novo 404, verificar se virou pasta real e rodar `setup-producao` (o `prepararLinkStorage` renomeia e recria o link; a rota fallback `/storage/{path}` cobre enquanto isso).
+- Deploy manual alternativo (raro): `scripts/build-deploy-package.sh` gera `declass-deploy.tar.gz` (vendor --no-dev + faker + `.env.production`, sem `public/storage`/`storage/app`/cache) → `hosting_deploy` type=static.
 - Blade: nao misturar `@php(expr)` inline com `@endphp` mais adiante no mesmo arquivo — o regex `@php(.*?)@endphp` engole o meio como bloco cru (parse error + corrompe o contador de `@forelse` no `view:cache`, gerando `$__empty_-N` em views seguintes). Usar sempre `@php expr; @endphp`.
 - Sessao/cache em `file` no .env de producao (drivers `database` exigem tabelas que nao existem antes do primeiro migrate).
 - Setup remoto: `GET /migrations/setup-producao?token={APP_MIGRATION_ROUTE_TOKEN}&demo=1` roda optimize:clear + storage:link + migrate --force + db:seed (+DemoEscolarSeeder com `demo=1`) + tenant/superadmins. Idempotente e SEM opções destrutivas — ver proibicao em Restricoes.
