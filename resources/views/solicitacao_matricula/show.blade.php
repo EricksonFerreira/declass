@@ -52,7 +52,6 @@
             </div>
         </div>
         <div class="sm-acoes">
-            <a href="{{ route('solicitacao_matricula.index') }}" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Voltar</a>
             @if($solicitacao->esta_pendente)
                 @can('solicitacao_matricula.edit')
                     <a href="{{ route('solicitacao_matricula.edit', $solicitacao->id) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i> Editar</a>
