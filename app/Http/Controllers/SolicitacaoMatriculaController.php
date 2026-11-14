@@ -197,6 +197,10 @@ class SolicitacaoMatriculaController extends BaseController implements FiltroInt
     {
         return [
             [
+                'name' => 'codigo', 'label' => 'Código', 'type' => 'text',
+                'typeWhere' => 'like',
+            ],
+            [
                 'name' => 'nome_aluno', 'label' => 'Nome do aluno', 'type' => 'text',
                 'typeWhere' => 'like',
             ],

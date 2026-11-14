@@ -25,6 +25,7 @@ class SolicitacaoMatricula extends Model
         'ano_letivo_id',
         'etapa_id',
         'turma_id',
+        'codigo',
         'nome_aluno',
         'data_nascimento_aluno',
         'sexo_aluno',
@@ -71,6 +72,51 @@ class SolicitacaoMatricula extends Model
         'tio' => 'Tio(a)',
         'outro' => 'Outro',
     ];
+
+    /**
+     * Gera o protocolo amigavel (3 letras + 3 digitos embaralhados,
+     * unico por tenant) quando nao informado — cobre tanto a fila
+     * interna quanto o formulario publico.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (SolicitacaoMatricula $solicitacao): void {
+            if (! $solicitacao->codigo) {
+                $solicitacao->codigo = static::gerarCodigo((int) $solicitacao->empresa_id);
+            }
+        });
+    }
+
+    /**
+     * Protocolo de 6 caracteres unico dentro do tenant:
+     * 3 letras + 3 digitos com posicoes variadas (ex.: K4M9A2, 7B2KQM).
+     * Alfabeto sem I/O e digitos sem 0/1 para nao confundir leitura.
+     */
+    public static function gerarCodigo(int $empresaId): string
+    {
+        do {
+            $chars = array_merge(
+                self::sortear('ABCDEFGHJKLMNPQRSTUVWXYZ', 3),
+                self::sortear('23456789', 3),
+            );
+            shuffle($chars);
+            $codigo = implode('', $chars);
+        } while (static::query()->withTrashed()->where('empresa_id', $empresaId)->where('codigo', $codigo)->exists());
+
+        return $codigo;
+    }
+
+    /** @return string[] */
+    private static function sortear(string $alfabeto, int $qtd): array
+    {
+        $max = strlen($alfabeto) - 1;
+        $out = [];
+        for ($i = 0; $i < $qtd; $i++) {
+            $out[] = $alfabeto[random_int(0, $max)];
+        }
+
+        return $out;
+    }
 
     public function empresa(): BelongsTo
     {

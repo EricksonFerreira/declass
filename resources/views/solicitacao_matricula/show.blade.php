@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="\App\Models\SolicitacaoMatricula::STATUS[$solicitacao->status] ?? $solicitacao->statusLabel()" subtitle="Solicitação de matrícula — {$solicitacao->nome_aluno}" />
+    <x-page-title :title="\App\Models\SolicitacaoMatricula::STATUS[$solicitacao->status] ?? $solicitacao->statusLabel()" subtitle="Solicitação #{{ $solicitacao->codigo }} — {{ $solicitacao->nome_aluno }}" />
 @stop
 
 @section('content')
@@ -23,6 +23,9 @@
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
+                    <dt class="col-sm-4">Código</dt>
+                    <dd class="col-sm-8"><code class="text-dark font-weight-bold">#{{ $solicitacao->codigo }}</code></dd>
+
                     <dt class="col-sm-4">Aluno pretendido</dt>
                     <dd class="col-sm-8">{{ $solicitacao->nome_aluno }}
                         @if($solicitacao->data_nascimento_aluno)

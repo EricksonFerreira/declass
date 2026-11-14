@@ -75,7 +75,7 @@ class MatriculaPublicaController extends BaseController
             'anosLetivos' => $anosLetivos,
             'etapas' => $etapas,
             'enviada' => true,
-            'protocolo' => $solicitacao->id,
+            'protocolo' => $solicitacao->codigo,
         ]);
     }
 
@@ -129,7 +129,7 @@ class MatriculaPublicaController extends BaseController
         User::query()->whereIn('id', $userIds)->get()->each(
             fn (User $u) => $u->notify(new AvisoSistemaNotification(
                 'Nova solicitação de matrícula',
-                "{$solicitacao->nome_aluno} solicitou vaga em {$escola->nome} (portal público).",
+                "{$solicitacao->nome_aluno} solicitou vaga em {$escola->nome} (portal público, protocolo {$solicitacao->codigo}).",
                 route('solicitacao_matricula.show', $solicitacao->id),
                 'fas fa-user-plus',
                 'success',
