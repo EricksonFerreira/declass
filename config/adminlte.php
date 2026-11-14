@@ -536,7 +536,7 @@ return [
                             'icon' => 'fas fa-exchange-alt',
                         ],
                         [
-                            'text' => 'Solicitações de Matrícula',
+                            'text' => 'Pré-matrículas',
                             'route' => 'solicitacao_matricula.index',
                             'can' => 'solicitacao_matricula.index',
                             'icon' => 'fas fa-user-plus',
@@ -949,6 +949,7 @@ return [
     'filters' => [
         App\Menu\Filters\AutoPermissionFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\GateFilter::class,
+        App\Menu\Filters\SolicitacaoMatriculaBadgeFilter::class,
         App\Menu\Filters\RoutePermissionVisibilityFilter::class,
         App\Menu\Filters\ProfessorMenuFilter::class,
         App\Menu\Filters\PortalMenuFilter::class,

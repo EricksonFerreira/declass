@@ -38,7 +38,7 @@ class SecretariaMenu
                     ['text' => 'Alunos', 'route' => 'aluno.index', 'can' => 'aluno.index', 'icon' => 'fas fa-user-graduate'],
                     ['text' => 'Responsáveis', 'route' => 'responsavel.index', 'can' => 'responsavel.index', 'icon' => 'fas fa-user-friends'],
                     ['text' => 'Matrículas', 'route' => 'matricula.index', 'can' => 'matricula.index', 'icon' => 'fas fa-id-card'],
-                    ['text' => 'Solicitações de Matrícula', 'route' => 'solicitacao_matricula.index', 'can' => 'solicitacao_matricula.index', 'icon' => 'fas fa-file-signature'],
+                    ['text' => 'Pré-matrículas', 'route' => 'solicitacao_matricula.index', 'can' => 'solicitacao_matricula.index', 'icon' => 'fas fa-file-signature'],
                     ['text' => 'Solicitações das Famílias', 'route' => 'solicitacao.index', 'can' => 'solicitacao.index', 'icon' => 'fas fa-inbox'],
                     ['text' => 'Documentos Solicitados', 'route' => 'documento_solicitacao.index', 'can' => 'documento_solicitacao.index', 'icon' => 'fas fa-file-alt'],
                     ['text' => 'Atestados e Abonos', 'route' => 'justificativa.index', 'can' => 'justificativa.index', 'icon' => 'fas fa-file-medical'],
