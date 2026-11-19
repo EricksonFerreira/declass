@@ -56,6 +56,9 @@
                                 </div>
                             </div>
                             <input type="hidden" name="turma_id" id="turma_id" value="{{ old('turma_id', request('turma_id')) }}" required>
+                            @if($turmaOrigem ?? null)
+                                <input type="hidden" name="from_turma_id" value="{{ $turmaOrigem->id }}">
+                            @endif
                             @error('turma_id')<span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>@enderror
                         @endif
                     </div>
@@ -76,7 +79,7 @@
 
                 <div class="row">
                     <div class="col-md-5">
-                        <x-form-input name="nome" label="Nome da avaliação" :value="old('nome', $avaliacao->nome ?? '')" required maxlength="150" placeholder="Ex.: Prova 1 — Equações" />
+                        <x-form-input name="nome" label="Nome da avaliação" :value="old('nome', $avaliacao->nome ?? '')" maxlength="150" placeholder="Vazio = avaliação da disciplina no período" />
                     </div>
                     <div class="col-md-3">
                         <x-form-select name="tipo" label="Tipo" :options="$tipos ?? []" :selected="old('tipo', $avaliacao->tipo ?? 'prova')" required />
@@ -86,16 +89,17 @@
                             <x-form-input name="periodo" label="Período" :value="$avaliacao->periodo ?? ''" disabled />
                         @else
                             <div class="form-group">
-                                <label class="form-label">Período letivo</label>
+                                <label class="form-label">Período letivo
+                                    <i class="fa fa-info-circle text-muted" data-toggle="tooltip" title="O período vigente vem selecionado; demais aparecem sinalizados."></i>
+                                </label>
                                 <select name="periodo_letivo_id" id="periodo_letivo_id" class="form-control">
                                     <option value="">Sem período</option>
                                 </select>
-                                <small class="text-muted">Períodos do ano letivo da turma.</small>
                             </div>
                         @endif
                     </div>
                     <div class="col-md-2">
-                        <x-form-input name="data" type="date" label="Data de aplicação" :value="old('data', isset($avaliacao) && $avaliacao->data ? $avaliacao->data->format('Y-m-d') : '')" />
+                        <x-form-input name="data" type="date" label="Data de aplicação" :value="old('data', isset($avaliacao) && $avaliacao->data ? $avaliacao->data->format('Y-m-d') : (isset($avaliacao) ? '' : now()->toDateString()))" />
                     </div>
                 </div>
 
@@ -127,7 +131,7 @@
                 <div class="av-foot__nav">
                     <button type="button" class="btn btn-outline-secondary" id="btnVoltar" style="display:none;"><i class="fa fa-arrow-left mr-1"></i> Voltar</button>
                     <button type="button" class="btn btn-danger" id="btnProximo">Próximo <i class="fa fa-arrow-right ml-1"></i></button>
-                    <button type="submit" class="btn btn-danger" id="btnSalvar" style="display:none;"><i class="fa fa-check mr-1"></i> Salvar avaliação</button>
+                    <button type="submit" class="btn btn-success" id="btnSalvar"><i class="fa fa-check mr-1"></i> Salvar avaliação</button>
                 </div>
             </div>
         </form>
@@ -158,7 +162,6 @@
         paint();
         btnVoltar.style.display = atual > 0 ? '' : 'none';
         btnProximo.style.display = atual === panes.length - 1 ? 'none' : '';
-        btnSalvar.style.display = atual === panes.length - 1 ? '' : 'none';
     }
     function primeiroInvalido(pane, silencioso) {
         for (const el of pane.querySelectorAll('input, select, textarea')) {
@@ -228,7 +231,7 @@
         listaP.forEach(function (p) {
             const o = document.createElement('option');
             o.value = p.id; o.textContent = p.nome;
-            if (String(p.id) === oldPeriodo) { o.selected = true; }
+            if (String(p.id) === oldPeriodo || (!oldPeriodo && p.vigente)) { o.selected = true; }
             selPeriodo.appendChild(o);
         });
     }

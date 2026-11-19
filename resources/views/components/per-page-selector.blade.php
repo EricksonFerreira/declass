@@ -7,15 +7,16 @@
 @endphp
 
 @if ($perPageAction)
-    <form method="POST" action="{{ $perPageAction }}" class="per-page-selector d-flex flex-row align-items-end mr-2 mb-0">
+    <form method="POST" action="{{ $perPageAction }}" class="ux-per-page mb-0">
         @csrf
 @else
-    <div class="per-page-selector d-flex flex-row align-items-end mr-2">
+    <div class="ux-per-page">
 @endif
-        <label for="perPage" class="text-xs font-weight-normal mr-2" style="margin:0px;color:#6c757d">Itens Página</label>
-        <select name="perPage" id="perPage" class="form-control form-control-sm p-0" onchange="this.form.submit()"
-            style="
-    padding:0px;height:1.3rem;width:3rem">
+        <label for="perPage" class="ux-per-page__label" title="Itens por página">
+            <i class="fas fa-list-ol"></i><span class="d-none d-sm-inline">Itens</span>
+        </label>
+        <select name="perPage" id="perPage" class="ux-per-page__select" onchange="this.form.submit()"
+            title="Itens por página" aria-label="Itens por página">
             @foreach ($perPages as $perPage)
                 <option value="{{ $perPage }}" {{ $perPage == $selectedPerPage ? 'selected' : '' }}>{{ $perPage }}
                 </option>

@@ -95,6 +95,7 @@ class AvaliacaoService extends AbstractBaseService
 
         $data['user_id'] = $user?->id;
         $this->sincronizarPeriodo($data);
+        $this->preencherNomePadrao($data);
 
         return parent::create($data);
     }
@@ -137,6 +138,7 @@ class AvaliacaoService extends AbstractBaseService
         }
 
         $this->sincronizarPeriodo($data);
+        $this->preencherNomePadrao($data, $avaliacao);
 
         return parent::update($id, $data);
     }
@@ -155,6 +157,22 @@ class AvaliacaoService extends AbstractBaseService
                 $data['periodo'] = $nome;
             }
         }
+    }
+
+    /** Nome vazio gera "Avaliação de {Disciplina} no {Período}". */
+    private function preencherNomePadrao(array &$data, ?Avaliacao $avaliacao = null): void
+    {
+        if (trim((string) ($data['nome'] ?? '')) !== '') {
+            return;
+        }
+
+        $disciplinaId = $data['disciplina_id'] ?? $avaliacao?->disciplina_id;
+        $nomeDisciplina = \App\Models\Disciplina::query()
+            ->whereKey($disciplinaId)
+            ->value('nome') ?? 'Disciplina';
+        $periodo = $data['periodo'] ?? $avaliacao?->periodo;
+
+        $data['nome'] = mb_substr('Avaliação de '.$nomeDisciplina.($periodo ? ' no '.$periodo : ''), 0, 150);
     }
 
     public function delete($id)

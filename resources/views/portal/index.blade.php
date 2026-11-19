@@ -6,10 +6,6 @@
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
 @stop
 
-@section('css')
-@include('partials.home-cards-styles')
-@stop
-
 @section('content')
 @php
     $usuario = auth()->user();
@@ -20,10 +16,10 @@
     $dataExtenso = ucfirst(\Carbon\Carbon::now()->locale('pt_BR')->isoFormat('dddd, D [de] MMMM'));
 
     $tiles = [
-        ['icone' => 'fas fa-tasks', 'cor' => 'bg-info', 'valor' => $tarefasPendentes, 'label' => 'Tarefas pendentes', 'url' => route('portal.tarefas')],
-        ['icone' => 'fas fa-bullhorn', 'cor' => 'bg-success', 'valor' => $avisosCount, 'label' => 'Avisos', 'url' => route('portal.avisos')],
-        ['icone' => 'fas fa-wallet', 'cor' => 'bg-warning', 'valor' => $mensalidadesAbertas, 'label' => 'Mensalidades em aberto', 'url' => route('portal.financeiro')],
-        ['icone' => 'fas fa-calendar-alt', 'cor' => 'bg-danger', 'valor' => $eventosCount, 'label' => 'Próximos eventos', 'url' => route('portal.agenda')],
+        ['icone' => 'fas fa-tasks', 'cor' => '#0891b2', 'valor' => $tarefasPendentes, 'label' => 'Tarefas pendentes', 'url' => route('portal.tarefas')],
+        ['icone' => 'fas fa-bullhorn', 'cor' => '#16a34a', 'valor' => $avisosCount, 'label' => 'Avisos', 'url' => route('portal.avisos')],
+        ['icone' => 'fas fa-wallet', 'cor' => '#d97706', 'valor' => $mensalidadesAbertas, 'label' => 'Mensalidades em aberto', 'url' => route('portal.financeiro')],
+        ['icone' => 'fas fa-calendar-alt', 'cor' => '#dc2626', 'valor' => $eventosCount, 'label' => 'Próximos eventos', 'url' => route('portal.agenda')],
     ];
 
     $servicos = [
@@ -38,100 +34,72 @@
         ['icone' => 'fas fa-file-alt', 'cor' => '#64748b', 'titulo' => 'Documentos', 'texto' => 'Documentos pedidos pela escola — envie por aqui', 'url' => route('portal.documentos')],
         ['icone' => 'fas fa-book', 'cor' => '#b45309', 'titulo' => 'Empréstimos', 'texto' => 'Livros da biblioteca', 'url' => route('portal.emprestimos')],
     ];
-
 @endphp
 
-{{-- Saudacao --}}
-<div class="callout callout-info prof-saudacao">
-    <img class="prof-avatar" src="{{ $usuario->foto_perfil_url }}" alt="{{ $usuario->nome }}">
-    <div>
-        <h5 class="mb-0">{{ $saudacao }}, {{ $primeiroNome }}</h5>
-        <small class="text-muted"><i class="far fa-calendar mr-1"></i>{{ $dataExtenso }} · {{ $isResponsavel ? 'Acompanhe seus alunos' : 'Acompanhe seus estudos' }}</small>
+{{-- Header estilo app --}}
+<div class="hs-app-header">
+    <img class="hs-app-avatar" src="{{ $usuario->foto_perfil_url }}" alt="{{ $usuario->nome }}">
+    <div class="hs-app-ola">
+        <b>{{ $saudacao }}, {{ $primeiroNome }}</b>
+        <small>{{ $dataExtenso }} · {{ $isResponsavel ? 'Acompanhe seus alunos' : 'Acompanhe seus estudos' }}</small>
     </div>
 </div>
 
-{{-- Resumo (padrao small-box do AdminLTE, igual a tela do professor) --}}
-<div class="row">
+{{-- Resumo: atalhos estilo tela de celular --}}
+<div class="hs-app-grid hs-app-grid--4">
     @foreach($tiles as $t)
-        <div class="col-md-3 col-6">
-            <div class="small-box {{ $t['cor'] }}">
-                <div class="inner">
-                    <h3>{{ $t['valor'] }}</h3>
-                    <p>{{ $t['label'] }}</p>
-                </div>
-                <div class="icon"><i class="{{ $t['icone'] }}"></i></div>
-                <a href="{{ $t['url'] }}" class="small-box-footer">Abrir <i class="fas fa-arrow-circle-right"></i></a>
-            </div>
-        </div>
+        <a href="{{ $t['url'] }}" class="hs-app" style="--app:{{ $t['cor'] }}">
+            <span class="hs-app-icone">
+                <i class="{{ $t['icone'] }}"></i>
+                <em class="hs-app-badge">{{ $t['valor'] }}</em>
+            </span>
+            <span class="hs-app-label">{{ $t['label'] }}</span>
+        </a>
     @endforeach
 </div>
 
-{{-- Alunos vinculados (so no perfil de responsavel): clique abre o popup de acao --}}
+{{-- Alunos vinculados (responsavel): lista estilo app, clique abre popup --}}
 @if($isResponsavel)
-<div class="card">
-    <div class="card-header font-weight-bold">
-        <i class="fas fa-user-graduate mr-1"></i> Alunos vinculados
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
-                @foreach($alunos as $aluno)
-                    @php
-                        $matricula = $matriculas->get($aluno->id);
-                        $turma = $matricula?->turma;
-                        $nome = $aluno->pessoa->nome ?? $aluno->nome;
-                    @endphp
-                    <tr @if($turma) class="portal-aluno-linha" data-toggle="modal" data-target="#aluno-acao-modal"
-                        data-titulo="{{ $nome }}"
-                        data-subtitulo="{{ $turma->nome }}{{ $turma->etapa ? ' · '.$turma->etapa->nome : '' }} · {{ $turma->anoLetivo->ano ?? '' }}"
-                        data-pdf="{{ route('portal.aluno.pdf', $aluno->id) }}"
-                        data-calendario="{{ route('portal.calendario', ['aluno_id' => $aluno->id]) }}"
-                        style="cursor:pointer;" @endif>
-                        <td style="width:52px;">
-                            @if($aluno->foto_url)
-                                <img class="portal-avatar" src="{{ $aluno->foto_url }}" alt="{{ $nome }}">
-                            @else
-                                <span class="portal-avatar"><i class="fas fa-user-graduate" aria-hidden="true"></i></span>
-                            @endif
-                        </td>
-                        <td>
-                            <div class="font-weight-bold">{{ $nome }}</div>
-                            @if($turma)
-                                <small class="text-muted">{{ $turma->nome }}@if($turma->etapa) · {{ $turma->etapa->nome }}@endif · {{ $turma->anoLetivo->ano ?? '' }}</small>
-                            @else
-                                <small class="text-muted">Sem matrícula ativa no momento.</small>
-                            @endif
-                        </td>
-                        <td class="text-right text-nowrap" style="width:50px;vertical-align:middle;">
-                            @if($turma)<i class="fas fa-chevron-right text-muted"></i>@endif
-                        </td>
-                    </tr>
-                @endforeach
-            </table>
-        </div>
-    </div>
+<div class="hs-sec"><i class="fa fa-user-graduate mr-1"></i> Alunos vinculados</div>
+<div class="hs-lista">
+    @foreach($alunos as $aluno)
+        @php
+            $matricula = $matriculas->get($aluno->id);
+            $turma = $matricula?->turma;
+            $nome = $aluno->pessoa->nome ?? $aluno->nome;
+        @endphp
+        <a href="#" class="hs-item" style="--app:#2563eb" @if($turma) data-toggle="modal" data-target="#aluno-acao-modal"
+            data-titulo="{{ $nome }}"
+            data-subtitulo="{{ $turma->nome }}{{ $turma->etapa ? ' · '.$turma->etapa->nome : '' }} · {{ $turma->anoLetivo->ano ?? '' }}"
+            data-pdf="{{ route('portal.aluno.pdf', $aluno->id) }}"
+            data-calendario="{{ route('portal.calendario', ['aluno_id' => $aluno->id]) }}" @endif>
+            <span class="hs-item-icone">
+                @if($aluno->foto_url)
+                    <img src="{{ $aluno->foto_url }}" alt="{{ $nome }}">
+                @else
+                    <i class="fas fa-user-graduate"></i>
+                @endif
+            </span>
+            <span class="hs-item-info">
+                <b>{{ $nome }}</b>
+                <small>@if($turma){{ $turma->nome }}@if($turma->etapa) · {{ $turma->etapa->nome }}@endif · {{ $turma->anoLetivo->ano ?? '' }}@else Sem matrícula ativa no momento.@endif</small>
+            </span>
+            @if($turma)<i class="fas fa-chevron-right hs-item-seta"></i>@endif
+        </a>
+    @endforeach
 </div>
 @endif
 
-{{-- Demais modulos do portal: mesmo visual dos cards da home --}}
-<div class="home-launcher">
-    <div class="home-section">
-        <div class="home-section-title">Serviços</div>
-        <div class="row">
-            @foreach($servicos as $s)
-                <div class="col-6 col-md-4 col-lg-3 mb-2">
-                    <a href="{{ $s['url'] }}" class="home-card" style="--card-cor: {{ $s['cor'] }};">
-                        <span class="home-card-icone"><i class="{{ $s['icone'] }}"></i></span>
-                        <span class="home-card-texto">
-                            <span class="home-card-nome">{{ $s['titulo'] }}</span>
-                            <p class="home-card-desc">{{ $s['texto'] }}</p>
-                        </span>
-                        <span class="home-card-seta"><i class="fas fa-arrow-right"></i></span>
-                    </a>
-                </div>
-            @endforeach
-        </div>
-    </div>
+{{-- Servicos: grid de icones estilo home screen --}}
+<div class="hs-sec"><i class="fa fa-th mr-1"></i> Serviços</div>
+<div class="hs-app-grid">
+    @foreach($servicos as $s)
+        <a href="{{ $s['url'] }}" class="hs-app" style="--app:{{ $s['cor'] }}" title="{{ $s['texto'] }}">
+            <span class="hs-app-icone"><i class="{{ $s['icone'] }}"></i></span>
+            <span class="hs-app-label">{{ $s['titulo'] }}</span>
+            <span class="hs-app-desc">{{ $s['texto'] }}</span>
+        </a>
+    @endforeach
 </div>
 
 {{-- Popup de acao rapida do aluno: boletim, PDF ou calendario --}}
@@ -160,12 +128,10 @@
 </div>
 @endif
 
+@include('partials.home-app-styles')
 <style>
-    .prof-saudacao { display: flex; align-items: center; gap: .8rem; }
-    .prof-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-    .portal-avatar { width: 36px; height: 36px; border-radius: 50%; background: #eef2f7; color: #4a6da7; display: inline-flex; align-items: center; justify-content: center; object-fit: cover; flex-shrink: 0; }
-    .portal-aluno-linha td { vertical-align: middle; }
-    .portal-aluno-linha:hover td { background: #f8fafc; }
+    .hs-app-grid--4 { grid-template-columns:repeat(4,1fr); }
+    @media (max-width: 991px) { .hs-app-grid--4 { grid-template-columns:repeat(3,1fr); } }
     .min-w-0 { min-width: 0; }
 </style>
 @stop

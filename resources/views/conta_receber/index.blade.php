@@ -7,6 +7,10 @@
     <x-page-title :title="$titulo" subtitle="Contas a receber da escola e da rede" :create-url="auth()->user()->hasPermissao('conta_receber.create') ? route('conta_receber.create') : null" :create-can="'conta_receber.create'" />
 @stop
 
+@push('css')
+    @include('partials.ux-index-styles')
+@endpush
+
 @section('content')
 <div class="card">
     <div class="card-header d-flex flex-wrap align-items-center" style="gap:.5rem;">
@@ -14,10 +18,77 @@
             <x-filter :filters="$filters" :additional-filters="$additionalFilters" :itens-filtered="$itensFiltered" :nome-filtro="$nomeFiltro" />
         </div>
         <x-per-page-selector :per-pages="$perPages" :selected-per-page="$perPage" />
+        @include('partials.ux-view-toggle', ['viewKey' => 'conta_receber_index_view'])
     </div>
 
-    <div class="card-body p-0">
-        <div class="table-responsive">
+    <div class="card-body p-0 ux-index-body" data-view="cards">
+                <div class="ux-cards">
+            @forelse($contas as $conta)
+                @php $situacao = $conta->situacao; @endphp
+                <article class="ux-card">
+                    <div class="ux-card__accent"></div>
+                    <div class="ux-card__head">
+                        <div class="ux-card__avatar"><i class="fas fa-hand-holding-usd"></i></div>
+                        <div class="ux-card__head-info">
+                            <div class="ux-card__title">{{ $conta->descricao }}</div>
+                            <div class="ux-card__sub">{{ $conta->aluno->pessoa->nome ?? '—' }}</div>
+                        </div>
+                        <div class="ux-card__badges">
+                            <span class="badge badge-light border">{{ $conta->categoria_label }}</span>
+                        </div>
+                    </div>
+                    <div class="ux-card__meta">
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Escola</span>
+                            <span class="ux-card__meta-value">{{ $conta->escola->nome ?? 'Rede toda' }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Vencimento</span>
+                            <span class="ux-card__meta-value">{{ $conta->data_vencimento->format('d/m/Y') }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Valor</span>
+                            <span class="ux-card__meta-value">R$ {{ number_format($conta->valor, 2, ',', '.') }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Status</span>
+                            <span class="ux-card__meta-value">@php $cor = ['prevista' => 'warning', 'atrasada' => 'danger', 'recebida' => 'success', 'cancelada' => 'secondary'][$situacao] ?? 'secondary'; @endphp
+                                <span class="badge badge-{{ $cor }}">{{ ucfirst($situacao) }}</span>
+                                @if($conta->status === 'recebida')
+                                    <br><small class="text-muted">{{ $conta->data_recebimento?->format('d/m/Y') }} · {{ \App\Models\ContaReceber::FORMAS_RECEBIMENTO[$conta->forma_recebimento] ?? $conta->forma_recebimento }}</small>
+                                @endif</span>
+                        </div>
+                    </div>
+                    <div class="ux-card__foot">
+                        @if($conta->status === 'prevista')
+                                    @can('conta_receber.edit')
+                                        <button type="button" class="btn btn-xs btn-success" title="Baixar (receber)"
+                                                data-toggle="modal" data-target="#modal-receber-{{ $conta->id }}">
+                                            <i class="fa fa-check"></i>
+                                        </button>
+                                        <a href="{{ route('conta_receber.edit', $conta->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
+                                        <form method="POST" action="{{ route('conta_receber.cancelar', $conta->id) }}" class="d-inline"
+                                              onsubmit="return confirm('Cancelar a conta a receber &quot;{{ addslashes($conta->descricao) }}&quot;?');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-xs btn-secondary" title="Cancelar conta"><i class="fa fa-ban"></i></button>
+                                        </form>
+                                    @endcan
+                                    @can('conta_receber.destroy')
+                                        <x-delete-button :action="route('conta_receber.destroy', $conta->id)" titulo="Excluir" mensagem="Excluir a conta a receber &quot;{{ $conta->descricao }}&quot;?" />
+                                    @endcan
+                                @else
+                                    <span class="text-muted" style="font-size:.75rem;">—</span>
+                                @endif
+                    </div>
+                </article>
+            @empty
+                <div class="text-center text-muted py-4" style="grid-column:1/-1;">
+                    <i class="fas fa-hand-holding-usd fa-2x mb-2 d-block"></i>
+                    Nenhuma conta a receber encontrada.
+                </div>
+            @endforelse
+        </div>
+        <div class="ux-table table-responsive">
             <table class="table table-hover table-sm mb-0">
                 <thead class="thead-light">
                     <tr>

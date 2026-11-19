@@ -365,3 +365,52 @@
     .dark-mode .filter-card .filter-sheet-close { background: #3f474e; color: #c2c7d0; }
     .dark-mode .filter-card form .filter-actions { background: #2b3038; }
 }
+
+/* Seletor "Itens por pagina" no mesmo padrao visual do toggle Cards/Tabela */
+.ux-per-page {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid #6c757d;
+    border-radius: .2rem;
+    overflow: hidden;
+    background: #fff;
+    color: #6c757d;
+    height: 1.5rem;
+    margin-right: .5rem;
+    line-height: 1;
+}
+.ux-per-page__label {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    padding: 0 .45rem;
+    font-size: .72rem;
+    font-weight: 400;
+    color: #6c757d;
+    border-right: 1px solid #dee2e6;
+    margin: 0;
+    white-space: nowrap;
+}
+.ux-per-page__select {
+    border: 0;
+    background: transparent;
+    font-size: .75rem;
+    color: #343a40;
+    padding: 0 .35rem;
+    height: 100%;
+    cursor: pointer;
+    outline: none;
+}
+.ux-per-page:focus-within {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 .15rem rgba(0,123,255,.2);
+}
+
+/* iCheck dentro de .form-check: remove o recuo do Bootstrap
+   (o box e desenhado pelo proprio icheck no label::before). */
+.form-check[class*="icheck-"] {
+    padding-left: 0;
+}
+.form-check[class*="icheck-"] > .form-check-input {
+    margin-left: 0;
+}

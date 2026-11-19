@@ -19,6 +19,9 @@ Route::prefix('solicitacoes')->name('solicitacao.')->group(function () {
 
 // Tipos de requerimento que a familia escolhe no portal (com anexo
 // obrigatorio e campos extras definidos pela secretaria)
+Route::get('tipos-solicitacao/filtro', [TipoSolicitacaoController::class, 'filtro'])->name('tipo_solicitacao.filtro');
+Route::match(['get', 'post'], 'tipos-solicitacao/filtro/remover', [TipoSolicitacaoController::class, 'removerFiltro'])->name('tipo_solicitacao.removerFiltro');
+Route::post('tipos-solicitacao/per-page', [TipoSolicitacaoController::class, 'setPerPage'])->name('tipo_solicitacao.setPerPage');
 Route::resource('tipos-solicitacao', TipoSolicitacaoController::class)
     ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
     ->names('tipo_solicitacao');

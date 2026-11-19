@@ -9,23 +9,30 @@
 </div>
 @push('js')
 <script>
-    $(function () {
-        const body = document.querySelector('.ux-index-body');
-        const btns = document.querySelectorAll('.ux-view-toggle [data-view]');
-        const store = @json($viewKey ?? 'ux_index_view');
+    (function () {
+        // Identifica o toggle que precede este script (suporta varios na mesma pagina).
+        var toggle = document.currentScript && document.currentScript.previousElementSibling;
+        $(function () {
+            var scope = toggle && toggle.closest('.card');
+            var body = scope
+                ? scope.querySelector('.ux-index-body')
+                : document.querySelector('.ux-index-body');
+            var btns = toggle ? toggle.querySelectorAll('[data-view]') : [];
+            var store = @json($viewKey ?? 'ux_index_view');
 
-        function setView(view) {
-            if (!body) return;
-            body.dataset.view = view;
-            btns.forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
-            localStorage.setItem(store, view);
-        }
+            function setView(view) {
+                if (!body) return;
+                body.dataset.view = view;
+                btns.forEach(function (btn) { btn.classList.toggle('active', btn.dataset.view === view); });
+                localStorage.setItem(store, view);
+            }
 
-        btns.forEach(btn => btn.addEventListener('click', function () {
-            setView(btn.dataset.view);
-        }));
+            btns.forEach(function (btn) {
+                btn.addEventListener('click', function () { setView(btn.dataset.view); });
+            });
 
-        setView(localStorage.getItem(store) || @json($default ?? 'cards'));
-    });
+            setView(localStorage.getItem(store) || @json($default ?? 'cards'));
+        });
+    })();
 </script>
 @endpush

@@ -13,665 +13,118 @@
             ? 'Superusuário'
             : (optional($user->tipoUsuario)->name ?? 'Sem perfil');
 
-        $heroHighlights = [
-            [
-                'label' => 'Empresa',
-                'value' => optional($user->empresa)->nome ?? 'Não informada',
-                'icon' => 'fas fa-building',
-                'bg_var' => '--profile-primary',
-                'fg_var' => '--empresa-cor-primaria-contraste, #ffffff',
-            ],
-            [
-                'label' => 'Cadastro',
-                'value' => $user->created_at ? $user->created_at->format('d/m/Y') : 'Não informado',
-                'icon' => 'fas fa-calendar-check',
-                'bg_var' => '--profile-secondary',
-                'fg_var' => '--empresa-cor-secundaria-contraste, #ffffff',
-            ],
-            [
-                'label' => 'Perfil',
-                'value' => $roleLabel,
-                'icon' => 'fas fa-user-shield',
-                'bg_var' => '--profile-tertiary',
-                'fg_var' => '--empresa-cor-terciaria-contraste, #111827',
-            ],
-        ];
-
-        $profileCards = [
-            [
-                'label' => 'Empresa',
-                'value' => optional($user->empresa)->nome ?? 'Não informada',
-                'icon' => 'fas fa-building',
-            ],
-            [
-                'label' => 'Telefone',
-                'value' => $user->telefone ?? 'Não informado',
-                'icon' => 'fas fa-phone-alt',
-            ],
-            [
-                'label' => 'Celular',
-                'value' => $user->celular ?? 'Não informado',
-                'icon' => 'fas fa-mobile-alt',
-            ],
-            [
-                'label' => 'Cidade',
-                'value' => $user->cidade ?? 'Não informada',
-                'icon' => 'fas fa-map-marker-alt',
-            ],
+        $infos = [
+            ['icone' => 'fas fa-building', 'cor' => '#2563eb', 'label' => 'Empresa', 'valor' => optional($user->empresa)->nome ?? 'Não informada'],
+            ['icone' => 'fas fa-user-shield', 'cor' => '#7c3aed', 'label' => 'Perfil', 'valor' => $roleLabel],
+            ['icone' => 'fas fa-phone-alt', 'cor' => '#0891b2', 'label' => 'Telefone', 'valor' => $user->telefone ?? 'Não informado'],
+            ['icone' => 'fas fa-mobile-alt', 'cor' => '#0d9488', 'label' => 'Celular', 'valor' => $user->celular ?? 'Não informado'],
+            ['icone' => 'fas fa-map-marker-alt', 'cor' => '#d97706', 'label' => 'Cidade', 'valor' => $user->cidade ?? 'Não informada'],
+            ['icone' => 'fas fa-calendar-check', 'cor' => '#db2777', 'label' => 'Cadastro', 'valor' => $user->created_at ? $user->created_at->format('d/m/Y') : 'Não informado'],
         ];
     @endphp
 
-    <div class="profile-page">
-        <div class="profile-shell">
-            <section class="profile-hero card">
-                <span class="profile-hero__decor profile-hero__decor--one"></span>
-                <span class="profile-hero__decor profile-hero__decor--two"></span>
-                <span class="profile-hero__accent"></span>
-
-                <div class="profile-hero__content">
-                    <div class="profile-hero__main">
-                        <div class="profile-avatar-wrap">
-                            <form action="{{ route('profile.foto.update') }}" method="POST" enctype="multipart/form-data" id="form-foto-perfil">
-                                @csrf
-                                @method('PUT')
-                                <div class="profile-avatar">
-                                    <img src="{{ $user->foto_perfil_url }}" alt="Foto de perfil de {{ $user->nome }}" id="profile-avatar-preview">
-                                    <label for="foto" class="profile-avatar__edit" title="Alterar foto de perfil">
-                                        <i class="fas fa-camera"></i>
-                                    </label>
-                                </div>
-                                <input type="file" name="foto" id="foto" accept="image/png,image/jpeg,image/webp" class="d-none">
-                                @error('foto')
-                                    <span class="text-danger text-xs d-block text-center mt-1">{{ $message }}</span>
-                                @enderror
-                                <button type="submit" class="btn btn-primary btn-sm font-weight-bold d-none mt-2" id="btn-salvar-foto">
-                                    <i class="fas fa-save mr-1"></i> Salvar foto
-                                </button>
-                            </form>
-                            <div class="profile-id-badge">ID #{{ $user->id }}</div>
-                        </div>
-
-                        <div class="profile-identity">
-                            <span class="profile-kicker">Meu perfil</span>
-                            <h1 class="profile-name">{{ $user->nome }}</h1>
-                            <p class="profile-email">{{ $user->email }}</p>
-
-                            <div class="profile-meta">
-                                {{-- <span class="profile-badge profile-badge--primary">
-                                    <i class="fas fa-user-shield mr-1"></i>{{ $roleLabel }}
-                                </span> --}}
-                                <span class="profile-badge profile-badge--soft">
-                                    <i class="fas fa-pen mr-1"></i>{{ $apenasFoto ? 'Apenas foto editável' : 'Dados de contato editáveis' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="profile-hero__aside">
-                        @foreach ($heroHighlights as $item)
-                            <div class="profile-quick-card" style="--profile-card-bg: var({{ $item['bg_var'] }}); --profile-card-fg: var({{ $item['fg_var'] }});">
-                                <div class="profile-quick-card__icon">
-                                    <i class="{{ $item['icon'] }}"></i>
-                                </div>
-                                <div class="profile-quick-card__body">
-                                    <span class="profile-quick-card__label">{{ $item['label'] }}</span>
-                                    <span class="profile-quick-card__value">{{ $item['value'] }}</span>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </section>
-
-            <section class="profile-grid">
-                @foreach ($profileCards as $info)
-                    <div class="profile-info-card card">
-                        <div class="profile-info-card__icon">
-                            <i class="{{ $info['icon'] }}"></i>
-                        </div>
-                        <span class="profile-info-card__label">{{ $info['label'] }}</span>
-                        <span class="profile-info-card__value">{{ $info['value'] }}</span>
-                    </div>
-                @endforeach
-            </section>
-
-            @unless ($apenasFoto)
-            <section class="profile-action card">
-                <div class="card-body p-4">
-                    <span class="profile-action__eyebrow">Dados de contato</span>
-                    <form action="{{ route('profile.update') }}" method="POST" class="mt-3">
-                        @csrf
-                        @method('PUT')
-                        <div class="row">
-                            <div class="col-md-4 form-group">
-                                <label class="text-xs text-muted font-weight-bold">Telefone</label>
-                                <input type="text" name="telefone" class="form-control @error('telefone') is-invalid @enderror"
-                                    value="{{ old('telefone', $user->telefone) }}" placeholder="(00) 0000-0000">
-                                @error('telefone') <span class="invalid-feedback">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-4 form-group">
-                                <label class="text-xs text-muted font-weight-bold">Celular</label>
-                                <input type="text" name="celular" class="form-control @error('celular') is-invalid @enderror"
-                                    value="{{ old('celular', $user->celular) }}" placeholder="(00) 00000-0000">
-                                @error('celular') <span class="invalid-feedback">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-4 form-group">
-                                <label class="text-xs text-muted font-weight-bold">Cidade</label>
-                                <input type="text" name="cidade" class="form-control @error('cidade') is-invalid @enderror"
-                                    value="{{ old('cidade', $user->cidade) }}" placeholder="Sua cidade">
-                                @error('cidade') <span class="invalid-feedback">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary font-weight-bold">
-                            <i class="fas fa-save mr-1"></i> Salvar
-                        </button>
-                    </form>
-                </div>
-            </section>
-            @endunless
-
-            {{-- <section class="profile-action card">
-                <div class="profile-action__content">
-                    <div class="profile-action__text">
-                        <span class="profile-action__eyebrow">Segurança da conta</span>
-                        <h2 class="profile-action__title">Quer trocar sua senha?</h2>
-                        <p class="profile-action__description">
-                            Use uma senha forte e mantenha seu acesso protegido. O sistema abrirá a tela de atualização com validação reforçada.
-                        </p>
-                    </div>
-
-                    <div class="profile-action__buttons">
-                        <a href="{{ route('profile.password.edit') }}" class="btn profile-btn profile-btn--primary">
-                            <i class="fas fa-key mr-1"></i> Alterar senha
-                        </a>
-                    </div>
-                </div>
-            </section> --}}
+    {{-- Header estilo app --}}
+    <div class="pf-header">
+        <form action="{{ route('profile.foto.update') }}" method="POST" enctype="multipart/form-data" id="form-foto-perfil">
+            @csrf
+            @method('PUT')
+            <div class="pf-avatar">
+                <img src="{{ $user->foto_perfil_url }}" alt="Foto de perfil de {{ $user->nome }}" id="profile-avatar-preview">
+                <label for="foto" class="pf-avatar-edit" title="Alterar foto de perfil"><i class="fas fa-camera"></i></label>
+            </div>
+            <input type="file" name="foto" id="foto" accept="image/png,image/jpeg,image/webp" class="d-none">
+            @error('foto')
+                <span class="text-danger text-xs d-block text-center mt-1">{{ $message }}</span>
+            @enderror
+            <button type="submit" class="btn btn-light btn-sm font-weight-bold d-none mt-2" id="btn-salvar-foto">
+                <i class="fas fa-save mr-1"></i> Salvar foto
+            </button>
+        </form>
+        <div class="pf-identidade">
+            <b>{{ $user->nome }}</b>
+            <small>{{ $user->email }}</small>
+            <div class="pf-meta">
+                <span class="pf-tag"><i class="fas fa-user-shield mr-1"></i>{{ $roleLabel }}</span>
+                <span class="pf-tag">ID #{{ $user->id }}</span>
+                <span class="pf-tag"><i class="fas fa-pen mr-1"></i>{{ $apenasFoto ? 'Apenas foto editável' : 'Dados de contato editáveis' }}</span>
+            </div>
         </div>
     </div>
-@stop
 
-@section('css')
-    <style>
-        .profile-page {
-            position: relative;
-            --profile-primary: var(--empresa-cor-primaria, #1F2937);
-            --profile-secondary: var(--empresa-cor-secundaria, #334155);
-            --profile-tertiary: var(--empresa-cor-terciaria, #E7B93A);
-            --profile-surface: #ffffff;
-            --profile-surface-soft: #f8fbff;
-            padding-bottom: 1.5rem;
-        }
+    {{-- Informacoes: lista estilo app --}}
+    <div class="pf-sec"><i class="fa fa-id-card mr-1"></i> Minhas informações</div>
+    <div class="pf-lista">
+        @foreach($infos as $info)
+            <div class="pf-item" style="--app:{{ $info['cor'] }}">
+                <span class="pf-item-icone"><i class="{{ $info['icone'] }}"></i></span>
+                <span class="pf-item-info">
+                    <small>{{ $info['label'] }}</small>
+                    <b>{{ $info['valor'] }}</b>
+                </span>
+            </div>
+        @endforeach
+    </div>
 
-        .profile-page::before,
-        .profile-page::after {
-            content: '';
-            position: fixed;
-            width: 280px;
-            height: 280px;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-            filter: blur(8px);
-        }
+    @unless ($apenasFoto)
+        {{-- Dados de contato editaveis --}}
+        <div class="pf-sec"><i class="fa fa-pen mr-1"></i> Dados de contato</div>
+        <div class="pf-card">
+            <form action="{{ route('profile.update') }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="row">
+                    <div class="col-md-4 form-group mb-md-0">
+                        <label class="text-xs text-muted font-weight-bold">Telefone</label>
+                        <input type="text" name="telefone" class="form-control @error('telefone') is-invalid @enderror"
+                            value="{{ old('telefone', $user->telefone) }}" placeholder="(00) 0000-0000">
+                        @error('telefone') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-4 form-group mb-md-0">
+                        <label class="text-xs text-muted font-weight-bold">Celular</label>
+                        <input type="text" name="celular" class="form-control @error('celular') is-invalid @enderror"
+                            value="{{ old('celular', $user->celular) }}" placeholder="(00) 00000-0000">
+                        @error('celular') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-4 form-group mb-0">
+                        <label class="text-xs text-muted font-weight-bold">Cidade</label>
+                        <input type="text" name="cidade" class="form-control @error('cidade') is-invalid @enderror"
+                            value="{{ old('cidade', $user->cidade) }}" placeholder="Sua cidade">
+                        @error('cidade') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary font-weight-bold mt-3">
+                    <i class="fas fa-save mr-1"></i> Salvar
+                </button>
+            </form>
+        </div>
+    @endunless
 
-        .profile-page::before {
-            top: 90px;
-            right: -90px;
-            background: radial-gradient(circle, color-mix(in srgb, var(--profile-primary) 22%, transparent 78%) 0%, transparent 72%);
-        }
-
-        .profile-page::after {
-            left: -110px;
-            bottom: 40px;
-            background: radial-gradient(circle, color-mix(in srgb, var(--profile-tertiary) 24%, transparent 76%) 0%, transparent 72%);
-        }
-
-        .profile-page > * {
-            position: relative;
-            z-index: 1;
-        }
-
-        .profile-shell {
-            max-width: 1180px;
-        }
-
-        .profile-hero {
-            position: relative;
-            overflow: hidden;
-            border: 1px solid #e5edf7;
-            border-radius: 28px;
-            background: linear-gradient(180deg, var(--profile-surface) 0%, var(--profile-surface-soft) 100%);
-            box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
-            margin-bottom: 1rem;
-        }
-
-        .profile-hero__accent {
-            position: absolute;
-            inset: auto 0 0 0;
-            height: 6px;
-            background: linear-gradient(90deg, var(--profile-primary) 0%, var(--profile-secondary) 54%, var(--profile-tertiary) 100%);
-        }
-
-        .profile-hero__decor {
-            position: absolute;
-            border-radius: 999px;
-            pointer-events: none;
-            opacity: .85;
-        }
-
-        .profile-hero__decor--one {
-            top: -60px;
-            right: 120px;
-            width: 220px;
-            height: 220px;
-            background: radial-gradient(circle, color-mix(in srgb, var(--profile-primary) 20%, transparent 80%) 0%, transparent 72%);
-        }
-
-        .profile-hero__decor--two {
-            bottom: -100px;
-            left: 40%;
-            width: 260px;
-            height: 260px;
-            background: radial-gradient(circle, color-mix(in srgb, var(--profile-tertiary) 18%, transparent 82%) 0%, transparent 70%);
-        }
-
-        .profile-hero__content {
-            position: relative;
-            display: grid;
-            grid-template-columns: minmax(0, 1.5fr) minmax(260px, .95fr);
-            gap: 1.25rem;
-            padding: 1.5rem;
-        }
-
-        .profile-hero__main {
-            display: flex;
-            gap: 1.25rem;
-            align-items: flex-start;
-        }
-
-        .profile-avatar-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: .65rem;
-            flex: 0 0 auto;
-        }
-
-        .profile-avatar {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            padding: 5px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ffffff 0%, color-mix(in srgb, var(--profile-primary) 10%, #ffffff 90%) 100%);
-            box-shadow: 0 18px 38px rgba(15, 23, 42, .16);
-        }
-
-        .profile-avatar__edit {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--profile-primary);
-            color: var(--empresa-cor-primaria-contraste, #ffffff);
-            border: 2px solid #ffffff;
-            box-shadow: 0 8px 18px rgba(15, 23, 42, .25);
-            cursor: pointer;
-            margin: 0;
-            font-size: .85rem;
-        }
-
-        .profile-avatar__edit:hover {
-            filter: brightness(1.08);
-        }
-
-        #form-foto-perfil {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            display: block;
-            background: #dbeafe;
-        }
-
-        .profile-id-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: .38rem .8rem;
-            border-radius: 999px;
-            background: var(--profile-primary);
-            color: var(--empresa-cor-primaria-contraste, #ffffff);
-            font-size: .74rem;
-            font-weight: 800;
-            letter-spacing: .04em;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, .20);
-        }
-
-        .profile-identity {
-            min-width: 0;
-            padding-top: .25rem;
-        }
-
-        .profile-kicker {
-            display: inline-flex;
-            align-items: center;
-            padding: .35rem .75rem;
-            border-radius: 999px;
-            background: var(--profile-primary);
-            color: var(--empresa-cor-primaria-contraste, #ffffff);
-            font-size: .72rem;
-            font-weight: 800;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-        }
-
-        .profile-name {
-            margin: .7rem 0 .25rem;
-            font-size: 1.85rem;
-            line-height: 1.1;
-            font-weight: 800;
-            color: #0f172a;
-            word-break: break-word;
-        }
-
-        .profile-email {
-            margin: 0;
-            color: var(--profile-secondary);
-            font-size: 1rem;
-            line-height: 1.45;
-            word-break: break-word;
-        }
-
-        .profile-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .55rem;
-            margin-top: 1rem;
-        }
-
-        .profile-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: .42rem .8rem;
-            border-radius: 999px;
-            font-size: .78rem;
-            font-weight: 700;
-            border: 1px solid transparent;
-        }
-
-        .profile-badge--primary {
-            background: var(--profile-primary);
-            color: var(--empresa-cor-primaria-contraste, #ffffff);
-            border-color: var(--profile-primary);
-        }
-
-        .profile-badge--soft {
-            background: var(--profile-secondary);
-            color: var(--empresa-cor-secundaria-contraste, #ffffff);
-            border-color: var(--profile-secondary);
-        }
-
-        .profile-hero__aside {
-            display: grid;
-            gap: .8rem;
-            align-content: start;
-        }
-
-        .profile-quick-card {
-            display: flex;
-            align-items: center;
-            gap: .85rem;
-            padding: .95rem 1rem;
-            background: var(--profile-card-bg, #ffffff);
-            border: 1px solid var(--profile-card-bg, #ffffff);
-            border-radius: 18px;
-            box-shadow: 0 12px 28px rgba(15, 23, 42, .10);
-        }
-
-        .profile-quick-card__icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--profile-card-fg, #ffffff);
-            color: var(--profile-card-bg, #1F2937);
-            font-size: 1rem;
-            flex: 0 0 auto;
-        }
-
-        .profile-quick-card__body {
-            min-width: 0;
-        }
-
-        .profile-quick-card__label {
-            display: block;
-            color: var(--profile-card-fg, #0f172a);
-            font-size: .72rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            margin-bottom: .22rem;
-        }
-
-        .profile-quick-card__value {
-            display: block;
-            color: var(--profile-card-fg, #0f172a);
-            font-weight: 700;
-            font-size: .96rem;
-            line-height: 1.4;
-            word-break: break-word;
-        }
-
-        .profile-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: .9rem;
-            margin-bottom: 1rem;
-        }
-
-        .profile-info-card {
-            position: relative;
-            overflow: hidden;
-            border: 1px solid color-mix(in srgb, var(--profile-primary) 10%, #e5edf7 90%);
-            border-radius: 20px;
-            padding: 1.1rem 1rem 1rem;
-            background: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--profile-primary) 2%, #fbfdff 98%) 100%);
-            box-shadow: 0 12px 28px rgba(15, 23, 42, .05);
-            min-height: 142px;
-        }
-
-        .profile-info-card::before {
-            content: '';
-            position: absolute;
-            inset: 0 auto auto 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--profile-primary) 0%, var(--profile-secondary) 54%, var(--profile-tertiary) 100%);
-        }
-
-        .profile-info-card__icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--profile-secondary);
-            color: var(--empresa-cor-secundaria-contraste, #ffffff);
-            margin-bottom: .9rem;
-            font-size: 1rem;
-        }
-
-        .profile-info-card__label {
-            display: block;
-            font-size: .72rem;
-            font-weight: 800;
-            color: #334155;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            margin-bottom: .3rem;
-        }
-
-        .profile-info-card__value {
-            display: block;
-            color: #0f172a;
-            font-weight: 700;
-            font-size: .98rem;
-            line-height: 1.45;
-            word-break: break-word;
-        }
-
-        .profile-action {
-            border: 1px solid color-mix(in srgb, var(--profile-primary) 10%, #e5edf7 90%);
-            border-radius: 24px;
-            overflow: hidden;
-            background: linear-gradient(135deg, #ffffff 0%, color-mix(in srgb, var(--profile-primary) 3%, #f8fbff 97%) 100%);
-            box-shadow: 0 18px 34px rgba(15, 23, 42, .06);
-        }
-
-        .profile-action__content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1.25rem;
-            padding: 1.35rem 1.4rem;
-        }
-
-        .profile-action__text {
-            min-width: 0;
-        }
-
-        .profile-action__eyebrow {
-            display: inline-flex;
-            align-items: center;
-            padding: .32rem .7rem;
-            border-radius: 999px;
-            background: var(--profile-primary);
-            color: var(--empresa-cor-primaria-contraste, #ffffff);
-            font-size: .72rem;
-            font-weight: 800;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            margin-bottom: .7rem;
-        }
-
-        .profile-action__title {
-            margin: 0 0 .45rem;
-            color: #0f172a;
-            font-size: 1.08rem;
-            font-weight: 800;
-        }
-
-        .profile-action__description {
-            margin: 0;
-            color: var(--profile-secondary);
-            font-size: .94rem;
-            line-height: 1.5;
-            max-width: 760px;
-        }
-
-        .profile-btn {
-            min-width: 200px;
-            min-height: 48px;
-            border-radius: 14px;
-            font-weight: 800;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: .45rem;
-            transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
-        }
-
-        .profile-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 26px rgba(15, 23, 42, .12);
-        }
-
-        .profile-btn--primary {
-            color: var(--empresa-cor-primaria-contraste, #ffffff) !important;
-            background: var(--profile-primary);
-            border: 1px solid var(--profile-primary);
-        }
-
-        @media (max-width: 1199.98px) {
-            .profile-hero__content {
-                grid-template-columns: 1fr;
-            }
-
-            .profile-hero__aside {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 991.98px) {
-            .profile-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .profile-hero__main {
-                flex-direction: column;
-            }
-
-            .profile-hero__aside {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 767.98px) {
-            .profile-hero__aside {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            .profile-page {
-                padding-bottom: .5rem;
-            }
-
-            .profile-hero__content,
-            .profile-action__content {
-                padding: 1rem;
-            }
-
-            .profile-avatar {
-                width: 96px;
-                height: 96px;
-            }
-
-            .profile-name {
-                font-size: 1.45rem;
-            }
-
-            .profile-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .profile-action__content {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .profile-btn {
-                width: 100%;
-                min-width: 0;
-            }
-        }
-    </style>
+<style>
+    .pf-header { display:flex; align-items:center; gap:1rem; padding:1.1rem 1.3rem; border-radius:18px; margin-bottom:1rem; color:#fff; background:#007bff; box-shadow:0 6px 20px rgba(0,123,255,.28); flex-wrap:wrap; }
+    .pf-avatar { position:relative; width:84px; height:84px; flex-shrink:0; }
+    .pf-avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover; border:3px solid rgba(255,255,255,.45); display:block; background:#dbeafe; }
+    .pf-avatar-edit { position:absolute; right:-2px; bottom:-2px; width:30px; height:30px; border-radius:50%; background:#fff; color:#007bff; border:2px solid #fff; box-shadow:0 3px 8px rgba(15,23,42,.25); display:flex; align-items:center; justify-content:center; cursor:pointer; margin:0; font-size:.75rem; }
+    .pf-avatar-edit:hover { background:#f1f5f9; }
+    .pf-identidade { display:flex; flex-direction:column; min-width:0; }
+    .pf-identidade > b { font-size:1.2rem; font-weight:800; word-break:break-word; }
+    .pf-identidade > small { font-size:.78rem; opacity:.85; word-break:break-word; }
+    .pf-meta { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.55rem; }
+    .pf-tag { display:inline-flex; align-items:center; padding:.28rem .65rem; border-radius:999px; background:rgba(255,255,255,.18); color:#fff; font-size:.68rem; font-weight:700; }
+    .pf-sec { display:flex; align-items:center; gap:.4rem; font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#2563eb; margin:1.1rem 0 .6rem; }
+    .pf-lista { background:#fff; border:1px solid #eef1f6; border-radius:14px; overflow:hidden; }
+    .pf-item { display:flex; align-items:center; gap:.8rem; padding:.7rem .95rem; border-bottom:1px solid #f1f5f9; }
+    .pf-item:last-child { border-bottom:0; }
+    .pf-item-icone { width:40px; height:40px; border-radius:12px; background:var(--app); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+    .pf-item-info { display:flex; flex-direction:column; min-width:0; }
+    .pf-item-info small { font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#9ca3af; }
+    .pf-item-info b { font-size:.88rem; color:#1f2937; word-break:break-word; }
+    .pf-card { background:#fff; border:1px solid #eef1f6; border-radius:14px; padding:1.1rem 1.2rem; }
+    @media (max-width: 576px) {
+        .pf-header { flex-direction:column; text-align:center; }
+        .pf-identidade { align-items:center; }
+        .pf-meta { justify-content:center; }
+    }
+</style>
 @stop
 
 @section('js')

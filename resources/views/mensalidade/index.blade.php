@@ -17,6 +17,7 @@
 
 @php $din = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.'); @endphp
 @push('css')
+    @include('partials.ux-index-styles')
 <style>
     @media (max-width: 575.98px) { .mens-stat-val { font-size: 1.05rem !important; } }
 </style>
@@ -93,10 +94,113 @@
             <i class="fa fa-user-graduate mr-1"></i> Extrato do aluno
         </button>
         <x-per-page-selector :per-pages="$perPages" :selected-per-page="$perPage" />
+        @include('partials.ux-view-toggle', ['viewKey' => 'mensalidade_index_view'])
     </div>
 
-    <div class="card-body p-0">
-        <div class="table-responsive">
+    <div class="card-body p-0 ux-index-body" data-view="cards">
+                <div class="ux-cards">
+            @forelse($mensalidades as $mensalidade)
+                @php $situacao = $mensalidade->situacao; @endphp
+                <article class="ux-card">
+                    <div class="ux-card__accent"></div>
+                    <div class="ux-card__head">
+                        <div class="ux-card__avatar"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="ux-card__head-info">
+                            <div class="ux-card__title">{{ $mensalidade->matricula->aluno->pessoa->nome ?? '—' }}</div>
+                            <div class="ux-card__sub">{{ $mensalidade->matricula->turma->nome ?? '—' }}</div>
+                        </div>
+                        <div class="ux-card__badges">
+                            @php $cor = ['pendente' => 'warning', 'vencida' => 'danger', 'paga' => 'success', 'cancelada' => 'secondary'][$situacao] ?? 'secondary'; @endphp
+                                <span class="badge badge-{{ $cor }}">{{ ucfirst($situacao) }}</span>
+                                @if($mensalidade->gateway_status)
+                                    @php $corGw = ['pendente' => 'secondary', 'recebida' => 'info', 'vencida' => 'danger', 'cancelada' => 'dark'][$mensalidade->gateway_status] ?? 'secondary'; @endphp
+                                    <span class="badge badge-{{ $corGw }}" title="Status no gateway ({{ strtoupper($mensalidade->gateway) }}){{ $mensalidade->gateway_synced_at ? ' — '. $mensalidade->gateway_synced_at->format('d/m H:i') : '' }}">
+                                        <i class="fas fa-plug"></i> {{ ucfirst($mensalidade->gateway_status) }}
+                                    </span>
+                                @endif
+                        </div>
+                    </div>
+                    <div class="ux-card__meta">
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Competência</span>
+                            <span class="ux-card__meta-value">{{ \Carbon\Carbon::createFromFormat('Y-m', $mensalidade->competencia)->format('m/Y') }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Plano</span>
+                            <span class="ux-card__meta-value">{{ $mensalidade->planoMensalidade->nome ?? '—' }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Valor</span>
+                            <span class="ux-card__meta-value">R$ {{ number_format($mensalidade->valor, 2, ',', '.') }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Vencimento</span>
+                            <span class="ux-card__meta-value">{{ $mensalidade->vencimento->format('d/m/Y') }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Pagamento</span>
+                            <span class="ux-card__meta-value">@if($mensalidade->status === 'paga')
+                                    <small>{{ $mensalidade->data_pagamento?->format('d/m/Y') }} · {{ \App\Models\Mensalidade::FORMAS_PAGAMENTO[$mensalidade->forma_pagamento] ?? $mensalidade->forma_pagamento }}</small>
+                                @else
+                                    —
+                                @endif</span>
+                        </div>
+                    </div>
+                    <div class="ux-card__foot">
+                        @if($mensalidade->status === 'pendente')
+                                    @can('mensalidade.edit')
+                                        <form method="POST" action="{{ route('mensalidade.baixar', $mensalidade->id) }}" class="d-inline">
+                                            @csrf
+                                            <input type="hidden" name="forma_pagamento" value="pix">
+                                            <button type="submit" class="btn btn-xs btn-success" title="Baixar (receber) — registra Pix"><i class="fa fa-check"></i></button>
+                                        </form>
+                                        @if(! $mensalidade->gateway_payment_id)
+                                            <form method="POST" action="{{ route('mensalidade.cobranca', $mensalidade->id) }}" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-xs btn-outline-primary" title="Gerar cobrança no gateway (boleto)"><i class="fa fa-barcode"></i></button>
+                                            </form>
+                                            <form method="POST" action="{{ route('mensalidade.cobranca', $mensalidade->id) }}" class="d-inline">
+                                                @csrf
+                                                <input type="hidden" name="metodo" value="PIX">
+                                                <button type="submit" class="btn btn-xs btn-outline-info" title="Gerar Pix no gateway"><i class="fa fa-qrcode"></i></button>
+                                            </form>
+                                        @else
+                                            <form method="POST" action="{{ route('mensalidade.sincronizar', $mensalidade->id) }}" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-xs btn-outline-secondary" title="Consultar status no gateway"><i class="fa fa-sync"></i></button>
+                                            </form>
+                                        @endif
+                                    @endcan
+                                @endif
+                                @if($mensalidade->status === 'paga')
+                                    @can('mensalidade.recibo')
+                                        <a href="{{ route('mensalidade.recibo', $mensalidade->id) }}" class="btn btn-xs btn-outline-primary" title="Recibo de pagamento"><i class="fa fa-file-invoice"></i></a>
+                                    @endcan
+                                @endif
+                                @if($mensalidade->boleto_url)
+                                    <a href="{{ $mensalidade->boleto_url }}" target="_blank" class="btn btn-xs btn-outline-secondary" title="Abrir boleto do gateway"><i class="fa fa-external-link-alt"></i></a>
+                                @endif
+                                @if($mensalidade->boleto_path)
+                                    @can('mensalidade.edit')
+                                        <a href="{{ route('mensalidade.boleto', $mensalidade->id) }}" target="_blank" class="btn btn-xs btn-outline-secondary" title="Ver boleto anexado"><i class="fa fa-barcode"></i></a>
+                                    @endcan
+                                @endif
+                                @can('mensalidade.edit')
+                                    <a href="{{ route('mensalidade.edit', $mensalidade->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
+                                @endcan
+                                @can('mensalidade.destroy')
+                                    <x-delete-button :action="route('mensalidade.destroy', $mensalidade->id)" titulo="Excluir" mensagem="Excluir a mensalidade de &quot;{{ $mensalidade->matricula->aluno->pessoa->nome ?? 'aluno' }}&quot;?" />
+                                @endcan
+                    </div>
+                </article>
+            @empty
+                <div class="text-center text-muted py-4" style="grid-column:1/-1;">
+                    <i class="fas fa-money-bill-wave fa-2x mb-2 d-block"></i>
+                    Nenhuma mensalidade encontrada.
+                </div>
+            @endforelse
+        </div>
+        <div class="ux-table table-responsive">
             <table class="table table-hover table-sm mb-0">
                 <thead class="thead-light">
                     <tr>

@@ -77,6 +77,21 @@ class TurmaService extends AbstractBaseService
                 continue;
             }
 
+            // Situacao derivada (nao e coluna): encerrada = inativa ou
+            // ano letivo encerrado; em letivo = o inverso (Turma::finalizada).
+            if ($field === 'situacao') {
+                if ($valor === 'encerrado') {
+                    $query->where(fn ($q) => $q->where('ativo', 'N')
+                        ->orWhereHas('anoLetivo', fn ($a) => $a->where('status', 'encerrado')));
+                } elseif ($valor === 'letivo') {
+                    $query->where('ativo', 'S')
+                        ->where(fn ($q) => $q->whereDoesntHave('anoLetivo')
+                            ->orWhereHas('anoLetivo', fn ($a) => $a->where('status', '!=', 'encerrado')));
+                }
+
+                continue;
+            }
+
             if (! SchemaCache::hasColumn($this->model->getTable(), (string) $field)) {
                 continue;
             }
@@ -337,6 +352,52 @@ class TurmaService extends AbstractBaseService
                     $criadas++;
                 }
             }
+        }
+
+        return ['criadas' => $criadas, 'puladas' => $puladas];
+    }
+
+    /**
+     * Criacao em lote manual: mesma estrutura (escola/ano/etapa/turno/
+     * sala/capacidade/status), uma linha por turma com nome e grade de
+     * horario proprios. Nomes repetidos no ano sao pulados.
+     */
+    public function criarEmLote(array $data): array
+    {
+        $anoLetivoId = (int) $data['ano_letivo_id'];
+
+        $existentes = $this->model->newQuery()
+            ->where('ano_letivo_id', $anoLetivoId)
+            ->pluck('nome')
+            ->map(fn ($n) => mb_strtolower((string) $n))
+            ->all();
+
+        $criadas = 0;
+        $puladas = [];
+
+        foreach ($data['turmas'] as $turma) {
+            $nome = trim((string) ($turma['nome'] ?? ''));
+
+            if ($nome === '' || in_array(mb_strtolower($nome), $existentes, true)) {
+                $puladas[] = $nome;
+
+                continue;
+            }
+
+            $this->create([
+                'escola_id' => $data['escola_id'],
+                'ano_letivo_id' => $anoLetivoId,
+                'etapa_id' => $data['etapa_id'],
+                'nome' => $nome,
+                'turno' => $data['turno'] ?? null,
+                'horario_id' => $turma['horario_id'] ?? null,
+                'sala' => $data['sala'] ?? null,
+                'capacidade_maxima' => $data['capacidade_maxima'] ?? null,
+                'ativo' => $data['ativo'] ?? 'S',
+            ]);
+
+            $existentes[] = mb_strtolower($nome);
+            $criadas++;
         }
 
         return ['criadas' => $criadas, 'puladas' => $puladas];

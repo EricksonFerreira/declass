@@ -13,6 +13,8 @@ Route::prefix('turma')->name('turma.')->group(function () {
     Route::get('removerfiltro', [TurmaController::class, 'removerFiltro'])->name('removerFiltro');
     Route::get('filtro', [TurmaController::class, 'filtro'])->name('filtro');
     Route::post('gerar-lote', [TurmaController::class, 'gerarLote'])->name('gerar_lote');
+    Route::get('lote', [TurmaController::class, 'lote'])->name('lote');
+    Route::post('lote', [TurmaController::class, 'storeLote'])->name('store_lote');
     Route::post('replicar-organizacao', [TurmaController::class, 'replicarOrganizacao'])->name('replicar_organizacao');
 
     // Chamada do dia: abre a chamada se ja existe aula hoje, senao leva ao registro da aula

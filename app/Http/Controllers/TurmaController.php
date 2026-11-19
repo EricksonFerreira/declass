@@ -7,6 +7,7 @@ use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Turma\GerarTurmasRequest;
 use App\Http\Requests\Turma\ReplicarOrganizacaoRequest;
 use App\Http\Requests\Turma\StoreTurmaRequest;
+use App\Http\Requests\Turma\StoreTurmasLoteRequest;
 use App\Http\Requests\Turma\UpdateTurmaRequest;
 use App\Models\AnoLetivo;
 use App\Models\Atribuicao;
@@ -35,8 +36,8 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
 
         $this->middleware('can:turma.index')->only('index');
         $this->middleware('can:turma.show')->only('show');
-        $this->middleware('can:turma.create')->only('create');
-        $this->middleware('can:turma.store')->only(['store', 'gerarLote']);
+        $this->middleware('can:turma.create')->only(['create', 'lote']);
+        $this->middleware('can:turma.store')->only(['store', 'gerarLote', 'storeLote']);
         $this->middleware('can:turma.replicar_organizacao')->only('replicarOrganizacao');
         $this->middleware('can:turma.edit')->only('edit');
         $this->middleware('can:turma.update')->only('update');
@@ -106,6 +107,30 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
         }
 
         return redirect()->back()->with('success', $mensagem);
+    }
+
+    /**
+     * Criacao em lote manual: mesma escola/etapa/turno, varias
+     * turmas nomeadas, cada uma podendo ter sua grade de horario.
+     */
+    public function lote()
+    {
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Turmas', 'turma.index', 'Turmas em lote', 'Vida Acadêmica');
+
+        return view('turma.lote', array_merge(compact('breadcrumb'), $this->opcoesFormulario()))
+            ->with('titulo', $this->titulo);
+    }
+
+    public function storeLote(StoreTurmasLoteRequest $request)
+    {
+        $resultado = $this->turmaService->criarEmLote($request->validated());
+
+        $mensagem = "{$resultado['criadas']} turma(s) criada(s).";
+        if ($resultado['puladas'] !== []) {
+            $mensagem .= ' '.count($resultado['puladas']).' já existiam e foram puladas: '.implode(', ', array_slice($resultado['puladas'], 0, 10)).(count($resultado['puladas']) > 10 ? '…' : '');
+        }
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro, $mensagem);
     }
 
     /**
@@ -383,6 +408,16 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
                         ->values()->all()
                 ),
             ],
+            [
+                'name' => 'situacao', 'label' => 'Situação', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todas', 'selected' => false]],
+                    collect(['letivo' => 'Em letivo', 'encerrado' => 'Encerrada'])
+                        ->map(fn ($label, $v) => ['value' => $v, 'label' => $label, 'selected' => false])
+                        ->values()->all()
+                ),
+            ],
         ];
 
         // Professor: padrao = turmas em periodo letivo; o filtro
@@ -428,7 +463,7 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
     {
         return AnoLetivo::query()->with('escola')->orderBy('ano', 'desc')->get()
             ->mapWithKeys(fn (AnoLetivo $a) => [
-                $a->id => $a->ano.' — '.($a->escola->nome ?? ''),
+                $a->id => $a->ano.' — '.($a->escola->nome ?? '').($a->status === 'encerrado' ? ' (encerrado)' : ''),
             ])->all();
     }
 

@@ -7,6 +7,10 @@
     <x-page-title :title="$titulo" subtitle="Contas de acesso: equipe, alunos e responsáveis" :create-url="auth()->user()->hasPermissao('usuario.create') ? route('usuario.create') : null" :create-can="'usuario.create'" />
 @stop
 
+@push('css')
+    @include('partials.ux-index-styles')
+@endpush
+
 @section('content')
 <div class="card">
     <div class="card-header d-flex flex-wrap align-items-center" style="gap:.5rem;">
@@ -14,10 +18,90 @@
             <x-filter :filters="$filters" :additional-filters="$additionalFilters" :itens-filtered="$itensFiltered" :nome-filtro="$nomeFiltro" />
         </div>
         <x-per-page-selector :per-pages="$perPages" :selected-per-page="$perPage" />
+        @include('partials.ux-view-toggle', ['viewKey' => 'usuario_index_view'])
     </div>
 
-    <div class="card-body p-0">
-        <div class="table-responsive">
+    <div class="card-body p-0 ux-index-body" data-view="cards">
+                <div class="ux-cards">
+            @forelse($usuarios as $usuario)
+                <article class="ux-card">
+                    <div class="ux-card__accent"></div>
+                    <div class="ux-card__head">
+                        <div class="ux-card__avatar"><i class="fas fa-user"></i></div>
+                        <div class="ux-card__head-info">
+                            <div class="ux-card__title">{{ $usuario->nome }}</div>
+                            <div class="ux-card__sub">{{ $usuario->email }}</div>
+                        </div>
+                        <div class="ux-card__badges">
+                            @php($tipo = $usuario->tipo_conta)
+                                @if($tipo === 'aluno')
+                                    <span class="badge badge-primary">Aluno</span>
+                                @elseif($tipo === 'responsavel')
+                                    <span class="badge badge-info">Responsável</span>
+                                @else
+                                    <span class="badge badge-secondary">Colaborador</span>
+                                @endif
+                        </div>
+                    </div>
+                    <div class="ux-card__meta">
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Perfil</span>
+                            <span class="ux-card__meta-value">{{ $usuario->regra->name ?? '—' }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Vínculo</span>
+                            <span class="ux-card__meta-value">@if($usuario->aluno)
+                                    @can('aluno.show')
+                                        <a href="{{ route('aluno.show', $usuario->aluno->id) }}">{{ $usuario->aluno->nome }}</a>
+                                    @else
+                                        {{ $usuario->aluno->nome }}
+                                    @endcan
+                                @elseif($usuario->responsavel)
+                                    @can('responsavel.show')
+                                        <a href="{{ route('responsavel.show', $usuario->responsavel->id) }}">{{ $usuario->responsavel->nome }}</a>
+                                    @else
+                                        {{ $usuario->responsavel->nome }}
+                                    @endcan
+                                @else
+                                    —
+                                @endif</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Escolas</span>
+                            <span class="ux-card__meta-value">{{ $usuario->escolas->pluck('nome')->join(', ') ?: '—' }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Status</span>
+                            <span class="ux-card__meta-value">@if($usuario->ativo)
+                                    <span class="badge badge-success">Ativo</span>
+                                @else
+                                    <span class="badge badge-secondary">Inativo</span>
+                                @endif</span>
+                        </div>
+                    </div>
+                    <div class="ux-card__foot">
+                        @can('usuario.show')
+                                    <a href="{{ route('usuario.show', $usuario->id) }}" class="btn btn-xs btn-info" title="Ver"><i class="fa fa-eye"></i></a>
+                                @endcan
+                                @can('usuario.edit')
+                                    <a href="{{ route('usuario.edit', $usuario->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
+                                @endcan
+                                @can('usuario.alterarSenha')
+                                    <a href="{{ route('usuario.alterarSenha', $usuario->id) }}" class="btn btn-xs btn-secondary" title="Senha"><i class="fa fa-key"></i></a>
+                                @endcan
+                                @can('usuario.destroy')
+                                    <x-delete-button :action="route('usuario.destroy', $usuario->id)" titulo="Excluir" mensagem="Excluir o usuário &quot;{{ $usuario->nome }}&quot;?" />
+                                @endcan
+                    </div>
+                </article>
+            @empty
+                <div class="text-center text-muted py-4" style="grid-column:1/-1;">
+                    <i class="fas fa-user fa-2x mb-2 d-block"></i>
+                    Nenhum usuário encontrado.
+                </div>
+            @endforelse
+        </div>
+        <div class="ux-table table-responsive">
             <table class="table table-hover table-sm mb-0">
                 <thead class="thead-light">
                     <tr>

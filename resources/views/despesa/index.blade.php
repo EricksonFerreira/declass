@@ -7,6 +7,10 @@
     <x-page-title :title="$titulo" subtitle="Contas a pagar da escola e da rede" :create-url="auth()->user()->hasPermissao('despesa.create') ? route('despesa.create') : null" :create-can="'despesa.create'" />
 @stop
 
+@push('css')
+    @include('partials.ux-index-styles')
+@endpush
+
 @section('content')
 <div class="card">
     <div class="card-header d-flex flex-wrap align-items-center" style="gap:.5rem;">
@@ -14,10 +18,77 @@
             <x-filter :filters="$filters" :additional-filters="$additionalFilters" :itens-filtered="$itensFiltered" :nome-filtro="$nomeFiltro" />
         </div>
         <x-per-page-selector :per-pages="$perPages" :selected-per-page="$perPage" />
+        @include('partials.ux-view-toggle', ['viewKey' => 'despesa_index_view'])
     </div>
 
-    <div class="card-body p-0">
-        <div class="table-responsive">
+    <div class="card-body p-0 ux-index-body" data-view="cards">
+                <div class="ux-cards">
+            @forelse($despesas as $despesa)
+                @php $situacao = $despesa->situacao; @endphp
+                <article class="ux-card">
+                    <div class="ux-card__accent"></div>
+                    <div class="ux-card__head">
+                        <div class="ux-card__avatar"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div class="ux-card__head-info">
+                            <div class="ux-card__title">{{ $despesa->descricao }}</div>
+                            <div class="ux-card__sub">{{ $despesa->fornecedor ?: '—' }}</div>
+                        </div>
+                        <div class="ux-card__badges">
+                            <span class="badge badge-light border">{{ $despesa->categoria_label }}</span>
+                        </div>
+                    </div>
+                    <div class="ux-card__meta">
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Escola</span>
+                            <span class="ux-card__meta-value">{{ $despesa->escola->nome ?? 'Rede toda' }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Vencimento</span>
+                            <span class="ux-card__meta-value">{{ $despesa->data_vencimento->format('d/m/Y') }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Valor</span>
+                            <span class="ux-card__meta-value">R$ {{ number_format($despesa->valor, 2, ',', '.') }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Status</span>
+                            <span class="ux-card__meta-value">@php $cor = ['prevista' => 'warning', 'atrasada' => 'danger', 'paga' => 'success', 'cancelada' => 'secondary'][$situacao] ?? 'secondary'; @endphp
+                                <span class="badge badge-{{ $cor }}">{{ ucfirst($situacao) }}</span>
+                                @if($despesa->status === 'paga')
+                                    <br><small class="text-muted">{{ $despesa->data_pagamento?->format('d/m/Y') }} · {{ \App\Models\Despesa::FORMAS_PAGAMENTO[$despesa->forma_pagamento] ?? $despesa->forma_pagamento }}</small>
+                                @endif</span>
+                        </div>
+                    </div>
+                    <div class="ux-card__foot">
+                        @if($despesa->status === 'prevista')
+                                    @can('despesa.edit')
+                                        <button type="button" class="btn btn-xs btn-success" title="Baixar (pagar)"
+                                                data-toggle="modal" data-target="#modal-pagar-{{ $despesa->id }}">
+                                            <i class="fa fa-check"></i>
+                                        </button>
+                                        <a href="{{ route('despesa.edit', $despesa->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
+                                        <form method="POST" action="{{ route('despesa.cancelar', $despesa->id) }}" class="d-inline"
+                                              onsubmit="return confirm('Cancelar a despesa &quot;{{ addslashes($despesa->descricao) }}&quot;?');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-xs btn-secondary" title="Cancelar despesa"><i class="fa fa-ban"></i></button>
+                                        </form>
+                                    @endcan
+                                    @can('despesa.destroy')
+                                        <x-delete-button :action="route('despesa.destroy', $despesa->id)" titulo="Excluir" mensagem="Excluir a despesa &quot;{{ $despesa->descricao }}&quot;?" />
+                                    @endcan
+                                @else
+                                    <span class="text-muted" style="font-size:.75rem;">—</span>
+                                @endif
+                    </div>
+                </article>
+            @empty
+                <div class="text-center text-muted py-4" style="grid-column:1/-1;">
+                    <i class="fas fa-file-invoice-dollar fa-2x mb-2 d-block"></i>
+                    Nenhuma despesa encontrada.
+                </div>
+            @endforelse
+        </div>
+        <div class="ux-table table-responsive">
             <table class="table table-hover table-sm mb-0">
                 <thead class="thead-light">
                     <tr>

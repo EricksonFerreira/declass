@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Interfaces\FiltroInterface;
+use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\SolicitacaoTipo\StoreTipoSolicitacaoRequest;
 use App\Http\Requests\SolicitacaoTipo\UpdateTipoSolicitacaoRequest;
 use App\Models\Escola;
 use App\Models\SolicitacaoTipo;
 use App\Services\BreadcrumbService;
+use App\Services\SolicitacaoTipoService;
+use App\Traits\AtualizaFiltrosTrait;
+use App\Traits\FiltroTrait;
 use Illuminate\Http\Request;
 
 /**
@@ -14,10 +19,14 @@ use Illuminate\Http\Request;
  * cada tipo pode exigir anexo e definir campos extras de
  * preenchimento (texto, numero, data, lista de opcoes).
  */
-class TipoSolicitacaoController extends BaseController
+class TipoSolicitacaoController extends BaseController implements FiltroInterface, ResourceInterface
 {
+    use AtualizaFiltrosTrait;
+    use FiltroTrait;
+
     public function __construct(
         protected BreadcrumbService $breadcrumbService,
+        protected SolicitacaoTipoService $solicitacaoTipoService,
     ) {
         $this->titulo = 'Tipos de Solicitação';
         $this->nomeFiltro = 'tipo_solicitacao';
@@ -26,22 +35,37 @@ class TipoSolicitacaoController extends BaseController
         $this->middleware('can:tipo_solicitacao.create')->only(['create', 'store']);
         $this->middleware('can:tipo_solicitacao.edit')->only(['edit', 'update']);
         $this->middleware('can:tipo_solicitacao.destroy')->only('destroy');
+        $this->middleware('can:tipo_solicitacao.filtro')->only('filtro');
+        $this->middleware('can:tipo_solicitacao.removerFiltro')->only('removerFiltro');
+        $this->middleware('can:tipo_solicitacao.setPerPage')->only('setPerPage');
     }
 
     public function index()
     {
-        $tipos = SolicitacaoTipo::query()
-            ->with('escola:id,nome')
-            ->withCount('solicitacoes')
-            ->orderBy('nome')
-            ->paginate(20);
+        $this->configurarSessao();
+
+        $itensFiltered = session("$this->nomeFiltro.filtro", []);
+        $perPage = session()->get("$this->nomeFiltro.perPage", 15);
+
+        $tipos = $this->solicitacaoTipoService->getAllWithFiltersAndPagination(
+            $itensFiltered, $perPage, ['escola:id,nome'], 'nome', 'asc',
+            fn ($query) => $query->withCount('solicitacoes')
+        );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Tipos de Solicitação', 'Alunos e Família');
+        $filters = $this->obterFiltrosPrincipais();
+        $additionalFilters = $this->obterFiltrosSecundarios();
 
-        return view('tipo_solicitacao.index', [
-            'tipos' => $tipos,
-            'breadcrumb' => $breadcrumb,
-        ])->with('titulo', $this->titulo);
+        $this->atualizarFiltros($itensFiltered, $filters);
+        $this->atualizarFiltros($itensFiltered, $additionalFilters);
+
+        $perPages = [5, 10, 15, 25, 50, 100];
+        $nomeFiltro = $this->nomeFiltro;
+
+        return view('tipo_solicitacao.index', compact(
+            'tipos', 'breadcrumb', 'filters', 'itensFiltered',
+            'additionalFilters', 'perPages', 'perPage', 'nomeFiltro'
+        ))->with('titulo', $this->titulo);
     }
 
     public function create()
@@ -89,6 +113,66 @@ class TipoSolicitacaoController extends BaseController
 
         return redirect()->route('tipo_solicitacao.index')
             ->with('success', 'Tipo de solicitação removido.');
+    }
+
+    public function filtro(Request $request)
+    {
+        $this->criarFiltros($request, $this->nomeFiltro);
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function removerFiltro(Request $request)
+    {
+        $this->removeSessao($this->nomeFiltro, $request->input('atributo'));
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function setPerPage(Request $request)
+    {
+        $request->session()->put("$this->nomeFiltro.perPage", $request->input('perPage'));
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function configurarSessao()
+    {
+        session()->put("$this->nomeFiltro.urlPadrao", 'tipos-solicitacao');
+        session()->put("$this->nomeFiltro.rotaRedirect", 'tipo_solicitacao.index');
+    }
+
+    public function obterFiltrosPrincipais()
+    {
+        return [
+            [
+                'name' => 'nome', 'label' => 'Nome', 'type' => 'text',
+                'typeWhere' => 'like',
+            ],
+        ];
+    }
+
+    public function obterFiltrosSecundarios()
+    {
+        return [
+            [
+                'name' => 'escola_id', 'label' => 'Escola', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => Escola::query()->orderBy('nome')->get(['id', 'nome'])
+                    ->map(fn (Escola $escola) => ['value' => $escola->id, 'label' => $escola->nome])
+                    ->all(),
+            ],
+            [
+                'name' => 'ativo', 'label' => 'Status', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => ['1' => 'Ativo', '0' => 'Inativo'],
+            ],
+            [
+                'name' => 'exige_anexo', 'label' => 'Anexo', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => ['1' => 'Obrigatório', '0' => 'Opcional'],
+            ],
+        ];
     }
 
     private function opcoesFormulario(): array

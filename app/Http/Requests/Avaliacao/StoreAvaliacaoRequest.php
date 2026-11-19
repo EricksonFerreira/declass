@@ -27,7 +27,8 @@ class StoreAvaliacaoRequest extends FormRequest
                 Rule::exists('disciplinas', 'id')->where('empresa_id', $empresaId),
             ],
             'tipo' => ['required', Rule::in(array_keys(Avaliacao::TIPOS))],
-            'nome' => ['required', 'string', 'max:150'],
+            // Vazio = nome gerado automaticamente ("Avaliação de X no Y").
+            'nome' => ['nullable', 'string', 'max:150'],
             'periodo' => ['nullable', 'string', 'max:30'],
             'periodo_letivo_id' => [
                 'nullable', 'integer',

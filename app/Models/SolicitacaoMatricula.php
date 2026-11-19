@@ -206,4 +206,16 @@ class SolicitacaoMatricula extends Model
     {
         return $this->statusLabel();
     }
+
+    /** Atalho de leitura em Blade: $model->origem_label */
+    public function getOrigemLabelAttribute(): string
+    {
+        return self::ORIGENS[$this->origem] ?? $this->origem;
+    }
+
+    /** Atalho de leitura em Blade: $model->parentesco_label */
+    public function getParentescoLabelAttribute(): string
+    {
+        return self::PARENTESCOS[$this->parentesco] ?? $this->parentesco;
+    }
 }

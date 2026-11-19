@@ -7,6 +7,10 @@
     <x-page-title :title="$titulo" subtitle="Todas as empresas da plataforma em um so painel" />
 @stop
 
+@push('css')
+    @include('partials.ux-index-styles')
+@endpush
+
 @section('content')
 <form method="GET" action="{{ route('rede.index') }}" class="mb-3">
     <div class="row justify-content-end">
@@ -91,10 +95,70 @@
 </div>
 
 <div class="card">
-    <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-network-wired mr-1"></i> Empresas da rede <span class="badge badge-primary ml-1">{{ $dados['linhas']->count() }}</span></h3>
+    <div class="card-header d-flex flex-wrap align-items-center" style="gap:.5rem;">
+        <h3 class="card-title flex-grow-1"><i class="fas fa-network-wired mr-1"></i> Empresas da rede <span class="badge badge-primary ml-1">{{ $dados['linhas']->count() }}</span></h3>
+        @include('partials.ux-view-toggle', ['viewKey' => 'rede_index_view'])
     </div>
-    <div class="card-body table-responsive p-0">
+    <div class="card-body p-0 ux-index-body" data-view="cards">
+        <div class="ux-cards">
+            @forelse($dados['linhas'] as $linha)
+                <article class="ux-card">
+                    <div class="ux-card__accent"></div>
+                    <div class="ux-card__head">
+                        <div class="ux-card__avatar"><i class="fas fa-building"></i></div>
+                        <div class="ux-card__head-info">
+                            <div class="ux-card__title">{{ $linha->empresa->nome }}</div>
+                            <div class="ux-card__sub">{{ $linha->empresa->slug }}{{ $linha->empresa->dominio ? ' · '.$linha->empresa->dominio : '' }}</div>
+                        </div>
+                        <div class="ux-card__badges">
+                            @if($linha->empresa->ativo === 'S')
+                                <span class="ux-card__badge ux-card__badge--blue">Ativa</span>
+                            @else
+                                <span class="ux-card__badge ux-card__badge--red">Inativa</span>
+                            @endif
+                            @if($linha->empresa->site_ativo === 'S')
+                                <span class="ux-card__badge ux-card__badge--green">Site no ar</span>
+                            @else
+                                <span class="ux-card__badge ux-card__badge--gray">Site off</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="ux-card__meta">
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Escolas</span>
+                            <span class="ux-card__meta-value">{{ $linha->escolas }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Alunos</span>
+                            <span class="ux-card__meta-value">{{ $linha->alunos }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Matrículas</span>
+                            <span class="ux-card__meta-value">{{ $linha->matriculas }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Turmas</span>
+                            <span class="ux-card__meta-value">{{ $linha->turmas }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Professores</span>
+                            <span class="ux-card__meta-value">{{ $linha->professores }}</span>
+                        </div>
+                        <div class="ux-card__meta-row">
+                            <span class="ux-card__meta-label">Usuários</span>
+                            <span class="ux-card__meta-value">{{ $linha->usuarios }}</span>
+                        </div>
+                    </div>
+                    <div class="ux-card__foot">
+                        <a href="{{ route('empresa.show', $linha->empresa) }}" class="btn btn-xs btn-info" title="Ver empresa"><i class="fas fa-eye"></i></a>
+                        <a href="{{ route('empresa.edit', $linha->empresa) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fas fa-pen"></i></a>
+                    </div>
+                </article>
+            @empty
+                <div class="text-center text-muted py-4" style="grid-column:1/-1;">Nenhuma empresa cadastrada.</div>
+            @endforelse
+        </div>
+        <div class="ux-table table-responsive">
         <table class="table table-hover table-striped mb-0">
             <thead>
                 <tr>
@@ -168,6 +232,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @stop

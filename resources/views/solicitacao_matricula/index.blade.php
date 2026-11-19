@@ -61,7 +61,7 @@
                         </div>
                         <div class="ux-card__meta-row">
                             <span class="ux-card__meta-label">Origem</span>
-                            <span class="ux-card__meta-value">{{ \App\Models\SolicitacaoMatricula::ORIGENS[$s->origem] ?? $s->origem }}</span>
+                            <span class="ux-card__meta-value">{{ $s->origem_label }}</span>
                         </div>
                         <div class="ux-card__meta-row">
                             <span class="ux-card__meta-label">Recebida em</span>
@@ -127,10 +127,10 @@
                             <td>
                                 {{ $s->nome_responsavel }}
                                 @if($s->parentesco)
-                                    <br><small class="text-muted">{{ \App\Models\SolicitacaoMatricula::PARENTESCOS[$s->parentesco] ?? $s->parentesco }}</small>
+                                    <br><small class="text-muted">{{ $s->parentesco_label }}</small>
                                 @endif
                             </td>
-                            <td><small>{{ \App\Models\SolicitacaoMatricula::ORIGENS[$s->origem] ?? $s->origem }}</small></td>
+                            <td><small>{{ $s->origem_label }}</small></td>
                             <td><span class="badge badge-{{ $statusCores[$s->status] ?? 'secondary' }}">{{ $s->status_label }}</span></td>
                             <td class="text-nowrap"><small>{{ $s->recebida_em }}</small></td>
                             <td class="text-right text-nowrap">

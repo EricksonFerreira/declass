@@ -5,13 +5,13 @@
     <button
         type="button"
         class="btn btn-xs {{ $btnClass ?? 'btn-danger' }} delete-button"
+        title="{{ $titulo ?? 'Excluir' }}"
         data-confirm-title="{{ $tituloMensagem ?? 'Você tem certeza?' }}"
         data-confirm-message="{{ $mensagem ?? 'Esta ação não pode ser desfeita!' }}"
         data-confirm-button="{{ $textoConfirmacao ?? 'Sim, excluir!' }}"
         data-confirm-color="{{ $corConfirmacao ?? '#d33' }}"
     >
         <i class="{{ $icone ?? 'fa fa-trash' }}"></i>
-        {{ $titulo ?? 'Excluir' }}
     </button>
 </form>
 

@@ -87,4 +87,10 @@ class Matricula extends Model
     {
         return $this->estaAtiva();
     }
+
+    /** Atalho de leitura em Blade: $model->status_label */
+    public function getStatusLabelAttribute(): string
+    {
+        return self::STATUS[$this->status] ?? $this->status;
+    }
 }

@@ -4,7 +4,11 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" subtitle="Turmas por escola, ano letivo e etapa" :create-url="auth()->user()->hasPermissao('turma.create') ? route('turma.create') : null" :create-can="'turma.create'" />
+    <x-page-title :title="$titulo" subtitle="Turmas por escola, ano letivo e etapa" :create-url="auth()->user()->hasPermissao('turma.create') ? route('turma.create') : null" :create-can="'turma.create'">
+        @can('turma.store')
+            <a href="{{ route('turma.lote') }}" class="btn btn-xs btn-outline-primary" title="Criar várias turmas de uma vez"><i class="fa fa-layer-group mr-1"></i>Em lote</a>
+        @endcan
+    </x-page-title>
 @stop
 
 @push('css')

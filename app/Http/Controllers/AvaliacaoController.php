@@ -88,12 +88,19 @@ class AvaliacaoController extends BaseController implements FiltroInterface, Res
             : $this->breadcrumbService->prepararBreadcrumbCreate('Avaliações', 'avaliacao.index', 'Nova Avaliação', 'Vida Acadêmica');
 
         return view('avaliacao.add-edit', array_merge(compact('breadcrumb'), $this->opcoesFormulario()))
-            ->with('titulo', $this->titulo);
+            ->with('titulo', $this->titulo)
+            ->with('turmaOrigem', $turma);
     }
 
     public function store(StoreAvaliacaoRequest $request)
     {
         $this->avaliacaoService->create($request->validated());
+
+        // Criada a partir da tela da turma: volta para o diario dela.
+        if ($turmaId = (int) $request->input('from_turma_id')) {
+            return redirect(route('turma.show', $turmaId).'#tab-registros')
+                ->with('success', 'Avaliação criada com sucesso.');
+        }
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Avaliação criada com sucesso.');
     }
@@ -273,15 +280,30 @@ class AvaliacaoController extends BaseController implements FiltroInterface, Res
         $turmas = $query->get();
         $periodos = \App\Models\PeriodoLetivo::query()
             ->whereIn('ano_letivo_id', $turmas->pluck('ano_letivo_id')->unique())
-            ->where('ativo', 'S')
             ->orderBy('ordem')
-            ->get(['id', 'ano_letivo_id', 'nome']);
+            ->get(['id', 'ano_letivo_id', 'nome', 'ativo', 'data_inicio', 'data_fim']);
 
+        $hoje = \Carbon\Carbon::today();
         $map = [];
         foreach ($turmas as $turma) {
             $map[$turma->id] = $periodos
                 ->where('ano_letivo_id', $turma->ano_letivo_id)
-                ->map(fn ($p) => ['id' => $p->id, 'nome' => $p->nome])
+                ->map(function ($p) use ($hoje) {
+                    $vigente = $p->ativo === 'S'
+                        && (! $p->data_inicio || $p->data_inicio->lte($hoje))
+                        && (! $p->data_fim || $p->data_fim->gte($hoje));
+                    if ($vigente) {
+                        $sufixo = '';
+                    } elseif ($p->ativo !== 'S') {
+                        $sufixo = ' (inativo)';
+                    } elseif ($p->data_inicio && $p->data_inicio->gt($hoje)) {
+                        $sufixo = ' (ainda não iniciado)';
+                    } else {
+                        $sufixo = ' (encerrado)';
+                    }
+
+                    return ['id' => $p->id, 'nome' => $p->nome.$sufixo, 'vigente' => $vigente];
+                })
                 ->values()
                 ->all();
         }

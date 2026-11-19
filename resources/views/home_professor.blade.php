@@ -12,112 +12,87 @@
 
     $totalAulasHoje = $aulasHoje->count();
     $tiles = [
-        ['icone' => 'fas fa-clock', 'cor' => 'bg-info', 'valor' => $totalAulasHoje, 'label' => 'Aulas hoje', 'url' => '#aulas-hoje'],
-        ['icone' => 'fas fa-clipboard-check', 'cor' => 'bg-success', 'valor' => $chamadasHoje.' de '.$totalAulasHoje, 'label' => 'Chamadas feitas', 'url' => '#aulas-hoje'],
-        ['icone' => 'fas fa-chalkboard-teacher', 'cor' => 'bg-warning', 'valor' => $totalTurmas, 'label' => 'Minhas turmas', 'url' => route('turma.index')],
-        ['icone' => 'fas fa-star-half-alt', 'cor' => 'bg-danger', 'valor' => $avaliacoesSemana, 'label' => 'Avaliações (7 dias)', 'url' => route('avaliacao.agenda')],
-        ['icone' => 'fas fa-check-double', 'cor' => 'bg-secondary', 'valor' => $totalCorrecoes, 'label' => 'Para corrigir', 'url' => '#correcoes'],
+        ['icone' => 'fas fa-clock', 'cor' => '#0891b2', 'valor' => $totalAulasHoje, 'label' => 'Aulas hoje', 'url' => '#aulas-hoje'],
+        ['icone' => 'fas fa-clipboard-check', 'cor' => '#16a34a', 'valor' => $chamadasHoje.'/'.$totalAulasHoje, 'label' => 'Chamadas feitas', 'url' => '#aulas-hoje'],
+        ['icone' => 'fas fa-chalkboard-teacher', 'cor' => '#d97706', 'valor' => $totalTurmas, 'label' => 'Minhas turmas', 'url' => route('turma.index')],
+        ['icone' => 'fas fa-star-half-alt', 'cor' => '#dc2626', 'valor' => $avaliacoesSemana, 'label' => 'Avaliações (7d)', 'url' => route('avaliacao.agenda')],
+        ['icone' => 'fas fa-check-double', 'cor' => '#7c3aed', 'valor' => $totalCorrecoes, 'label' => 'Para corrigir', 'url' => '#correcoes'],
     ];
 @endphp
 
-{{-- Saudacao do professor --}}
-<div class="callout callout-info prof-saudacao">
-    <img class="prof-avatar" src="{{ $usuario->foto_perfil_url }}" alt="{{ $usuario->nome }}">
-    <div>
-        <h5 class="mb-0">{{ $saudacao }}, {{ $primeiroNome }}</h5>
-        <small class="text-muted"><i class="far fa-calendar mr-1"></i>{{ $dataExtenso }}</small>
+{{-- Header estilo app --}}
+<div class="hs-app-header">
+    <img class="hs-app-avatar" src="{{ $usuario->foto_perfil_url }}" alt="{{ $usuario->nome }}">
+    <div class="hs-app-ola">
+        <b>{{ $saudacao }}, {{ $primeiroNome }}</b>
+        <small>{{ $dataExtenso }}</small>
     </div>
 </div>
 
-{{-- Resumo do dia (padrao small-box do AdminLTE) --}}
-<div class="row">
+{{-- Atalhos estilo tela de celular --}}
+<div class="hs-app-grid hs-app-grid--5">
     @foreach($tiles as $t)
-        <div class="col-md col-6">
-            <div class="small-box {{ $t['cor'] }}">
-                <div class="inner">
-                    <h3>{{ $t['valor'] }}</h3>
-                    <p>{{ $t['label'] }}</p>
-                </div>
-                <div class="icon"><i class="{{ $t['icone'] }}"></i></div>
-                <a href="{{ $t['url'] }}" class="small-box-footer">Abrir <i class="fas fa-arrow-circle-right"></i></a>
-            </div>
-        </div>
+        <a href="{{ $t['url'] }}" class="hs-app" style="--app:{{ $t['cor'] }}">
+            <span class="hs-app-icone">
+                <i class="{{ $t['icone'] }}"></i>
+                <em class="hs-app-badge">{{ $t['valor'] }}</em>
+            </span>
+            <span class="hs-app-label">{{ $t['label'] }}</span>
+        </a>
     @endforeach
 </div>
 
-{{-- Aulas de hoje com popup de acao --}}
-<div class="card" id="aulas-hoje">
-    <div class="card-header font-weight-bold d-flex justify-content-between align-items-center">
-        <span><i class="fas fa-calendar-day mr-1"></i> Aulas de hoje</span>
-        <a href="{{ route('meus_horarios.index') }}" class="btn btn-outline-primary btn-sm">Ver horários</a>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
-                @forelse($aulasHoje as $aula)
-                    <tr class="prof-aula-linha" data-toggle="modal" data-target="#aula-acao-modal"
-                        data-titulo="{{ $aula['disciplina'] }}"
-                        data-subtitulo="{{ $aula['turma'] }}{{ $aula['sala'] ? ' · Sala '.$aula['sala'] : '' }}"
-                        data-hora="{{ $aula['inicio'] }}{{ $aula['fim'] ? ' – '.$aula['fim'] : '' }}"
-                        data-turma-url="{{ route('turma.show', $aula['turma_id']) }}"
-                        data-chamada-url="{{ route('diario.chamada', ['turma_id' => $aula['turma_id'], 'disciplina_id' => $aula['disciplina_id'], 'data' => $aula['chamada_data']]) }}"
-                        style="cursor:pointer;">
-                        <td class="text-center" style="width:90px;">
-                            <span class="badge badge-primary px-2 py-1">{{ $aula['inicio'] ?: '—' }}</span>
-                            @if($aula['fim'])<br><small class="text-muted">{{ $aula['fim'] }}</small>@endif
-                        </td>
-                        <td class="font-weight-bold">{{ $aula['disciplina'] }}</td>
-                        <td class="text-muted">{{ $aula['turma'] }}@if($aula['sala']) · Sala {{ $aula['sala'] }}@endif</td>
-                        <td class="text-right text-nowrap" style="width:60px;">
-                            <i class="fas fa-chevron-right text-muted"></i>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td class="text-center text-muted py-4">
-                            <i class="fas fa-mug-hot mb-1 d-block" style="font-size:1.4rem;opacity:.4;"></i>
-                            <strong>Sem aulas hoje</strong><br>
-                            <small>Sua grade está livre neste dia.</small>
-                        </td>
-                    </tr>
-                @endforelse
-            </table>
+{{-- Aulas de hoje: lista estilo app com popup de acao --}}
+<div class="hs-sec" id="aulas-hoje"><i class="fa fa-calendar-day mr-1"></i> Aulas de hoje
+    <a href="{{ route('meus_horarios.index') }}" class="hs-sec-link">Ver horários</a>
+</div>
+<div class="hs-lista">
+    @forelse($aulasHoje as $aula)
+        <a href="#" class="hs-item" style="--app:#007bff" data-toggle="modal" data-target="#aula-acao-modal"
+            data-titulo="{{ $aula['disciplina'] }}"
+            data-subtitulo="{{ $aula['turma'] }}{{ $aula['sala'] ? ' · Sala '.$aula['sala'] : '' }}"
+            data-hora="{{ $aula['inicio'] }}{{ $aula['fim'] ? ' – '.$aula['fim'] : '' }}"
+            data-turma-url="{{ route('turma.show', $aula['turma_id']) }}"
+            data-chamada-url="{{ route('diario.chamada', ['turma_id' => $aula['turma_id'], 'disciplina_id' => $aula['disciplina_id'], 'data' => $aula['chamada_data']]) }}">
+            <span class="hs-item-icone"><i class="fas fa-book-open"></i></span>
+            <span class="hs-item-info">
+                <b>{{ $aula['disciplina'] }}</b>
+                <small>{{ $aula['turma'] }}@if($aula['sala']) · Sala {{ $aula['sala'] }}@endif</small>
+            </span>
+            <span class="hs-item-qtd">{{ $aula['inicio'] ?: '—' }}</span>
+            <i class="fas fa-chevron-right hs-item-seta"></i>
+        </a>
+    @empty
+        <div class="hs-item-vazio">
+            <i class="fas fa-mug-hot"></i>
+            <b>Sem aulas hoje</b>
+            <small>Sua grade está livre neste dia.</small>
         </div>
-    </div>
+    @endforelse
 </div>
 
-{{-- Atividades entregues pelos alunos aguardando correcao, por turma --}}
-<div class="card" id="correcoes">
-    <div class="card-header font-weight-bold d-flex justify-content-between align-items-center">
-        <span><i class="fas fa-check-double mr-1"></i> Correções pendentes</span>
-        @if($totalCorrecoes > 0)
-            <span class="badge badge-danger">{{ $totalCorrecoes }}</span>
-        @endif
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
-                @forelse($turmasComCorrecao as $item)
-                    <tr onclick="window.location='{{ route('turma.show', $item['turma']->id) }}#tab-tarefas'" style="cursor:pointer;">
-                        <td class="font-weight-bold">{{ $item['turma']->nome }}</td>
-                        <td class="text-muted">{{ $item['turma']->escola->nome ?? '' }}</td>
-                        <td class="text-right text-nowrap" style="width:140px;">
-                            <span class="badge badge-danger">{{ $item['pendentes'] }} para corrigir</span>
-                            <i class="fas fa-chevron-right text-muted ml-1"></i>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td class="text-center text-muted py-4">
-                            <i class="fas fa-check-circle mb-1 d-block" style="font-size:1.4rem;opacity:.4;"></i>
-                            <strong>Nada para corrigir</strong><br>
-                            <small>Nenhuma atividade entregue aguardando correção.</small>
-                        </td>
-                    </tr>
-                @endforelse
-            </table>
+{{-- Atividades entregues aguardando correcao --}}
+<div class="hs-sec" id="correcoes"><i class="fa fa-check-double mr-1"></i> Correções pendentes
+    @if($totalCorrecoes > 0)<span class="hs-sec-badge">{{ $totalCorrecoes }}</span>@endif
+</div>
+<div class="hs-lista">
+    @forelse($turmasComCorrecao as $item)
+        <a href="{{ route('turma.show', $item['turma']->id) }}#tab-tarefas" class="hs-item" style="--app:#7c3aed">
+            <span class="hs-item-icone"><i class="fas fa-pen"></i></span>
+            <span class="hs-item-info">
+                <b>{{ $item['turma']->nome }}</b>
+                <small>{{ $item['turma']->escola->nome ?? '' }}</small>
+            </span>
+            <span class="hs-item-qtd">{{ $item['pendentes'] }}</span>
+            <i class="fas fa-chevron-right hs-item-seta"></i>
+        </a>
+    @empty
+        <div class="hs-item-vazio">
+            <i class="fas fa-check-circle"></i>
+            <b>Nada para corrigir</b>
+            <small>Nenhuma atividade entregue aguardando correção.</small>
         </div>
-    </div>
+    @endforelse
 </div>
 
 {{-- Popup de acao rapida: ir para a turma ou fazer a chamada da aula --}}
@@ -145,11 +120,10 @@
     </div>
 </div>
 
+@include('partials.home-app-styles')
 <style>
-    .prof-saudacao { display: flex; align-items: center; gap: .8rem; }
-    .prof-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-    .prof-aula-linha td { vertical-align: middle; }
-    .prof-aula-linha:hover td { background: #f8fafc; }
+    .hs-app-grid--5 { grid-template-columns:repeat(5,1fr); }
+    @media (max-width: 991px) { .hs-app-grid--5 { grid-template-columns:repeat(3,1fr); } }
     .min-w-0 { min-width: 0; }
 </style>
 @stop
