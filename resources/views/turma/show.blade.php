@@ -63,6 +63,39 @@
         .turma-acoes .dropdown { flex: 1 1 100%; }
         .turma-acoes .dropdown .btn { width: 100%; }
     }
+
+    /* Calendario do diario/avaliacoes */
+    .rcal-head { display:flex; align-items:center; gap:.5rem; padding:.65rem .9rem; border-bottom:1px solid #f1f5f9; }
+    .rcal-head h6 { flex:1; text-align:center; margin:0; font-weight:700; text-transform:capitalize; }
+    .rcal-head .btn { border-radius:999px; }
+    .rcal-grid { display:grid; grid-template-columns:repeat(7,1fr); border-top:1px solid #eef2f7; }
+    .rcal-dow { padding:.4rem .2rem; font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#94a3b8; text-align:center; background:#f8fafc; border-bottom:1px solid #eef2f7; }
+    .rcal-dia { min-height:88px; padding:4px 4px 6px; border-right:1px solid #f1f5f9; border-bottom:1px solid #f1f5f9; background:#fff; overflow:hidden; }
+    .rcal-dia:nth-child(7n) { border-right:0; }
+    .rcal-out { background:#fafbfc; }
+    .rcal-out .rcal-num { color:#cbd5e1; }
+    .rcal-hoje .rcal-num { background:#4f46e5; color:#fff; }
+    .rcal-num { width:20px; height:20px; border-radius:50%; font-size:.66rem; font-weight:700; color:#475569; display:flex; align-items:center; justify-content:center; margin-bottom:3px; }
+    .rc-item { display:block; width:100%; text-align:left; border:0; border-radius:5px; padding:2px 5px; margin-bottom:2px; font-size:.62rem; font-weight:600; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+    .rc-item--diario { background:#e0f2fe; color:#0369a1; }
+    .rc-item--diario:hover { background:#bae6fd; color:#075985; }
+    .rc-item--avaliacao { background:#fef3c7; color:#b45309; }
+    .rc-item--avaliacao:hover { background:#fde68a; color:#92400e; }
+    .rc-more { font-size:.6rem; color:#94a3b8; padding-left:4px; }
+    .rcal-vazio { padding:2rem; text-align:center; color:#94a3b8; font-size:.85rem; }
+    @media (max-width: 576px) {
+        .rcal-dia { min-height:52px; }
+        .rc-item { font-size:.55rem; }
+    }
+    /* Detalhes no drawer */
+    .rd-date { display:flex; align-items:center; gap:.5rem; color:#475569; font-size:.9rem; margin:.35rem 0 1rem; }
+    .rd-date .sem { color:#94a3b8; text-transform:capitalize; }
+    .rd-row { display:flex; gap:.6rem; padding:.5rem 0; border-bottom:1px solid #f1f5f9; font-size:.85rem; }
+    .rd-row:last-child { border-bottom:0; }
+    .rd-label { width:96px; flex-shrink:0; color:#94a3b8; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding-top:2px; }
+    .rd-val { color:#1e293b; }
+    #regDrawer .side-drawer-footer { display:flex; gap:.5rem; }
+    #regDrawer .side-drawer-footer .btn { flex:1; font-weight:600; }
 </style>
 @endpush
 
@@ -347,9 +380,15 @@
         </div>
     </div>
     <div class="card">
-        <div class="card-header font-weight-bold d-flex justify-content-between align-items-center">
+        <div class="card-header font-weight-bold d-flex justify-content-between align-items-center flex-wrap" style="gap:.5rem;">
             <span>Diário e avaliações ({{ $registros->count() }})</span>
-            @include('partials.ux-view-toggle', ['viewKey' => 'turma_registros_view'])
+            <span class="d-flex align-items-center" style="gap:.5rem;">
+                <div class="btn-group btn-group-sm reg-modo" role="group" title="Alternar visualização">
+                    <button type="button" class="btn btn-outline-primary active" data-modo="lista"><i class="fa fa-list"></i> Lista</button>
+                    <button type="button" class="btn btn-outline-primary" data-modo="cal"><i class="fa fa-calendar-alt"></i> Calendário</button>
+                </div>
+                @include('partials.ux-view-toggle', ['viewKey' => 'turma_registros_view'])
+            </span>
         </div>
         <div class="card-body p-0 ux-index-body" data-view="cards">
             <div class="ux-cards reg-cards">
@@ -463,12 +502,104 @@
                 </tbody>
             </table></div>
         </div>
+        <div id="registros-cal" style="display:none;">
+            <div class="rcal-head">
+                <a href="{{ route('turma.show', ['turma' => $turma->id] + request()->except('r_mes') + ['r_mes' => $mesRegistros->copy()->subMonth()->format('Y-m')]) }}#tab-registros"
+                   class="btn btn-sm btn-outline-secondary" title="Mês anterior"><i class="fa fa-chevron-left"></i></a>
+                <h6>{{ $mesRegistros->locale('pt_BR')->translatedFormat('F \d\e Y') }}</h6>
+                <a href="{{ route('turma.show', ['turma' => $turma->id] + request()->except('r_mes') + ['r_mes' => $mesRegistros->copy()->addMonth()->format('Y-m')]) }}#tab-registros"
+                   class="btn btn-sm btn-outline-secondary" title="Próximo mês"><i class="fa fa-chevron-right"></i></a>
+            </div>
+            <div class="rcal-grid">
+                @foreach(['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'] as $dow)
+                    <div class="rcal-dow">{{ $dow }}</div>
+                @endforeach
+                @foreach($semanasRegistros as $semana)
+                    @foreach($semana as $dia)
+                        @php
+                            $diaKey = $dia->toDateString();
+                            $doDia = $registrosMes[$diaKey] ?? collect();
+                        @endphp
+                        <div class="rcal-dia {{ $dia->month !== $mesRegistros->month ? 'rcal-out' : '' }} {{ $dia->isToday() ? 'rcal-hoje' : '' }}">
+                            <div class="rcal-num">{{ $dia->day }}</div>
+                            @foreach($doDia->take(3) as $r)
+                                @php $m = $r['model']; @endphp
+                                <button type="button" class="rc-item rc-item--{{ $r['tipo'] }}"
+                                    data-tipo="{{ $r['tipo'] }}"
+                                    data-titulo="{{ $r['item'] }}"
+                                    data-data="{{ $r['data']?->format('d/m/Y') ?? '—' }}"
+                                    data-semana="{{ $r['data']?->locale('pt_BR')->translatedFormat('l') ?? '' }}"
+                                    data-disciplina="{{ $r['disciplina'] ?? '' }}"
+                                    data-detalhe="{{ $r['detalhe'] ?? '' }}"
+                                    @if($r['tipo'] === 'avaliacao')
+                                        data-desc="{{ $m->descricao ?? '' }}"
+                                        data-nota="{{ $m->nota_maxima ?? '' }}"
+                                    @endif
+                                    @if($r['tipo'] === 'diario')
+                                        @can('diario.frequencia')
+                                            data-lancar-url="{{ route('diario.chamada', ['turma_id' => $m->turma_id, 'disciplina_id' => $m->disciplina_id, 'data' => $m->data?->format('Y-m-d')]) }}"
+                                            data-lancar-label="Chamada"
+                                        @endcan
+                                        @can('diario.edit')
+                                            data-edit-url="{{ route('diario.edit', $m->id) }}"
+                                        @endcan
+                                        @can('diario.destroy')
+                                            data-del-url="{{ route('diario.destroy', $m->id) }}"
+                                        @endcan
+                                    @else
+                                        @can('avaliacao.notas')
+                                            data-lancar-url="{{ route('avaliacao.notas', $m->id) }}"
+                                            data-lancar-label="Lançar notas"
+                                        @endcan
+                                        @can('avaliacao.edit')
+                                            data-edit-url="{{ route('avaliacao.edit', $m->id) }}"
+                                        @endcan
+                                        @can('avaliacao.destroy')
+                                            data-del-url="{{ route('avaliacao.destroy', $m->id) }}"
+                                        @endcan
+                                    @endif
+                                >{{ $r['tipo'] === 'diario' ? \Illuminate\Support\Str::limit($r['item'], 40) : $r['item'] }}</button>
+                            @endforeach
+                            @if($doDia->count() > 3)
+                                <div class="rc-more">+{{ $doDia->count() - 3 }}</div>
+                            @endif
+                        </div>
+                    @endforeach
+                @endforeach
+            </div>
+            @if($registrosMes->isEmpty())
+                <div class="rcal-vazio"><i class="fa fa-calendar-times mr-1"></i> Nenhum registro neste mês.</div>
+            @endif
+        </div>
         @can('avaliacao.create')
             <div class="card-footer">
                 <a href="{{ route('turma.avaliacao.create', $turma->id) }}" class="btn btn-sm btn-outline-primary"><i class="fa fa-plus"></i> Nova avaliação</a>
             </div>
         @endcan
     </div>
+    <x-side-drawer id="regDrawer" title="Detalhes do registro">
+        <div>
+            <span id="rdBadge" class="badge mb-1"></span>
+            <h5 id="rdTitulo" class="font-weight-bold mb-0"></h5>
+            <div class="rd-date">
+                <i class="fa fa-calendar-day"></i> <b id="rdData"></b>
+                <span class="sem" id="rdSemana"></span>
+            </div>
+            <div class="rd-row" id="rdRowDisc"><span class="rd-label">Disciplina</span><span class="rd-val" id="rdDisc"></span></div>
+            <div class="rd-row" id="rdRowDet"><span class="rd-label" id="rdDetLabel">Detalhe</span><span class="rd-val" id="rdDet"></span></div>
+            <div class="rd-row" id="rdRowNota" style="display:none;"><span class="rd-label">Nota máx.</span><span class="rd-val" id="rdNota"></span></div>
+            <div class="rd-row" id="rdRowDesc" style="display:none;"><span class="rd-label">Descrição</span><span class="rd-val" id="rdDesc"></span></div>
+        </div>
+        <x-slot name="footer">
+            <a id="rdLancar" href="#" class="btn btn-success"><i class="fa fa-pencil-alt mr-1"></i><span id="rdLancarTxt"></span></a>
+            <a id="rdEditar" href="#" class="btn btn-warning"><i class="fa fa-edit mr-1"></i>Editar</a>
+            <button type="button" id="rdExcluir" class="btn btn-danger"><i class="fa fa-trash mr-1"></i>Excluir</button>
+        </x-slot>
+    </x-side-drawer>
+    <form id="formDelReg" method="POST" style="display:none;">
+        @csrf
+        @method('DELETE')
+    </form>
 </div>
 
 
@@ -825,6 +956,72 @@
                 allowClear: true,
                 dropdownParent: $(this).closest('.modal')
             });
+        });
+
+        /* Diario e avaliacoes: alterna Lista / Calendario (persiste). */
+        var regBody = $('.ux-index-body').has('.reg-cards');
+        var regCal = $('#registros-cal');
+        function setModoReg(modo) {
+            var cal = modo === 'cal';
+            regCal.toggle(cal);
+            regBody.toggle(!cal);
+            $('.reg-modo [data-modo]').removeClass('active')
+                .filter('[data-modo="' + (cal ? 'cal' : 'lista') + '"]').addClass('active');
+            try { localStorage.setItem('turma_registros_modo', cal ? 'cal' : 'lista'); } catch (e) {}
+        }
+        $('.reg-modo [data-modo]').on('click', function () {
+            setModoReg($(this).data('modo'));
+        });
+        try { setModoReg(localStorage.getItem('turma_registros_modo') || 'lista'); } catch (e) {}
+
+        /* Drawer de detalhes do registro (clique no item do calendario). */
+        var delUrl = '';
+        $(document).on('click', '.rc-item', function () {
+            var d = $(this).data();
+            var diario = d.tipo === 'diario';
+            $('#rdBadge')
+                .attr('class', 'badge mb-1 ' + (diario ? 'badge-info' : 'badge-warning'))
+                .html('<i class="fa ' + (diario ? 'fa-book' : 'fa-star') + ' mr-1"></i>' + (diario ? 'Diário' : 'Avaliação'));
+            $('#rdTitulo').text(d.titulo || '—');
+            $('#rdData').text(d.data || '—');
+            $('#rdSemana').text(d.semana || '');
+            $('#rdRowDisc').toggle(!!d.disciplina).find('#rdDisc').text(d.disciplina || '');
+            $('#rdDetLabel').text(diario ? 'Professor' : 'Tipo / Período');
+            $('#rdRowDet').toggle(!!d.detalhe).find('#rdDet').text(d.detalhe || '');
+            $('#rdRowNota').toggle(!diario && d.nota !== undefined && d.nota !== '').find('#rdNota').text(d.nota || '');
+            $('#rdRowDesc').toggle(!!d.desc).find('#rdDesc').text(d.desc || '');
+
+            $('#rdLancar').toggle(!!d.lancarUrl).attr('href', d.lancarUrl || '#');
+            $('#rdLancarTxt').text(d.lancarLabel || '');
+            $('#rdEditar').toggle(!!d.editUrl).attr('href', d.editUrl || '#');
+            delUrl = d.delUrl || '';
+            $('#rdExcluir').toggle(!!delUrl);
+
+            document.getElementById('regDrawer').classList.add('open');
+            document.getElementById('regDrawerBackdrop').classList.add('show');
+        });
+
+        $('#rdExcluir').on('click', function () {
+            if (!delUrl) return;
+            var titulo = $('#rdTitulo').text();
+            var confirma = function () {
+                $('#formDelReg').attr('action', delUrl).submit();
+            };
+            if (typeof window.Swal !== 'undefined' && window.Swal.fire) {
+                window.Swal.fire({
+                    title: 'Excluir o registro?',
+                    text: '"' + titulo + '" será removido. Esta ação não pode ser desfeita.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sim, excluir!',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    focusCancel: true,
+                }).then(function (r) { if (r && r.isConfirmed) confirma(); });
+            } else if (window.confirm('Excluir "' + titulo + '"?')) {
+                confirma();
+            }
         });
     });
 </script>

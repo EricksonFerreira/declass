@@ -233,6 +233,30 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
         $registros = $this->turmaService->registrosDaTurma(
             $turma, $temFiltroRegistro ? 100 : 30, $viewer, $filtrosRegistros
         );
+
+        // Calendario da aba "Diario e avaliacoes": mes navegavel (r_mes)
+        // respeitando os mesmos filtros da lista (disciplina/tipo/periodo);
+        // so o intervalo de datas vem do mes exibido.
+        $mesRegistros = \Carbon\Carbon::parse(
+            ($request->query('r_mes')
+                ?: ($filtrosRegistros['data_inicio']
+                    ? substr($filtrosRegistros['data_inicio'], 0, 7)
+                    : now()->format('Y-m'))).'-01'
+        )->startOfMonth();
+        $filtrosCal = array_merge($filtrosRegistros, [
+            'data_inicio' => $mesRegistros->toDateString(),
+            'data_fim' => $mesRegistros->copy()->endOfMonth()->toDateString(),
+        ]);
+        $registrosMes = $this->turmaService->registrosDaTurma($turma, 500, $viewer, $filtrosCal)
+            ->groupBy(fn ($r) => $r['data']?->toDateString());
+        $inicioCal = $mesRegistros->copy()->startOfWeek(\Carbon\Carbon::SUNDAY);
+        $fimCal = $mesRegistros->copy()->endOfMonth()->endOfWeek(\Carbon\Carbon::SUNDAY);
+        $diasCal = collect();
+        for ($d = $inicioCal->copy(); $d->lte($fimCal); $d->addDay()) {
+            $diasCal->push($d->copy());
+        }
+        $semanasRegistros = $diasCal->chunk(7);
+
         $periodosLetivos = \App\Models\PeriodoLetivo::query()
             ->where('ano_letivo_id', $turma->ano_letivo_id)
             ->orderBy('ordem')
@@ -288,7 +312,8 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
             'professoresOpcoes', 'professoresDisciplinas', 'papeis', 'turnos', 'breadcrumb',
             'diarioHoje', 'registros', 'presencas', 'disciplinasVisiveis',
             'periodosLetivos', 'filtrosRegistros', 'minhasAulas',
-            'materiais', 'tarefasCorrecao'
+            'materiais', 'tarefasCorrecao',
+            'mesRegistros', 'registrosMes', 'semanasRegistros'
         ))->with('titulo', $turma->nome);
     }
 
