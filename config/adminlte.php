@@ -548,10 +548,28 @@ return [
                     'icon' => 'fas fa-users',
                     'submenu' => [
                         [
-                            'text' => 'Usuários',
+                            'text' => 'Colaboradores',
+                            'route' => ['usuario.index', ['grupo' => 'funcionarios']],
+                            'can' => 'usuario.index',
+                            'icon' => 'fas fa-briefcase',
+                        ],
+                        [
+                            'text' => 'Alunos',
+                            'route' => ['usuario.index', ['grupo' => 'alunos']],
+                            'can' => 'usuario.index',
+                            'icon' => 'fas fa-user-graduate',
+                        ],
+                        [
+                            'text' => 'Responsáveis',
+                            'route' => ['usuario.index', ['grupo' => 'responsaveis']],
+                            'can' => 'usuario.index',
+                            'icon' => 'fas fa-user-friends',
+                        ],
+                        [
+                            'text' => 'Todos os usuários',
                             'route' => 'usuario.index',
                             'can' => 'usuario.index',
-                            'icon' => 'fas fa-user-cog',
+                            'icon' => 'fas fa-users',
                         ],
                         [
                             'text' => 'Perfis de Acesso',
