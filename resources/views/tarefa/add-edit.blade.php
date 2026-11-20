@@ -64,12 +64,12 @@
     }
     .tarefa-step-ind.done .tarefa-step-label { color: #059669; }
     .tarefa-step-ind.active .tarefa-step-num {
-        background: #2563eb;
-        border-color: #2563eb;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        border-color: #4f46e5;
         color: #fff;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, .15);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, .15);
     }
-    .tarefa-step-ind.active .tarefa-step-label { color: #1d4ed8; }
+    .tarefa-step-ind.active .tarefa-step-label { color: #4f46e5; }
     .tarefa-step-pane { display: none; }
     .tarefa-step-pane.active { display: block; }
     .tarefa-step-pane__titulo {
@@ -101,12 +101,40 @@
         .tarefa-step-ind { min-width: 60px; }
         .tarefa-steps::before { left: 15%; right: 15%; }
     }
+
+    /* Cards de secao (padrao uf-*) */
+    .uf-card { background: #fff; border: 1px solid #e8edf5; border-radius: 16px; box-shadow: 0 1px 3px rgba(15,23,42,.05); margin-bottom: 1rem; overflow: hidden; }
+    .uf-head { display: flex; align-items: center; gap: .6rem; padding: .85rem 1.15rem; border-bottom: 1px solid #f1f5f9; background: #fbfcfe; }
+    .uf-head i { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: .78rem; flex-shrink: 0; }
+    .uf-head .uf-t { font-size: .86rem; font-weight: 800; color: #0f172a; }
+    .uf-head .uf-s { font-size: .72rem; color: #94a3b8; }
+    .uf-head .uf-opt { margin-left: auto; font-size: .66rem; font-weight: 700; color: #94a3b8; background: #f1f5f9; border-radius: 999px; padding: 2px 9px; }
+    .uf-ic--blue { background: #eff6ff; color: #3b82f6; }
+    .uf-ic--green { background: #f0fdf4; color: #22c55e; }
+    .uf-ic--violet { background: #f5f3ff; color: #8b5cf6; }
+    .uf-ic--amber { background: #fffbeb; color: #f59e0b; }
+    .uf-body { padding: 1.1rem 1.15rem .4rem; }
+    .uf-body .form-control { border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: .85rem; }
+    .uf-body .form-control:focus { border-color: #93c5fd; box-shadow: 0 0 0 .15rem rgba(59,130,246,.12); }
+    .uf-body label { font-size: .78rem; font-weight: 700; color: #475569; }
+    .uf-pills { display: flex; gap: .45rem; flex-wrap: wrap; }
+    .uf-pill { margin: 0; }
+    .uf-pill input { position: absolute; opacity: 0; pointer-events: none; }
+    .uf-pill span { display: inline-flex; align-items: center; gap: .35rem; padding: .45rem .95rem; border-radius: 999px; border: 1.5px solid #e2e8f0; background: #fff; font-size: .78rem; font-weight: 700; color: #64748b; cursor: pointer; transition: all .13s; }
+    .uf-pill span:hover { border-color: #c7d2fe; }
+    .uf-pill input:checked + span { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+    .uf-pill--blue input:checked + span { background: #3b82f6; border-color: #3b82f6; }
+    .uf-pill--green input:checked + span { background: #16a34a; border-color: #16a34a; }
+    .uf-pill--red input:checked + span { background: #dc2626; border-color: #dc2626; }
+    .uf-hint { display: flex; align-items: flex-start; gap: .45rem; background: #f8fafc; border: 1.5px dashed #e2e8f0; border-radius: 10px; padding: .55rem .8rem; font-size: .72rem; color: #64748b; }
+    .uf-hint i { color: #8b5cf6; margin-top: .1rem; }
+    .uf-dlist { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: .45rem .7rem; min-height: 40px; max-height: 150px; overflow-y: auto; background: #fbfcfe; }
+    .uf-dlist .form-check { padding: .15rem 0 .15rem 1.4rem; font-size: .82rem; }
+    .tarefa-wizard-foot .btn { border-radius: 999px; font-weight: 700; }
 </style>
 @endpush
 
 @section('content')
-<div class="card">
-    <div class="card-body">
         <div class="tarefa-steps" id="tarefaSteps">
             <div class="tarefa-step-ind" data-goto="0">
                 <span class="tarefa-step-num">1</span>
@@ -130,120 +158,164 @@
 
             {{-- Etapa 1: dados gerais --}}
             <div class="tarefa-step-pane active" data-step="0">
-                <div class="tarefa-step-pane__titulo"><i class="fas fa-info-circle text-primary"></i> Informações gerais</div>
-                <p class="tarefa-step-pane__sub">Para qual turma e disciplina a tarefa será publicada.</p>
+                <div class="uf-card">
+                    <div class="uf-head">
+                        <i class="uf-ic--blue fas fa-info-circle"></i>
+                        <div>
+                            <div class="uf-t">Informações gerais</div>
+                            <div class="uf-s">Para qual turma e disciplina a tarefa será publicada</div>
+                        </div>
+                    </div>
+                    <div class="uf-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                @if(isset($tarefa))
+                                    <x-form-input name="turma_nome" label="Turma" :value="$tarefa->turma->nome ?? ''" disabled />
+                                @else
+                                    <label class="form-label" for="turma_display">Turma <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="text" id="turma_display" class="form-control" placeholder="Nenhuma turma selecionada" readonly tabindex="-1">
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-primary" id="btnBuscarTurma" title="Buscar turma"><i class="fa fa-search"></i></button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="turma_id" id="turma_id" value="{{ old('turma_id', $turmaPreId ?? '') }}" required>
+                                    @error('turma_id')<span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>@enderror
+                                @endif
+                            </div>
+                            <div class="col-md-6">
+                                @if(isset($tarefa))
+                                    <x-form-select name="disciplina_id" label="Disciplina" :options="['' => 'Sem disciplina específica']" id="disciplina_id" :selected="old('disciplina_id', $tarefa->disciplina_id ?? '')" />
+                                @else
+                                    <label class="form-label">Disciplinas</label>
+                                    <div id="disciplinas-lista" class="uf-dlist">
+                                        <small class="text-muted">Selecione a turma para listar as disciplinas.</small>
+                                    </div>
+                                    <small class="form-text text-muted">Nenhuma marcada = vale para a turma toda.</small>
+                                    @error('disciplina_ids')<span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>@enderror
+                                @endif
+                            </div>
+                        </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        @if(isset($tarefa))
-                            <x-form-input name="turma_nome" label="Turma" :value="$tarefa->turma->nome ?? ''" disabled />
-                        @else
-                            <label class="form-label" for="turma_display">Turma <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="text" id="turma_display" class="form-control" placeholder="Nenhuma turma selecionada" readonly tabindex="-1">
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-outline-primary" id="btnBuscarTurma" title="Buscar turma"><i class="fa fa-search"></i></button>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <x-form-input name="titulo" label="Título" :value="old('titulo', $tarefa->titulo ?? '')" required maxlength="200" placeholder="Ex.: Exercícios da página 42" />
+                            </div>
+                            <div class="col-md-3">
+                                <x-form-input name="data_entrega" type="date" label="Data de entrega" :value="old('data_entrega', isset($tarefa) ? $tarefa->data_entrega->format('Y-m-d') : '')" required />
+                            </div>
+                            <div class="col-md-3">
+                                <x-form-input name="nota_maxima" type="number" label="Nota máx." :value="old('nota_maxima', $tarefa->nota_maxima ?? '')" min="0" max="100" step="0.5" />
+                            </div>
+                        </div>
+
+                        <div class="row align-items-end">
+                            <div class="col-md-8">
+                                <label class="form-label">Tipo</label>
+                                @php $tipoSel = old('tipo', $tarefa->tipo ?? 'atividade'); @endphp
+                                <div class="uf-pills mb-3">
+                                    @foreach(['atividade' => ['Atividade', 'fa-tasks'], 'prova' => ['Prova', 'fa-star'], 'trabalho' => ['Trabalho', 'fa-briefcase']] as $tv => $td)
+                                        <label class="uf-pill">
+                                            <input type="radio" name="tipo" value="{{ $tv }}" {{ $tipoSel === $tv ? 'checked' : '' }}>
+                                            <span><i class="fa {{ $td[1] }}"></i>{{ $td[0] }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                                @error('tipo')<span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>@enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Status</label>
+                                @php $ativoSel = old('ativo', $tarefa->ativo ?? 'S'); @endphp
+                                <div class="uf-pills mb-3">
+                                    <label class="uf-pill uf-pill--green">
+                                        <input type="radio" name="ativo" value="S" {{ $ativoSel === 'S' ? 'checked' : '' }}>
+                                        <span><i class="fa fa-check-circle"></i>Ativa</span>
+                                    </label>
+                                    <label class="uf-pill uf-pill--red">
+                                        <input type="radio" name="ativo" value="N" {{ $ativoSel === 'N' ? 'checked' : '' }}>
+                                        <span><i class="fa fa-ban"></i>Inativa</span>
+                                    </label>
                                 </div>
                             </div>
-                            <input type="hidden" name="turma_id" id="turma_id" value="{{ old('turma_id', $turmaPreId ?? '') }}" required>
-                            @error('turma_id')<span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>@enderror
-                        @endif
-                    </div>
-                    <div class="col-md-4">
-                        @if(isset($tarefa))
-                            <x-form-select name="disciplina_id" label="Disciplina" :options="['' => 'Sem disciplina específica']" id="disciplina_id" :selected="old('disciplina_id', $tarefa->disciplina_id ?? '')" />
-                        @else
-                            <label class="form-label">Disciplinas</label>
-                            <div id="disciplinas-lista" class="border rounded px-2 py-1" style="min-height:38px;max-height:150px;overflow-y:auto;">
-                                <small class="text-muted">Selecione a turma para listar as disciplinas.</small>
-                            </div>
-                            <small class="form-text text-muted">Nenhuma marcada = vale para a turma toda.</small>
-                            @error('disciplina_ids')<span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>@enderror
-                        @endif
-                    </div>
-                    <div class="col-md-2">
-                        <x-form-select name="ativo" label="Status" :options="['S' => 'Ativa', 'N' => 'Inativa']" :selected="old('ativo', $tarefa->ativo ?? 'S')" />
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <x-form-input name="titulo" label="Título" :value="old('titulo', $tarefa->titulo ?? '')" required maxlength="200" placeholder="Ex.: Exercícios da página 42" />
-                    </div>
-                    <div class="col-md-2">
-                        <x-form-select name="tipo" label="Tipo" :options="\App\Models\Tarefa::TIPOS" :selected="old('tipo', $tarefa->tipo ?? 'atividade')" />
-                    </div>
-                    <div class="col-md-2">
-                        <x-form-input name="data_entrega" type="date" label="Data de entrega" :value="old('data_entrega', isset($tarefa) ? $tarefa->data_entrega->format('Y-m-d') : '')" required />
-                    </div>
-                    <div class="col-md-2">
-                        <x-form-input name="nota_maxima" type="number" label="Nota máx." :value="old('nota_maxima', $tarefa->nota_maxima ?? '')" min="0" max="100" step="0.5" />
+                        </div>
                     </div>
                 </div>
             </div>
 
             {{-- Etapa 2: conteudo e entrega --}}
             <div class="tarefa-step-pane" data-step="1">
-                <div class="tarefa-step-pane__titulo"><i class="fas fa-file-alt text-success"></i> Conteúdo e entrega</div>
-                <p class="tarefa-step-pane__sub">Como o aluno recebe e devolve a tarefa pelo portal.</p>
-
-                <div class="row">
-                    <div class="col-md-4">
-                        <x-form-select name="tipo_entrega" label="Entrega pelo portal" :options="\App\Models\Tarefa::TIPOS_ENTREGA" :selected="old('tipo_entrega', $tarefa->tipo_entrega ?? 'nenhuma')" />
-                    </div>
-                    <div class="col-md-8 d-flex align-items-end pb-3">
-                        <small class="text-muted">
-                            Leitura: o aluno só confirma que leu. Texto: ele digita a resposta.
-                            Fotos/arquivos: ele envia imagens do que fez. Envios ficam
-                            <strong>aguardando sua correção</strong> para receber nota.
-                        </small>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <label class="form-label">Descrição</label>
-                        <textarea name="descricao" class="form-control" rows="4" maxlength="4000"
-                            placeholder="O que deve ser feito, formato de entrega, materiais necessários.">{{ old('descricao', $tarefa->descricao ?? '') }}</textarea>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <label class="form-label">Instruções</label>
-                        <textarea name="instrucoes" class="form-control" rows="3" maxlength="4000"
-                            placeholder="Passo a passo, links, observações para os alunos.">{{ old('instrucoes', $tarefa->instrucoes ?? '') }}</textarea>
-                    </div>
-                </div>
-
-                @if(!isset($tarefa))
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-check">
-                                <input type="checkbox" name="gerar_entregas" value="1" class="form-check-input" id="gerar_entregas" {{ old('gerar_entregas') ? 'checked' : 'checked' }}>
-                                <label class="form-check-label" for="gerar_entregas">
-                                    Criar controle de entregas para todos os alunos da turma
-                                    <small class="text-muted">(permite lançar status e notas por aluno)</small>
-                                </label>
-                            </div>
+                <div class="uf-card">
+                    <div class="uf-head">
+                        <i class="uf-ic--green fas fa-file-alt"></i>
+                        <div>
+                            <div class="uf-t">Conteúdo e entrega</div>
+                            <div class="uf-s">Como o aluno recebe e devolve a tarefa pelo portal</div>
                         </div>
                     </div>
-                @endif
+                    <div class="uf-body">
+                        <label class="form-label">Entrega pelo portal</label>
+                        @php $entregaSel = old('tipo_entrega', $tarefa->tipo_entrega ?? 'nenhuma'); @endphp
+                        <div class="uf-pills mb-2">
+                            @foreach(['nenhuma' => ['Sem envio online', 'fa-ban'], 'leitura' => ['Confirmação de leitura', 'fa-book-open'], 'texto' => ['Texto digitado', 'fa-keyboard'], 'foto' => ['Fotos/arquivos', 'fa-camera']] as $ev => $ed)
+                                <label class="uf-pill uf-pill--blue">
+                                    <input type="radio" name="tipo_entrega" value="{{ $ev }}" {{ $entregaSel === $ev ? 'checked' : '' }}>
+                                    <span><i class="fa {{ $ed[1] }}"></i>{{ $ed[0] }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        <div class="uf-hint mb-3">
+                            <i class="fa fa-info-circle"></i>
+                            <span>Leitura: o aluno só confirma que leu. Texto: ele digita a resposta. Fotos/arquivos: ele envia imagens do que fez. Envios ficam <strong>aguardando sua correção</strong> para receber nota.</span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="form-label">Descrição</label>
+                                <textarea name="descricao" class="form-control" rows="4" maxlength="4000"
+                                    placeholder="O que deve ser feito, formato de entrega, materiais necessários.">{{ old('descricao', $tarefa->descricao ?? '') }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="form-label">Instruções</label>
+                                <textarea name="instrucoes" class="form-control" rows="3" maxlength="4000"
+                                    placeholder="Passo a passo, links, observações para os alunos.">{{ old('instrucoes', $tarefa->instrucoes ?? '') }}</textarea>
+                            </div>
+                        </div>
+
+                        @if(!isset($tarefa))
+                            <div class="uf-hint mb-3">
+                                <div class="form-check mb-0">
+                                    <input type="checkbox" name="gerar_entregas" value="1" class="form-check-input" id="gerar_entregas" {{ old('gerar_entregas') ? 'checked' : 'checked' }}>
+                                    <label class="form-check-label" for="gerar_entregas" style="font-weight:700;">
+                                        Criar controle de entregas para todos os alunos da turma
+                                        <div class="text-muted" style="font-weight:400;">Permite lançar status e notas por aluno</div>
+                                    </label>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
             </div>
 
             {{-- Etapa 3: questoes online (opcional) --}}
             <div class="tarefa-step-pane" data-step="2">
-                <div class="tarefa-step-pane__titulo">
-                    <i class="fas fa-question-circle text-warning"></i> Questões respondidas online
-                    <span class="badge badge-light border font-weight-normal text-lowercase">opcional</span>
-                </div>
-                <p class="tarefa-step-pane__sub">O aluno responde pelo celular no portal. Objetivas corrigem sozinhas; discursivas ficam para correção. Deixe vazio se a tarefa não tiver questões online.</p>
-
-                <div class="d-flex justify-content-end mb-2" style="gap:.4rem;">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-preview-questoes"><i class="fa fa-eye mr-1"></i> Ver prévia</button>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-questao"><i class="fa fa-plus"></i> Adicionar questão</button>
-                </div>
-                <div id="questoes-lista"></div>
+                <div class="uf-card">
+                    <div class="uf-head">
+                        <i class="uf-ic--amber fas fa-question-circle"></i>
+                        <div>
+                            <div class="uf-t">Questões respondidas online</div>
+                            <div class="uf-s">O aluno responde pelo celular no portal — objetivas corrigem sozinhas</div>
+                        </div>
+                        <span class="uf-opt">opcional</span>
+                    </div>
+                    <div class="uf-body">
+                        <div class="d-flex justify-content-end mb-2" style="gap:.4rem;">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-preview-questoes"><i class="fa fa-eye mr-1"></i> Ver prévia</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-questao"><i class="fa fa-plus"></i> Adicionar questão</button>
+                        </div>
+                        <div id="questoes-lista"></div>
 
                 {{-- Previa das questoes em formato de prova --}}
                 <div class="modal fade" id="modalPreviewQuestoes" tabindex="-1" role="dialog" aria-hidden="true">
@@ -260,6 +332,8 @@
                                 <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Fechar</button>
                             </div>
                         </div>
+                    </div>
+                </div>
                     </div>
                 </div>
             </div>
@@ -279,8 +353,6 @@
                 </div>
             </div>
         </form>
-    </div>
-</div>
 
 <script>
 (function () {
