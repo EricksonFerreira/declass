@@ -40,7 +40,7 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
         $this->middleware('can:ano_letivo.setPerPage')->only('setPerPage');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $this->configurarSessao();
 
