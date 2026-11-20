@@ -10,6 +10,25 @@ class PeriodoLetivoService extends AbstractBaseService
 {
     protected Model $model;
 
+    /**
+     * Filtro "situacao do ano" (ano_letivo_status): nao e coluna de
+     * periodos — vira whereHas na relacao anoLetivo antes dos demais
+     * filtros de coluna.
+     */
+    public function getAllWithFiltersAndPagination($filters = [], $perPage = 15, $with = [], $orderBy = 'id', $order = 'asc', ?\Closure $scope = null)
+    {
+        $situacao = $filters['ano_letivo_status']['valor'] ?? null;
+        unset($filters['ano_letivo_status']);
+
+        if ($situacao) {
+            $scope = function ($query) use ($situacao) {
+                $query->whereHas('anoLetivo', fn ($a) => $a->where('status', $situacao));
+            };
+        }
+
+        return parent::getAllWithFiltersAndPagination($filters, $perPage, $with, $orderBy, $order, $scope);
+    }
+
     public function __construct(PeriodoLetivo $periodo)
     {
         $this->model = $periodo;

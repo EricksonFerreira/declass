@@ -181,6 +181,13 @@ class PeriodoLetivoController extends BaseController implements FiltroInterface,
                     ['value' => 'N', 'label' => 'Inativo', 'selected' => false],
                 ],
             ],
+            [
+                'name' => 'ano_letivo_status', 'label' => 'Situação do ano', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => collect(\App\Models\AnoLetivo::STATUS)
+                    ->map(fn ($label, $value) => ['value' => $value, 'label' => $label, 'selected' => false])
+                    ->values()->all(),
+            ],
         ];
     }
 
