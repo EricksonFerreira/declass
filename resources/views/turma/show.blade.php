@@ -825,50 +825,15 @@
 </div>
 
 <div class="tab-pane fade" id="tab-materiais" role="tabpanel">
-    <div class="row">
-        <div class="col-lg-5">
-            <div class="card card-outline card-primary">
-                <div class="card-header"><h3 class="card-title font-weight-bold">Publicar material</h3></div>
-                <div class="card-body">
-                    <form method="POST" action="{{ route('turma.material.store', $turma->id) }}" enctype="multipart/form-data">
-                        @csrf
-                        <div class="form-group">
-                            <label>Título</label>
-                            <input type="text" name="titulo" class="form-control" maxlength="200" required placeholder="Ex.: Lista de exercícios — cap. 3">
-                        </div>
-                        <div class="form-group">
-                            <label>Disciplina</label>
-                            <select name="disciplina_id" class="form-control">
-                                <option value="">Geral (todas)</option>
-                                @foreach($disciplinasVisiveis as $d)
-                                    <option value="{{ $d->id }}">{{ $d->nome }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Descrição <small class="text-muted">(opcional)</small></label>
-                            <textarea name="descricao" class="form-control" rows="2" maxlength="2000"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Arquivo</label>
-                            <input type="file" name="arquivo" class="form-control-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip,.txt">
-                            <small class="text-muted">PDF, Office, imagem ou ZIP — até 15MB. Ou informe um link:</small>
-                        </div>
-                        <div class="form-group">
-                            <input type="url" name="url" class="form-control" maxlength="500" placeholder="https://…">
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-upload mr-1"></i> Publicar material</button>
-                    </form>
-                </div>
-            </div>
+    <div class="card">
+        <div class="card-header font-weight-bold d-flex justify-content-between align-items-center flex-wrap" style="gap:.5rem;">
+            <span>Materiais publicados</span>
+            <span class="d-flex align-items-center" style="gap:.5rem;">
+                @include('partials.ux-view-toggle', ['viewKey' => 'turma_materiais_view'])
+                <button type="button" id="btnNovoMaterial" class="btn btn-outline-primary btn-sm"><i class="fa fa-plus mr-1"></i> Novo material</button>
+            </span>
         </div>
-        <div class="col-lg-7">
-            <div class="card">
-                <div class="card-header font-weight-bold d-flex justify-content-between align-items-center">
-                    <span>Materiais publicados</span>
-                    @include('partials.ux-view-toggle', ['viewKey' => 'turma_materiais_view'])
-                </div>
-                <div class="card-body p-0 ux-index-body" data-view="cards">
+        <div class="card-body p-0 ux-index-body" data-view="cards">
                     <div class="ux-cards reg-cards">
                         @forelse($materiais as $material)
                             <article class="ux-card">
@@ -955,11 +920,52 @@
                             @endforelse
                         </tbody>
                     </table></div>
-                </div>
-            </div>
         </div>
     </div>
-
+    <x-side-drawer id="matDrawer" title="Publicar material" formId="matForm" action="{{ route('turma.material.store', $turma->id) }}" enctype="multipart/form-data">
+        <div id="matErro" class="alert alert-danger py-2 small" style="display:none;"></div>
+        <div class="form-group">
+            <label>Título <span class="text-danger">*</span></label>
+            <input type="text" name="titulo" class="form-control" maxlength="200" required placeholder="Ex.: Lista de exercícios — cap. 3">
+            <span class="invalid-feedback" data-err="titulo"></span>
+        </div>
+        <div class="form-group">
+            <label>Disciplina</label>
+            <select name="disciplina_id" class="form-control">
+                <option value="">Geral (todas)</option>
+                @foreach($disciplinasVisiveis as $d)
+                    <option value="{{ $d->id }}">{{ $d->nome }}</option>
+                @endforeach
+            </select>
+            <span class="invalid-feedback" data-err="disciplina_id"></span>
+        </div>
+        <div class="form-group">
+            <label>Descrição <small class="text-muted">(opcional)</small></label>
+            <textarea name="descricao" class="form-control" rows="3" maxlength="2000" placeholder="Contexto do material para os alunos."></textarea>
+            <span class="invalid-feedback" data-err="descricao"></span>
+        </div>
+        <div class="form-group">
+            <label>Arquivo</label>
+            <div class="custom-file">
+                <input type="file" name="arquivo" class="custom-file-input" id="matArquivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip,.txt">
+                <label class="custom-file-label" for="matArquivo">Escolher ficheiro</label>
+            </div>
+            <small class="text-muted">PDF, Office, imagem ou ZIP — até 15MB.</small>
+            <span class="invalid-feedback" data-err="arquivo"></span>
+        </div>
+        <div class="form-group">
+            <label>Ou link</label>
+            <input type="url" name="url" class="form-control" maxlength="500" placeholder="https://…">
+            <span class="invalid-feedback" data-err="url"></span>
+        </div>
+        <div id="matVazio" class="alert alert-warning py-2 small" style="display:none;">
+            <i class="fa fa-exclamation-triangle mr-1"></i> Anexe um arquivo <b>ou</b> informe um link.
+        </div>
+        <x-slot name="footer">
+            <button type="button" class="btn btn-secondary" id="cancelmatDrawer">Cancelar</button>
+            <button type="submit" class="btn btn-primary"><i class="fa fa-upload mr-1"></i> Publicar material</button>
+        </x-slot>
+    </x-side-drawer>
 </div>
 </div>
 @stop
@@ -1050,6 +1056,56 @@
             } else if (window.confirm('Excluir "' + titulo + '"?')) {
                 confirma();
             }
+        });
+
+        /* Novo material: abre o drawer e envia via AJAX —
+           erros de validacao aparecem no proprio drawer. */
+        $('#btnNovoMaterial').on('click', function () {
+            document.getElementById('matDrawer').classList.add('open');
+            document.getElementById('matDrawerBackdrop').classList.add('show');
+        });
+        $('#matArquivo').on('change', function () {
+            var nome = this.files && this.files[0] ? this.files[0].name : 'Escolher ficheiro';
+            $(this).next('.custom-file-label').text(nome);
+        });
+        $('#matForm').on('submit', function (e) {
+            e.preventDefault();
+            var form = this;
+            var temArq = form.arquivo && form.arquivo.files.length > 0;
+            var temUrl = $.trim(form.url.value) !== '';
+            $('#matVazio').toggle(!temArq && !temUrl);
+            if (!temArq && !temUrl) { return; }
+
+            $('#matErro').hide();
+            $('[data-err]', form).text('').removeClass('d-block');
+            $(form).find('.is-invalid').removeClass('is-invalid');
+            var btn = $(form).find('[type=submit]').prop('disabled', true);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            }).then(function (r) {
+                if (r.status === 422) {
+                    return r.json().then(function (j) {
+                        var msgs = [];
+                        Object.keys(j.errors || {}).forEach(function (k) {
+                            msgs.push(j.errors[k][0]);
+                            var el = form.querySelector('[data-err="' + k + '"]');
+                            if (el) { el.textContent = j.errors[k][0]; el.classList.add('d-block'); }
+                            var inp = form.querySelector('[name="' + k + '"]');
+                            if (inp) { inp.classList.add('is-invalid'); }
+                        });
+                        $('#matErro').html(msgs.join('<br>')).show();
+                        btn.prop('disabled', false);
+                    });
+                }
+                window.location.href = '{{ route('turma.show', $turma->id) }}#tab-materiais';
+                window.location.reload();
+            }).catch(function () {
+                btn.prop('disabled', false);
+                form.submit();
+            });
         });
     });
 </script>

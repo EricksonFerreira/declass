@@ -3,7 +3,8 @@
     'title' => '',
     'formId' => 'drawerForm',
     'action' => '',
-    'method' => 'POST'
+    'method' => 'POST',
+    'enctype' => null
 ])
 
 {{-- Side Drawer Backdrop --}}
@@ -19,7 +20,7 @@
         </button>
     </div>
     
-    <form id="{{ $formId }}" action="{{ $action }}" method="POST" class="flex-grow-1 d-flex flex-column h-100 mb-0">
+    <form id="{{ $formId }}" action="{{ $action }}" method="POST" class="flex-grow-1 d-flex flex-column h-100 mb-0" @if($enctype) enctype="{{ $enctype }}" @endif>
         @csrf
         <input type="hidden" name="_method" id="{{ $formId }}Method" value="{{ $method }}">
         
