@@ -394,6 +394,16 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
                         ->values()->all()
                 ),
             ],
+            [
+                'name' => 'situacao', 'label' => 'Situação', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => array_merge(
+                    [['value' => '', 'label' => 'Todas', 'selected' => false]],
+                    collect(['letivo' => 'Em letivo', 'encerrado' => 'Encerrada'])
+                        ->map(fn ($label, $v) => ['value' => $v, 'label' => $label, 'selected' => false])
+                        ->values()->all()
+                ),
+            ],
         ];
     }
 
@@ -416,16 +426,6 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
                 'options' => array_merge(
                     [['value' => '', 'label' => 'Todas', 'selected' => false]],
                     collect(['S' => 'Ativa', 'N' => 'Inativa'])
-                        ->map(fn ($label, $v) => ['value' => $v, 'label' => $label, 'selected' => false])
-                        ->values()->all()
-                ),
-            ],
-            [
-                'name' => 'situacao', 'label' => 'Situação', 'type' => 'select',
-                'typeWhere' => 'where',
-                'options' => array_merge(
-                    [['value' => '', 'label' => 'Todas', 'selected' => false]],
-                    collect(['letivo' => 'Em letivo', 'encerrado' => 'Encerrada'])
                         ->map(fn ($label, $v) => ['value' => $v, 'label' => $label, 'selected' => false])
                         ->values()->all()
                 ),
