@@ -67,7 +67,10 @@
             <a href="{{ route('avaliacao.agenda', ['mes' => $mesAtual]) }}" class="btn btn-sm btn-outline-secondary">Hoje</a>
             <a href="{{ route('avaliacao.agenda', ['mes' => $mesProximo]) }}" class="btn btn-sm btn-outline-secondary"><i class="fa fa-chevron-right"></i></a>
         </div>
-        <h5 class="mb-0 font-weight-bold">{{ $mesCarbon->locale('pt_BR')->translatedFormat('F \d\e Y') }}</h5>
+        <h5 class="mb-0 font-weight-bold flex-grow-1">{{ $mesCarbon->locale('pt_BR')->translatedFormat('F \d\e Y') }}</h5>
+        <a href="{{ route('avaliacao.agenda.pdf', ['mes' => request('mes', $mesAtual)]) }}" class="btn btn-sm btn-danger" title="Exportar a agenda do mês em PDF para compartilhar com as famílias">
+            <i class="fa fa-file-pdf mr-1"></i> PDF
+        </a>
     </div>
     <div class="card-header d-flex flex-wrap align-items-center py-2 border-bottom">
         <div class="flex-grow-1">

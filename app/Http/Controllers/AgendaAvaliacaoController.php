@@ -29,7 +29,7 @@ class AgendaAvaliacaoController extends BaseController implements FiltroInterfac
         $this->titulo = 'Agenda de Avaliações';
         $this->nomeFiltro = 'avaliacao_agenda';
 
-        $this->middleware('can:avaliacao.agenda')->only(['index', 'filtro', 'removerFiltro']);
+        $this->middleware('can:avaliacao.agenda')->only(['index', 'filtro', 'removerFiltro', 'pdf']);
     }
 
     public function index(Request $request)
@@ -40,41 +40,9 @@ class AgendaAvaliacaoController extends BaseController implements FiltroInterfac
         $mesCarbon = Carbon::parse($mes.'-01')->startOfMonth();
 
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
-        $filtros = collect($itensFiltered)
-            ->mapWithKeys(fn ($f) => [$f['name'] => $f['valor']])
-            ->filter(fn ($v) => $v !== null && $v !== '')
-            ->all();
+        $filtros = $this->lerFiltrosSessao();
 
-        // Escola ativa no contexto: o escopo global ja filtra — ignora
-        // um escola_id divergente salvo na sessao.
-        if (app(EscolaContext::class)->filtrar()) {
-            unset($filtros['escola_id']);
-        }
-
-        $query = Avaliacao::query()
-            ->with(['turma.escola', 'turma.anoLetivo', 'turma.etapa', 'disciplina', 'professor'])
-            ->whereBetween('data', [$mesCarbon->copy()->startOfMonth(), $mesCarbon->copy()->endOfMonth()])
-            ->orderBy('data')
-            ->orderBy('id');
-
-        if ($filtros['escola_id'] ?? null) {
-            $query->whereHas('turma', fn ($q) => $q->where('escola_id', $filtros['escola_id']));
-        }
-        if ($filtros['turma_id'] ?? null) {
-            $query->where('turma_id', $filtros['turma_id']);
-        }
-        if ($filtros['tipo'] ?? null) {
-            $query->where('tipo', $filtros['tipo']);
-        }
-
-        $user = $request->user();
-        if ($user->isProfessor()) {
-            $query->whereHas('turma.atribuicoes', fn ($q) => $q
-                ->where('user_id', $user->id)
-                ->where('ativo', 'S'));
-        }
-
-        $avaliacoes = $query->get();
+        $avaliacoes = $this->consultarAgenda($request->user(), $mesCarbon, $filtros);
 
         // Grade do mes: celulas de domingo a sabado cobrindo o mes.
         $porDia = $avaliacoes->groupBy(fn ($a) => $a->data->format('Y-m-d'));
@@ -117,6 +85,88 @@ class AgendaAvaliacaoController extends BaseController implements FiltroInterfac
             'additionalFilters' => $additionalFilters,
             'nomeFiltro' => $nomeFiltro,
         ]);
+    }
+
+    /**
+     * Exporta a agenda do mes (com os mesmos filtros da tela) em PDF
+     * — formato pensado para compartilhar com as familias.
+     */
+    public function pdf(Request $request)
+    {
+        $this->configurarSessao();
+
+        $mes = $request->input('mes', now()->format('Y-m'));
+        $mesCarbon = Carbon::parse($mes.'-01')->startOfMonth();
+
+        $filtros = $this->lerFiltrosSessao();
+        $avaliacoes = $this->consultarAgenda($request->user(), $mesCarbon, $filtros);
+
+        $turma = ($filtros['turma_id'] ?? null)
+            ? Turma::with('escola')->find($filtros['turma_id'])
+            : null;
+        $escola = $turma?->escola
+            ?? (($filtros['escola_id'] ?? null) ? Escola::find($filtros['escola_id']) : null);
+
+        return app(\App\Services\PdfService::class)->download(
+            'agenda_avaliacao.pdf',
+            [
+                'avaliacoes' => $avaliacoes,
+                'mesCarbon' => $mesCarbon,
+                'turma' => $turma,
+                'escola' => $escola,
+                'tipoLabel' => Avaliacao::TIPOS,
+            ],
+            'agenda-avaliacoes-'.$mes.'.pdf'
+        );
+    }
+
+    /**
+     * Filtros ativos da sessao no formato nome => valor.
+     */
+    private function lerFiltrosSessao(): array
+    {
+        $filtros = collect(session("$this->nomeFiltro.filtro", []))
+            ->mapWithKeys(fn ($f) => [$f['name'] => $f['valor']])
+            ->filter(fn ($v) => $v !== null && $v !== '')
+            ->all();
+
+        // Escola ativa no contexto: o escopo global ja filtra — ignora
+        // um escola_id divergente salvo na sessao.
+        if (app(EscolaContext::class)->filtrar()) {
+            unset($filtros['escola_id']);
+        }
+
+        return $filtros;
+    }
+
+    /**
+     * Avaliacoes do mes respeitando os filtros e o escopo do professor.
+     */
+    private function consultarAgenda($user, Carbon $mesCarbon, array $filtros)
+    {
+        $query = Avaliacao::query()
+            ->with(['turma.escola', 'turma.anoLetivo', 'turma.etapa', 'disciplina', 'professor'])
+            ->whereBetween('data', [$mesCarbon->copy()->startOfMonth(), $mesCarbon->copy()->endOfMonth()])
+            ->orderBy('data')
+            ->orderBy('id');
+
+        if ($filtros['escola_id'] ?? null) {
+            $query->whereHas('turma', fn ($q) => $q->where('escola_id', $filtros['escola_id']));
+        }
+        if ($filtros['turma_id'] ?? null) {
+            $query->where('turma_id', $filtros['turma_id']);
+        }
+        if ($filtros['tipo'] ?? null) {
+            $query->where('tipo', $filtros['tipo']);
+        }
+
+        if ($user->isProfessor()) {
+            $query->whereHas('turma.atribuicoes', fn ($q) => $q
+                ->where('user_id', $user->id)
+                ->where('ativo', 'S'));
+        }
+
+        return $query->get();
     }
 
     public function filtro(Request $request)
