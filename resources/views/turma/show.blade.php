@@ -64,6 +64,10 @@
         .turma-acoes .dropdown .btn { width: 100%; }
     }
 
+    /* Toggle Lista/Calendario — mesmo visual do ux-view-toggle ao lado */
+    .reg-modo { display: inline-flex; gap: 5px; }
+    .reg-modo .btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+
     /* Calendario do diario/avaliacoes */
     .rcal-head { display:flex; align-items:center; gap:.5rem; padding:.65rem .9rem; border-bottom:1px solid #f1f5f9; }
     .rcal-head h6 { flex:1; text-align:center; margin:0; font-weight:700; text-transform:capitalize; }
@@ -383,9 +387,9 @@
         <div class="card-header font-weight-bold d-flex justify-content-between align-items-center flex-wrap" style="gap:.5rem;">
             <span>Diário e avaliações ({{ $registros->count() }})</span>
             <span class="d-flex align-items-center" style="gap:.5rem;">
-                <div class="btn-group btn-group-sm reg-modo" role="group" title="Alternar visualização">
-                    <button type="button" class="btn btn-outline-primary active" data-modo="lista"><i class="fa fa-list"></i> Lista</button>
-                    <button type="button" class="btn btn-outline-primary" data-modo="cal"><i class="fa fa-calendar-alt"></i> Calendário</button>
+                <div class="reg-modo" role="group" title="Alternar visualização">
+                    <button type="button" class="btn btn-xs btn-outline-secondary active" data-modo="lista"><i class="fas fa-list mr-1"></i>Lista</button>
+                    <button type="button" class="btn btn-xs btn-outline-secondary" data-modo="cal"><i class="fas fa-calendar-alt mr-1"></i>Calendário</button>
                 </div>
                 @include('partials.ux-view-toggle', ['viewKey' => 'turma_registros_view'])
             </span>
