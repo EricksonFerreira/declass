@@ -109,19 +109,25 @@
     </div></div>
 @else
     <div class="card">
-        <div class="card-body py-2">
-            <span class="font-weight-bold mr-3">
-                {{ $turma->nome }} — {{ $turma->horario->nome ?? 'matriz padrão do turno' }}
-            </span>
-            <span class="text-muted small mr-3">{{ $rotuloPeriodo }}: {{ $inicio->format('d/m/Y') }} a {{ $fim->format('d/m/Y') }}</span>
-            <span class="badge bg-success-light border mr-1">Aula</span>
-            <span class="badge bg-danger-light border mr-1">Suspenso</span>
-            <span class="badge bg-warning-light border mr-1">Aula + evento</span>
-            <span class="badge bg-info-light border mr-1">Só evento</span>
-            <span class="badge bg-light border">Sem aula</span>
-            @if($aulasProfessor->isNotEmpty())
-                <span class="badge bg-success-light border mr-1" title="Dias em que você tem aula nesta turma"><i class="fas fa-chalkboard-teacher"></i> Você leciona</span>
-            @endif
+        <div class="card-body py-2 d-flex align-items-center flex-wrap" style="gap:.5rem;">
+            <div class="flex-grow-1">
+                <span class="font-weight-bold mr-3">
+                    {{ $turma->nome }} — {{ $turma->horario->nome ?? 'matriz padrão do turno' }}
+                </span>
+                <span class="text-muted small mr-3">{{ $rotuloPeriodo }}: {{ $inicio->format('d/m/Y') }} a {{ $fim->format('d/m/Y') }}</span>
+                <span class="badge bg-success-light border mr-1">Aula</span>
+                <span class="badge bg-danger-light border mr-1">Suspenso</span>
+                <span class="badge bg-warning-light border mr-1">Aula + evento</span>
+                <span class="badge bg-info-light border mr-1">Só evento</span>
+                <span class="badge bg-light border">Sem aula</span>
+                @if($aulasProfessor->isNotEmpty())
+                    <span class="badge bg-success-light border mr-1" title="Dias em que você tem aula nesta turma"><i class="fas fa-chalkboard-teacher"></i> Você leciona</span>
+                @endif
+            </div>
+            <div class="cal-tabs" role="tablist">
+                <button type="button" class="cal-tab is-on" data-view="grid"><i class="fa fa-calendar"></i> Calendário</button>
+                <button type="button" class="cal-tab" data-view="lista"><i class="fa fa-list"></i> Agenda</button>
+            </div>
         </div>
     </div>
 
@@ -169,19 +175,120 @@
         </div>
     @endif
 
-    @include('calendario._grid', [
-        'meses' => $mesExibido ? [$mesExibido] : [],
-        'diasProfessor' => $diasProfessor,
-        'aulasProfessor' => $aulasProfessor,
-        'somenteMinhas' => $somenteMinhas,
-        'ocultarFeriados' => $ocultarFeriados,
-    ])
+    <div id="cal-view-grid" class="cal-view is-on">
+        @include('calendario._grid', [
+            'meses' => $mesExibido ? [$mesExibido] : [],
+            'diasProfessor' => $diasProfessor,
+            'aulasProfessor' => $aulasProfessor,
+            'somenteMinhas' => $somenteMinhas,
+            'ocultarFeriados' => $ocultarFeriados,
+        ])
+    </div>
+
+    {{-- Agenda: mesmos dias do mes exibido, em lista cronologica --}}
+    <div id="cal-view-lista" class="cal-view">
+        @if($mesExibido)
+            @php
+                $coresAg = [
+                    'nao_letivo' => ['bg-light', 'text-muted'],
+                    'aula' => ['bg-success-light', 'text-success'],
+                    'sem_aula' => ['bg-danger-light', 'text-danger'],
+                    'evento' => ['bg-info-light', 'text-info'],
+                    'aula_evento' => ['bg-warning-light', 'text-warning'],
+                ];
+            @endphp
+            <div class="card">
+                <div class="card-header py-2">
+                    <span class="font-weight-bold"><i class="fa fa-list mr-1"></i> Agenda — {{ $mesExibido['rotulo'] }}</span>
+                </div>
+                <div class="card-body py-2">
+                    <div class="list-group list-group-flush">
+                        @foreach($mesExibido['semanas'] as $semana)
+                            @foreach($semana as $dia)
+                                @continue($dia === null)
+                                @php
+                                    [$bgAg, $txAg] = $coresAg[$dia['status']] ?? $coresAg['nao_letivo'];
+                                    $diaProf = $dia['letivo'] && in_array($dia['data']->dayOfWeekIso, $diasProfessor ?? []);
+                                    $nomesAg = $ocultarFeriados
+                                        ? $dia['eventos']->pluck('titulo')
+                                        : $dia['feriados']->pluck('nome')->merge($dia['eventos']->pluck('titulo'));
+                                    $dimAg = $somenteMinhas && $dia['letivo'] && ! $diaProf;
+                                @endphp
+                                <div class="list-group-item d-flex align-items-center px-2 py-2 mb-1 {{ $bgAg }} cal-alt cal-ag {{ $dimAg ? 'cal-ag--dim' : '' }}">
+                                    <div class="cal-alt-data text-center mr-3">
+                                        <span class="d-block font-weight-bold">{{ $dia['data']->format('d') }}</span>
+                                        <span class="d-block small text-uppercase text-muted">{{ $dia['data']->locale('pt_BR')->translatedFormat('M') }}</span>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center flex-wrap">
+                                            <span class="badge {{ $txAg }} border mr-1">{{ $rotulosStatus[$dia['status']] ?? $dia['status'] }}</span>
+                                            <span class="small text-muted">{{ ucfirst($dia['data']->locale('pt_BR')->translatedFormat('l')) }}</span>
+                                            @if($dia['data']->isToday())
+                                                <span class="badge badge-primary ml-1">Hoje</span>
+                                            @endif
+                                            @if($diaProf)
+                                                <span class="badge bg-success-light border ml-1" title="Você leciona neste dia"><i class="fas fa-chalkboard-teacher"></i> Você leciona</span>
+                                            @endif
+                                        </div>
+                                        @if($nomesAg->isNotEmpty())
+                                            <div class="small mt-1 font-weight-medium text-dark">{{ $nomesAg->implode(', ') }}</div>
+                                        @endif
+                                        @foreach(($aulasProfessor[$dia['data']->dayOfWeekIso] ?? collect()) as $aulaProf)
+                                            <div class="small text-success font-weight-bold">
+                                                <i class="fas fa-chalkboard-teacher"></i> {{ $aulaProf['disciplina'] }}{{ $aulaProf['inicio'] ? ' '.$aulaProf['inicio'] : '' }}
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
+    </div>
 @endif
+
+@push('js')
+<script>
+(function () {
+    var key = 'calendario_view';
+    function ativar(v) {
+        document.querySelectorAll('.cal-tab').forEach(function (t) {
+            t.classList.toggle('is-on', t.dataset.view === v);
+        });
+        var grid = document.getElementById('cal-view-grid');
+        var lista = document.getElementById('cal-view-lista');
+        if (grid) grid.classList.toggle('is-on', v === 'grid');
+        if (lista) lista.classList.toggle('is-on', v === 'lista');
+    }
+    document.querySelectorAll('.cal-tab').forEach(function (t) {
+        t.addEventListener('click', function () {
+            ativar(t.dataset.view);
+            try { localStorage.setItem(key, t.dataset.view); } catch (e) {}
+        });
+    });
+    var salva = null;
+    try { salva = localStorage.getItem(key); } catch (e) {}
+    if (salva === 'lista' || salva === 'grid') { ativar(salva); }
+})();
+</script>
+@endpush
 @push('css')
 <style>
     .cal-alt { border-left: 4px solid rgba(0, 0, 0, .12); }
     .cal-alt-data { min-width: 52px; padding: 4px 6px; background: #fff; border-radius: 6px; line-height: 1.15; box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
     .cal-alt-data .font-weight-bold { font-size: 18px; }
+
+    .cal-tabs { display: inline-flex; gap: .3rem; }
+    .cal-tab { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .8rem; border-radius: 999px; border: 1.5px solid #e2e8f0; background: #fff; font-size: .72rem; font-weight: 700; color: #64748b; cursor: pointer; transition: all .13s; }
+    .cal-tab:hover { border-color: #c7d2fe; color: #4f46e5; }
+    .cal-tab.is-on { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+    .cal-view { display: none; }
+    .cal-view.is-on { display: block; }
+
+    .cal-ag { border-left: 4px solid rgba(0,0,0,.12); }
+    .cal-ag--dim { opacity: .55; }
 </style>
 @endpush
 @stop
