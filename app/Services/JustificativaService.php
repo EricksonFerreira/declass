@@ -163,6 +163,44 @@ class JustificativaService extends AbstractBaseService
     }
 
     /**
+     * Edicao: reverte as faltas ainda no efeito antigo, atualiza o
+     * registro e reaplica no novo periodo/disciplina. A matricula
+     * nao pode ser trocada na edicao.
+     */
+    public function update($id, array $dados): ?Justificativa
+    {
+        $justificativa = $this->getById($id);
+        if (! $justificativa) {
+            return null;
+        }
+
+        return DB::transaction(function () use ($justificativa, $dados) {
+            Frequencia::query()
+                ->where('justificativa_id', $justificativa->id)
+                ->where('status', $justificativa->efeito)
+                ->update(['status' => 'falta', 'justificativa_id' => null]);
+
+            $arquivo = $dados['arquivo'] ?? null;
+            unset($dados['arquivo'], $dados['matricula_id'], $dados['turma_ref']);
+
+            $justificativa->update($dados);
+
+            if ($arquivo instanceof UploadedFile) {
+                $pathAntigo = $justificativa->arquivo_path;
+                $justificativa->arquivo_path = UploadStorage::putFile($arquivo, "justificativas/{$justificativa->id}", null, 'public');
+                $justificativa->save();
+                if ($pathAntigo && $pathAntigo !== $justificativa->arquivo_path && Storage::disk('public')->exists($pathAntigo)) {
+                    Storage::disk('public')->delete($pathAntigo);
+                }
+            }
+
+            $this->aplicarNasFrequencias($justificativa);
+
+            return $justificativa;
+        });
+    }
+
+    /**
      * Converte as faltas do periodo no efeito da justificativa.
      * Abono tambem abrange faltas ja lancadas como justificada;
      * justificativa simples nao altera faltas abonadas.

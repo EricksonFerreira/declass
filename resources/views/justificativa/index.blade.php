@@ -97,6 +97,9 @@
                             @if($j->arquivo_path)
                                 <a href="{{ route('justificativa.arquivo', $j->id) }}" class="btn btn-xs btn-secondary" title="Baixar documento"><i class="fa fa-paperclip"></i></a>
                             @endif
+                            @can('justificativa.edit')
+                                <a href="{{ route('justificativa.edit', $j->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
+                            @endcan
                             @can('justificativa.destroy')
                                 <form method="POST" action="{{ route('justificativa.destroy', $j->id) }}" class="d-inline"
                                     onsubmit="return confirm('Excluir esta justificativa? As faltas do período voltarão a contar.')">
@@ -144,6 +147,9 @@
                             @if($j->arquivo_path)
                                 <a href="{{ route('justificativa.arquivo', $j->id) }}" class="btn btn-xs btn-secondary" title="Baixar documento"><i class="fa fa-paperclip"></i></a>
                             @endif
+                            @can('justificativa.edit')
+                                <a href="{{ route('justificativa.edit', $j->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
+                            @endcan
                             @can('justificativa.destroy')
                                 <form method="POST" action="{{ route('justificativa.destroy', $j->id) }}" class="d-inline"
                                     onsubmit="return confirm('Excluir esta justificativa? As faltas do período voltarão a contar.')">
@@ -187,7 +193,8 @@
 </div>
 
 @php
-    $jJson = $justificativas->keyBy('id')->map(function ($j) {
+    $podeEditar = auth()->user()?->hasPermissao('justificativa.edit') ?? false;
+    $jJson = $justificativas->keyBy('id')->map(function ($j) use ($podeEditar) {
         return [
             'aluno' => $j->matricula->aluno->pessoa->nome ?? '—',
             'turma' => $j->matricula->turma->nome ?? '—',
@@ -204,6 +211,7 @@
             'registrado_em' => $j->created_at?->format('d/m/Y H:i'),
             'anexo' => $j->arquivo_path ? route('justificativa.arquivo', $j->id) : null,
             'nome_anexo' => $j->arquivo_path ? basename($j->arquivo_path) : null,
+            'edit_url' => $podeEditar ? route('justificativa.edit', $j->id) : null,
         ];
     });
 @endphp
@@ -258,7 +266,8 @@
         }
         document.getElementById('jm-secoes').innerHTML = html;
         document.getElementById('jm-foot').innerHTML =
-            (j.anexo ? '<a href="' + j.anexo + '" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-1"></i>Baixar documento</a>' : '')
+            (j.edit_url ? '<a href="' + j.edit_url + '" class="btn btn-warning"><i class="fa fa-edit mr-1"></i>Editar</a>' : '')
+            + (j.anexo ? '<a href="' + j.anexo + '" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-1"></i>Baixar documento</a>' : '')
             + '<button type="button" class="btn btn-light" data-dismiss="modal">Fechar</button>';
         $('#jfModal').modal('show');
     }

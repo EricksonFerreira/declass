@@ -32,6 +32,7 @@ class JustificativaController extends BaseController implements FiltroInterface
 
         $this->middleware('can:justificativa.index')->only('index');
         $this->middleware('can:justificativa.create')->only(['create', 'store']);
+        $this->middleware('can:justificativa.edit')->only(['edit', 'update']);
         $this->middleware('can:justificativa.destroy')->only('destroy');
         $this->middleware('can:justificativa.arquivo')->only('arquivo');
         $this->middleware('can:justificativa.filtro')->only('filtro');
@@ -84,8 +85,6 @@ class JustificativaController extends BaseController implements FiltroInterface
 
     public function create(Request $request)
     {
-        $turmas = $this->justificativaService->turmasOpcoes()->load(['escola:id,nome', 'anoLetivo:id,ano']);
-
         $turmaRota = $request->route('turma');
         $turma = $turmaRota ? Turma::find($turmaRota) : null;
         if ($turma) {
@@ -102,6 +101,51 @@ class JustificativaController extends BaseController implements FiltroInterface
                 'Atestados e Abonos', 'justificativa.index', 'Nova justificativa', 'Vida Acadêmica'
             );
 
+        return view('justificativa.add-edit', $this->opcoesFormulario() + [
+            'breadcrumb' => $breadcrumb,
+        ])->with('titulo', $this->titulo);
+    }
+
+    public function store(StoreJustificativaRequest $request)
+    {
+        $this->justificativaService->create($request->validated());
+
+        return redirect()->route('justificativa.index')
+            ->with('success', 'Justificativa registrada e faltas do período atualizadas.');
+    }
+
+    public function edit($id)
+    {
+        $justificativa = $this->justificativaService->getById($id, ['matricula.aluno.pessoa', 'matricula.turma']);
+        abort_if(! $justificativa, 404, 'Registro não encontrado.');
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCustom([
+            ['Atestados e Abonos', route('justificativa.index')],
+            ['Editar justificativa', null],
+        ]);
+
+        return view('justificativa.add-edit', $this->opcoesFormulario() + [
+            'justificativa' => $justificativa,
+            'breadcrumb' => $breadcrumb,
+        ])->with('titulo', $this->titulo);
+    }
+
+    public function update(StoreJustificativaRequest $request, $id)
+    {
+        $justificativa = $this->justificativaService->update($id, $request->validated());
+        abort_if(! $justificativa, 404, 'Registro não encontrado.');
+
+        return redirect()->route('justificativa.index')
+            ->with('success', 'Justificativa atualizada e faltas do período recalculadas.');
+    }
+
+    /**
+     * Opcoes compartilhadas do formulario (create e edit).
+     */
+    private function opcoesFormulario(): array
+    {
+        $turmas = $this->justificativaService->turmasOpcoes()->load(['escola:id,nome', 'anoLetivo:id,ano']);
+
         $escolas = $turmas->pluck('escola')->filter()->unique('id')->sortBy('nome')
             ->mapWithKeys(fn ($e) => [$e->id => $e->nome])->all();
 
@@ -113,7 +157,7 @@ class JustificativaController extends BaseController implements FiltroInterface
             'escola' => $t->escola?->nome ?? '',
         ])->all();
 
-        return view('justificativa.add-edit', [
+        return [
             'turmas' => $turmas,
             'escolas' => $escolas,
             'turmasPicker' => $turmasPicker,
@@ -122,16 +166,7 @@ class JustificativaController extends BaseController implements FiltroInterface
             'disciplinasPorTurma' => $this->justificativaService->disciplinasPorTurma($turmas),
             'tipos' => Justificativa::TIPOS,
             'efeitos' => Justificativa::EFEITOS,
-            'breadcrumb' => $breadcrumb,
-        ])->with('titulo', $this->titulo);
-    }
-
-    public function store(StoreJustificativaRequest $request)
-    {
-        $this->justificativaService->create($request->validated());
-
-        return redirect()->route('justificativa.index')
-            ->with('success', 'Justificativa registrada e faltas do período atualizadas.');
+        ];
     }
 
     public function arquivo($id)

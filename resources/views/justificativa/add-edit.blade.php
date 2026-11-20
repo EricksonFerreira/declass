@@ -1,10 +1,18 @@
 @extends('adminlte::page')
 
+@php
+    $editando = isset($justificativa);
+@endphp
+
 @section('title', $titulo)
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title title="Nova Justificativa" subtitle="Atestado ou declaração que justifica/abona as faltas do aluno no período" />
+    <x-page-title
+        :title="$editando ? 'Editar Justificativa' : 'Nova Justificativa'"
+        :subtitle="$editando
+            ? 'Ajuste o atestado/abono — as faltas do período são recalculadas automaticamente'
+            : 'Atestado ou declaração que justifica/abona as faltas do aluno no período'" />
 @stop
 
 @push('css')
@@ -27,74 +35,85 @@
             As faltas já lançadas no período são convertidas automaticamente; deixe a disciplina em branco para valer em todas.
         </div>
 
-        <form method="POST" action="{{ route('justificativa.store') }}" enctype="multipart/form-data" id="jfForm" novalidate>
+        <form method="POST" action="{{ $editando ? route('justificativa.update', $justificativa->id) : route('justificativa.store') }}" enctype="multipart/form-data" id="jfForm" novalidate>
             @csrf
+            @if($editando)
+                @method('PUT')
+            @endif
 
             <div class="jf-sec"><i class="fa fa-school"></i> Localização do aluno</div>
             <div class="row">
                 <div class="col-md-4">
                     <label class="form-label"><span class="jf-num">1</span>Escola</label>
-                    <select id="sel-escola" class="form-control">
+                    <select id="sel-escola" class="form-control" {{ $editando ? 'disabled' : '' }}>
                         <option value="">Todas as escolas</option>
                         @foreach($escolas as $id => $nome)
-                            <option value="{{ $id }}">{{ $nome }}</option>
+                            <option value="{{ $id }}" {{ $editando && $justificativa->escola_id == $id ? 'selected' : '' }}>{{ $nome }}</option>
                         @endforeach
                     </select>
-                    <div class="jf-hint">Filtra as turmas disponíveis.</div>
+                    <div class="jf-hint">{{ $editando ? 'Turma e aluno não podem ser trocados.' : 'Filtra as turmas disponíveis.' }}</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label"><span class="jf-num">2</span>Turma <span class="text-danger">*</span></label>
                     <div class="input-group">
-                        <input type="text" id="jf_turma_display" class="form-control" placeholder="Buscar turma..." readonly tabindex="-1">
+                        <input type="text" id="jf_turma_display" class="form-control" placeholder="Buscar turma..." readonly tabindex="-1"
+                            value="{{ $editando ? $justificativa->matricula?->turma?->nome : '' }}">
                         <div class="input-group-append">
-                            <button type="button" class="btn btn-outline-primary" id="btnBuscarTurma"><i class="fa fa-search"></i></button>
+                            <button type="button" class="btn btn-outline-primary" id="btnBuscarTurma" {{ $editando ? 'disabled' : '' }}><i class="fa fa-search"></i></button>
                         </div>
                     </div>
-                    <input type="hidden" name="turma_ref" id="turma_ref" value="{{ old('turma_ref', request('turma_id')) }}">
+                    <input type="hidden" name="turma_ref" id="turma_ref" value="{{ old('turma_ref', $editando ? $justificativa->matricula?->turma_id : request('turma_id')) }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label"><span class="jf-num">3</span>Aluno <span class="text-danger">*</span></label>
                     <div class="input-group">
-                        <input type="text" id="jf_aluno_display" class="form-control" placeholder="Escolha a turma primeiro" readonly tabindex="-1">
+                        <input type="text" id="jf_aluno_display" class="form-control" placeholder="Escolha a turma primeiro" readonly tabindex="-1"
+                            value="{{ $editando ? $justificativa->matricula?->aluno?->pessoa?->nome : '' }}">
                         <div class="input-group-append">
-                            <button type="button" class="btn btn-outline-primary" id="btnBuscarAluno"><i class="fa fa-search"></i></button>
+                            <button type="button" class="btn btn-outline-primary" id="btnBuscarAluno" {{ $editando ? 'disabled' : '' }}><i class="fa fa-search"></i></button>
                         </div>
                     </div>
-                    <input type="hidden" name="matricula_id" id="matricula_id" value="{{ old('matricula_id') }}">
+                    <input type="hidden" name="matricula_id" id="matricula_id" value="{{ old('matricula_id', $editando ? $justificativa->matricula_id : '') }}">
                 </div>
             </div>
 
             <div class="jf-sec"><i class="fa fa-file-medical"></i> Documento e período</div>
             <div class="row">
                 <div class="col-md-3">
-                    <x-form-select name="tipo" label="Documento" :options="$tipos" :selected="old('tipo')" placeholder="Selecionar" required />
+                    <x-form-select name="tipo" label="Documento" :options="$tipos" :selected="old('tipo', $editando ? $justificativa->tipo : '')" placeholder="Selecionar" required />
                 </div>
                 <div class="col-md-3">
-                    <x-form-select name="efeito" label="Efeito nas faltas" :options="$efeitos" :selected="old('efeito', 'justificada')" required />
+                    <x-form-select name="efeito" label="Efeito nas faltas" :options="$efeitos" :selected="old('efeito', $editando ? $justificativa->efeito : 'justificada')" required />
                 </div>
                 <div class="col-md-3">
-                    <x-form-input name="data_inicio" type="date" label="Início do afastamento" :value="old('data_inicio')" required />
+                    <x-form-input name="data_inicio" type="date" label="Início do afastamento" :value="old('data_inicio', $editando ? $justificativa->data_inicio?->format('Y-m-d') : '')" required />
                 </div>
                 <div class="col-md-3">
-                    <x-form-input name="data_fim" type="date" label="Fim do afastamento" :value="old('data_fim')" required />
+                    <x-form-input name="data_fim" type="date" label="Fim do afastamento" :value="old('data_fim', $editando ? $justificativa->data_fim?->format('Y-m-d') : '')" required />
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-4">
-                    <x-form-select name="disciplina_id" label="Disciplina (vazio = todas)" :options="[]" :selected="old('disciplina_id')" placeholder="Todas as disciplinas" />
+                    <x-form-select name="disciplina_id" label="Disciplina (vazio = todas)" :options="[]" :selected="old('disciplina_id', $editando ? $justificativa->disciplina_id : '')" placeholder="Todas as disciplinas" />
                 </div>
                 <div class="col-md-4">
-                    <x-form-input name="arquivo" type="file" label="Anexo (PDF/imagem, opcional)" />
+                    <x-form-input name="arquivo" type="file" :label="$editando ? 'Substituir anexo (PDF/imagem)' : 'Anexo (PDF/imagem, opcional)'" />
+                    @if($editando && $justificativa->arquivo_path)
+                        <div class="jf-hint">
+                            Atual: <a href="{{ route('justificativa.arquivo', $justificativa->id) }}" target="_blank">{{ basename($justificativa->arquivo_path) }}</a>
+                            · enviar novo substitui
+                        </div>
+                    @endif
                 </div>
                 <div class="col-md-4">
-                    <x-form-input name="motivo" label="Motivo / observação" :value="old('motivo')" maxlength="1000" placeholder="Ex.: consulta médica, campeonato" />
+                    <x-form-input name="motivo" label="Motivo / observação" :value="old('motivo', $editando ? $justificativa->motivo : '')" maxlength="1000" placeholder="Ex.: consulta médica, campeonato" />
                 </div>
             </div>
 
             <div class="mt-3 pt-3" style="border-top:1px solid #f0f3f8;">
                 <a href="{{ route('justificativa.index') }}" class="btn btn-secondary">Cancelar</a>
-                <button type="submit" class="btn btn-primary"><i class="fa fa-check mr-1"></i> Salvar e aplicar</button>
+                <button type="submit" class="btn btn-primary"><i class="fa fa-check mr-1"></i> {{ $editando ? 'Salvar alterações' : 'Salvar e aplicar' }}</button>
             </div>
         </form>
     </div>
@@ -116,7 +135,8 @@
     const inputMatricula = document.getElementById('matricula_id');
     const displayAluno = document.getElementById('jf_aluno_display');
     const selDisciplina = document.querySelector('select[name="disciplina_id"]');
-    const disciplinaAnterior = @json((string) old('disciplina_id', ''));
+    const disciplinaAnterior = @json((string) old('disciplina_id', $editando ? (string) $justificativa->disciplina_id : ''));
+    const EDITANDO = @json($editando);
 
     function turmasDaEscola() {
         const eid = selEscola.value;
@@ -184,25 +204,30 @@
         }
     });
 
-    registrarTurma();
-    document.getElementById('btnBuscarTurma').addEventListener('click', function () { EntityPicker.abrir('turma'); });
-    document.getElementById('btnBuscarAluno').addEventListener('click', function () {
-        if (!inputTurma.value) {
-            displayTurma.classList.add('is-invalid');
-            EntityPicker.abrir('turma');
-            return;
-        }
-        EntityPicker.abrir('aluno');
-    });
+    if (EDITANDO) {
+        // Turma/aluno travados: so popula disciplinas da turma atual.
+        preencherDisciplinas(inputTurma.value);
+    } else {
+        registrarTurma();
+        document.getElementById('btnBuscarTurma').addEventListener('click', function () { EntityPicker.abrir('turma'); });
+        document.getElementById('btnBuscarAluno').addEventListener('click', function () {
+            if (!inputTurma.value) {
+                displayTurma.classList.add('is-invalid');
+                EntityPicker.abrir('turma');
+                return;
+            }
+            EntityPicker.abrir('aluno');
+        });
 
-    // Preselecao (?turma_id= ou old())
-    if (inputTurma.value) {
-        const t = TURMAS_TODAS.find(function (x) { return String(x.id) === String(inputTurma.value); });
-        if (t) {
-            escolherTurma(t);
-            if (inputMatricula.value) {
-                const m = (MATRICULAS[t.id] || []).find(function (x) { return String(x.id) === String(inputMatricula.value); });
-                if (m) { displayAluno.value = m.rotulo; }
+        // Preselecao (?turma_id= ou old())
+        if (inputTurma.value) {
+            const t = TURMAS_TODAS.find(function (x) { return String(x.id) === String(inputTurma.value); });
+            if (t) {
+                escolherTurma(t);
+                if (inputMatricula.value) {
+                    const m = (MATRICULAS[t.id] || []).find(function (x) { return String(x.id) === String(inputMatricula.value); });
+                    if (m) { displayAluno.value = m.rotulo; }
+                }
             }
         }
     }

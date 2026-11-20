@@ -11,6 +11,8 @@ Route::group([], function () {
     Route::get('justificativas', [JustificativaController::class, 'index'])->name('justificativa.index');
     Route::get('justificativas/nova', [JustificativaController::class, 'create'])->name('justificativa.create');
     Route::post('justificativas', [JustificativaController::class, 'store'])->name('justificativa.store');
+    Route::get('justificativas/{id}/editar', [JustificativaController::class, 'edit'])->name('justificativa.edit');
+    Route::put('justificativas/{id}', [JustificativaController::class, 'update'])->name('justificativa.update');
     Route::get('justificativas/{id}/arquivo', [JustificativaController::class, 'arquivo'])->name('justificativa.arquivo');
     Route::delete('justificativas/{id}', [JustificativaController::class, 'destroy'])->name('justificativa.destroy');
 });
