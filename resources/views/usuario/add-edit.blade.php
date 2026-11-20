@@ -238,11 +238,13 @@
             aplicarPerfil();
         }
 
-        // Secao de habilitacoes aparece apenas para perfil de professor.
+        // Secao de habilitacoes aparece apenas para COLABORADOR com
+        // perfil de professor — aluno/responsavel nao lecionam.
         function aplicarPerfil() {
             if (!grupoDisc || !selPerfil) return;
+            var colaborador = tipo.value === 'colaborador';
             var ehProfessor = rolesProfessor.map(String).indexOf(String(selPerfil.value)) !== -1;
-            grupoDisc.style.display = ehProfessor ? '' : 'none';
+            grupoDisc.style.display = (colaborador && ehProfessor) ? '' : 'none';
         }
 
         // Pills de tipo de conta e status gravam nos campos ocultos.
