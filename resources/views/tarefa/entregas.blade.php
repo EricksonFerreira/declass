@@ -60,11 +60,14 @@
 
     /* Acoes em lote */
     .ent-bulk { display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; }
-    .ent-bulk-nota { display:flex; gap:.35rem; align-items:center; margin-left:auto; }
-    .ent-bulk-nota input { width:90px; }
+    .ent-bulk-acoes { display:flex; gap:.6rem; align-items:center; margin-left:auto; flex-wrap:wrap; }
+    .ent-bulk-grp { display:flex; gap:.35rem; align-items:center; }
+    .ent-bulk-grp input[type="number"] { width:90px; }
+    .ent-bulk-grp input[type="date"] { width:135px; }
     @media (max-width:575.98px) {
-        .ent-bulk-nota { margin-left:0; width:100%; }
-        .ent-bulk-nota input { flex:1; width:auto; }
+        .ent-bulk-acoes { margin-left:0; width:100%; }
+        .ent-bulk-grp { flex:1; }
+        .ent-bulk-grp input { flex:1; min-width:0; width:auto; }
         .ent-bulk > .btn { flex:1; }
     }
 
@@ -157,10 +160,19 @@
             <button type="button" class="btn btn-outline-primary btn-sm" id="btnTodosAvaliados">
                 <i class="fa fa-check-double mr-1"></i>Todos avaliados
             </button>
-            <div class="ent-bulk-nota">
-                <input type="number" id="notaLote" class="form-control form-control-sm" step="0.5" min="0"
-                       max="{{ $tarefa->nota_maxima ?? 100 }}" placeholder="Nota /{{ $tarefa->nota_maxima ?? 100 }}">
-                <button type="button" class="btn btn-primary btn-sm text-nowrap" id="btnNotaLote">Aplicar a todos</button>
+            <div class="ent-bulk-acoes">
+                <div class="ent-bulk-grp">
+                    <input type="date" id="dataLote" class="form-control form-control-sm"
+                           value="{{ now()->format('Y-m-d') }}" title="Data de entrega para todos">
+                    <button type="button" class="btn btn-outline-primary btn-sm text-nowrap" id="btnDataLote">
+                        <i class="fa fa-calendar-check mr-1"></i>Data p/ todos
+                    </button>
+                </div>
+                <div class="ent-bulk-grp">
+                    <input type="number" id="notaLote" class="form-control form-control-sm" step="0.5" min="0"
+                           max="{{ $tarefa->nota_maxima ?? 100 }}" placeholder="Nota /{{ $tarefa->nota_maxima ?? 100 }}">
+                    <button type="button" class="btn btn-primary btn-sm text-nowrap" id="btnNotaLote">Nota p/ todos</button>
+                </div>
             </div>
         </div>
     </div>
@@ -354,6 +366,21 @@
     document.getElementById('btnTodosAvaliados').addEventListener('click', function () {
         document.querySelectorAll('.ent-card').forEach(function (card) {
             definirStatus(card, 'avaliada', { semContar: true });
+        });
+        atualizarContadores();
+    });
+    document.getElementById('btnDataLote').addEventListener('click', function () {
+        const v = document.getElementById('dataLote').value;
+        if (!v) {
+            document.getElementById('dataLote').classList.add('is-invalid');
+            return;
+        }
+        document.getElementById('dataLote').classList.remove('is-invalid');
+        document.querySelectorAll('.ent-card').forEach(function (card) {
+            card.querySelector('input[name$="[data_entrega]"]').value = v;
+            if (card.querySelector('.ent-st').value === 'pendente') {
+                definirStatus(card, 'entregue', { semContar: true });
+            }
         });
         atualizarContadores();
     });
