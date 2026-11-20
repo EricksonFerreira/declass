@@ -8,8 +8,13 @@ use App\Http\Requests\Usuario\StoreUsuarioRequest;
 use App\Http\Requests\Usuario\UpdatePasswordUsuarioRequest;
 use App\Http\Requests\Usuario\UpdateUsuarioRequest;
 use App\Models\Aluno;
+use App\Models\Atribuicao;
+use App\Models\Avaliacao;
 use App\Models\Disciplina;
+use App\Models\EntregaTarefa;
 use App\Models\Escola;
+use App\Models\HorarioTurma;
+use App\Models\Matricula;
 use App\Models\Regra;
 use App\Models\Responsavel;
 use App\Models\User;
@@ -253,8 +258,125 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 ->where('role_has_permissions.role_id', $usuario->role_id)->pluck('permissions.name') : collect();
         }
 
-        return view('usuario.show', compact('usuario', 'breadcrumb', 'permissoesGrupos', 'permEstado', 'permPerfil'))
+        $prof = $usuario->isProfessor() ? $this->dadosProfessor($usuario) : null;
+
+        return view('usuario.show', compact('usuario', 'breadcrumb', 'permissoesGrupos', 'permEstado', 'permPerfil', 'prof'))
             ->with('titulo', $usuario->nome ?? 'Usuário');
+    }
+
+    /**
+     * Painel do professor (perfil de usuario.show): turmas atribuidas,
+     * habilitacoes, quadro semanal e pendencias de lancamento/correcao.
+     * Tudo ja chega pronto para a view (labels, contadores, urls).
+     */
+    private function dadosProfessor(User $usuario): array
+    {
+        // Turmas atribuidas (papel + disciplinas por turma)
+        $atribuicoes = Atribuicao::query()
+            ->where('user_id', $usuario->id)
+            ->where('ativo', 'S')
+            ->with(['turma:id,nome,escola_id,ano_letivo_id', 'turma.escola:id,nome', 'turma.anoLetivo:id,ano', 'disciplina:id,nome'])
+            ->get();
+
+        $turmas = $atribuicoes->whereNotNull('turma')->groupBy('turma_id')
+            ->map(function ($grupo) {
+                $t = $grupo->first()->turma;
+
+                return [
+                    'id' => $t->id,
+                    'nome' => $t->nome,
+                    'escola' => $t->escola->nome ?? '—',
+                    'ano' => $t->anoLetivo->ano ?? null,
+                    'disciplinas' => $grupo->map(fn ($a) => [
+                        'nome' => $a->disciplina->nome ?? 'Todas as disciplinas',
+                        'papel' => Atribuicao::PAPEIS[$a->papel] ?? $a->papel,
+                    ])->values()->all(),
+                ];
+            })->sortBy('nome')->values()->all();
+
+        // Habilitacoes (principal/optativa)
+        $habilitacoes = $usuario->disciplinasHabilitadas
+            ->map(fn ($d) => ['nome' => $d->nome, 'tipo' => $d->pivot->tipo ?? 'principal'])
+            ->sortBy('nome')->values()->all();
+
+        // Quadro de horario semanal (estilo i-Educar)
+        $horarios = HorarioTurma::query()
+            ->where('user_id', $usuario->id)
+            ->with(['turma:id,nome', 'disciplina:id,nome'])
+            ->orderBy('dia_semana')->orderBy('ordem')->get();
+        $grade = [];
+        foreach ($horarios as $h) {
+            $grade[$h->dia_semana][$h->ordem] = [
+                'disciplina' => $h->disciplina->nome ?? '—',
+                'turma' => $h->turma->nome ?? '—',
+                'sala' => $h->sala,
+            ];
+        }
+        $maxOrdem = (int) $horarios->max('ordem');
+        $diasSemana = [1 => 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+        // Avaliacoes criadas por ele + progresso de lancamento de notas
+        $avaliacoes = Avaliacao::query()
+            ->where('user_id', $usuario->id)
+            ->with(['turma:id,nome', 'disciplina:id,nome'])
+            ->withCount('notas')
+            ->orderByDesc('data')->limit(40)->get();
+        $alunosPorTurma = Matricula::query()
+            ->whereIn('turma_id', $avaliacoes->pluck('turma_id')->unique()->filter())
+            ->where('status', 'ativa')
+            ->selectRaw('turma_id, count(*) as n')->groupBy('turma_id')
+            ->pluck('n', 'turma_id');
+        $avItems = $avaliacoes->map(function ($a) use ($alunosPorTurma) {
+            $total = (int) ($alunosPorTurma[$a->turma_id] ?? 0);
+
+            return [
+                'nome' => $a->nome,
+                'tipo' => Avaliacao::TIPOS[$a->tipo] ?? $a->tipo,
+                'turma' => $a->turma->nome ?? '—',
+                'disciplina' => $a->disciplina->nome ?? '—',
+                'data' => $a->data?->format('d/m/Y') ?? '—',
+                'lancadas' => (int) $a->notas_count,
+                'total' => $total,
+                'pendente' => $total > 0 && $a->notas_count < $total,
+                'url' => route('avaliacao.notas', $a->id),
+            ];
+        })->values();
+
+        // Entregas de tarefa aguardando correcao (tarefas criadas por ele)
+        $entregasPorTarefa = EntregaTarefa::query()
+            ->where('status', 'entregue')
+            ->whereHas('tarefa', fn ($q) => $q->where('user_id', $usuario->id))
+            ->with('tarefa:id,titulo,turma_id,user_id', 'tarefa.turma:id,nome')
+            ->get()->groupBy('tarefa_id');
+        $tarefasPendentes = $entregasPorTarefa->map(function ($grupo, $tarefaId) {
+            $tarefa = $grupo->first()->tarefa;
+
+            return [
+                'titulo' => $tarefa->titulo ?? 'Tarefa',
+                'turma' => $tarefa->turma->nome ?? '—',
+                'pendentes' => $grupo->count(),
+                'url' => route('tarefa.entregas', $tarefaId),
+            ];
+        })->values();
+
+        $avPendentes = $avItems->where('pendente', true)->values();
+
+        return [
+            'turmas' => $turmas,
+            'habilitacoes' => $habilitacoes,
+            'grade' => $grade,
+            'dias_semana' => $diasSemana,
+            'max_ordem' => $maxOrdem,
+            'avaliacoes' => $avItems->all(),
+            'avaliacoes_pendentes' => $avPendentes->all(),
+            'tarefas_pendentes' => $tarefasPendentes->all(),
+            'stats' => [
+                'turmas' => count($turmas),
+                'disciplinas' => $atribuicoes->whereNotNull('disciplina_id')->pluck('disciplina_id')->unique()->count(),
+                'aulas_semana' => $horarios->count(),
+                'pendencias' => $avPendentes->count() + $entregasPorTarefa->sum(fn ($g) => $g->count()),
+            ],
+        ];
     }
 
     /**
