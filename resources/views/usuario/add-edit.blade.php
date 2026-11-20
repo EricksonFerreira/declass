@@ -38,6 +38,15 @@
     .uf-hint { display: flex; align-items: flex-start; gap: .45rem; background: #f8fafc; border: 1.5px dashed #e2e8f0; border-radius: 10px; padding: .55rem .8rem; font-size: .72rem; color: #64748b; }
     .uf-hint i { color: #8b5cf6; margin-top: .1rem; }
 
+    .uf-tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .9rem; }
+    .uf-tab { display: inline-flex; align-items: center; gap: .4rem; padding: .42rem 1rem; border-radius: 999px; border: 1.5px solid #e2e8f0; background: #fff; font-size: .78rem; font-weight: 700; color: #64748b; cursor: pointer; transition: all .13s; }
+    .uf-tab:hover { border-color: #c7d2fe; color: #4f46e5; }
+    .uf-tab.is-on { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+    .uf-tab.has-err { border-color: #fca5a5; color: #dc2626; }
+    .uf-tab.has-err.is-on { background: #dc2626; border-color: #dc2626; color: #fff; }
+    .uf-pane { display: none; }
+    .uf-pane.is-on { display: block; }
+
     .uf-foot { display: flex; justify-content: flex-end; gap: .5rem; padding: .4rem 0 .25rem; }
     .uf-foot .btn { border-radius: 10px; font-weight: 700; font-size: .82rem; padding: .5rem 1.4rem; }
 </style>
@@ -50,7 +59,14 @@
         @method($metodo)
     @endif
 
+    <div class="uf-tabs" role="tablist">
+        <button type="button" class="uf-tab is-on" data-pane="pane-dados"><i class="fa fa-user"></i> Dados pessoais</button>
+        <button type="button" class="uf-tab" data-pane="pane-acesso"><i class="fa fa-key"></i> Acesso e vínculos</button>
+        <button type="button" class="uf-tab" data-pane="pane-disciplinas" id="tab-disciplinas" style="display:none;"><i class="fa fa-book-open"></i> Disciplinas</button>
+    </div>
+
     {{-- Dados pessoais --}}
+    <div class="uf-pane is-on" id="pane-dados">
     <div class="uf-card">
         <div class="uf-head">
             <i class="fa fa-user uf-ic--blue"></i>
@@ -99,7 +115,11 @@
         </div>
     </div>
 
+    </div>
+    </div>
+
     {{-- Acesso --}}
+    <div class="uf-pane" id="pane-acesso">
     <div class="uf-card">
         <div class="uf-head">
             <i class="fa fa-key uf-ic--violet"></i>
@@ -174,8 +194,12 @@
         </div>
     </div>
 
+    </div>
+    </div>
+
     {{-- Disciplinas (só professor) --}}
-    <div class="uf-card" id="grupo-disciplinas" style="display:none;">
+    <div class="uf-pane" id="pane-disciplinas">
+    <div class="uf-card">
         <div class="uf-head">
             <i class="fa fa-book-open uf-ic--amber"></i>
             <div>
@@ -194,6 +218,7 @@
             </div>
             <div class="uf-hint mb-3"><i class="fa fa-info-circle"></i> Ao atribuir o professor a uma turma, essas disciplinas aparecem destacadas no topo do select (principais primeiro, depois optativas).</div>
         </div>
+    </div>
     </div>
 
     <div class="uf-foot">
@@ -215,8 +240,28 @@
         var selPerfil = document.getElementById('perfil-acesso');
         var selAluno = document.getElementById('vinculo-aluno');
         var selResp = document.getElementById('vinculo-responsavel');
-        var grupoDisc = document.getElementById('grupo-disciplinas');
+        var tabDisc = document.getElementById('tab-disciplinas');
         var rolesProfessor = @json($rolesProfessor ?? []);
+
+        // Tabs: ativa o pane correspondente ao botao clicado.
+        function ativarTab(btn) {
+            if (btn.style.display === 'none') { return; }
+            document.querySelectorAll('.uf-tab').forEach(function (t) { t.classList.remove('is-on'); });
+            document.querySelectorAll('.uf-pane').forEach(function (p) { p.classList.remove('is-on'); });
+            btn.classList.add('is-on');
+            var pane = document.getElementById(btn.dataset.pane);
+            if (pane) { pane.classList.add('is-on'); }
+        }
+
+        document.querySelectorAll('.uf-tab').forEach(function (btn) {
+            btn.addEventListener('click', function () { ativarTab(btn); });
+            // Erro de validacao dentro do pane marca a aba em vermelho.
+            var pane = document.getElementById(btn.dataset.pane);
+            if (pane && pane.querySelector('.is-invalid, .invalid-feedback')) {
+                btn.classList.add('has-err');
+                ativarTab(btn);
+            }
+        });
 
         var dadosVinculo = {
             aluno: @json($vinculoDadosAluno ?? []),
@@ -238,13 +283,18 @@
             aplicarPerfil();
         }
 
-        // Secao de habilitacoes aparece apenas para COLABORADOR com
+        // Aba de habilitacoes aparece apenas para COLABORADOR com
         // perfil de professor — aluno/responsavel nao lecionam.
         function aplicarPerfil() {
-            if (!grupoDisc || !selPerfil) return;
+            if (!tabDisc || !selPerfil) return;
             var colaborador = tipo.value === 'colaborador';
             var ehProfessor = rolesProfessor.map(String).indexOf(String(selPerfil.value)) !== -1;
-            grupoDisc.style.display = (colaborador && ehProfessor) ? '' : 'none';
+            var mostrar = colaborador && ehProfessor;
+            tabDisc.style.display = mostrar ? '' : 'none';
+            // Se a aba ativa sumiu, volta para a primeira.
+            if (!mostrar && tabDisc.classList.contains('is-on')) {
+                ativarTab(document.querySelector('.uf-tab'));
+            }
         }
 
         // Pills de tipo de conta e status gravam nos campos ocultos.
