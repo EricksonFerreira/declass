@@ -987,7 +987,7 @@
         });
 
         /* Diario e avaliacoes: alterna Lista / Calendario (persiste). */
-        var regBody = $('.ux-index-body').has('.reg-cards');
+        var regBody = $('#tab-registros .ux-index-body');
         var regCal = $('#registros-cal');
         function setModoReg(modo) {
             var cal = modo === 'cal';
