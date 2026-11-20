@@ -14,14 +14,35 @@
     .jf-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#dbeafe,#bfdbfe); color:#1d4ed8; display:inline-flex; align-items:center; justify-content:center; font-size:.78rem; font-weight:700; flex-shrink:0; }
     .jf-meta { font-size:.74rem; color:#6b7280; }
     tr.jf-click { cursor:pointer; }
-    #jfModal .modal-header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; border-radius:.3rem .3rem 0 0; padding:.6rem 1rem; }
-    #jfModal .close { color:#fff; opacity:.85; }
-    .jf-sec { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#2563eb; margin:.8rem 0 .3rem; }
-    .jf-txt { font-size:.84rem; color:#374151; white-space:pre-line; background:#f8fafc; border:1px solid #eef1f6; border-radius:8px; padding:.5rem .7rem; }
-    .jf-info-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.4rem; }
-    .jf-info { border:1px solid #eef1f6; border-radius:8px; padding:.4rem .6rem; }
-    .jf-info label { display:block; font-size:.62rem; font-weight:700; text-transform:uppercase; color:#9ca3af; margin:0; }
-    .jf-info span { font-size:.84rem; font-weight:600; color:#1f2937; }
+
+    /* Modal de detalhes */
+    #jfModal .modal-content.jfm { border:0; border-radius:16px; overflow:hidden; box-shadow:0 20px 50px rgba(15,23,42,.28); }
+    .jfm-head { display:flex; align-items:flex-start; gap:.7rem; padding:1rem 1.15rem .85rem; background:linear-gradient(135deg,#1e3a8a,#3b82f6); }
+    .jfm-avatar { width:44px; height:44px; border-radius:13px; background:rgba(255,255,255,.16); border:1.5px solid rgba(255,255,255,.35); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.95rem; color:#fff; flex-shrink:0; }
+    .jfm-title { margin:0; font-size:1.05rem; font-weight:800; color:#fff; }
+    .jfm-sub { font-size:.72rem; color:rgba(255,255,255,.78); margin-top:1px; }
+    .jfm-head .close { color:#fff; opacity:.8; margin-left:auto; padding:.2rem .3rem; }
+    .jfm-head .badge { font-size:.62rem; font-weight:700; }
+    .jfm-periodo { display:flex; align-items:center; gap:.55rem; padding:.7rem 1.15rem; background:#f8faff; border-bottom:1px solid #eef2fa; font-weight:700; color:#1e40af; font-size:.85rem; flex-wrap:wrap; }
+    .jfm-periodo .jfm-arrow { color:#93c5fd; }
+    .jfm-dias { margin-left:auto; font-size:.6rem; font-weight:800; color:#1d4ed8; background:#dbeafe; border-radius:999px; padding:.2rem .6rem; text-transform:uppercase; letter-spacing:.04em; }
+    .jfm-grid { display:grid; grid-template-columns:1fr 1fr; gap:.55rem .9rem; padding:.9rem 1.15rem .2rem; }
+    .jfm-item { min-width:0; }
+    .jfm-item label { display:block; font-size:.6rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:#9ca3af; margin:0 0 1px; }
+    .jfm-item span { font-size:.82rem; font-weight:600; color:#1f2937; }
+    .jfm-secoes { padding:.3rem 1.15rem 0; }
+    .jfm-sec-t { font-size:.66rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:#4f46e5; margin:.7rem 0 .35rem; display:flex; align-items:center; gap:.35rem; }
+    .jfm-motivo { font-size:.84rem; color:#374151; white-space:pre-line; background:#f8fafc; border-left:3px solid #4f46e5; border-radius:0 10px 10px 0; padding:.6rem .8rem; }
+    .jfm-anexo { display:flex; align-items:center; gap:.6rem; border:1.5px solid #e2e8f0; border-radius:10px; padding:.55rem .75rem; }
+    .jfm-anexo i.anx-ic { width:34px; height:34px; border-radius:9px; background:#eff6ff; color:#3b82f6; display:flex; align-items:center; justify-content:center; font-size:.85rem; flex-shrink:0; }
+    .jfm-anexo .n { font-size:.8rem; font-weight:700; color:#1f2937; word-break:break-all; }
+    .jfm-anexo .t { font-size:.65rem; color:#94a3b8; }
+    .jfm-anexo .btn { margin-left:auto; flex-shrink:0; border-radius:8px; }
+    .jfm-foot { display:flex; justify-content:flex-end; gap:.45rem; padding:.7rem 1.15rem; border-top:1px solid #f1f5f9; background:#fbfcfe; }
+    .jfm-foot .btn { border-radius:999px; font-weight:700; font-size:.8rem; }
+    @media (max-width: 576px) {
+        .jfm-grid { grid-template-columns:1fr; }
+    }
 </style>
 @endpush
 
@@ -146,19 +167,21 @@
 
 {{-- Modal de detalhes --}}
 <div class="modal fade" id="jfModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <h5 class="modal-title" id="jm-titulo"></h5>
-                    <span id="jm-badges"></span>
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content jfm">
+            <div class="jfm-head">
+                <div class="jfm-avatar" id="jm-avatar"></div>
+                <div style="min-width:0;">
+                    <h5 class="jfm-title" id="jm-titulo"></h5>
+                    <div class="jfm-sub" id="jm-sub"></div>
+                    <div id="jm-badges" class="mt-1"></div>
                 </div>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar"><span>&times;</span></button>
             </div>
-            <div class="modal-body">
-                <div class="jf-info-grid" id="jm-info"></div>
-                <div id="jm-secoes"></div>
-            </div>
+            <div class="jfm-periodo" id="jm-periodo"></div>
+            <div class="jfm-grid" id="jm-info"></div>
+            <div class="jfm-secoes" id="jm-secoes"></div>
+            <div class="jfm-foot" id="jm-foot"></div>
         </div>
     </div>
 </div>
@@ -174,6 +197,7 @@
             'efeito_cor' => $j->efeito === 'abonada' ? 'success' : 'info',
             'inicio' => $j->data_inicio->format('d/m/Y'),
             'fim' => $j->data_fim->format('d/m/Y'),
+            'dias' => $j->data_inicio->diffInDays($j->data_fim) + 1,
             'disciplina' => $j->disciplina->nome ?? 'Todas as disciplinas',
             'motivo' => $j->motivo,
             'registrado_por' => $j->registradoPor->nome ?? '—',
@@ -193,35 +217,49 @@
         return d.innerHTML;
     }
     function info(label, valor) {
-        return '<div class="jf-info"><label>' + label + '</label><span>' + esc(valor || '—') + '</span></div>';
+        return '<div class="jfm-item"><label>' + label + '</label><span>' + esc(valor || '—') + '</span></div>';
+    }
+    function iniciais(nome) {
+        return String(nome || '?').trim().split(/\s+/).filter(Boolean)
+            .slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
     }
     function abrir(id) {
         const j = JF[id];
         if (!j) { return; }
+        document.getElementById('jm-avatar').textContent = iniciais(j.aluno);
         document.getElementById('jm-titulo').textContent = j.aluno;
+        document.getElementById('jm-sub').textContent = j.turma + ' · ' + j.escola;
         document.getElementById('jm-badges').innerHTML =
             '<span class="badge badge-' + j.efeito_cor + ' mr-1">' + esc(j.efeito) + '</span>'
             + '<span class="badge badge-light border">' + esc(j.tipo) + '</span>';
+        document.getElementById('jm-periodo').innerHTML =
+            '<i class="fa fa-calendar-check"></i> ' + esc(j.inicio)
+            + ' <i class="fa fa-long-arrow-alt-right jfm-arrow"></i> ' + esc(j.fim)
+            + '<span class="jfm-dias">' + j.dias + (j.dias > 1 ? ' dias' : ' dia') + '</span>';
         document.getElementById('jm-info').innerHTML =
-            info('Turma', j.turma) + info('Escola', j.escola)
-            + info('Início', j.inicio) + info('Fim', j.fim)
-            + info('Disciplina', j.disciplina) + info('Registrado por', j.registrado_por)
+            info('Disciplina', j.disciplina) + info('Registrado por', j.registrado_por)
             + info('Registrado em', j.registrado_em);
 
         let html = '';
         if (j.motivo) {
-            html += '<div class="jf-sec"><i class="fa fa-comment-alt mr-1"></i>Motivo / observação</div>'
-                + '<div class="jf-txt">' + esc(j.motivo) + '</div>';
+            html += '<div class="jfm-sec-t"><i class="fa fa-comment-alt"></i> Motivo / observação</div>'
+                + '<div class="jfm-motivo">' + esc(j.motivo) + '</div>';
         }
         if (j.anexo) {
-            html += '<div class="jf-sec"><i class="fa fa-paperclip mr-1"></i>Anexo</div>'
+            html += '<div class="jfm-sec-t"><i class="fa fa-paperclip"></i> Anexo</div>'
+                + '<div class="jfm-anexo"><i class="anx-ic fa fa-file-alt"></i>'
+                + '<div style="min-width:0;"><div class="n">' + esc(j.nome_anexo || 'documento') + '</div>'
+                + '<div class="t">Documento anexado à justificativa</div></div>'
                 + '<a href="' + j.anexo + '" target="_blank" class="btn btn-sm btn-outline-primary">'
-                + '<i class="fa fa-download mr-1"></i>' + esc(j.nome_anexo || 'Baixar documento') + '</a>';
+                + '<i class="fa fa-download mr-1"></i>Baixar</a></div>';
         }
         if (!j.motivo && !j.anexo) {
-            html = '<div class="text-muted small mt-2">Sem observações nem anexo.</div>';
+            html = '<div class="text-muted small py-2 text-center">Sem observações nem anexo.</div>';
         }
         document.getElementById('jm-secoes').innerHTML = html;
+        document.getElementById('jm-foot').innerHTML =
+            (j.anexo ? '<a href="' + j.anexo + '" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-1"></i>Baixar documento</a>' : '')
+            + '<button type="button" class="btn btn-light" data-dismiss="modal">Fechar</button>';
         $('#jfModal').modal('show');
     }
 
