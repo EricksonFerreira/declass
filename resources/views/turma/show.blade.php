@@ -72,6 +72,7 @@
     .rcal-head { display:flex; align-items:center; gap:.5rem; padding:.65rem .9rem; border-bottom:1px solid #f1f5f9; }
     .rcal-head h6 { flex:1; text-align:center; margin:0; font-weight:700; text-transform:capitalize; }
     .rcal-head .btn { border-radius:999px; }
+    .rcal-jump { max-width:190px; font-weight:700; text-transform:capitalize; }
     .rcal-grid { display:grid; grid-template-columns:repeat(7,1fr); border-top:1px solid #eef2f7; }
     .rcal-dow { padding:.4rem .2rem; font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#94a3b8; text-align:center; background:#f8fafc; border-bottom:1px solid #eef2f7; }
     .rcal-dia { min-height:88px; padding:4px 4px 6px; border-right:1px solid #f1f5f9; border-bottom:1px solid #f1f5f9; background:#fff; overflow:hidden; }
@@ -510,7 +511,30 @@
             <div class="rcal-head">
                 <a href="{{ route('turma.show', ['turma' => $turma->id] + request()->except('r_mes') + ['r_mes' => $mesRegistros->copy()->subMonth()->format('Y-m')]) }}#tab-registros"
                    class="btn btn-sm btn-outline-secondary" title="Mês anterior"><i class="fa fa-chevron-left"></i></a>
-                <h6>{{ $mesRegistros->locale('pt_BR')->translatedFormat('F \d\e Y') }}</h6>
+                <form method="GET" action="{{ route('turma.show', $turma->id) }}#tab-registros" class="d-flex align-items-center justify-content-center flex-grow-1" style="gap:.4rem;">
+                    @foreach(request()->except(['r_mes', 'page']) as $qp => $qv)
+                        @unless(is_array($qv))
+                            <input type="hidden" name="{{ $qp }}" value="{{ $qv }}">
+                        @endunless
+                    @endforeach
+                    <select name="r_mes" class="form-control form-control-sm rcal-jump" onchange="this.form.submit()" title="Ir para mês/ano">
+                        @php $mesSel = $mesRegistros->format('Y-m'); @endphp
+                        @for($y = $registroAnoBase - 1; $y <= $registroAnoBase + 1; $y++)
+                            <optgroup label="{{ $y }}">
+                                @for($m = 1; $m <= 12; $m++)
+                                    @php $vm = sprintf('%04d-%02d', $y, $m); @endphp
+                                    <option value="{{ $vm }}" {{ $vm === $mesSel ? 'selected' : '' }}>
+                                        {{ \Carbon\Carbon::create($y, $m, 1)->locale('pt_BR')->translatedFormat('F') }}
+                                    </option>
+                                @endfor
+                            </optgroup>
+                        @endfor
+                    </select>
+                    @unless($mesRegistros->isSameMonth(now()))
+                        <a href="{{ route('turma.show', ['turma' => $turma->id] + request()->except('r_mes')) }}#tab-registros"
+                           class="btn btn-xs btn-outline-secondary text-nowrap" title="Voltar ao mês atual">Hoje</a>
+                    @endunless
+                </form>
                 <a href="{{ route('turma.show', ['turma' => $turma->id] + request()->except('r_mes') + ['r_mes' => $mesRegistros->copy()->addMonth()->format('Y-m')]) }}#tab-registros"
                    class="btn btn-sm btn-outline-secondary" title="Próximo mês"><i class="fa fa-chevron-right"></i></a>
             </div>

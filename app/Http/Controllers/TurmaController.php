@@ -256,6 +256,7 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
             $diasCal->push($d->copy());
         }
         $semanasRegistros = $diasCal->chunk(7);
+        $registroAnoBase = $turma->anoLetivo->ano ?? now()->year;
 
         $periodosLetivos = \App\Models\PeriodoLetivo::query()
             ->where('ano_letivo_id', $turma->ano_letivo_id)
@@ -313,7 +314,7 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
             'diarioHoje', 'registros', 'presencas', 'disciplinasVisiveis',
             'periodosLetivos', 'filtrosRegistros', 'minhasAulas',
             'materiais', 'tarefasCorrecao',
-            'mesRegistros', 'registrosMes', 'semanasRegistros'
+            'mesRegistros', 'registrosMes', 'semanasRegistros', 'registroAnoBase'
         ))->with('titulo', $turma->nome);
     }
 
