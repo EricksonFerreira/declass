@@ -124,6 +124,12 @@ class PeriodoLetivoController extends BaseController implements FiltroInterface,
         $success = $this->periodoService->delete($id);
         abort_if(! $success, 403, 'Sem acesso para excluir este período.');
 
+        // Excluido pelo planejador do ano letivo: volta para ele.
+        if ($anoId = (int) request()->input('from_ano_letivo_id')) {
+            return redirect()->route('ano_letivo.show', $anoId)
+                ->with('success', 'Período excluído com sucesso.');
+        }
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 

@@ -85,6 +85,12 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
     {
         $this->turmaService->create($request->validated());
 
+        // Criada pelo modal do planejador do ano letivo: volta para ele.
+        if ($anoId = (int) $request->input('from_ano_letivo_id')) {
+            return redirect()->route('ano_letivo.show', $anoId)
+                ->with('success', 'Turma criada com sucesso.');
+        }
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Turma criada com sucesso.');
     }
 
@@ -318,6 +324,12 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
     {
         $success = $this->turmaService->delete($id);
         abort_if(! $success, 403, 'Sem acesso para excluir esta turma.');
+
+        // Excluida pelo planejador do ano letivo: volta para ele.
+        if ($anoId = (int) request()->input('from_ano_letivo_id')) {
+            return redirect()->route('ano_letivo.show', $anoId)
+                ->with('success', 'Turma excluída com sucesso.');
+        }
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }

@@ -7,280 +7,241 @@
     <x-page-title :title="'Ano letivo '.$anoLetivo->ano" :subtitle="$anoLetivo->escola->nome ?? ''" />
 @stop
 
+@push('css')
+    @include('partials.home-app-styles')
+    <style>
+        .collapse-toggle { cursor: pointer; }
+        .collapse-toggle .collapse-icon { transition: transform .2s ease; display: inline-block; }
+        .collapse-toggle[aria-expanded="true"] .collapse-icon { transform: rotate(180deg); }
+        .hs-item-acoes { margin-left: auto; display: flex; align-items: center; gap: .35rem; flex-shrink: 0; }
+        .hs-mini { display: inline-flex; align-items: center; gap: .3rem; font-size: .66rem; font-weight: 700; color: #6b7280; background: #f3f4f6; border-radius: 999px; padding: .18rem .55rem; white-space: nowrap; }
+        .al-aviso { border-radius: 14px; border: 1px dashed #f59e0b; background: #fffbeb; padding: 1rem; text-align: center; }
+        .rep-box { border-radius: 12px; border: 1px solid #e5e7eb; background: #f8fafc; padding: .6rem .75rem; max-height: 180px; overflow-y: auto; font-size: .85rem; }
+    </style>
+@endpush
+
 @section('content')
-<style>
-    .collapse-toggle { cursor: pointer; }
-    .collapse-toggle .collapse-icon { transition: transform .2s ease; display: inline-block; }
-    .collapse-toggle[aria-expanded="true"] .collapse-icon { transform: rotate(180deg); }
-</style>
-@php
-    $periodicidadeLabel = \App\Models\AnoLetivo::PERIODICIDADES[$anoLetivo->periodicidade] ?? '—';
-    $totalDisciplinas = $turmas->sum(fn ($t) => $t->disciplinas->count());
-    // Collapse inteligente: abre so o que precisa de acao no momento.
-    $periodosAbertos = $anoLetivo->periodos->isEmpty();
-    $turmasAbertas = $turmas->isEmpty();
-    $temTurmaSemOrg = $turmas->contains(fn ($t) => $t->disciplinas->isEmpty());
-    $temTurmaComOrg = $turmas->contains(fn ($t) => $t->disciplinas->isNotEmpty());
-    $replicarAberto = $turmas->count() >= 2 && $temTurmaSemOrg && $temTurmaComOrg;
-    $turmasJson = $turmas->map(fn ($t) => [
-        'id' => $t->id,
-        'nome' => $t->nome,
-        'etapa_id' => $t->etapa_id,
-        'disciplinas' => $t->disciplinas->map(fn ($d) => [
-            'id' => $d->id,
-            'nome' => $d->nome,
-            'carga' => $d->pivot->carga_horaria_semanal,
-        ])->values()->all(),
-        'atribuicoes' => $t->atribuicoes->filter->esta_ativa->map(fn ($a) => [
-            'professor' => $a->user->nome ?? '—',
-            'disciplina' => $a->disciplina->nome ?? 'Turma toda',
-            'papel' => \App\Models\Atribuicao::PAPEIS[$a->papel] ?? $a->papel,
-        ])->values()->all(),
-    ])->values();
-@endphp
+<div class="hs-widgets mb-3" style="grid-template-columns:repeat(auto-fit,minmax(115px,1fr));">
+    <div class="hs-widget">
+        <span class="hs-widget-icone"><i class="fas fa-calendar-alt"></i></span>
+        <b>{{ $anoLetivo->periodos->count() }}</b>
+        <small>Períodos</small>
+    </div>
+    <div class="hs-widget">
+        <span class="hs-widget-icone"><i class="fas fa-chalkboard"></i></span>
+        <b>{{ $turmas->count() }}</b>
+        <small>Turmas</small>
+    </div>
+    <div class="hs-widget">
+        <span class="hs-widget-icone"><i class="fas fa-book"></i></span>
+        <b>{{ $totalDisciplinas }}</b>
+        <small>Ofertas</small>
+    </div>
+    <div class="hs-widget">
+        <span class="hs-widget-icone"><i class="fas fa-user-graduate"></i></span>
+        <b>{{ $totalMatriculas }}</b>
+        <small>Matrículas</small>
+    </div>
+    <div class="hs-widget">
+        <span class="hs-widget-icone"><i class="fas fa-flag"></i></span>
+        <b>{{ $anoLetivo->status_label }}</b>
+        <small>Status</small>
+    </div>
+</div>
 
 <div class="row">
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-header font-weight-bold">Dados do Ano Letivo</div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-5">Ano</dt><dd class="col-sm-7 font-weight-bold">{{ $anoLetivo->ano }}</dd>
-                    <dt class="col-sm-5">Escola</dt><dd class="col-sm-7">{{ $anoLetivo->escola->nome ?? '—' }}</dd>
-                    <dt class="col-sm-5">Início</dt><dd class="col-sm-7">{{ optional($anoLetivo->data_inicio)->format('d/m/Y') ?? '—' }}</dd>
-                    <dt class="col-sm-5">Fim</dt><dd class="col-sm-7">{{ optional($anoLetivo->data_fim)->format('d/m/Y') ?? '—' }}</dd>
-                    <dt class="col-sm-5">Periodicidade</dt>
-                    <dd class="col-sm-7"><span class="badge badge-{{ \App\Models\AnoLetivo::PERIODICIDADE_BADGES[$anoLetivo->periodicidade] ?? 'secondary' }}">{{ $periodicidadeLabel }}</span></dd>
-                    <dt class="col-sm-5">Status</dt>
-                    <dd class="col-sm-7">
-                        <span class="badge badge-{{ \App\Models\AnoLetivo::STATUS_BADGES[$anoLetivo->status] ?? 'secondary' }}">
-                            {{ \App\Models\AnoLetivo::STATUS[$anoLetivo->status] ?? $anoLetivo->status }}
-                        </span>
-                    </dd>
-                    <dt class="col-sm-5">Períodos</dt><dd class="col-sm-7">{{ $anoLetivo->periodos->count() }}</dd>
-                    <dt class="col-sm-5">Turmas</dt><dd class="col-sm-7">{{ $turmas->count() }}</dd>
-                    <dt class="col-sm-5">Ofertas</dt><dd class="col-sm-7">{{ $totalDisciplinas }} disciplina(s) ofertada(s)</dd>
-                </dl>
+        <div class="hs-sec"><i class="fa fa-info-circle"></i> Dados do ano letivo</div>
+        <div class="hs-lista mb-3">
+            <div class="hs-item">
+                <span class="hs-item-icone" style="--app:#007bff;"><i class="fas fa-calendar-alt"></i></span>
+                <div class="hs-item-info"><small>Ano</small><b>{{ $anoLetivo->ano }}</b></div>
             </div>
-            <div class="card-footer">
-                <a href="{{ route('ano_letivo.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
-                @can('ano_letivo.edit')
-                    <a href="{{ route('ano_letivo.edit', $anoLetivo->id) }}" class="btn btn-warning btn-sm">Editar</a>
-                @endcan
+            <div class="hs-item">
+                <span class="hs-item-icone" style="--app:#06b6d4;"><i class="fas fa-school"></i></span>
+                <div class="hs-item-info"><small>Escola</small><b>{{ $anoLetivo->escola->nome ?? '—' }}</b></div>
+            </div>
+            <div class="hs-item">
+                <span class="hs-item-icone" style="--app:#10b981;"><i class="fas fa-play"></i></span>
+                <div class="hs-item-info"><small>Início</small><b>{{ optional($anoLetivo->data_inicio)->format('d/m/Y') ?? '—' }}</b></div>
+            </div>
+            <div class="hs-item">
+                <span class="hs-item-icone" style="--app:#ef4444;"><i class="fas fa-flag-checkered"></i></span>
+                <div class="hs-item-info"><small>Fim</small><b>{{ optional($anoLetivo->data_fim)->format('d/m/Y') ?? '—' }}</b></div>
+            </div>
+            <div class="hs-item">
+                <span class="hs-item-icone" style="--app:#8b5cf6;"><i class="fas fa-layer-group"></i></span>
+                <div class="hs-item-info">
+                    <small>Periodicidade</small>
+                    <b><span class="badge badge-{{ $anoLetivo->periodicidade_badge }}">{{ $anoLetivo->periodicidade_label }}</span></b>
+                </div>
+            </div>
+            <div class="hs-item">
+                <span class="hs-item-icone" style="--app:{{ $anoLetivo->status === 'letivo' ? '#22c55e' : '#94a3b8' }};"><i class="fas fa-toggle-on"></i></span>
+                <div class="hs-item-info">
+                    <small>Status</small>
+                    <b><span class="badge badge-{{ $anoLetivo->status_badge }}">{{ $anoLetivo->status_label }}</span></b>
+                </div>
             </div>
         </div>
 
+        <div class="d-flex mb-3" style="gap:.5rem;">
+            <a href="{{ route('ano_letivo.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fa fa-arrow-left"></i> Voltar</a>
+            @can('ano_letivo.edit')
+                <a href="{{ route('ano_letivo.edit', $anoLetivo->id) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i> Editar</a>
+            @endcan
+        </div>
+
         @if($anoLetivo->periodos->isEmpty() && ($anoLetivo->periodicidade ?? null) !== 'personalizado')
-            <div class="card border-warning">
-                <div class="card-body text-center">
-                    <i class="fas fa-calendar-times fa-2x text-warning mb-2 d-block"></i>
-                    <p class="mb-2">Este ano ainda não tem períodos letivos.</p>
-                    @can('ano_letivo.update')
-                        <form method="POST" action="{{ route('ano_letivo.gerar_periodos', $anoLetivo->id) }}"
-                              onsubmit="return confirm('Gerar os períodos letivos conforme a periodicidade {{ strtolower($periodicidadeLabel) }}?');">
-                            @csrf
-                            <button type="submit" class="btn btn-warning btn-sm">
-                                <i class="fa fa-magic"></i> Gerar períodos ({{ $periodicidadeLabel }})
-                            </button>
-                        </form>
-                    @endcan
-                </div>
+            <div class="al-aviso">
+                <i class="fas fa-calendar-times text-warning mb-2 d-block" style="font-size:1.5rem;"></i>
+                <p class="mb-2" style="font-size:.85rem;">Este ano ainda não tem períodos letivos.</p>
+                @can('ano_letivo.update')
+                    <form method="POST" action="{{ route('ano_letivo.gerar_periodos', $anoLetivo->id) }}"
+                          onsubmit="return confirm('Gerar os períodos letivos conforme a periodicidade {{ strtolower($anoLetivo->periodicidade_label) }}?');">
+                        @csrf
+                        <button type="submit" class="btn btn-warning btn-sm">
+                            <i class="fa fa-magic"></i> Gerar períodos ({{ $anoLetivo->periodicidade_label }})
+                        </button>
+                    </form>
+                @endcan
             </div>
         @endif
     </div>
 
     <div class="col-md-8">
-        <div class="card">
-            <div class="card-header collapse-toggle d-flex justify-content-between align-items-center"
-                 data-toggle="collapse" data-target="#collapse-periodos" aria-expanded="{{ $periodosAbertos ? 'true' : 'false' }}">
-                <span class="font-weight-bold">
-                    Períodos letivos
-                    <span class="badge badge-secondary">{{ $anoLetivo->periodos->count() }}</span>
-                    <i class="fa fa-chevron-down collapse-icon ml-1"></i>
-                </span>
-                @if($anoLetivo->periodos->isEmpty() && ($anoLetivo->periodicidade ?? null) !== 'personalizado')
-                    <span class="badge badge-warning">pendente</span>
-                @endif
-            </div>
-            <div id="collapse-periodos" class="collapse {{ $periodosAbertos ? 'show' : '' }}">
-            <div class="card-body p-0">
-                <div class="table-responsive"><table class="table table-sm table-hover mb-0">
-                    <thead class="thead-light">
-                        <tr>
-                            <th style="width:60px">Ordem</th>
-                            <th>Período</th>
-                            <th>Início</th>
-                            <th>Fim</th>
-                            <th>Status</th>
-                            <th class="text-right">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($anoLetivo->periodos->sortBy('ordem') as $periodo)
-                            <tr>
-                                <td>{{ $periodo->ordem }}º</td>
-                                <td class="font-weight-bold">{{ $periodo->nome }}</td>
-                                <td>{{ optional($periodo->data_inicio)->format('d/m/Y') ?? '—' }}</td>
-                                <td>{{ optional($periodo->data_fim)->format('d/m/Y') ?? '—' }}</td>
-                                <td>
-                                    @if($periodo->esta_ativo)
-                                        <span class="badge badge-success">Ativo</span>
-                                    @else
-                                        <span class="badge badge-secondary">Inativo</span>
-                                    @endif
-                                </td>
-                                <td class="text-right">
-                                    <a href="{{ route('periodo_letivo.show', $periodo->id) }}" class="btn btn-xs btn-info" title="Detalhes"><i class="fa fa-eye"></i></a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="fas fa-calendar-alt fa-2x mb-2 d-block"></i>
-                                    Nenhum período letivo. Ajuste a periodicidade na edição do ano ou gere automaticamente.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table></div>
-            </div>
-            </div>
+        <div class="hs-sec">
+            <i class="fas fa-calendar-alt"></i> Períodos letivos
+            <span class="badge badge-primary">{{ $anoLetivo->periodos->count() }}</span>
+            @if($anoLetivo->periodos->isEmpty() && ($anoLetivo->periodicidade ?? null) !== 'personalizado')
+                <span class="badge badge-warning">pendente</span>
+            @endif
         </div>
-
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="font-weight-bold collapse-toggle" data-toggle="collapse" data-target="#collapse-turmas" aria-expanded="{{ $turmasAbertas ? 'true' : 'false' }}">
-                    Turmas
-                    <span class="badge badge-secondary">{{ $turmas->count() }}</span>
-                    <i class="fa fa-chevron-down collapse-icon ml-1"></i>
-                </span>
-                <div>
-                    @if($podeGerar)
-                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#modal-gerar-lote"><i class="fa fa-layer-group"></i> Geração em massa</button>
-                        <a href="{{ route('turma.create') }}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Nova turma</a>
-                    @endif
+        <div class="hs-lista mb-4">
+            @forelse($anoLetivo->periodos->sortBy('ordem') as $periodo)
+                <div class="hs-item">
+                    <span class="hs-item-icone" style="--app:{{ $periodo->esta_ativo ? '#22c55e' : '#94a3b8' }};"><i class="fas fa-calendar-day"></i></span>
+                    <div class="hs-item-info">
+                        <b>{{ $periodo->ordem }}º · {{ $periodo->nome }}</b>
+                        <small>{{ optional($periodo->data_inicio)->format('d/m/Y') ?? '—' }} — {{ optional($periodo->data_fim)->format('d/m/Y') ?? '—' }}</small>
+                    </div>
+                    <span class="badge badge-{{ $periodo->esta_ativo ? 'success' : 'secondary' }}">{{ $periodo->esta_ativo ? 'Ativo' : 'Inativo' }}</span>
+                    <span class="hs-item-acoes">
+                        <a href="{{ route('periodo_letivo.show', $periodo->id) }}" class="btn btn-xs btn-info" title="Detalhes"><i class="fa fa-eye"></i></a>
+                        @can('periodo_letivo.destroy')
+                            <x-delete-button :action="route('periodo_letivo.destroy', $periodo->id).'?from_ano_letivo_id='.$anoLetivo->id" titulo="Excluir" mensagem="Excluir o período &quot;{{ $periodo->nome }}&quot;? Diários e avaliações vinculados podem impedir a exclusão." />
+                        @endcan
+                    </span>
                 </div>
-            </div>
-            <div id="collapse-turmas" class="collapse {{ $turmasAbertas ? 'show' : '' }}">
-            <div class="card-body p-0">
-                <div class="table-responsive"><table class="table table-sm table-hover mb-0">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Turma</th>
-                            <th>Etapa</th>
-                            <th>Turno</th>
-                            <th>Disciplinas</th>
-                            <th>Matrículas</th>
-                            <th class="text-right">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($turmas as $turma)
-                            <tr>
-                                <td class="font-weight-bold">{{ $turma->nome }}</td>
-                                <td>{{ $turma->etapa->nome ?? '—' }}</td>
-                                <td>{{ \App\Models\Turma::TURNOS[$turma->turno ?? ''] ?? '—' }}</td>
-                                <td>
-                                    @php $qtdDisc = $turma->disciplinas->count(); @endphp
-                                    @if($qtdDisc > 0)
-                                        <span class="badge badge-info">{{ $qtdDisc }}</span>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
-                                </td>
-                                <td>{{ $turma->matriculas_count ?? 0 }}</td>
-                                <td class="text-right">
-                                    <a href="{{ route('turma.show', $turma->id) }}" class="btn btn-xs btn-info" title="Detalhes"><i class="fa fa-eye"></i></a>
-                                    @can('turma.edit')
-                                        <a href="{{ route('turma.edit', $turma->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
-                                    @endcan
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="fas fa-chalkboard fa-2x mb-2 d-block"></i>
-                                    Nenhuma turma neste ano letivo.
-                                    @if($podeGerar) Use a <strong>geração em massa</strong> acima para criar todas de uma vez. @endif
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table></div>
-            </div>
-            </div>
+            @empty
+                <div class="hs-item-vazio">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Nenhum período letivo. Ajuste a periodicidade na edição do ano ou gere automaticamente.</span>
+                </div>
+            @endforelse
         </div>
 
-        @include('turma.partials.gerador-lote', [
-            'anoLetivo' => $anoLetivo,
-            'etapasOpcoes' => $etapasOpcoes,
-            'turnosOpcoes' => $turnosOpcoes,
-            'nomesExistentes' => $nomesExistentes,
-            'podeGerar' => $podeGerar,
-        ])
+        <div class="hs-sec">
+            <i class="fas fa-chalkboard"></i> Turmas
+            <span class="badge badge-primary">{{ $turmas->count() }}</span>
+            <span class="ml-auto d-flex" style="gap:.4rem;">
+                @if($podeGerar)
+                    <button type="button" class="btn btn-info btn-xs" data-toggle="modal" data-target="#modal-gerar-lote"><i class="fa fa-layer-group"></i> Geração em massa</button>
+                @endif
+                @if($podeCriarTurma)
+                    <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#modal-nova-turma"><i class="fa fa-plus"></i> Nova turma</button>
+                @endif
+            </span>
+        </div>
+        <div class="hs-lista mb-4">
+            @forelse($turmas as $turma)
+                <div class="hs-item">
+                    <span class="hs-item-icone" style="--app:{{ $turma->esta_ativa ? '#007bff' : '#94a3b8' }};"><i class="fas fa-chalkboard"></i></span>
+                    <div class="hs-item-info">
+                        <b><a href="{{ route('turma.show', $turma->id) }}" class="text-dark">{{ $turma->nome }}</a></b>
+                        <small>{{ $turma->etapa->nome ?? '—' }} · {{ $turma->turno_label }}</small>
+                    </div>
+                    <span class="hs-mini"><i class="fas fa-book"></i> {{ $turma->disciplinas->count() }} disc.</span>
+                    <span class="hs-mini"><i class="fas fa-user-graduate"></i> {{ $turma->matriculas_count ?? 0 }}</span>
+                    <span class="hs-item-acoes">
+                        <a href="{{ route('turma.show', $turma->id) }}" class="btn btn-xs btn-info" title="Detalhes"><i class="fa fa-eye"></i></a>
+                        @can('turma.edit')
+                            <a href="{{ route('turma.edit', $turma->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
+                        @endcan
+                        @can('turma.destroy')
+                            <x-delete-button :action="route('turma.destroy', $turma->id).'?from_ano_letivo_id='.$anoLetivo->id" titulo="Excluir" mensagem="Excluir a turma &quot;{{ $turma->nome }}&quot;? Disciplinas e atribuições vinculadas são removidas junto." />
+                        @endcan
+                    </span>
+                </div>
+            @empty
+                <div class="hs-item-vazio">
+                    <i class="fas fa-chalkboard"></i>
+                    <span>Nenhuma turma neste ano letivo.@if($podeGerar) Use a <strong>geração em massa</strong> acima para criar todas de uma vez.@endif</span>
+                </div>
+            @endforelse
+        </div>
 
         @if($podeReplicar && $turmas->count() >= 2)
-            <div class="card">
-                <div class="card-header collapse-toggle font-weight-bold"
-                     data-toggle="collapse" data-target="#collapse-replicar" aria-expanded="{{ $replicarAberto ? 'true' : 'false' }}">
-                    <i class="fa fa-copy"></i> Replicar organização entre turmas
-                    <i class="fa fa-chevron-down collapse-icon ml-1"></i>
-                    <small class="text-muted font-weight-normal">— copie disciplinas e professores da turma modelo para as irmãs (A, B, C...)</small>
-                </div>
-                <div id="collapse-replicar" class="collapse {{ $replicarAberto ? 'show' : '' }}">
-                <div class="card-body">
-                    <form method="POST" action="{{ route('turma.replicar_organizacao') }}" id="form-replicar">
-                        @csrf
-                        <div class="row">
-                            <div class="col-md-4">
-                                <label class="font-weight-bold">Turma de origem <span class="text-danger">*</span></label>
-                                <select name="turma_origem_id" id="rep-origem" class="form-control" required>
-                                    <option value="">Selecione a turma modelo…</option>
-                                    @foreach($turmas as $turma)
-                                        <option value="{{ $turma->id }}">{{ $turma->nome }} ({{ $turma->disciplinas->count() }} disc. / {{ $turma->atribuicoes->filter->esta_ativa->count() }} prof.)</option>
-                                    @endforeach
-                                </select>
-                                <small class="text-muted">Disciplinas, cargas e professores desta turma serão copiados.</small>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="font-weight-bold">Disciplinas da origem</label>
-                                <div id="rep-disciplinas" class="border rounded p-2 bg-light" style="max-height: 180px; overflow-y: auto; font-size: .9rem;">
-                                    <span class="text-muted">Selecione a turma de origem para ver as disciplinas.</span>
+            <div class="hs-sec collapse-toggle" data-toggle="collapse" data-target="#collapse-replicar" aria-expanded="{{ $replicarAberto ? 'true' : 'false' }}">
+                <i class="fa fa-copy"></i> Replicar organização entre turmas
+                <i class="fa fa-chevron-down collapse-icon ml-1"></i>
+                <span class="hs-sec-link">copie disciplinas e professores da turma modelo para as irmãs</span>
+            </div>
+            <div id="collapse-replicar" class="collapse {{ $replicarAberto ? 'show' : '' }}">
+                <div class="hs-lista mb-4">
+                    <div class="p-3">
+                        <form method="POST" action="{{ route('turma.replicar_organizacao') }}" id="form-replicar">
+                            @csrf
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="font-weight-bold">Turma de origem <span class="text-danger">*</span></label>
+                                    <select name="turma_origem_id" id="rep-origem" class="form-control" required>
+                                        <option value="">Selecione a turma modelo…</option>
+                                        @foreach($turmas as $turma)
+                                            <option value="{{ $turma->id }}">{{ $turma->nome }} ({{ $turma->disciplinas->count() }} disc. / {{ $turma->atribuicoes->filter->esta_ativa->count() }} prof.)</option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">Disciplinas, cargas e professores desta turma serão copiados.</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="font-weight-bold">Disciplinas da origem</label>
+                                    <div id="rep-disciplinas" class="rep-box">
+                                        <span class="text-muted">Selecione a turma de origem para ver as disciplinas.</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="font-weight-bold">Professores da origem</label>
+                                    <div id="rep-professores" class="rep-box">
+                                        <span class="text-muted">Selecione a turma de origem para ver os professores.</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="font-weight-bold">Professores da origem</label>
-                                <div id="rep-professores" class="border rounded p-2 bg-light" style="max-height: 180px; overflow-y: auto; font-size: .9rem;">
-                                    <span class="text-muted">Selecione a turma de origem para ver os professores.</span>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="row mt-3">
-                            <div class="col-md-8">
-                                <label class="font-weight-bold">Copiar para as turmas <span class="text-danger">*</span></label>
-                                <div id="rep-destinos" class="border rounded p-2" style="max-height: 160px; overflow-y: auto;">
-                                    <span class="text-muted">Selecione a turma de origem primeiro — turmas da mesma etapa já vêm marcadas.</span>
+                            <div class="row mt-3">
+                                <div class="col-md-8">
+                                    <label class="font-weight-bold">Copiar para as turmas <span class="text-danger">*</span></label>
+                                    <div id="rep-destinos" class="rep-box" style="max-height:160px;">
+                                        <span class="text-muted">Selecione a turma de origem primeiro — turmas da mesma etapa já vêm marcadas.</span>
+                                    </div>
+                                    <small class="text-muted">Ofertas e atribuições que o destino já tiver serão atualizadas; nada existente é removido.</small>
                                 </div>
-                                <small class="text-muted">Ofertas e atribuições que o destino já tiver serão atualizadas; nada existente é removido.</small>
-                            </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="incluir_professores" value="1" id="rep-prof-check" checked>
-                                    <label class="form-check-label font-weight-bold" for="rep-prof-check">
-                                        Incluir professores atribuídos
-                                    </label>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="incluir_professores" value="1" id="rep-prof-check" checked>
+                                        <label class="form-check-label font-weight-bold" for="rep-prof-check">
+                                            Incluir professores atribuídos
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="mt-3">
-                            <button type="submit" class="btn btn-success" id="rep-btn" disabled>
-                                <i class="fa fa-copy"></i> Replicar organização
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-success" id="rep-btn" disabled>
+                                    <i class="fa fa-copy"></i> Replicar organização
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -371,4 +332,20 @@
         @endif
     </div>
 </div>
+
+@include('turma.partials.gerador-lote', [
+    'anoLetivo' => $anoLetivo,
+    'etapasOpcoes' => $etapasOpcoes,
+    'turnosOpcoes' => $turnosOpcoes,
+    'nomesExistentes' => $nomesExistentes,
+    'podeGerar' => $podeGerar,
+])
+
+@include('turma.partials.nova-turma-modal', [
+    'anoLetivo' => $anoLetivo,
+    'etapasOpcoes' => $etapasOpcoes,
+    'turnosOpcoes' => $turnosOpcoes,
+    'horariosJson' => $horariosJson,
+    'podeCriarTurma' => $podeCriarTurma,
+])
 @stop

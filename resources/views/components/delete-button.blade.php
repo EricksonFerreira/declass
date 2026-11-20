@@ -5,10 +5,10 @@
     <button
         type="button"
         class="btn btn-xs {{ $btnClass ?? 'btn-danger' }} delete-button"
-        title="{{ $titulo ?? 'Excluir' }}"
-        data-confirm-title="{{ $tituloMensagem ?? 'Você tem certeza?' }}"
-        data-confirm-message="{{ $mensagem ?? 'Esta ação não pode ser desfeita!' }}"
-        data-confirm-button="{{ $textoConfirmacao ?? 'Sim, excluir!' }}"
+        title="{{ html_entity_decode($titulo ?? 'Excluir', ENT_QUOTES, 'UTF-8') }}"
+        data-confirm-title="{{ html_entity_decode($tituloMensagem ?? 'Você tem certeza?', ENT_QUOTES, 'UTF-8') }}"
+        data-confirm-message="{{ html_entity_decode($mensagem ?? 'Esta ação não pode ser desfeita!', ENT_QUOTES, 'UTF-8') }}"
+        data-confirm-button="{{ html_entity_decode($textoConfirmacao ?? 'Sim, excluir!', ENT_QUOTES, 'UTF-8') }}"
         data-confirm-color="{{ $corConfirmacao ?? '#d33' }}"
     >
         <i class="{{ $icone ?? 'fa fa-trash' }}"></i>

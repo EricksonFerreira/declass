@@ -1,78 +1,74 @@
 @if($podeGerar && $anoLetivo)
-    <div class="modal fade" id="modal-gerar-lote" tabindex="-1" role="dialog" aria-labelledby="modal-gerar-lote-label" aria-hidden="true">
+    @once
+        @include('turma.partials.turma-modal-styles')
+    @endonce
+
+    <div class="modal fade tm-modal" id="modal-gerar-lote" tabindex="-1" role="dialog" aria-labelledby="modal-gerar-lote-label" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <form method="POST" action="{{ route('turma.gerar_lote') }}" id="form-gerar-lote">
                     @csrf
                     <input type="hidden" name="ano_letivo_id" value="{{ $anoLetivo->id }}">
 
-                    <div class="modal-header">
-                        <h5 class="modal-title font-weight-bold" id="modal-gerar-lote-label">
-                            <i class="fa fa-layer-group"></i> {{ $tituloGerador ?? 'Geração de turmas em massa' }}
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                    <div class="tm-hero tm-hero--violet">
+                        <div class="tm-hero__icon"><i class="fa fa-layer-group"></i></div>
+                        <div class="tm-hero__info">
+                            <h5 class="tm-hero__title" id="modal-gerar-lote-label">{{ $tituloGerador ?? 'Geração de turmas em massa' }}</h5>
+                            <div class="tm-hero__sub">Crie todas as turmas do ano letivo {{ $anoLetivo->ano }} de uma vez</div>
+                        </div>
+                        <button type="button" class="tm-hero__close" data-dismiss="modal" aria-label="Fechar"><i class="fas fa-times"></i></button>
                     </div>
 
                     <div class="modal-body">
-                        <p class="text-muted mb-3">Crie todas as turmas do ano letivo {{ $anoLetivo->ano }} de uma vez.</p>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label class="font-weight-bold">Etapas <span class="text-danger">*</span></label>
-                                <div class="border rounded p-2" style="max-height: 180px; overflow-y: auto;">
-                                    @foreach($etapasOpcoes as $etapa)
-                                        <div class="form-check">
-                                            <input class="form-check-input etapa-check" type="checkbox" name="etapas[]" value="{{ $etapa->id }}" id="etapa_{{ $etapa->id }}" checked>
-                                            <label class="form-check-label" for="etapa_{{ $etapa->id }}">{{ $etapa->nome }}</label>
-                                        </div>
-                                    @endforeach
-                                </div>
-                                <small class="text-muted">Marque as etapas que terão turmas.</small>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="font-weight-bold">Turnos <small class="text-muted">(nenhum = sem turno)</small></label>
-                                <div class="border rounded p-2">
-                                    @foreach($turnosOpcoes as $valor => $label)
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input turno-check" type="checkbox" name="turnos[]" value="{{ $valor }}" id="turno_{{ $valor }}">
-                                            <label class="form-check-label" for="turno_{{ $valor }}">{{ $label }}</label>
-                                        </div>
-                                    @endforeach
-                                </div>
-                                <small class="text-muted">Com 2+ turnos, o nome ganha o sufixo do turno (ex.: "1º Ano A — Matutino").</small>
-                            </div>
+                        <div class="tm-sec tm-sec--violet"><i class="fa fa-layer-group"></i> Etapas</div>
+                        <div class="tm-chips mb-2">
+                            @foreach($etapasOpcoes as $etapa)
+                                <label class="tm-chip tm-chip--violet">
+                                    <input type="checkbox" class="etapa-check" name="etapas[]" value="{{ $etapa->id }}" checked>
+                                    <span>{{ $etapa->nome }}</span>
+                                </label>
+                            @endforeach
                         </div>
+                        <small class="text-muted d-block mb-2">Marque as etapas que terão turmas.</small>
 
-                        <div class="row mt-3">
-                            <div class="col-md-4">
+                        <div class="tm-sec tm-sec--violet"><i class="fa fa-clock"></i> Turnos <span class="font-weight-normal text-lowercase">(nenhum = sem turno)</span></div>
+                        <div class="tm-chips mb-2">
+                            @foreach($turnosOpcoes as $valor => $label)
+                                <label class="tm-chip tm-chip--violet">
+                                    <input type="checkbox" class="turno-check" name="turnos[]" value="{{ $valor }}">
+                                    <span>{{ $label }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        <small class="text-muted d-block mb-2">Com 2+ turnos, o nome ganha o sufixo do turno (ex.: "1º Ano A — Matutino").</small>
+
+                        <div class="tm-sec tm-sec--violet"><i class="fa fa-sliders-h"></i> Configuração</div>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
                                 <label class="font-weight-bold">Sufixos <span class="text-danger">*</span></label>
                                 <input type="text" name="sufixos" id="input-sufixos" class="form-control" value="A, B, C, D" required>
-                                <small class="text-muted">Separados por vírgula: letras (A, B, C) ou números (1, 2, 3).</small>
+                                <small class="text-muted">Letras (A, B, C) ou números (1, 2, 3).</small>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-4 mb-2">
                                 <label class="font-weight-bold">Sala <small class="text-muted">(opcional)</small></label>
                                 <input type="text" name="sala" class="form-control" maxlength="40" placeholder="Ex.: 101">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-4 mb-2">
                                 <label class="font-weight-bold">Capacidade <small class="text-muted">(opcional)</small></label>
                                 <input type="number" name="capacidade_maxima" class="form-control" min="1" max="500" placeholder="Ex.: 40">
                             </div>
                         </div>
 
-                        <div class="mt-3">
-                            <label class="font-weight-bold">Pré-visualização</label>
-                            <div id="preview-lote" class="border rounded p-2 bg-light" style="max-height: 220px; overflow-y: auto; font-size: .9rem;"></div>
-                        </div>
+                        <div class="tm-sec tm-sec--violet"><i class="fa fa-eye"></i> Pré-visualização</div>
+                        <div id="preview-lote" class="tm-preview"></div>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success" id="btn-gerar">
-                            <i class="fa fa-check"></i> Criar turmas
+                    <div class="tm-foot">
+                        <span class="tm-foot__hint">Turmas com nome já existente no ano serão puladas.</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-sm btn-success" id="btn-gerar">
+                            <i class="fa fa-check mr-1"></i> Criar turmas
                         </button>
-                        <span class="text-muted ml-2">Turmas com nome já existente no ano serão puladas automaticamente.</span>
                     </div>
                 </form>
             </div>

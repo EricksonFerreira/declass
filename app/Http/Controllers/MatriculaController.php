@@ -146,12 +146,18 @@ class MatriculaController extends BaseController implements FiltroInterface, Res
             ->where('empresa_id', $empresaId)
             ->orderByDesc('ano')
             ->get(['id', 'escola_id', 'ano', 'status'])
-            ->map(fn ($a) => [
-                'id' => $a->id,
-                'escola_id' => (int) $a->escola_id,
-                'rotulo' => $a->ano,
-                'status' => $a->status ?: 'letivo',
-            ])->values();
+            ->map(function ($a) {
+                $a->status = $a->status ?: 'letivo';
+
+                return [
+                    'id' => $a->id,
+                    'escola_id' => (int) $a->escola_id,
+                    'rotulo' => $a->ano,
+                    'status' => $a->status,
+                    'status_label' => $a->status_label,
+                    'status_badge' => $a->status_badge,
+                ];
+            })->values();
 
         $turmas = $this->rematriculaService->turmasComOcupacao($empresaId)
             ->map(fn ($t) => [
@@ -326,6 +332,10 @@ class MatriculaController extends BaseController implements FiltroInterface, Res
                 ->where('ativo', 'S')
                 ->orderBy('nome')
                 ->pluck('nome', 'id')
+                ->all(),
+            'planosValores' => \App\Models\PlanoMensalidade::query()
+                ->where('ativo', 'S')
+                ->pluck('valor', 'id')
                 ->all(),
         ];
     }

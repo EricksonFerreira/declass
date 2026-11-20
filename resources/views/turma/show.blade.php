@@ -108,6 +108,9 @@
             @can('matricula.create')
                 <a href="{{ route('turma.matricula.create', $turma->id) }}" class="dropdown-item"><i class="fa fa-user-plus mr-1"></i> Nova matrícula</a>
             @endcan
+            @can('matricula.rematricula')
+                <a href="{{ route('matricula.rematricula', ['escola_origem' => $turma->escola_id, 'ano_origem' => $turma->ano_letivo_id, 'turma_origem' => $turma->id, 'escola_destino' => $turma->escola_id]) }}" class="dropdown-item"><i class="fa fa-retweet mr-1"></i> Rematricular turma</a>
+            @endcan
             @can('justificativa.index')
                 <a href="{{ route('turma.justificativas', $turma->id) }}" class="dropdown-item"><i class="fa fa-file-medical mr-1"></i> Atestados e abonos</a>
             @endcan

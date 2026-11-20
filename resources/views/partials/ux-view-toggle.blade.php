@@ -1,5 +1,5 @@
 {{-- Toggle Cards/Tabela + persistência da visão por tela. Uso: @include('partials.ux-view-toggle', ['viewKey' => 'funcoes_index_view']) --}}
-<div class="ux-view-toggle">
+<div class="ux-view-toggle" data-store="{{ $viewKey ?? 'ux_index_view' }}" data-default="{{ $default ?? 'cards' }}">
     <button type="button" class="btn btn-xs btn-outline-secondary active" data-view="cards">
         <i class="fas fa-th-large mr-1"></i>Cards
     </button>
@@ -10,15 +10,17 @@
 @push('js')
 <script>
     (function () {
-        // Identifica o toggle que precede este script (suporta varios na mesma pagina).
-        var toggle = document.currentScript && document.currentScript.previousElementSibling;
-        $(function () {
-            var scope = toggle && toggle.closest('.card');
+        function initToggle(toggle) {
+            if (toggle.__uxBound) return;
+            toggle.__uxBound = true;
+
+            var scope = toggle.closest('.card');
             var body = scope
                 ? scope.querySelector('.ux-index-body')
                 : document.querySelector('.ux-index-body');
-            var btns = toggle ? toggle.querySelectorAll('[data-view]') : [];
-            var store = @json($viewKey ?? 'ux_index_view');
+            var btns = toggle.querySelectorAll('[data-view]');
+            var store = toggle.dataset.store;
+            var inicial = localStorage.getItem(store) || toggle.dataset.default || 'cards';
 
             function setView(view) {
                 if (!body) return;
@@ -30,9 +32,18 @@
             btns.forEach(function (btn) {
                 btn.addEventListener('click', function () { setView(btn.dataset.view); });
             });
+            setView(inicial);
+        }
 
-            setView(localStorage.getItem(store) || @json($default ?? 'cards'));
-        });
+        function initAll() {
+            document.querySelectorAll('.ux-view-toggle').forEach(initToggle);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAll);
+        } else {
+            initAll();
+        }
     })();
 </script>
 @endpush

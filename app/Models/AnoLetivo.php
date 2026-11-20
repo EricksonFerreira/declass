@@ -100,4 +100,28 @@ class AnoLetivo extends Model
     {
         return $this->estaAtivo();
     }
+
+    /** Atalho de leitura em Blade: $model->status_label */
+    public function getStatusLabelAttribute()
+    {
+        return self::STATUS[$this->status] ?? $this->status;
+    }
+
+    /** Atalho de leitura em Blade: $model->status_badge */
+    public function getStatusBadgeAttribute()
+    {
+        return self::STATUS_BADGES[$this->status] ?? 'secondary';
+    }
+
+    /** Atalho de leitura em Blade: $model->periodicidade_label */
+    public function getPeriodicidadeLabelAttribute()
+    {
+        return self::PERIODICIDADES[$this->periodicidade] ?? '—';
+    }
+
+    /** Atalho de leitura em Blade: $model->periodicidade_badge */
+    public function getPeriodicidadeBadgeAttribute()
+    {
+        return self::PERIODICIDADE_BADGES[$this->periodicidade] ?? 'secondary';
+    }
 }

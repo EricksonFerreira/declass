@@ -111,4 +111,10 @@ class Turma extends Model
     {
         return $this->finalizada();
     }
+
+    /** Atalho de leitura em Blade: $model->turno_label */
+    public function getTurnoLabelAttribute()
+    {
+        return self::TURNOS[$this->turno ?? ''] ?? '—';
+    }
 }

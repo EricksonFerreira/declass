@@ -27,6 +27,8 @@ class Matricula extends Model
         'status',
         'plano_mensalidade_id',
         'bolsa_percentual',
+        'bolsa_tipo',
+        'bolsa_valor',
         'numero_chamada',
         'data_matricula',
         'data_saida',
@@ -36,8 +38,15 @@ class Matricula extends Model
     protected $casts = [
         'numero_chamada' => 'integer',
         'bolsa_percentual' => 'float',
+        'bolsa_valor' => 'float',
         'data_matricula' => 'date',
         'data_saida' => 'date',
+    ];
+
+    /** Modalidades de bolsa/desconto na mensalidade. */
+    public const BOLSA_TIPOS = [
+        'percentual' => 'Percentual (%)',
+        'valor' => 'Valor fixo (R$)',
     ];
 
     public const STATUS = [
@@ -92,5 +101,40 @@ class Matricula extends Model
     public function getStatusLabelAttribute(): string
     {
         return self::STATUS[$this->status] ?? $this->status;
+    }
+
+    /**
+     * Valor da mensalidade com a bolsa aplicada sobre o plano.
+     * Percentual abate proporcionalmente; valor fixo abate R$ por parcela.
+     */
+    public function valorComBolsa(): ?float
+    {
+        $valorPlano = (float) ($this->planoMensalidade?->valor ?? 0);
+
+        if ($valorPlano <= 0) {
+            return null;
+        }
+
+        if ($this->bolsa_tipo === 'valor' && (float) $this->bolsa_valor > 0) {
+            return max(0, round($valorPlano - $this->bolsa_valor, 2));
+        }
+
+        $percentual = min((float) ($this->bolsa_percentual ?? 0), 100);
+
+        return $percentual > 0 ? round($valorPlano * (1 - $percentual / 100), 2) : $valorPlano;
+    }
+
+    /** Atalho de leitura em Blade: $model->bolsa_label ("20%" / "R$ 150,00" / null). */
+    public function getBolsaLabelAttribute(): ?string
+    {
+        if ($this->bolsa_tipo === 'valor' && (float) $this->bolsa_valor > 0) {
+            return 'R$ '.number_format($this->bolsa_valor, 2, ',', '.');
+        }
+
+        if ((float) ($this->bolsa_percentual ?? 0) > 0) {
+            return rtrim(rtrim(number_format($this->bolsa_percentual, 2, ',', ''), '0'), ',').'%';
+        }
+
+        return null;
     }
 }

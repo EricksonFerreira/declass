@@ -181,8 +181,8 @@
                                         <td>
                                             @if($matricula->planoMensalidade)
                                                 <span class="badge badge-info">{{ $matricula->planoMensalidade->nome }}</span>
-                                                @if($matricula->bolsa_percentual)
-                                                    <br><small class="text-success">bolsa {{ rtrim(rtrim(number_format($matricula->bolsa_percentual, 2, ',', ''), '0'), ',') }}%</small>
+                                                @if($matricula->bolsa_label)
+                                                    <br><small class="text-success">bolsa {{ $matricula->bolsa_label }}</small>
                                                 @endif
                                             @else
                                                 <span class="text-muted">—</span>
@@ -214,8 +214,6 @@
 <script>
 (function () {
     var ANOS = @json($anosLetivos);
-    var STATUS_LABELS = @json(\App\Models\AnoLetivo::STATUS);
-    var STATUS_BADGES = @json(\App\Models\AnoLetivo::STATUS_BADGES);
     var TURMAS = @json($turmas);
     var SEL = @json($selecao);
 
@@ -247,7 +245,7 @@
     function anosDaEscola(escolaId) {
         return ANOS.filter(function (a) { return String(a.escola_id) === String(escolaId); })
             .map(function (a) {
-                return { id: a.id, rotulo: a.rotulo + ' — ' + (STATUS_LABELS[a.status] || a.status) };
+                return { id: a.id, rotulo: a.rotulo + ' — ' + (a.status_label || a.status) };
             });
     }
 
@@ -259,8 +257,8 @@
         var span = document.getElementById(spanId);
         var ano = ANOS.find(function (a) { return String(a.id) === String(anoId); });
         span.innerHTML = ano
-            ? '<span class="badge badge-' + (STATUS_BADGES[ano.status] || 'secondary') + '">'
-                + (STATUS_LABELS[ano.status] || ano.status) + '</span>'
+            ? '<span class="badge badge-' + (ano.status_badge || 'secondary') + '">'
+                + (ano.status_label || ano.status) + '</span>'
             : '';
     }
 

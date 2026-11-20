@@ -27,10 +27,18 @@ class AtribuicaoController extends BaseController
     {
         $turma = $this->turmaOu404($turmaId);
 
-        $this->atribuicaoService->create($request->validated() + ['turma_id' => $turma->id]);
+        $resultado = $this->atribuicaoService->atribuirProfessor($turma, $request->validated());
 
-        return redirect()->route('turma.show', $turma->id)
-            ->with('success', 'Professor atribuído com sucesso.');
+        $mensagem = $resultado['criadas'] > 0
+            ? "{$resultado['criadas']} atribuição(ões) criada(s) com sucesso"
+            : 'Nenhuma atribuição nova — o vínculo já existia';
+        if ($resultado['existentes'] > 0) {
+            $mensagem .= " ({$resultado['existentes']} já existia(m))";
+        }
+        $mensagem .= '.';
+
+        return redirect()->to(route('turma.show', $turma->id).'#tab-equipe')
+            ->with('success', $mensagem);
     }
 
     public function update(UpdateAtribuicaoRequest $request, $turmaId, $atribuicaoId)

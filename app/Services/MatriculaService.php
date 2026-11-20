@@ -105,6 +105,12 @@ class MatriculaService extends AbstractBaseService
             ]);
         }
 
+        if (empty($data['numero_chamada'])) {
+            $data['numero_chamada'] = ((int) $this->applyEmpresaScope($this->model->newQuery())
+                ->where('turma_id', $data['turma_id'])
+                ->max('numero_chamada')) + 1;
+        }
+
         return parent::create($data);
     }
 }

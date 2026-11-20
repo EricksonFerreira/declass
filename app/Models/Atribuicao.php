@@ -65,4 +65,10 @@ class Atribuicao extends Model
     {
         return $this->estaAtiva();
     }
+
+    /** Atalho de leitura em Blade: $model->papel_label */
+    public function getPapelLabelAttribute()
+    {
+        return self::PAPEIS[$this->papel] ?? $this->papel;
+    }
 }

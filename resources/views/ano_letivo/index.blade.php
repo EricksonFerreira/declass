@@ -94,6 +94,14 @@
             <x-filter :filters="$filters" :additional-filters="$additionalFilters" :itens-filtered="$itensFiltered" :nome-filtro="$nomeFiltro" />
         </div>
         <x-per-page-selector :per-pages="$perPages" :selected-per-page="$perPage" />
+        <form method="GET" action="{{ route('ano_letivo.index') }}" class="d-inline">
+            <select name="ordem" class="form-control form-control-sm d-inline-block" style="width:auto;" onchange="this.form.submit()" title="Ordenar">
+                <option value="recentes" {{ ($ordem ?? 'recentes') === 'recentes' ? 'selected' : '' }}>Mais recentes</option>
+                <option value="antigos" {{ ($ordem ?? '') === 'antigos' ? 'selected' : '' }}>Mais antigos</option>
+                <option value="inicio" {{ ($ordem ?? '') === 'inicio' ? 'selected' : '' }}>Início mais recente</option>
+                <option value="status" {{ ($ordem ?? '') === 'status' ? 'selected' : '' }}>Status</option>
+            </select>
+        </form>
         @include('partials.ux-view-toggle', ['viewKey' => 'ano_letivo_index_view'])
     </div>
 

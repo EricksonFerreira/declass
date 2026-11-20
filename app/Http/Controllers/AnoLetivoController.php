@@ -47,8 +47,20 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
+        $ordens = [
+            'recentes' => ['ano', 'desc'],
+            'antigos' => ['ano', 'asc'],
+            'inicio' => ['data_inicio', 'desc'],
+            'status' => ['status', 'asc'],
+        ];
+        if ($request->filled('ordem')) {
+            session()->put("$this->nomeFiltro.ordem", $request->input('ordem'));
+        }
+        $ordem = session()->get("$this->nomeFiltro.ordem", 'recentes');
+        [$orderBy, $order] = $ordens[$ordem] ?? $ordens['recentes'];
+
         $anosLetivos = $this->anoLetivoService->getAllWithFiltersAndPagination(
-            $itensFiltered, $perPage, ['escola', 'periodos', 'turmas']
+            $itensFiltered, $perPage, ['escola', 'periodos', 'turmas'], $orderBy, $order
         );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Anos Letivos', 'Vida Acadêmica');
@@ -63,7 +75,7 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
 
         return view('ano_letivo.index', compact(
             'anosLetivos', 'breadcrumb', 'filters', 'itensFiltered',
-            'additionalFilters', 'perPages', 'perPage', 'nomeFiltro'
+            'additionalFilters', 'perPages', 'perPage', 'nomeFiltro', 'ordem'
         ))->with('titulo', $this->titulo);
     }
 
@@ -139,16 +151,50 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
 
         $user = auth()->user();
 
+        $totalDisciplinas = $turmas->sum(fn ($t) => $t->disciplinas->count());
+        $temTurmaSemOrg = $turmas->contains(fn ($t) => $t->disciplinas->isEmpty());
+        $temTurmaComOrg = $turmas->contains(fn ($t) => $t->disciplinas->isNotEmpty());
+        $turmasJson = $turmas->map(fn ($t) => [
+            'id' => $t->id,
+            'nome' => $t->nome,
+            'etapa_id' => $t->etapa_id,
+            'disciplinas' => $t->disciplinas->map(fn ($d) => [
+                'id' => $d->id,
+                'nome' => $d->nome,
+                'carga' => $d->pivot->carga_horaria_semanal,
+            ])->values()->all(),
+            'atribuicoes' => $t->atribuicoes->filter->esta_ativa->map(fn ($a) => [
+                'professor' => $a->user->nome ?? '—',
+                'disciplina' => $a->disciplina->nome ?? 'Todas as disciplinas',
+                'papel' => $a->papel_label,
+            ])->values()->all(),
+        ])->values();
+
         return view('ano_letivo.show', [
             'anoLetivo' => $anoLetivo,
             'turmas' => $turmas,
             'breadcrumb' => $breadcrumb,
+            'totalDisciplinas' => $totalDisciplinas,
+            'totalMatriculas' => $turmas->sum('matriculas_count'),
+            'periodosAbertos' => $anoLetivo->periodos->isEmpty(),
+            'turmasAbertas' => $turmas->isEmpty(),
+            'replicarAberto' => $turmas->count() >= 2 && $temTurmaSemOrg && $temTurmaComOrg,
+            'turmasJson' => $turmasJson,
             'etapasOpcoes' => \App\Models\Etapa::query()->where('ativo', 'S')
                 ->orderBy('ordem')->orderBy('nome')->get(['id', 'nome']),
             'turnosOpcoes' => \App\Models\Turma::TURNOS,
             'nomesExistentes' => $turmas->pluck('nome')->map(fn ($n) => mb_strtolower($n))->all(),
             'podeGerar' => $user->hasPermissao('turma.gerar_lote'),
             'podeReplicar' => $user->hasPermissao('turma.replicar_organizacao'),
+            'podeCriarTurma' => $user->hasPermissao('turma.create'),
+            'horariosJson' => \App\Models\Horario::query()->where('ativo', 'S')
+                ->where('escola_id', $anoLetivo->escola_id)
+                ->orderBy('nome')
+                ->get(['id', 'turno', 'nome'])
+                ->map(fn ($h) => [
+                    'id' => $h->id, 'turno' => $h->turno,
+                    'label' => $h->nome.' ('.(\App\Models\Turma::TURNOS[$h->turno] ?? $h->turno).')',
+                ])->values(),
         ])->with('titulo', "Ano letivo {$anoLetivo->ano}");
     }
 
@@ -211,7 +257,17 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
     public function obterFiltrosPrincipais()
     {
         return [
-            ['name' => 'ano', 'label' => 'Ano', 'type' => 'number', 'typeWhere' => 'where'],
+            [
+                'name' => 'ano', 'label' => 'Ano', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => AnoLetivo::query()->distinct()->orderByDesc('ano')
+                    ->pluck('ano', 'ano')->all(),
+            ],
+            [
+                'name' => 'status', 'label' => 'Status', 'type' => 'select',
+                'typeWhere' => 'where',
+                'options' => AnoLetivo::STATUS,
+            ],
         ];
     }
 
@@ -223,11 +279,6 @@ class AnoLetivoController extends BaseController implements FiltroInterface, Res
                 'typeWhere' => 'where',
                 'options' => Escola::query()->orderBy('nome')->get(['id', 'nome'])
                     ->map(fn (Escola $e) => ['value' => $e->id, 'label' => $e->nome])->all(),
-            ],
-            [
-                'name' => 'status', 'label' => 'Status', 'type' => 'select',
-                'typeWhere' => 'where',
-                'options' => AnoLetivo::STATUS,
             ],
             [
                 'name' => 'ativo', 'label' => 'Situação', 'type' => 'select',
