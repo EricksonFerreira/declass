@@ -217,6 +217,17 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Disciplinas que o professor esta habilitado a lecionar
+     * (pivot tipo: principal | optativa).
+     */
+    public function disciplinasHabilitadas(): BelongsToMany
+    {
+        return $this->belongsToMany(Disciplina::class, 'user_disciplina', 'user_id', 'disciplina_id')
+            ->withPivot('tipo')
+            ->withTimestamps();
+    }
+
+    /**
      * Registro de aluno vinculado a esta conta (acesso do proprio
      * aluno ao Portal Familiar).
      */

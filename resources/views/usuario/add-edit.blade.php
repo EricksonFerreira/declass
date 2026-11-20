@@ -93,6 +93,21 @@
                 </div>
             </div>
 
+            <div class="row" id="grupo-disciplinas" style="display:none;">
+                <div class="col-12">
+                    <h6 class="font-weight-bold mb-2"><i class="fa fa-book-open mr-1 text-muted"></i> Disciplinas que leciona</h6>
+                </div>
+                <div class="col-md-6">
+                    <x-form-select name="disciplinas_principais[]" label="Principais (formação / contrato)" :options="$disciplinasOpcoes ?? []" :selected="old('disciplinas_principais', $disciplinasPrincipaisIds ?? [])" multiple />
+                </div>
+                <div class="col-md-6">
+                    <x-form-select name="disciplinas_optativas[]" label="Optativas (pode assumir)" :options="$disciplinasOpcoes ?? []" :selected="old('disciplinas_optativas', $disciplinasOptativasIds ?? [])" multiple />
+                </div>
+                <div class="col-12">
+                    <small class="text-muted d-block mb-3">Usadas para sinalizar, na atribuição de professor à turma, as disciplinas que ele está apto a lecionar.</small>
+                </div>
+            </div>
+
             <div class="mt-3">
                 <a href="{{ route('usuario.index') }}" class="btn btn-secondary">Cancelar</a>
                 <button type="submit" class="btn btn-primary">Salvar</button>
@@ -113,6 +128,8 @@
         var selPerfil = document.getElementById('perfil-acesso');
         var selAluno = document.getElementById('vinculo-aluno');
         var selResp = document.getElementById('vinculo-responsavel');
+        var grupoDisc = document.getElementById('grupo-disciplinas');
+        var rolesProfessor = @json($rolesProfessor ?? []);
 
         var dadosVinculo = {
             aluno: @json($vinculoDadosAluno ?? []),
@@ -131,6 +148,14 @@
             grupoResp.style.display = (t === 'responsavel') ? '' : 'none';
             selAluno.disabled = (t !== 'aluno');
             selResp.disabled = (t !== 'responsavel');
+            aplicarPerfil();
+        }
+
+        // Secao de habilitacoes aparece apenas para perfil de professor.
+        function aplicarPerfil() {
+            if (!grupoDisc || !selPerfil) return;
+            var ehProfessor = rolesProfessor.map(String).indexOf(String(selPerfil.value)) !== -1;
+            grupoDisc.style.display = ehProfessor ? '' : 'none';
         }
 
         // Preenche os dados da conta com o cadastro do vinculo escolhido.
@@ -149,6 +174,7 @@
         if (selAluno) selAluno.addEventListener('change', function () { preencher('aluno', selAluno.value); });
         if (selResp) selResp.addEventListener('change', function () { preencher('responsavel', selResp.value); });
         if (tipo) tipo.addEventListener('change', aplicarTipo);
+        if (selPerfil) selPerfil.addEventListener('change', aplicarPerfil);
         aplicarTipo();
     });
 </script>

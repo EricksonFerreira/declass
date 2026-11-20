@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * Habilitacoes do professor: disciplinas principais (de formacao/
+ * contrato) e optativas (pode lecionar se preciso). Usado para
+ * sinalizar na atribuicao professor-turma quais disciplinas o
+ * professor esta apto a assumir — padrao de sistemas escolares
+ * (i-Educar "disciplinas ministradas").
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('user_disciplina', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('empresa_id')->constrained('empresas')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('disciplina_id')->constrained('disciplinas')->cascadeOnDelete();
+            $table->string('tipo', 10)->default('principal');
+            $table->timestamps();
+
+            $table->unique(['user_id', 'disciplina_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('user_disciplina');
+    }
+};

@@ -89,6 +89,7 @@
                             @endforeach
                         </select>
                         <small class="text-muted">Uma atribuição é criada para cada disciplina marcada.</small>
+                        <small class="d-block mt-1 font-weight-bold" id="vinc-hint" style="color:#8b5cf6;display:none;"></small>
                     </div>
                     <div class="form-group mb-0">
                         <label class="font-weight-bold">Papel <span class="text-danger">*</span></label>
@@ -121,16 +122,84 @@
     var modal = document.getElementById('modal-atribuir-professor');
     if (!modal) { return; }
     var box = document.getElementById('vinc-disciplinas');
+    var hint = document.getElementById('vinc-hint');
+    var selProf = modal.querySelector('select[name="user_id"]');
+    var selDisc = modal.querySelector('select[name="disciplina_ids[]"]');
+    var habilitacao = @json($professoresDisciplinas ?? []);
+
+    // Guarda o rotulo original de cada disciplina para reescrever
+    // o sufixo de habilitacao sem acumular texto.
+    if (selDisc) {
+        selDisc.querySelectorAll('option').forEach(function (o) {
+            o.dataset.base = o.textContent;
+        });
+    }
 
     function toggleDisciplinas() {
         var checked = modal.querySelector('input[name="vinculo"]:checked');
         box.style.display = (checked && checked.value === 'disciplinas') ? 'block' : 'none';
     }
 
+    function rank(o, info) {
+        var id = parseInt(o.value, 10);
+        if (info.principais.indexOf(id) !== -1) { return 0; }
+        if (info.optativas.indexOf(id) !== -1) { return 1; }
+        return 2;
+    }
+
+    // Sinaliza no select de disciplinas as que o professor leciona:
+    // principais primeiro (marcadas), depois optativas, depois demais.
+    function sinalizar() {
+        if (!selDisc || !selProf) { return; }
+        var info = habilitacao[selProf.value] || { principais: [], optativas: [] };
+        var opts = Array.prototype.slice.call(selDisc.options);
+        var nomes = { principais: [], optativas: [] };
+
+        opts.forEach(function (o) {
+            var id = parseInt(o.value, 10);
+            var sufixo = '';
+            if (info.principais.indexOf(id) !== -1) {
+                sufixo = ' · principal';
+                nomes.principais.push(o.dataset.base);
+            } else if (info.optativas.indexOf(id) !== -1) {
+                sufixo = ' · optativa';
+                nomes.optativas.push(o.dataset.base);
+            }
+            o.textContent = o.dataset.base + sufixo;
+        });
+
+        opts.sort(function (a, b) {
+            var d = rank(a, info) - rank(b, info);
+            return d !== 0 ? d : a.dataset.base.localeCompare(b.dataset.base);
+        });
+        opts.forEach(function (o) { selDisc.appendChild(o); });
+
+        if (window.jQuery) { window.jQuery(selDisc).trigger('change.select2'); }
+
+        if (hint) {
+            if (!selProf.value) {
+                hint.style.display = 'none';
+            } else if (!nomes.principais.length && !nomes.optativas.length) {
+                hint.style.display = 'block';
+                hint.textContent = 'Este professor ainda não tem disciplinas habilitadas (cadastro em Usuários).';
+            } else {
+                hint.style.display = 'block';
+                var partes = [];
+                if (nomes.principais.length) { partes.push('Principais: ' + nomes.principais.join(', ')); }
+                if (nomes.optativas.length) { partes.push('Optativas: ' + nomes.optativas.join(', ')); }
+                hint.textContent = partes.join(' · ');
+            }
+        }
+    }
+
     modal.querySelectorAll('input[name="vinculo"]').forEach(function (r) {
         r.addEventListener('change', toggleDisciplinas);
     });
     toggleDisciplinas();
+
+    if (window.jQuery && selProf) {
+        window.jQuery(selProf).on('change', sinalizar);
+    }
 })();
 </script>
 @endcan

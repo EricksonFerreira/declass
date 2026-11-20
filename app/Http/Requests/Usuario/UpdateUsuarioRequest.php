@@ -108,6 +108,16 @@ class UpdateUsuarioRequest extends FormRequest
                 'integer',
                 Rule::exists('escolas', 'id')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
+            'disciplinas_principais' => 'nullable|array',
+            'disciplinas_principais.*' => [
+                'integer',
+                Rule::exists('disciplinas', 'id')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
+            'disciplinas_optativas' => 'nullable|array',
+            'disciplinas_optativas.*' => [
+                'integer',
+                Rule::exists('disciplinas', 'id')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
         ];
     }
 

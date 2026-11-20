@@ -199,6 +199,22 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
             ->pluck('nome', 'id')
             ->all();
 
+        // Habilitacoes (principal/optativa) de cada professor — usadas
+        // para sinalizar no modal de atribuicao quais disciplinas ele
+        // esta apto a lecionar.
+        $professoresDisciplinas = \App\Support\SchemaCache::hasTable('user_disciplina')
+            ? \Illuminate\Support\Facades\DB::table('user_disciplina')
+                ->whereIn('user_id', array_keys($professoresOpcoes))
+                ->select('user_id', 'disciplina_id', 'tipo')
+                ->get()
+                ->groupBy('user_id')
+                ->map(fn ($rows) => [
+                    'principais' => $rows->where('tipo', 'principal')->pluck('disciplina_id')->values()->all(),
+                    'optativas' => $rows->where('tipo', 'optativa')->pluck('disciplina_id')->values()->all(),
+                ])
+                ->all()
+            : [];
+
         $papeis = Atribuicao::PAPEIS;
         $turnos = Turma::TURNOS;
 
@@ -269,7 +285,7 @@ class TurmaController extends BaseController implements FiltroInterface, Resourc
 
         return view('turma.show', compact(
             'turma', 'disciplinasOpcoes', 'disciplinasOfertadas',
-            'professoresOpcoes', 'papeis', 'turnos', 'breadcrumb',
+            'professoresOpcoes', 'professoresDisciplinas', 'papeis', 'turnos', 'breadcrumb',
             'diarioHoje', 'registros', 'presencas', 'disciplinasVisiveis',
             'periodosLetivos', 'filtrosRegistros', 'minhasAulas',
             'materiais', 'tarefasCorrecao'

@@ -8,7 +8,9 @@ use App\Http\Requests\Usuario\StoreUsuarioRequest;
 use App\Http\Requests\Usuario\UpdatePasswordUsuarioRequest;
 use App\Http\Requests\Usuario\UpdateUsuarioRequest;
 use App\Models\Aluno;
+use App\Models\Disciplina;
 use App\Models\Escola;
+use App\Models\Regra;
 use App\Models\Responsavel;
 use App\Models\User;
 use App\Services\BreadcrumbService;
@@ -17,8 +19,8 @@ use App\Services\UsuarioService;
 use App\Support\SchemaCache;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UsuarioController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -302,7 +304,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
         $data = $request->except(['escolas']);
         $atualizado = $this->usuarioService->updateUser($id, $data);
-        $this->sincronizarVinculos($usuario, $request);
+        $this->sincronizarVinculos($atualizado ?: $usuario, $request);
 
         // Vinculo so e regravado quando o tipo de conta veio no
         // form — chamadas antigas sem tipo_conta preservam o atual.
@@ -426,9 +428,20 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $alunos = $this->vinculoRegistros(Aluno::class, $usuario);
         $responsaveis = $this->vinculoRegistros(Responsavel::class, $usuario);
 
+        $habilitadas = $usuario
+            ? $usuario->disciplinasHabilitadas->groupBy('pivot.tipo')
+            : collect();
+
         return [
             'escolasOpcoes' => Escola::query()->orderBy('nome')->pluck('nome', 'id'),
             'escolasSelecionadas' => $usuario ? $usuario->escolas->pluck('id')->all() : [],
+            'disciplinasOpcoes' => Disciplina::query()->orderBy('nome')->pluck('nome', 'id'),
+            'rolesProfessor' => Regra::query()
+                ->where('empresa_id', auth()->user()?->empresa_id)
+                ->whereIn('name', ['professor', 'professor_substituto'])
+                ->pluck('id')->all(),
+            'disciplinasPrincipaisIds' => $habilitadas->get('principal', collect())->pluck('id')->all(),
+            'disciplinasOptativasIds' => $habilitadas->get('optativa', collect())->pluck('id')->all(),
             'tiposConta' => User::TIPOS_CONTA,
             'tipoConta' => $usuario?->tipoConta() ?? User::TIPO_CONTA_COLABORADOR,
             'vinculoSelecionado' => $usuario ? ($usuario->aluno?->id ?? $usuario->responsavel?->id) : null,
@@ -476,6 +489,23 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     private function sincronizarVinculos(User $usuario, Request $request): void
     {
         $usuario->escolas()->sync($request->input('escolas', []));
+
+        if (! SchemaCache::hasTable('user_disciplina')) {
+            return;
+        }
+
+        // Habilitacoes so se aplicam a professor — quando o perfil
+        // sai de professor as habilitacoes sao limpas.
+        $sync = [];
+        if ($usuario->isProfessor()) {
+            foreach ((array) $request->input('disciplinas_principais', []) as $did) {
+                $sync[(int) $did] = ['tipo' => 'principal', 'empresa_id' => $usuario->empresa_id];
+            }
+            foreach ((array) $request->input('disciplinas_optativas', []) as $did) {
+                $sync += [(int) $did => ['tipo' => 'optativa', 'empresa_id' => $usuario->empresa_id]];
+            }
+        }
+        $usuario->disciplinasHabilitadas()->sync($sync);
     }
 
     private function getFormMethodAndRoute($usuario = null)
