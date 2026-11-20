@@ -158,6 +158,31 @@ class UsuarioService extends AbstractBaseService
      * Escopo de listagem por tipo de conta (colaborador/aluno/
      * responsavel). Retorna null quando nao ha filtro.
      */
+    /**
+     * Total de contas por grupo da listagem (abas): funcionarios
+     * (qualquer perfil de equipe — diretor, coordenador, professor...),
+     * alunos e responsaveis (acesso portal).
+     */
+    public function contagemPorTipoConta(): array
+    {
+        $contar = function (?string $tipo): int {
+            $query = $this->applyEmpresaScope($this->model->newQuery());
+            $scope = $this->scopeTipoConta($tipo);
+            if ($scope) {
+                $scope($query);
+            }
+
+            return $query->count();
+        };
+
+        return [
+            'todos' => $contar(null),
+            'funcionarios' => $contar(User::TIPO_CONTA_COLABORADOR),
+            'alunos' => $contar(User::TIPO_CONTA_ALUNO),
+            'responsaveis' => $contar(User::TIPO_CONTA_RESPONSAVEL),
+        ];
+    }
+
     public function scopeTipoConta(?string $tipo): ?\Closure
     {
         return match ($tipo) {

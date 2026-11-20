@@ -9,11 +9,33 @@
 
 @push('css')
     @include('partials.ux-index-styles')
+    <style>
+        .ux-tabs { display: flex; gap: .4rem; flex-wrap: wrap; width: 100%; margin-bottom: .55rem; padding-bottom: .6rem; border-bottom: 1px solid #f1f5f9; }
+        .ux-tab { display: inline-flex; align-items: center; gap: .4rem; padding: .38rem .9rem; border-radius: 999px; border: 1.5px solid #e2e8f0; background: #fff; font-size: .76rem; font-weight: 700; color: #64748b; text-decoration: none; transition: all .13s; }
+        .ux-tab:hover { border-color: #c7d2fe; color: #4f46e5; text-decoration: none; }
+        .ux-tab.is-on { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+        .ux-tab .ux-tab-n { font-size: .64rem; font-weight: 800; background: #f1f5f9; color: #64748b; border-radius: 999px; padding: .1rem .45rem; }
+        .ux-tab.is-on .ux-tab-n { background: rgba(255,255,255,.22); color: #fff; }
+    </style>
 @endpush
 
 @section('content')
 <div class="card">
     <div class="card-header d-flex flex-wrap align-items-center" style="gap:.5rem;">
+        @php($abas = [
+            'funcionarios' => ['Funcionários', 'fa-briefcase'],
+            'alunos' => ['Alunos', 'fa-graduation-cap'],
+            'responsaveis' => ['Responsáveis', 'fa-users'],
+            'todos' => ['Todos', 'fa-list'],
+        ])
+        <div class="ux-tabs">
+            @foreach($abas as $abv => [$abl, $abi])
+                <a href="{{ route('usuario.index', ['grupo' => $abv]) }}" class="ux-tab {{ $grupo === $abv ? 'is-on' : '' }}">
+                    <i class="fa {{ $abi }}"></i> {{ $abl }}
+                    <span class="ux-tab-n">{{ $contagemGrupos[$abv] ?? 0 }}</span>
+                </a>
+            @endforeach
+        </div>
         <div class="flex-grow-1">
             <x-filter :filters="$filters" :additional-filters="$additionalFilters" :itens-filtered="$itensFiltered" :nome-filtro="$nomeFiltro" />
         </div>
@@ -39,7 +61,7 @@
                                 @elseif($tipo === 'responsavel')
                                     <span class="badge badge-info">Responsável</span>
                                 @else
-                                    <span class="badge badge-secondary">Colaborador</span>
+                                    <span class="badge badge-dark">{{ ucwords(str_replace('_', ' ', $usuario->regra->name ?? 'Colaborador')) }}</span>
                                 @endif
                         </div>
                     </div>
@@ -127,7 +149,7 @@
                                 @elseif($tipo === 'responsavel')
                                     <span class="badge badge-info">Responsável</span>
                                 @else
-                                    <span class="badge badge-secondary">Colaborador</span>
+                                    <span class="badge badge-dark">{{ ucwords(str_replace('_', ' ', $usuario->regra->name ?? 'Colaborador')) }}</span>
                                 @endif
                             </td>
                             <td>{{ $usuario->regra->name ?? '—' }}</td>

@@ -60,15 +60,34 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $tipoFiltro = $itensFiltered['tipo_conta']['valor'] ?? null;
+        // Aba da listagem: funcionarios (equipe — diretor, coordenador,
+        // professor...), alunos, responsaveis ou todos. Substitui o
+        // antigo filtro de tipo_conta, removido dos filtros extras.
+        $grupo = (string) request()->query('grupo', session('usuario.grupo', 'funcionarios'));
+        if (! in_array($grupo, ['todos', 'funcionarios', 'alunos', 'responsaveis'], true)) {
+            $grupo = 'funcionarios';
+        }
+        session(['usuario.grupo' => $grupo]);
+        unset($itensFiltered['tipo_conta']);
+        session()->forget("$this->nomeFiltro.filtro.tipo_conta");
+
+        $tipoGrupo = match ($grupo) {
+            'funcionarios' => User::TIPO_CONTA_COLABORADOR,
+            'alunos' => User::TIPO_CONTA_ALUNO,
+            'responsaveis' => User::TIPO_CONTA_RESPONSAVEL,
+            default => null,
+        };
+
         $usuarios = $this->usuarioService->getAllWithFiltersAndPagination(
             $itensFiltered,
             $perPage,
             ['tipoUsuario', 'regra', 'escolas', 'aluno.pessoa', 'responsavel.pessoa'],
             'id',
             'asc',
-            $this->usuarioService->scopeTipoConta(is_string($tipoFiltro) ? $tipoFiltro : null)
+            $this->usuarioService->scopeTipoConta($tipoGrupo)
         );
+
+        $contagemGrupos = $this->usuarioService->contagemPorTipoConta();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Usuários', 'Gerenciar');
         $filters = $this->obterFiltrosPrincipais();
@@ -83,7 +102,8 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
         return view('usuario.index', compact(
             'usuarios', 'breadcrumb', 'filters', 'itensFiltered',
-            'additionalFilters', 'perPages', 'perPage', 'nomeFiltro', 'tiposUsuario'
+            'additionalFilters', 'perPages', 'perPage', 'nomeFiltro', 'tiposUsuario',
+            'grupo', 'contagemGrupos'
         ))->with('titulo', $this->titulo);
     }
 
@@ -405,16 +425,9 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
     public function obterFiltrosSecundarios()
     {
-        return [
-            [
-                'name' => 'tipo_conta', 'label' => 'Tipo de conta', 'type' => 'select',
-                'typeWhere' => 'where',
-                'options' => collect(User::TIPOS_CONTA)
-                    ->map(fn ($label, $value) => ['value' => $value, 'label' => $label])
-                    ->values()
-                    ->all(),
-            ],
-        ];
+        // O agrupamento por tipo (funcionario/aluno/responsavel) virou
+        // abas no topo da listagem — nao ha filtro secundario.
+        return [];
     }
 
     /**
