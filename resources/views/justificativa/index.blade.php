@@ -101,11 +101,7 @@
                                 <a href="{{ route('justificativa.edit', $j->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                             @endcan
                             @can('justificativa.destroy')
-                                <form method="POST" action="{{ route('justificativa.destroy', $j->id) }}" class="d-inline"
-                                    onsubmit="return confirm('Excluir esta justificativa? As faltas do período voltarão a contar.')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></button>
-                                </form>
+                                <x-delete-button :action="route('justificativa.destroy', $j->id)" titulo="Excluir" mensagem="Excluir esta justificativa? As faltas do período voltarão a contar." />
                             @endcan
                         </td>
                     </tr>
@@ -151,11 +147,7 @@
                                 <a href="{{ route('justificativa.edit', $j->id) }}" class="btn btn-xs btn-warning" title="Editar"><i class="fa fa-edit"></i></a>
                             @endcan
                             @can('justificativa.destroy')
-                                <form method="POST" action="{{ route('justificativa.destroy', $j->id) }}" class="d-inline"
-                                    onsubmit="return confirm('Excluir esta justificativa? As faltas do período voltarão a contar.')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></button>
-                                </form>
+                                <x-delete-button :action="route('justificativa.destroy', $j->id)" titulo="Excluir" mensagem="Excluir esta justificativa? As faltas do período voltarão a contar." />
                             @endcan
                         </div>
                     </div>
