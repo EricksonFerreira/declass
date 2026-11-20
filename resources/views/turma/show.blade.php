@@ -504,13 +504,13 @@
                 <div class="table-responsive"><table class="table table-sm mb-0">
                     <thead class="thead-light">
                         <tr>
-                            <th>Nº</th>
-                            <th>Aluno</th>
-                            <th class="text-center">Presenças</th>
-                            <th class="text-center">Faltas</th>
-                            <th class="text-center">Justif./Abon.</th>
-                            <th class="text-center">Freq. %</th>
-                            <th>Status</th>
+                            <th class="th-sort">Nº</th>
+                            <th class="th-sort">Aluno</th>
+                            <th class="text-center th-sort">Presenças</th>
+                            <th class="text-center th-sort">Faltas</th>
+                            <th class="text-center th-sort">Justif./Abon.</th>
+                            <th class="text-center th-sort">Freq. %</th>
+                            <th class="th-sort">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -522,7 +522,7 @@
                                     : null;
                             @endphp
                             <tr>
-                                <td class="text-muted">{{ $matricula->numero_chamada ?? '—' }}</td>
+                                <td class="text-muted" data-sort="{{ $matricula->numero_chamada ?? -1 }}">{{ $matricula->numero_chamada ?? '—' }}</td>
                                 <td>
                                     @can('aluno.show')
                                         <a href="{{ route('aluno.show', $matricula->aluno_id) }}" class="font-weight-bold">{{ $matricula->aluno->pessoa->nome ?? '—' }}</a>
@@ -530,12 +530,12 @@
                                         {{ $matricula->aluno->pessoa->nome ?? '—' }}
                                     @endcan
                                 </td>
-                                <td class="text-center">{{ $freq?->presente ?? '—' }}</td>
-                                <td class="text-center">{{ $freq?->falta ?? '—' }}</td>
-                                <td class="text-center" title="Justificadas / Abonadas">
+                                <td class="text-center" data-sort="{{ $freq?->presente ?? -1 }}">{{ $freq?->presente ?? '—' }}</td>
+                                <td class="text-center" data-sort="{{ $freq?->falta ?? -1 }}">{{ $freq?->falta ?? '—' }}</td>
+                                <td class="text-center" data-sort="{{ $freq?->justificada ?? -1 }}" title="Justificadas / Abonadas">
                                     {{ $freq?->justificada ?? '—' }}@if($freq && (int) $freq->abonada > 0) <span class="text-muted">/ {{ $freq->abonada }}</span>@endif
                                 </td>
-                                <td class="text-center">
+                                <td class="text-center" data-sort="{{ $pct ?? -1 }}">
                                     @if($pct === null)
                                         <span class="text-muted">—</span>
                                     @else

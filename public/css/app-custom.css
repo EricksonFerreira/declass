@@ -414,3 +414,31 @@
 .form-check[class*="icheck-"] > .form-check-input {
     margin-left: 0;
 }
+
+/* Tabelas ordenaveis: clique no th.th-sort ordena as linhas do tbody
+   (chave em data-sort do td; fallback no texto). Ordem alterna a cada
+   clique e a seta mostra a direcao ativa. */
+th.th-sort {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+th.th-sort:hover {
+    color: #4f46e5;
+}
+th.th-sort::after {
+    content: ' \21C5';
+    font-weight: normal;
+    opacity: .35;
+    font-size: .8em;
+}
+th.th-sort.th-sort-asc::after {
+    content: ' \2191';
+    opacity: 1;
+    color: #4f46e5;
+}
+th.th-sort.th-sort-desc::after {
+    content: ' \2193';
+    opacity: 1;
+    color: #4f46e5;
+}
