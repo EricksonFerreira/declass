@@ -51,6 +51,14 @@
     .up-pend.tarefa { border-color:#fecaca; border-left-color:#ef4444; background:#fff8f8; }
     .up-pend .n { font-size:1.1rem; font-weight:800; color:#b45309; min-width:34px; text-align:center; }
     .up-pend.tarefa .n { color:#b91c1c; }
+
+    .up-filtro { background:#fff; border:1px solid #e8edf4; border-radius:12px; padding:.55rem .8rem; display:flex; flex-wrap:wrap; align-items:center; gap:.55rem; margin-bottom:.9rem; }
+    .up-filtro select { width:auto; max-width:100%; }
+    .up-filtro .info { font-size:.72rem; color:#94a3b8; margin-left:auto; }
+    @media (max-width:575.98px) {
+        .up-filtro select { flex:1; }
+        .up-filtro .info { width:100%; margin-left:0; }
+    }
 </style>
 @endpush
 
@@ -63,27 +71,46 @@
         <div class="col-md-3 col-6 mb-2">
             <div class="card up-stat mb-0"><div class="card-body">
                 <div class="up-ico" style="background:#2563eb;"><i class="fa fa-users"></i></div>
-                <div><div class="up-num">{{ $prof['stats']['turmas'] }}</div><div class="up-lbl">Turmas</div></div>
+                <div><div class="up-num" data-up-stat="turmas">{{ $prof['stats']['turmas'] }}</div><div class="up-lbl">Turmas</div></div>
             </div></div>
         </div>
         <div class="col-md-3 col-6 mb-2">
             <div class="card up-stat mb-0"><div class="card-body">
                 <div class="up-ico" style="background:#7c3aed;"><i class="fa fa-book"></i></div>
-                <div><div class="up-num">{{ $prof['stats']['disciplinas'] }}</div><div class="up-lbl">Disciplinas lecionadas</div></div>
+                <div><div class="up-num" data-up-stat="disciplinas">{{ $prof['stats']['disciplinas'] }}</div><div class="up-lbl">Disciplinas lecionadas</div></div>
             </div></div>
         </div>
         <div class="col-md-3 col-6 mb-2">
             <div class="card up-stat mb-0"><div class="card-body">
                 <div class="up-ico" style="background:#0ea5e9;"><i class="fa fa-calendar-alt"></i></div>
-                <div><div class="up-num">{{ $prof['stats']['aulas_semana'] }}</div><div class="up-lbl">Aulas por semana</div></div>
+                <div><div class="up-num" data-up-stat="aulas">{{ $prof['stats']['aulas_semana'] }}</div><div class="up-lbl">Aulas por semana</div></div>
             </div></div>
         </div>
         <div class="col-md-3 col-6 mb-2">
             <div class="card up-stat mb-0"><div class="card-body">
                 <div class="up-ico" style="background:#f59e0b;"><i class="fa fa-exclamation-circle"></i></div>
-                <div><div class="up-num">{{ $prof['stats']['pendencias'] }}</div><div class="up-lbl">Pendências</div></div>
+                <div><div class="up-num" data-up-stat="pendencias">{{ $prof['stats']['pendencias'] }}</div><div class="up-lbl">Pendências</div></div>
             </div></div>
         </div>
+    </div>
+
+    <div class="up-filtro">
+        <span class="small font-weight-bold text-muted"><i class="fa fa-filter mr-1"></i>Ver por:</span>
+        <select id="profFiltroEsc" class="form-control form-control-sm">
+            <option value="">Todas as escolas</option>
+            @foreach($prof['escolas_filtro'] as $eid => $enome)
+                <option value="{{ $eid }}">{{ $enome }}</option>
+            @endforeach
+        </select>
+        @if(count($prof['periodos_filtro']))
+            <select id="profFiltroPer" class="form-control form-control-sm">
+                <option value="">Período geral</option>
+                @foreach($prof['periodos_filtro'] as $p)
+                    <option value="{{ $p['id'] }}">{{ $p['rotulo'] }}</option>
+                @endforeach
+            </select>
+        @endif
+        <span class="info" id="profFiltroInfo"></span>
     </div>
 
     <div class="up-tabs" role="tablist">
@@ -184,13 +211,13 @@
         <div class="card-body">
             <div class="row">
                 @forelse($prof['turmas'] as $t)
-                    <div class="col-md-6 col-xl-4 mb-3">
+                    <div class="col-md-6 col-xl-4 mb-3 prof-item" data-grupo="turma" data-esc="{{ $t['esc'] }}" data-ano="{{ $t['ano_letivo'] }}">
                         <a href="{{ route('turma.show', $t['id']) }}" class="text-decoration-none d-block h-100">
                             <div class="up-turma-card">
                                 <div class="font-weight-bold text-dark">{{ $t['nome'] }}</div>
                                 <div class="small text-muted mb-2">{{ $t['escola'] }}{{ $t['ano'] ? ' · '.$t['ano'] : '' }}</div>
                                 @foreach($t['disciplinas'] as $d)
-                                    <div class="d-flex align-items-center mb-1" style="gap:.4rem;">
+                                    <div class="d-flex align-items-center mb-1" style="gap:.4rem;" data-disc="{{ $d['nome'] }}">
                                         <span class="up-chip up-chip-disc"><i class="fa fa-book"></i> {{ $d['nome'] }}</span>
                                         <span class="badge badge-{{ $d['papel_cor'] }}">{{ $d['papel'] }}</span>
                                     </div>
@@ -202,6 +229,7 @@
                     <div class="col-12 text-center text-muted py-4"><i class="fa fa-users fa-2x mb-2 d-block"></i>Nenhuma turma atribuída ainda.</div>
                 @endforelse
             </div>
+            <div class="prof-vazio text-center text-muted py-4 d-none"><i class="fa fa-filter fa-2x mb-2 d-block"></i>Nenhuma turma neste filtro.</div>
         </div>
     </div>
 </div>
@@ -252,7 +280,7 @@
                                         <td>
                                             @if(isset($prof['grade'][$dia][$ordem]))
                                                 @php $slot = $prof['grade'][$dia][$ordem]; @endphp
-                                                <div class="up-slot" title="{{ $slot['disciplina'] }} · {{ $slot['turma'] }}{{ $slot['sala'] ? ' · sala '.$slot['sala'] : '' }}">
+                                                <div class="up-slot prof-item" data-grupo="slot" data-esc="{{ $slot['esc'] }}" data-ano="{{ $slot['ano_letivo'] }}" title="{{ $slot['disciplina'] }} · {{ $slot['turma'] }}{{ $slot['sala'] ? ' · sala '.$slot['sala'] : '' }}">
                                                     <div class="d">{{ $slot['disciplina'] }}</div>
                                                     <div class="t">{{ $slot['turma'] }}{{ $slot['sala'] ? ' · '.$slot['sala'] : '' }}</div>
                                                 </div>
@@ -269,6 +297,7 @@
             @else
                 <div class="text-center text-muted py-4"><i class="fa fa-calendar-times fa-2x mb-2 d-block"></i>Nenhum horário cadastrado no quadro das turmas.</div>
             @endif
+            <div class="prof-vazio text-center text-muted py-4 d-none"><i class="fa fa-filter fa-2x mb-2 d-block"></i>Nenhuma aula neste filtro.</div>
         </div>
     </div>
 </div>
@@ -279,7 +308,7 @@
         <div class="card-header font-weight-bold"><i class="fa fa-star text-primary mr-1"></i> Avaliações criadas</div>
         <div class="card-body">
             @forelse($prof['avaliacoes'] as $av)
-                <div class="up-av">
+                <div class="up-av prof-item" data-grupo="av" data-esc="{{ $av['esc'] }}" data-per="{{ $av['per'] }}">
                     <div class="flex-grow-1" style="min-width:0;">
                         <div class="font-weight-bold text-truncate">{{ $av['nome'] }}</div>
                         <div class="small text-muted">{{ $av['tipo'] }} · {{ $av['turma'] }} · {{ $av['disciplina'] }} · {{ $av['data'] }}</div>
@@ -295,6 +324,7 @@
             @empty
                 <div class="text-center text-muted py-4"><i class="fa fa-star-half-alt fa-2x mb-2 d-block"></i>Nenhuma avaliação criada ainda.</div>
             @endforelse
+            <div class="prof-vazio text-center text-muted py-4 d-none"><i class="fa fa-filter fa-2x mb-2 d-block"></i>Nenhuma avaliação neste filtro.</div>
         </div>
     </div>
 </div>
@@ -304,10 +334,11 @@
     <div class="card">
         <div class="card-header font-weight-bold"><i class="fa fa-exclamation-circle text-warning mr-1"></i> O que falta fazer</div>
         <div class="card-body">
+            <div id="pendSecAv">
             @if(count($prof['avaliacoes_pendentes']))
                 <div class="small font-weight-bold text-uppercase text-muted mb-2"><i class="fa fa-star mr-1"></i>Notas a lançar</div>
                 @foreach($prof['avaliacoes_pendentes'] as $av)
-                    <a href="{{ $av['url'] }}" class="text-decoration-none">
+                    <a href="{{ $av['url'] }}" class="text-decoration-none prof-item" data-grupo="pend" data-esc="{{ $av['esc'] }}" data-per="{{ $av['per'] }}" data-n="{{ $av['total'] - $av['lancadas'] }}">
                         <div class="up-pend">
                             <div class="n">{{ $av['total'] - $av['lancadas'] }}</div>
                             <div class="flex-grow-1" style="min-width:0;">
@@ -319,11 +350,13 @@
                     </a>
                 @endforeach
             @endif
+            </div>
 
+            <div id="pendSecTf">
             @if(count($prof['tarefas_pendentes']))
                 <div class="small font-weight-bold text-uppercase text-muted mb-2 mt-3"><i class="fa fa-tasks mr-1"></i>Entregas a corrigir</div>
                 @foreach($prof['tarefas_pendentes'] as $tf)
-                    <a href="{{ $tf['url'] }}" class="text-decoration-none">
+                    <a href="{{ $tf['url'] }}" class="text-decoration-none prof-item" data-grupo="pend" data-esc="{{ $tf['esc'] }}" data-per="" data-n="{{ $tf['pendentes'] }}">
                         <div class="up-pend tarefa">
                             <div class="n">{{ $tf['pendentes'] }}</div>
                             <div class="flex-grow-1" style="min-width:0;">
@@ -335,9 +368,11 @@
                     </a>
                 @endforeach
             @endif
+            </div>
 
+            <div class="prof-vazio text-center text-muted py-4 d-none"><i class="fa fa-filter fa-2x mb-2 d-block"></i>Nenhuma pendência neste filtro.</div>
             @if(!count($prof['avaliacoes_pendentes']) && !count($prof['tarefas_pendentes']))
-                <div class="text-center text-success py-4"><i class="fa fa-check-circle fa-2x mb-2 d-block"></i>Tudo em dia — nenhuma pendência.</div>
+                <div class="prof-tudodia text-center text-success py-4"><i class="fa fa-check-circle fa-2x mb-2 d-block"></i>Tudo em dia — nenhuma pendência.</div>
             @endif
         </div>
     </div>
@@ -408,6 +443,97 @@ document.querySelectorAll('.up-tab').forEach(function (tab) {
         document.getElementById(tab.dataset.pane).classList.remove('d-none');
     });
 });
+
+// Filtro do painel: escola + periodo letivo ("geral" = tudo).
+(function () {
+    const PERIODOS = @json(collect($prof['periodos_filtro'])->keyBy('id')->map(fn ($p) => ['ano' => $p['ano_letivo'], 'esc' => $p['esc']])->all());
+    const selEsc = document.getElementById('profFiltroEsc');
+    const selPer = document.getElementById('profFiltroPer');
+    const info = document.getElementById('profFiltroInfo');
+
+    function aplicar() {
+        const esc = selEsc ? selEsc.value : '';
+        const perId = selPer ? selPer.value : '';
+        const per = perId && PERIODOS[perId] ? PERIODOS[perId] : null;
+
+        const vis = { turma: 0, slot: 0, av: 0, pend: 0 };
+        const discs = new Set();
+        let pendTotal = 0;
+
+        document.querySelectorAll('.prof-item').forEach(function (el) {
+            const g = el.dataset.grupo;
+            let ok = true;
+            if (esc && String(el.dataset.esc) !== esc) { ok = false; }
+            if (ok && per) {
+                if (g === 'av') {
+                    ok = String(el.dataset.per) === String(perId);
+                } else if (g === 'pend') {
+                    // Tarefa nao tem periodo: so avaliacao filtra pelo id.
+                    ok = !el.dataset.per || String(el.dataset.per) === String(perId);
+                } else {
+                    // Turma/horario: pertence ao ano letivo do periodo.
+                    ok = String(el.dataset.ano) === String(per.ano);
+                }
+            }
+            el.classList.toggle('d-none', !ok);
+            if (ok) {
+                if (vis[g] !== undefined) { vis[g]++; }
+                if (g === 'turma') {
+                    el.querySelectorAll('[data-disc]').forEach(function (d) { discs.add(d.dataset.disc); });
+                }
+                if (g === 'pend') { pendTotal += parseInt(el.dataset.n || '0', 10); }
+            }
+        });
+
+        // Stats no topo
+        const set = function (k, v) {
+            const el = document.querySelector('[data-up-stat="' + k + '"]');
+            if (el) { el.textContent = v; }
+        };
+        set('turmas', vis.turma);
+        set('disciplinas', discs.size);
+        set('aulas', vis.slot);
+        set('pendencias', pendTotal);
+
+        // Contadores nas abas
+        const cnt = function (pane, v) {
+            const t = document.querySelector('.up-tab[data-pane="' + pane + '"] .cnt');
+            if (t) { t.textContent = v; }
+        };
+        cnt('up-turmas', vis.turma);
+        cnt('up-avaliacoes', vis.av);
+        cnt('up-pendencias', pendTotal);
+
+        // Estados vazios por aba
+        [['up-turmas', vis.turma], ['up-horario', vis.slot], ['up-avaliacoes', vis.av]].forEach(function (par) {
+            const v = document.querySelector('#' + par[0] + ' .prof-vazio');
+            if (v) { v.classList.toggle('d-none', par[1] > 0); }
+        });
+
+        // Pendencias: secoes escondem sozinhas + "tudo em dia" vs "nada no filtro"
+        const secAv = document.getElementById('pendSecAv');
+        const secTf = document.getElementById('pendSecTf');
+        let pendRows = 0;
+        [secAv, secTf].forEach(function (sec) {
+            if (!sec) { return; }
+            const n = sec.querySelectorAll('.prof-item:not(.d-none)').length;
+            sec.classList.toggle('d-none', n === 0);
+            pendRows += n;
+        });
+        const pv = document.querySelector('#up-pendencias .prof-vazio');
+        const td = document.querySelector('#up-pendencias .prof-tudodia');
+        if (pv) { pv.classList.toggle('d-none', !(pendRows === 0 && !td)); }
+        if (td) { td.classList.toggle('d-none', pendRows > 0); }
+
+        info.textContent = (esc || perId)
+            ? 'Filtro ativo — ' + (esc ? 'escola' : '') + (esc && perId ? ' + ' : '') + (perId ? 'período' : '')
+            : 'Visão geral de todas as escolas e períodos';
+    }
+
+    if (selEsc) { selEsc.addEventListener('change', aplicar); }
+    if (selPer) { selPer.addEventListener('change', aplicar); }
+    aplicar();
+})();
 </script>
 @endif
 @stop

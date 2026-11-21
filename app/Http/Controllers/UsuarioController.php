@@ -15,6 +15,7 @@ use App\Models\EntregaTarefa;
 use App\Models\Escola;
 use App\Models\HorarioTurma;
 use App\Models\Matricula;
+use App\Models\PeriodoLetivo;
 use App\Models\Regra;
 use App\Models\Responsavel;
 use App\Models\User;
@@ -286,7 +287,9 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                     'id' => $t->id,
                     'nome' => $t->nome,
                     'escola' => $t->escola->nome ?? '—',
+                    'esc' => $t->escola_id,
                     'ano' => $t->anoLetivo->ano ?? null,
+                    'ano_letivo' => $t->ano_letivo_id,
                     'disciplinas' => $grupo->map(fn ($a) => [
                         'nome' => $a->disciplina->nome ?? 'Todas as disciplinas',
                         'papel' => Atribuicao::PAPEIS[$a->papel] ?? $a->papel,
@@ -303,7 +306,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         // Quadro de horario semanal (estilo i-Educar)
         $horarios = HorarioTurma::query()
             ->where('user_id', $usuario->id)
-            ->with(['turma:id,nome', 'disciplina:id,nome'])
+            ->with(['turma:id,nome,escola_id,ano_letivo_id', 'disciplina:id,nome'])
             ->orderBy('dia_semana')->orderBy('ordem')->get();
         $grade = [];
         foreach ($horarios as $h) {
@@ -311,6 +314,8 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 'disciplina' => $h->disciplina->nome ?? '—',
                 'turma' => $h->turma->nome ?? '—',
                 'sala' => $h->sala,
+                'esc' => $h->turma->escola_id ?? null,
+                'ano_letivo' => $h->turma->ano_letivo_id ?? null,
             ];
         }
         $maxOrdem = (int) $horarios->max('ordem');
@@ -340,6 +345,8 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 'total' => $total,
                 'pendente' => $total > 0 && $a->notas_count < $total,
                 'url' => route('avaliacao.notas', $a->id),
+                'esc' => $a->escola_id,
+                'per' => $a->periodo_letivo_id,
             ];
         })->values();
 
@@ -347,7 +354,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $entregasPorTarefa = EntregaTarefa::query()
             ->where('status', 'entregue')
             ->whereHas('tarefa', fn ($q) => $q->where('user_id', $usuario->id))
-            ->with('tarefa:id,titulo,turma_id,user_id', 'tarefa.turma:id,nome')
+            ->with('tarefa:id,titulo,turma_id,user_id,escola_id', 'tarefa.turma:id,nome')
             ->get()->groupBy('tarefa_id');
         $tarefasPendentes = $entregasPorTarefa->map(function ($grupo, $tarefaId) {
             $tarefa = $grupo->first()->tarefa;
@@ -357,10 +364,31 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 'turma' => $tarefa->turma->nome ?? '—',
                 'pendentes' => $grupo->count(),
                 'url' => route('tarefa.entregas', $tarefaId),
+                'esc' => $tarefa->escola_id,
             ];
         })->values();
 
         $avPendentes = $avItems->where('pendente', true)->values();
+
+        // Filtros do painel: escolas onde atua + periodos letivos das avaliacoes
+        $escolaIds = collect($turmas)->pluck('esc')
+            ->merge($avItems->pluck('esc'))
+            ->merge($tarefasPendentes->pluck('esc'))
+            ->merge(collect($grade)->flatten(2)->pluck('esc'))
+            ->filter()->unique()->values();
+        $escolasFiltro = Escola::query()->whereIn('id', $escolaIds)
+            ->orderBy('nome')->pluck('nome', 'id')->all();
+
+        $periodos = PeriodoLetivo::query()
+            ->whereIn('id', $avaliacoes->pluck('periodo_letivo_id')->filter()->unique())
+            ->orderBy('data_inicio')
+            ->get(['id', 'nome', 'ano_letivo_id', 'escola_id', 'data_inicio', 'data_fim']);
+        $periodosFiltro = $periodos->map(fn ($p) => [
+            'id' => $p->id,
+            'rotulo' => $p->nome.' ('.$p->data_inicio->format('d/m').'–'.$p->data_fim->format('d/m').')',
+            'ano_letivo' => $p->ano_letivo_id,
+            'esc' => $p->escola_id,
+        ])->values()->all();
 
         return [
             'turmas' => $turmas,
@@ -371,6 +399,8 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             'avaliacoes' => $avItems->all(),
             'avaliacoes_pendentes' => $avPendentes->all(),
             'tarefas_pendentes' => $tarefasPendentes->all(),
+            'escolas_filtro' => $escolasFiltro,
+            'periodos_filtro' => $periodosFiltro,
             'stats' => [
                 'turmas' => count($turmas),
                 'disciplinas' => $atribuicoes->whereNotNull('disciplina_id')->pluck('disciplina_id')->unique()->count(),
