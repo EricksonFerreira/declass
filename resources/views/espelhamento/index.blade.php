@@ -25,17 +25,78 @@
     </div>
 @endif
 
-<div class="card">
-    <div class="card-header">
-        <form method="GET" action="{{ route('espelhamento.index') }}" class="form-inline">
-            <div class="input-group input-group-sm" style="max-width:320px;">
-                <input type="text" name="q" value="{{ $busca }}" class="form-control" placeholder="Buscar por nome ou e-mail...">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+<div class="card mb-2 filter-card">
+    <div class="card-body p-2">
+        <h6 class="filter-heading text-secondary text-xs mb-1"><i class="fa fa-filter mr-1"></i> Filtros</h6>
+        <hr class="filter-heading m-0 mb-2">
+        <form method="GET" action="{{ route('espelhamento.index') }}">
+            <div class="row align-items-end">
+                <div class="col-auto flex-grow-1 filter-field">
+                    <label class="text-xs mb-0">Nome / usuário</label>
+                    <input type="text" name="q" value="{{ $filtros['q'] }}" class="form-control form-control-sm" placeholder="Nome ou login...">
+                </div>
+                <div class="col-auto flex-grow-1 filter-field">
+                    <label class="text-xs mb-0">E-mail</label>
+                    <input type="text" name="email" value="{{ $filtros['email'] }}" class="form-control form-control-sm" placeholder="email@...">
+                </div>
+                <div class="col-auto flex-grow-1 filter-field">
+                    <label class="text-xs mb-0">Empresa</label>
+                    <select name="empresa_id" class="form-control form-control-sm">
+                        <option value="">Todas</option>
+                        @foreach($empresas as $eid => $enome)
+                            <option value="{{ $eid }}" {{ $filtros['empresa_id'] == $eid ? 'selected' : '' }}>{{ $enome }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-auto filter-field">
+                    <label class="text-xs mb-0">Tipo de conta</label>
+                    <select name="tipo_conta" class="form-control form-control-sm">
+                        <option value="">Todos</option>
+                        @foreach($tiposConta as $valor => $rotulo)
+                            <option value="{{ $valor }}" {{ $filtros['tipo_conta'] === $valor ? 'selected' : '' }}>{{ $rotulo }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-auto filter-field">
+                    <label class="text-xs mb-0">Perfil</label>
+                    <select name="role_id" class="form-control form-control-sm">
+                        <option value="">Todos</option>
+                        @foreach($regras as $rid => $rnome)
+                            <option value="{{ $rid }}" {{ $filtros['role_id'] == $rid ? 'selected' : '' }}>{{ $rnome }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-auto filter-field">
+                    <label class="text-xs mb-0">Status</label>
+                    <select name="status" class="form-control form-control-sm">
+                        <option value="">Todos</option>
+                        <option value="ativo" {{ $filtros['status'] === 'ativo' ? 'selected' : '' }}>Ativo</option>
+                        <option value="inativo" {{ $filtros['status'] === 'inativo' ? 'selected' : '' }}>Inativo</option>
+                    </select>
+                </div>
+                <div class="col-auto d-flex align-items-end filter-actions" style="gap:6px;">
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-search mr-1"></i> Filtrar</button>
                 </div>
             </div>
         </form>
+        @if(count($chips) > 0)
+            <div class="mt-2 d-flex flex-wrap align-items-center" style="gap:6px;">
+                <span class="text-xs text-secondary text-bold">Aplicados:</span>
+                @foreach($chips as $chip)
+                    <a href="{{ route('espelhamento.index', request()->except($chip['param'])) }}"
+                       class="badge badge-secondary font-weight-normal" title="Remover filtro">
+                        <i class="fa fa-times mr-1"></i>{{ $chip['label'] }}: <b>{{ $chip['valor'] }}</b>
+                    </a>
+                @endforeach
+                <a href="{{ route('espelhamento.index') }}" class="badge badge-danger font-weight-normal" title="Limpar todos">
+                    <i class="fa fa-times mr-1"></i> Limpar tudo
+                </a>
+            </div>
+        @endif
     </div>
+</div>
+
+<div class="card">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover table-sm mb-0">

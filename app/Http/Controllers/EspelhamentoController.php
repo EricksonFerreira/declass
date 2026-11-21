@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Empresa;
+use App\Models\Regra;
 use App\Models\User;
+use App\Services\UsuarioService;
 use App\Support\EspelhamentoContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,32 +20,77 @@ use Illuminate\View\View;
 class EspelhamentoController extends Controller
 {
     public function __construct(
-        private readonly EspelhamentoContext $espelhamento
+        private readonly EspelhamentoContext $espelhamento,
+        private readonly UsuarioService $usuarioService
     ) {}
 
     public function index(Request $request): View
     {
         abort_unless($request->user()->isSuperAdmin(), 403);
 
-        $busca = trim((string) $request->query('q', ''));
+        $filtros = [
+            'q' => trim((string) $request->query('q', '')),
+            'email' => trim((string) $request->query('email', '')),
+            'empresa_id' => (string) $request->query('empresa_id', ''),
+            'tipo_conta' => (string) $request->query('tipo_conta', ''),
+            'role_id' => (string) $request->query('role_id', ''),
+            'status' => (string) $request->query('status', ''),
+        ];
+
+        $scopeTipo = $this->usuarioService->scopeTipoConta($filtros['tipo_conta'] ?: null);
 
         $usuarios = User::query()
             ->with(['regra', 'empresa'])
-            ->when($busca !== '', function ($query) use ($busca) {
+            ->when($filtros['q'] !== '', function ($query) use ($filtros) {
+                $busca = $filtros['q'];
                 $query->where(function ($w) use ($busca) {
                     $w->where('name', 'like', "%{$busca}%")
                         ->orWhere('nome', 'like', "%{$busca}%")
-                        ->orWhere('email', 'like', "%{$busca}%");
+                        ->orWhere('usuario', 'like', "%{$busca}%");
                 });
             })
+            ->when($filtros['email'] !== '', fn ($q) => $q->where('email', 'like', '%'.$filtros['email'].'%'))
+            ->when($filtros['empresa_id'] !== '', fn ($q) => $q->where('empresa_id', $filtros['empresa_id']))
+            ->when($filtros['role_id'] !== '', fn ($q) => $q->where('role_id', $filtros['role_id']))
+            ->when($filtros['status'] === 'ativo', fn ($q) => $q->where('ativo', true))
+            ->when($filtros['status'] === 'inativo', fn ($q) => $q->where('ativo', false))
+            ->when($scopeTipo, fn ($q) => $q->where($scopeTipo))
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();
 
+        $empresas = Empresa::query()->orderBy('nome')->pluck('nome', 'id');
+        $regras = Regra::query()->orderBy('name')->pluck('name', 'id');
+        $tiposConta = User::TIPOS_CONTA;
+
+        $chips = [];
+        if ($filtros['q'] !== '') {
+            $chips[] = ['param' => 'q', 'label' => 'Busca', 'valor' => $filtros['q']];
+        }
+        if ($filtros['email'] !== '') {
+            $chips[] = ['param' => 'email', 'label' => 'E-mail', 'valor' => $filtros['email']];
+        }
+        if ($filtros['empresa_id'] !== '' && isset($empresas[$filtros['empresa_id']])) {
+            $chips[] = ['param' => 'empresa_id', 'label' => 'Empresa', 'valor' => $empresas[$filtros['empresa_id']]];
+        }
+        if ($filtros['tipo_conta'] !== '' && isset($tiposConta[$filtros['tipo_conta']])) {
+            $chips[] = ['param' => 'tipo_conta', 'label' => 'Tipo', 'valor' => $tiposConta[$filtros['tipo_conta']]];
+        }
+        if ($filtros['role_id'] !== '' && isset($regras[$filtros['role_id']])) {
+            $chips[] = ['param' => 'role_id', 'label' => 'Perfil', 'valor' => $regras[$filtros['role_id']]];
+        }
+        if ($filtros['status'] !== '') {
+            $chips[] = ['param' => 'status', 'label' => 'Status', 'valor' => $filtros['status'] === 'ativo' ? 'Ativo' : 'Inativo'];
+        }
+
         return view('espelhamento.index', [
             'titulo' => 'Espelhar acesso',
             'usuarios' => $usuarios,
-            'busca' => $busca,
+            'filtros' => $filtros,
+            'empresas' => $empresas,
+            'regras' => $regras,
+            'tiposConta' => $tiposConta,
+            'chips' => $chips,
             'alvo' => $this->espelhamento->alvo(),
             'breadcrumb' => [
                 ['label' => 'Configurações'],
