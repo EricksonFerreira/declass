@@ -147,9 +147,18 @@
         <div class="card">
             <div class="card-header font-weight-bold d-flex align-items-center">
                 Acesso e vínculos
-                @can('usuario.edit')
-                    <a href="{{ route('usuario.edit', $usuario->id) }}" class="btn btn-warning btn-xs ml-auto"><i class="fa fa-edit mr-1"></i>Editar</a>
-                @endcan
+                <div class="ml-auto d-flex" style="gap:.35rem;">
+                    @can('usuario.alterarSenha')
+                        <button type="button" class="btn btn-outline-secondary btn-xs" id="btnSenhaAcesso"
+                                data-url="{{ route('usuario.salvarNovaSenha', $usuario->id) }}"
+                                data-csrf="{{ csrf_token() }}" data-nome="{{ $usuario->nome }}">
+                            <i class="fa fa-key mr-1"></i>Senha
+                        </button>
+                    @endcan
+                    @can('usuario.edit')
+                        <a href="{{ route('usuario.edit', $usuario->id) }}" class="btn btn-warning btn-xs"><i class="fa fa-edit mr-1"></i>Editar</a>
+                    @endcan
+                </div>
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
@@ -532,4 +541,57 @@ document.querySelectorAll('.up-tab').forEach(function (tab) {
 })();
 </script>
 @endif
+
+<script>
+// Senha: Swal escolhe entre resetar para Senh@123 (troca no 1o login)
+// ou enviar o link de redefinicao por e-mail.
+(function () {
+    const btn = document.getElementById('btnSenhaAcesso');
+    if (!btn || typeof Swal === 'undefined') { return; }
+
+    btn.addEventListener('click', function () {
+        Swal.fire({
+            title: 'Senha de ' + (btn.dataset.nome || 'usuário'),
+            html: 'Como o usuário deve receber o novo acesso?<br>' +
+                '<small class="text-muted"><b>Senh@123</b> obriga a criar senha nova no primeiro login; ' +
+                'o <b>e-mail</b> envia um link para redefinir.</small>',
+            icon: 'question',
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: 'Definir Senh@123',
+            denyButtonText: 'Enviar por e-mail',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#4f46e5',
+            denyButtonColor: '#0ea5e9',
+            reverseButtons: true,
+        }).then(function (r) {
+            if (r.isConfirmed) { enviar('padrao'); }
+            else if (r.isDenied) { enviar('email'); }
+        });
+    });
+
+    function enviar(modo) {
+        Swal.fire({ title: 'Aguarde...', allowOutsideClick: false, didOpen: function () { Swal.showLoading(); } });
+        fetch(btn.dataset.url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': btn.dataset.csrf,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ modo: modo }),
+        })
+            .then(function (resp) {
+                return resp.json().then(function (j) { return { ok: resp.ok, msg: j.message || 'Operação concluída.' }; });
+            })
+            .then(function (r) {
+                Swal.fire({ icon: r.ok ? 'success' : 'error', title: r.ok ? 'Pronto' : 'Ops', text: r.msg });
+            })
+            .catch(function () {
+                Swal.fire({ icon: 'error', title: 'Ops', text: 'Falha de comunicação. Tente novamente.' });
+            });
+    }
+})();
+</script>
 @stop

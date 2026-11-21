@@ -21,6 +21,12 @@ class UpdatePasswordUsuarioRequest extends FormRequest
 
     public function rules(): array
     {
+        // Fluxo rapido (Swal no perfil): padrao=Senh@123 forcando
+        // troca; email=link de redefinicao — nenhum pede a senha.
+        if (in_array($this->input('modo'), ['padrao', 'email'], true)) {
+            return ['modo' => ['required', 'in:padrao,email,manual']];
+        }
+
         $isResetPadrao = $this->boolean('resetar_para_acesso');
 
         $passwordRules = $isResetPadrao

@@ -27,6 +27,7 @@ use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
 
 class UsuarioController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -511,6 +512,38 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     {
         $usuario = $this->usuarioService->getById($id);
         abort_if(! $usuario, 403, 'Sem acesso a este usuario.');
+
+        $modo = $request->input('modo', 'manual');
+
+        if ($modo === 'padrao') {
+            $this->usuarioService->updatePassword($id, [
+                'password' => self::SENHA_PADRAO_ACESSO,
+                'forcar_troca_senha' => true,
+            ]);
+            $mensagem = 'Senha resetada para '.self::SENHA_PADRAO_ACESSO.'. No primeiro login o usuário será obrigado a definir uma nova senha.';
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $mensagem])
+                : redirect()->route('usuario.show', $usuario->id)->with('success', $mensagem);
+        }
+
+        if ($modo === 'email') {
+            if (empty($usuario->email)) {
+                return $request->expectsJson()
+                    ? response()->json(['message' => 'Este usuário não tem e-mail cadastrado.'], 422)
+                    : back()->withErrors(['email' => 'Este usuário não tem e-mail cadastrado.']);
+            }
+
+            $status = Password::sendResetLink(['email' => $usuario->email]);
+            $ok = $status === Password::RESET_LINK_SENT;
+            $mensagem = $ok
+                ? 'Link de redefinição enviado para '.$usuario->email.'.'
+                : 'Não foi possível enviar o e-mail agora. Tente novamente.';
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $mensagem], $ok ? 200 : 422)
+                : redirect()->route('usuario.show', $usuario->id)->with($ok ? 'success' : 'error', $mensagem);
+        }
 
         $resetarParaAcesso = $request->boolean('resetar_para_acesso');
 
