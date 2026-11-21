@@ -290,6 +290,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                     'disciplinas' => $grupo->map(fn ($a) => [
                         'nome' => $a->disciplina->nome ?? 'Todas as disciplinas',
                         'papel' => Atribuicao::PAPEIS[$a->papel] ?? $a->papel,
+                        'papel_cor' => ['titular' => 'success', 'auxiliar' => 'info', 'substituto' => 'warning'][$a->papel] ?? 'secondary',
                     ])->values()->all(),
                 ];
             })->sortBy('nome')->values()->all();

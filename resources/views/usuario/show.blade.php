@@ -190,7 +190,10 @@
                                 <div class="font-weight-bold text-dark">{{ $t['nome'] }}</div>
                                 <div class="small text-muted mb-2">{{ $t['escola'] }}{{ $t['ano'] ? ' · '.$t['ano'] : '' }}</div>
                                 @foreach($t['disciplinas'] as $d)
-                                    <span class="up-chip up-chip-disc"><i class="fa fa-book"></i> {{ $d['nome'] }} <span class="up-chip up-chip-papel">{{ $d['papel'] }}</span></span>
+                                    <div class="d-flex align-items-center mb-1" style="gap:.4rem;">
+                                        <span class="up-chip up-chip-disc"><i class="fa fa-book"></i> {{ $d['nome'] }}</span>
+                                        <span class="badge badge-{{ $d['papel_cor'] }}">{{ $d['papel'] }}</span>
+                                    </div>
                                 @endforeach
                             </div>
                         </a>
