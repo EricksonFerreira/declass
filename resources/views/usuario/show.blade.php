@@ -145,7 +145,12 @@
         </div>
 
         <div class="card">
-            <div class="card-header font-weight-bold">Acesso e vínculos</div>
+            <div class="card-header font-weight-bold d-flex align-items-center">
+                Acesso e vínculos
+                @can('usuario.edit')
+                    <a href="{{ route('usuario.edit', $usuario->id) }}" class="btn btn-warning btn-xs ml-auto"><i class="fa fa-edit mr-1"></i>Editar</a>
+                @endcan
+            </div>
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Tipo de conta</dt>
@@ -179,15 +184,6 @@
                     <dt class="col-sm-4">Troca de senha</dt>
                     <dd class="col-sm-8">{{ $usuario->forcar_troca_senha ? 'Obrigatória no próximo login' : 'Não pendente' }}</dd>
                 </dl>
-            </div>
-            <div class="card-footer">
-                <a href="{{ route('usuario.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
-                @can('usuario.edit')
-                    <a href="{{ route('usuario.edit', $usuario->id) }}" class="btn btn-warning btn-sm">Editar</a>
-                @endcan
-                @can('usuario.alterarSenha')
-                    <a href="{{ route('usuario.alterarSenha', $usuario->id) }}" class="btn btn-secondary btn-sm">Senha</a>
-                @endcan
             </div>
         </div>
     </div>
