@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Empresa;
 use App\Models\Regra;
 use App\Models\User;
+use App\Services\BreadcrumbService;
 use App\Services\UsuarioService;
 use App\Support\EspelhamentoContext;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,8 @@ class EspelhamentoController extends Controller
 {
     public function __construct(
         private readonly EspelhamentoContext $espelhamento,
-        private readonly UsuarioService $usuarioService
+        private readonly UsuarioService $usuarioService,
+        private readonly BreadcrumbService $breadcrumbService
     ) {}
 
     public function index(Request $request): View
@@ -92,10 +94,11 @@ class EspelhamentoController extends Controller
             'tiposConta' => $tiposConta,
             'chips' => $chips,
             'alvo' => $this->espelhamento->alvo(),
-            'breadcrumb' => [
-                ['label' => 'Configurações'],
-                ['label' => 'Espelhar acesso'],
-            ],
+            'breadcrumb' => $this->breadcrumbService->prepararBreadcrumbCustom([
+                ['Home', route('home')],
+                ['Configurações', null],
+                ['Espelhar acesso', null],
+            ]),
         ]);
     }
 
