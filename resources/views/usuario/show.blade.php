@@ -248,7 +248,7 @@
                                     @foreach(array_keys($prof['dias_semana']) as $dia)
                                         <td>
                                             @if(isset($prof['grade'][$dia][$ordem]))
-                                                @php($slot = $prof['grade'][$dia][$ordem])
+                                                @php $slot = $prof['grade'][$dia][$ordem]; @endphp
                                                 <div class="up-slot" title="{{ $slot['disciplina'] }} · {{ $slot['turma'] }}{{ $slot['sala'] ? ' · sala '.$slot['sala'] : '' }}">
                                                     <div class="d">{{ $slot['disciplina'] }}</div>
                                                     <div class="t">{{ $slot['turma'] }}{{ $slot['sala'] ? ' · '.$slot['sala'] : '' }}</div>
